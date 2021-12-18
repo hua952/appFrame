@@ -12,9 +12,10 @@ enum IAsyScessionState
 
 struct IAsyScessionCallBack
 {
-	virtual onStateChangea(IAsyScessionState from, IAsyScessionState to) = 0;
-	virtual onRecPack(packetHead* pack) = 0;
+	virtual void onStateChangea(IAsyScessionState from, IAsyScessionState to) = 0;
+	virtual void onRecPack(packetHead* pack) = 0;
 };
+
 struct IAsyScession
 {
 	virtual void* userData() = 0;
@@ -22,6 +23,7 @@ struct IAsyScession
 	virtual IAsyScessionState state() =0;
 	virtual int send(packetHead* pack) = 0;
 	virtual int close() = 0;
+	virtual void setCallBack(IAsyScessionCallBack* pI) = 0;
 };
 
 #endif 
