@@ -48,7 +48,7 @@ static inline struct page * rb_search_page_cache(struct inode * inode,
 		else
 			return page;
 	}
-	return NULL;
+	return nullptr;
 }
 
 static inline struct page * __rb_insert_page_cache(struct inode * inode,
@@ -56,7 +56,7 @@ static inline struct page * __rb_insert_page_cache(struct inode * inode,
 						   struct rb_node * node)
 {
 	struct rb_node ** p = &inode->i_rb_page_cache.rb_node;
-	struct rb_node * parent = NULL;
+	struct rb_node * parent = nullptr;
 	struct page * page;
 
 	while (*p)
@@ -74,7 +74,7 @@ static inline struct page * __rb_insert_page_cache(struct inode * inode,
 
 	rb_link_node(node, parent, p);
 
-	return NULL;
+	return nullptr;
 }
 
 static inline struct page * rb_insert_page_cache(struct inode * inode,
@@ -94,8 +94,11 @@ static inline struct page * rb_insert_page_cache(struct inode * inode,
 #ifndef	_LINUX_RBTREE_H
 #define	_LINUX_RBTREE_H
 
-#include <linux/kernel.h>
-#include <linux/stddef.h>
+#define container_of(ptr, type, member) ({			\
+	const typeof( ((type *)0)->member ) *__mptr = (ptr);	\
+	(type *)( (char *)__mptr - offsetof(type,member) );})
+
+#define offsetof(TYPE, MEMBER) ((size_t) &((TYPE *)0)->MEMBER)
 
 struct rb_node
 {
@@ -129,10 +132,10 @@ static inline void rb_set_color(struct rb_node *rb, int color)
 	rb->rb_parent_color = (rb->rb_parent_color & ~1) | color;
 }
 
-#define RB_ROOT	(struct rb_root) { NULL, }
+#define RB_ROOT	(struct rb_root) { nullptr, }
 #define	rb_entry(ptr, type, member) container_of(ptr, type, member)
 
-#define RB_EMPTY_ROOT(root)	((root)->rb_node == NULL)
+#define RB_EMPTY_ROOT(root)	((root)->rb_node == nullptr)
 #define RB_EMPTY_NODE(node)	(rb_parent(node) == node)
 #define RB_CLEAR_NODE(node)	(rb_set_parent(node, node))
 
@@ -154,14 +157,14 @@ extern struct rb_node *rb_first(const struct rb_root *);
 extern struct rb_node *rb_last(const struct rb_root *);
 
 /* Fast replacement of a single node without remove/rebalance/add/rebalance */
-extern void rb_replace_node(struct rb_node *victim, struct rb_node *new, 
+extern void rb_replace_node(struct rb_node *victim, struct rb_node *newN, 
 			    struct rb_root *root);
 
 static inline void rb_link_node(struct rb_node * node, struct rb_node * parent,
 				struct rb_node ** rb_link)
 {
 	node->rb_parent_color = (unsigned long )parent;
-	node->rb_left = node->rb_right = NULL;
+	node->rb_left = node->rb_right = nullptr;
 
 	*rb_link = node;
 }

@@ -23,9 +23,10 @@ public:
 	{
 		m_udwMaxTNum = udwNum;
 		m_pTS = std::make_unique<T[]>(udwNum);
-		memcpy(m_pTS, pA, udwNum * sizeof(T));
+		auto pT = m_pTS.get();
+		memcpy(pT, pA, udwNum * sizeof(T));
 		m_udwTNum = udwNum;
-		TQuickSort<T*, T, CompF> qs(m_pTS, m_udwTNum);
+		TQuickSort<T*, T, CompF> qs(pT, m_udwTNum);
 		qs.sort();
 	}
     ~arraySet()
@@ -41,7 +42,9 @@ public:
         {
 			auto nNewNum = m_udwMaxTNum <<= 1;
 			auto pNewTS = std::make_unique<T[]>(nNewNum);
-			memcpy(pNewTS, m_pTS, m_udwMaxTNum * sizeof(T));
+			auto pT = m_pTS.get();
+			auto pNT = pNewTS.get();
+			memcpy(pNT, pT, m_udwMaxTNum * sizeof(T));
 			m_pTS = std::move(pNewTS);
 			m_udwMaxTNum = nNewNum;
         }
@@ -51,28 +54,29 @@ public:
 			m_udwTNum = 1;
 			return 0;
 		}
-        TBinarySearch<T, CompF> bs(m_pTS, m_udwTNum);
+		auto pT = m_pTS.get();
+        TBinarySearch<T, CompF> bs(pT, m_udwTNum);
         uqword uqwRet = bs.Search(node);
         CompF cmp;
-		if(cmp(node, m_pTS[uqwRet]))
+		if(cmp(node, pT[uqwRet]))
 		{
-			memmove(&m_pTS[uqwRet + 1], &m_pTS[uqwRet], sizeof(m_pTS[0]) * (m_udwTNum - (udword)uqwRet));
-			m_pTS[uqwRet] = node;
+			memmove(&pT[uqwRet + 1], &pT[uqwRet], sizeof(pT[0]) * (m_udwTNum - (udword)uqwRet));
+			pT[uqwRet] = node;
 			m_udwTNum++;
 		}
 		else         
 		{
-			if(cmp(m_pTS[uqwRet], node))
+			if(cmp(pT[uqwRet], node))
 			{
 				if(uqwRet == m_udwTNum - 1)
 				{
-					m_pTS[m_udwTNum++] = node;
+					pT[m_udwTNum++] = node;
 				}
 				else
 				{
 					uqwRet++;
-					memmove(&m_pTS[uqwRet + 1], &m_pTS[uqwRet], sizeof(m_pTS[0]) * (m_udwTNum - (udword)uqwRet));
-					m_pTS[uqwRet] = node;
+					memmove(&pT[uqwRet + 1], &pT[uqwRet], sizeof(pT[0]) * (m_udwTNum - (udword)uqwRet));
+					pT[uqwRet] = node;
 					m_udwTNum++;
 				}
 			}
@@ -80,7 +84,6 @@ public:
 			{
 				return 2;
 			}
-
 		}
         return 0;
     }
@@ -129,14 +132,15 @@ public:
 private:
     arrayMapIndexType Find(const T& node)
     {
-        TBinarySearch<T, CompF> bs(m_pTS, m_udwTNum);
+		auto pT = m_pTS.get();
+        TBinarySearch<T, CompF> bs(pT, m_udwTNum);
         uqword uqwRet = bs.Search(node);
         CompF cmp;
-        if(cmp(m_pTS[uqwRet], node))
+        if(cmp(pT[uqwRet], node))
         {
             return m_udwTNum;
         }
-        if(cmp(node, m_pTS[uqwRet]))
+        if(cmp(node, pT[uqwRet]))
         {
             return  m_udwTNum;
         }
