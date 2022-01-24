@@ -9,7 +9,7 @@ class tSingleton
 public:
 	static void createSingleton()
 	{
-		myAssert(NULL == s_pMgr);
+		myAssert(nullptr == s_pMgr);
 		s_pMgr = std::make_unique<T>();
 	}
 	
