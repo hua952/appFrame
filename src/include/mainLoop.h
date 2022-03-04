@@ -2,7 +2,14 @@
 #define _mainLoop_h__
 #include "loop.h"
 
-typedef int (*sendPackToLoopFT)(packetHead*, uword);
+#define LoopNumBitLen 3
+#define ProcNumBitLen 3
+#define GroupNumBitLen 2 
+#define LoopNum			(1<<LoopNumBitLen)
+#define ProcNum			(1<<ProcNumBitLen)
+#define GroupNum		(1<<GroupNumBitLen)
+
+typedef int (*sendPackToLoopFT)(netPacketHead*, uword);
 typedef void (*stopLoopSFT)();
 typedef packetHead* (*allocPackFT)(udword udwSize);
 typedef void		(*freePackFT)(packetHead* pack);
@@ -26,7 +33,7 @@ extern "C"
 {
 	int onInit(int nArgC, char* argS[], PhyCallback* pCallbackS); // call by level 0
 	int getAllLoopAndStart(loopHandleType* pBuff, int nBuffNum); // call by level 0
-	void loopStartResult(loopHandleType pLoop, int res, ModelIDType id); // call by level 0
+	//void loopStartResult(loopHandleType pLoop, int res, ModelIDType id); // call by level 0
 }
 
 #endif
