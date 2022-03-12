@@ -1,0 +1,4 @@
+C:/work/appFrame/build/CMakeFiles/commonL.dir
+C:/work/appFrame/build/CMakeFiles/midFrame.dir
+C:/work/appFrame/build/CMakeFiles/ALL_BUILD.dir
+C:/work/appFrame/build/CMakeFiles/ZERO_CHECK.dir

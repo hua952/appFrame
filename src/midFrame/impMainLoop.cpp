@@ -31,6 +31,36 @@ loopHandleType PhyInfo::createLoop(char* szName, frameFunType funFrame, void* ar
 	return pRet ;
 }
 
+int PhyInfo::regMsg(loopHandleType handle, uword uwMsgId, procPacketFunType pFun)
+{
+	int nRet = 0;
+	auto pLoop = (impLoop*)(handle);
+	do 
+	{
+		if (NULL == pLoop) {
+			nRet = 1;
+			break;
+		}
+		nRet = pLoop->regMsg(uwMsgId, pFun);
+	} while(0);
+	return nRet;
+}
+
+int PhyInfo::removeMsg(loopHandleType handle, uword uwMsgId)
+{
+	int nRet = 0;
+	auto pLoop = (impLoop*)(handle);
+	do 
+	{
+		if (NULL == pLoop) {
+			nRet = 1;
+			break;
+		}
+		nRet = pLoop->removeMsg(uwMsgId);
+	} while(0);
+	return nRet;
+}
+
 int PhyInfo::init(int nArgC, char* argS[], PhyCallback& info)
 {
 	m_callbackS = info;
@@ -38,6 +68,8 @@ int PhyInfo::init(int nArgC, char* argS[], PhyCallback& info)
 	forLogic.fnCreateLoop = PhyInfo::createLoop;
 	forLogic.fnAllocPack = info.fnAllocPack;
 	forLogic.fnFreePack = info.fnFreePack;
+	forLogic.fnRegMsg = regMsg;
+	forLogic.fnRemoveMsg = removeMsg;
 	auto nRet = procArgS(nArgC, argS);
 	do
 	{

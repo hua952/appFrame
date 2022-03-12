@@ -1,4 +1,5 @@
 #include"mainLoop.h"
+/*
 loopHandleType createLoop(char* szName, frameFunType funFrame, void* arg)
 {
 	return NULL;
@@ -23,3 +24,4 @@ procPacketFunType findMsg(uword uwMsgId)
 {
 	return NULL;
 }
+*/

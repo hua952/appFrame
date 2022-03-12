@@ -16,6 +16,8 @@ public:
 	PhyCallback& getPhyCallback();  
 	ForLogicFun&  getForLogicFun();
 	static loopHandleType createLoop(char* szName, frameFunType funFrame, void* arg);
+	static int regMsg(loopHandleType handle, uword uwMsgId, procPacketFunType pFun);
+	static int removeMsg(loopHandleType handle, uword uwMsgId);
 private:		
 	PhyCallback  m_callbackS;
 	ForLogicFun m_forLogic;

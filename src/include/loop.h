@@ -11,8 +11,8 @@ typedef ubyte ModelIDType;
 
 extern "C"
 {
-	int regMsg(loopHandleType handle, uword uwMsgId, procPacketFunType pFun); // call by level 2
-	int removeMsg(loopHandleType handle, uword uwMsgId); // call by level 2
+	//int regMsg(loopHandleType handle, uword uwMsgId, procPacketFunType pFun); // call by level 2
+	//int removeMsg(loopHandleType handle, uword uwMsgId); // call by level 2
 	//procPacketFunType findMsg(loopHandleType handle, uword uwMsgId);
 
 	int OnLoopFrame(loopHandleType* pThis); // call by level 0

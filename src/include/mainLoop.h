@@ -22,11 +22,17 @@ typedef struct _PhyCallback
 } PhyCallback;
 
 typedef loopHandleType (*createLoopFT)(char* szName, frameFunType funFrame, void* arg);
+
+typedef  int (*regMsgFT)(loopHandleType handle, uword uwMsgId, procPacketFunType pFun); // call by level 2
+typedef  int (*removeMsgFT)(loopHandleType handle, uword uwMsgId); // call by level 2
+
 typedef struct _ForLogicFun
 {
 	allocPackFT		 fnAllocPack;
 	freePackFT		 fnFreePack;
 	createLoopFT	 fnCreateLoop;
+	regMsgFT		 fnRegMsg;
+	removeMsgFT		 fnRemoveMsg;
 } ForLogicFun;
 
 extern "C"
