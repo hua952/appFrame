@@ -1,8 +1,9 @@
+#include <iostream>
 #include "CModule.h"
 #include <dlfcn.h>
 #include "myAssert.h"
 
-int CModule::load()
+int CModule::load(const ForLogicFun* pForLogic)
 {
 	int nRet = 0;
 	auto szName = name();
@@ -19,11 +20,12 @@ int CModule::load()
 		myAssert(funOnLoad);
 		if(!funOnLoad)
 		{
+			std::cout<<"funOnLoad empty error is"<<dlerror()<<std::endl;
 			nRet = 2;
 			break;
 		}
 		m_onUnloadFun = (beforeUnloadFunT)(dlsym(m_handle, "beforeUnload"));
-		funOnLoad();
+		funOnLoad(pForLogic);
 	}while(0);
 	return nRet;
 }

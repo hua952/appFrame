@@ -1,13 +1,15 @@
-#include <vector>
+#include <set>
 #include <string>
 #include <sstream>
+#include <iostream>
 #include "impMainLoop.h"
 #include "tSingleton.h"
 #include "strFun.h"
 #include "CModule.h"
 #include "impLoop.h"
+#include "myAssert.h"
 
-int onInit(int nArgC, char* argS[], PhyCallback* pCallbackS)
+int  InitMidFrame(int nArgC, const char* argS[], PhyCallback* pCallbackS)
 {
 	tSingleton<PhyInfo>::createSingleton();
 	auto& rMgr = tSingleton<PhyInfo>::single();
@@ -61,7 +63,7 @@ int PhyInfo::removeMsg(loopHandleType handle, uword uwMsgId)
 	return nRet;
 }
 
-int PhyInfo::init(int nArgC, char* argS[], PhyCallback& info)
+int PhyInfo::init(int nArgC, const char* argS[], PhyCallback& info)
 {
 	m_callbackS = info;
 	auto& forLogic = getForLogicFun();
@@ -77,19 +79,20 @@ int PhyInfo::init(int nArgC, char* argS[], PhyCallback& info)
 		{
 			break;
 		}
+		std::cout<<"in PhyInfo::init"<<std::endl;
 		auto& rModuleS = m_ModuleS;
 		for(auto i = 0; i < m_ModuleNum; i++)
 		{
 			auto& rM = m_ModuleS[i];
-			rM.load();
+			rM.load(&forLogic );
 		}
 	}while(0);
 	return nRet;
 }
 
-int PhyInfo::procArgS(int nArgC, char* argS[])
+int PhyInfo::procArgS(int nArgC, const char* argS[])
 {
-	using tempModuleInfo = std::vector<std::string>;
+	using tempModuleInfo = std::set<std::string>;
 	tempModuleInfo moduleS;
 	for(int i = 1; i < nArgC; i++)
 	{
@@ -104,17 +107,20 @@ int PhyInfo::procArgS(int nArgC, char* argS[])
 		{
 			if(0 == strcmp(buff[0], "addLogic"))
 			{
-				moduleS.push_back(buff[1]);
+				auto bI = moduleS.insert(buff[1]);
+				myAssert (bI.second);
 			}
 		}
 	}
 	auto nS = moduleS.size();
 	m_ModuleNum = nS;
 	m_ModuleS = std::make_unique<CModule[]>(nS);
-	for(auto i = 0; i < nS; i++)
+	auto i = 0;
+	auto& forLogic = getForLogicFun();
+	for(auto it = moduleS.begin(); moduleS.end() != it; ++it)
 	{
-		auto& rM = m_ModuleS[i];
-		rM.init(moduleS[i].c_str());
+		auto& rM = m_ModuleS[i++];
+		rM.init(it->c_str());
 	}
 	return 0;
 }
@@ -128,6 +134,10 @@ PhyCallback& PhyInfo::getPhyCallback()
 ForLogicFun&  PhyInfo::getForLogicFun()
 {
 	return m_forLogic;
+}
+
+loopMgr::~loopMgr()
+{
 }
 
 loopHandleType loopMgr::createLoop(char* szName, frameFunType funFrame, void* arg)

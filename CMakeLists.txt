@@ -24,11 +24,54 @@ add_library(${midFrameName} SHARED
 	${midFrameSrc}
 	${midFrameSrcOS}
 	)
-
 target_include_directories(midFrame PUBLIC 
                            "src/common/include" 
                            "src/include" 
 						   "src/midFrame" 
                            ) 
+
+SET(logicCommonName logicCommon)
+set(logicCommonSrc)
+file(GLOB logicCommonSrc src/logicCommon/*.cpp)
+add_library(${logicCommonName} SHARED ${logicCommonSrc})
+target_include_directories(${logicCommonName} PUBLIC 
+"src/common/include" 
+"src/include" 
+)
+
+SET(testLogicName testLogic)
+set(testLogicSrc)
+file(GLOB testLogicSrc src/testLogic/*.cpp)
+add_library(${testLogicName} SHARED ${testLogicSrc})
+target_include_directories(${testLogicName} PUBLIC 
+"src/common/include" 
+"src/include" 
+"src/logicCommon" 
+) 
+target_link_libraries(${testLogicName} PUBLIC  testLogicMsg  logicCommon)
+
+
+SET(testLogicMsgName testLogicMsg)
+set(testLogicMsgSrc)
+file(GLOB testLogicMsgSrc src/testLogicMsg/*.cpp)
+add_library(${testLogicMsgName} SHARED ${testLogicMsgSrc})
+target_include_directories(${testLogicMsgName} PUBLIC 
+"src/common/include" 
+"src/include" 
+"src/logicCommon" 
+) 
+
+
+SET(cppLevel0Name cppLevel0)
+set(cppLevel0Src)
+file(GLOB cppLevel0Src src/cppLevel0/*.cpp)
+add_executable(${cppLevel0Name} ${cppLevel0Src})
+target_include_directories(${cppLevel0Name} PUBLIC 
+"src/include" 
+"src/common/include" 
+)
+LINK_DIRECTORIES(${PROJECT_SOURCE_DIR}/bin)
+target_link_libraries(${cppLevel0Name} PUBLIC ${midFrameName} commonL)
+
 SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)

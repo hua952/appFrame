@@ -70,6 +70,12 @@ void impLoop::clean()
 {
 }
 
+int impLoop::OnLoopFrame()
+{
+	int nRet = 0;
+	return nRet;
+}
+
 bool impLoop::regMsg(uword uwMsgId, procPacketFunType pFun)
 {
 	bool bRet = m_MsgMap.insert(uwMsgId, pFun);	

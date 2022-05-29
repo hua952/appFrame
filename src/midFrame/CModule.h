@@ -6,13 +6,13 @@
 class CModule
 {
 public:
-	typedef void (*afterLoadFunT)();
-	typedef void (*beforeUnloadFunT)(ForLogicFun* pForLogic);
+	typedef void (*afterLoadFunT)(const ForLogicFun* pForLogic);
+	typedef void (*beforeUnloadFunT)();
 	CModule();
 	~CModule();
 	int init(const char* szName);
 	const char* name();
-	int load();
+	int load(const ForLogicFun* pForLogic);
 private:
 	int unload();
 	beforeUnloadFunT	m_onUnloadFun;

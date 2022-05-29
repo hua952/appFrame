@@ -11,8 +11,8 @@ class PhyInfo
 {
 public:
 	PhyInfo();
-	int init(int nArgC, char* argS[], PhyCallback& info);
-	int procArgS(int nArgC, char* argS[]);
+	int init(int nArgC, const char* argS[], PhyCallback& info);
+	int procArgS(int nArgC, const char* argS[]);
 	PhyCallback& getPhyCallback();  
 	ForLogicFun&  getForLogicFun();
 	static loopHandleType createLoop(char* szName, frameFunType funFrame, void* arg);

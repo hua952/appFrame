@@ -17,8 +17,8 @@ typedef struct _PhyCallback
 {
 	sendPackToLoopFT fnSendPackToLoop;
 	stopLoopSFT      fnStopLoopS;
-	allocPackFT		 fnAllocPack;
-	freePackFT		 fnFreePack;
+	allocPackFT		 fnAllocPack; // Thread safety
+	freePackFT		 fnFreePack; // Thread safety
 } PhyCallback;
 
 typedef loopHandleType (*createLoopFT)(char* szName, frameFunType funFrame, void* arg);
@@ -28,16 +28,22 @@ typedef  int (*removeMsgFT)(loopHandleType handle, uword uwMsgId); // call by le
 
 typedef struct _ForLogicFun
 {
-	allocPackFT		 fnAllocPack;
-	freePackFT		 fnFreePack;
+	allocPackFT		 fnAllocPack; // Thread safety
+	freePackFT		 fnFreePack; // Thread safety
 	createLoopFT	 fnCreateLoop;
 	regMsgFT		 fnRegMsg;
 	removeMsgFT		 fnRemoveMsg;
 } ForLogicFun;
 
+typedef struct _ForMsgModuleFunS
+{
+	allocPackFT		 fnAllocPack; // Thread safety
+	freePackFT		 fnFreePack; // Thread safety
+} ForMsgModuleFunS;
+
 extern "C"
 {
-	int onInit(int nArgC, char* argS[], PhyCallback* pCallbackS); // call by level 0
+	int InitMidFrame(int nArgC, const char* argS[], PhyCallback* pCallbackS); // call by level 0
 	int getAllLoopAndStart(loopHandleType* pBuff, int nBuffNum); // call by level 0
 	//void loopStartResult(loopHandleType pLoop, int res, ModelIDType id); // call by level 0
 }
