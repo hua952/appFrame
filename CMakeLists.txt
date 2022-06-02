@@ -61,11 +61,20 @@ target_include_directories(${testLogicMsgName} PUBLIC
 "src/logicCommon" 
 ) 
 
+add_subdirectory (cppLevel0L)
 
 SET(cppLevel0Name cppLevel0)
 set(cppLevel0Src)
 file(GLOB cppLevel0Src src/cppLevel0/*.cpp)
-add_executable(${cppLevel0Name} ${cppLevel0Src})
+set(cppLevel0SrcOS)
+if (UNIX)
+    MESSAGE(STATUS "unix")
+	file(GLOB cppLevel0SrcOS src/cppLevel0/unix/*.cpp)
+elseif (WIN32)
+    MESSAGE(STATUS "windows")
+endif ()
+
+add_executable(${cppLevel0Name} ${cppLevel0Src} ${cppLevel0SrcOS})
 target_include_directories(${cppLevel0Name} PUBLIC 
 "src/include" 
 "src/common/include" 
