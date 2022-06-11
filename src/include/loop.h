@@ -4,7 +4,7 @@
 
 typedef int (*frameFunType)(void* arg);
 typedef void* loopHandleType;
-typedef int (*procPacketFunType)(netPacketHead*);
+typedef int (*procPacketFunType)(packetHead*);
 typedef ubyte ModelIDType;
 
 #define c_emptyModelId 255

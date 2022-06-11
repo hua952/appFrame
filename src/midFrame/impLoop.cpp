@@ -36,7 +36,7 @@ int impLoop::processOncePack(packetHead* pPack)
 	auto pF = findMsg(pNetPack->uwMsgID);
 	if(pF)
 	{
-		nRet = pF(pNetPack);
+		nRet = pF(pPack);
 	}
 	return nRet;
 }

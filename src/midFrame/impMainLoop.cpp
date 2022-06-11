@@ -26,7 +26,7 @@ PhyInfo::PhyInfo()
 {
 }
 
-loopHandleType PhyInfo::createLoop(char* szName, frameFunType funFrame, void* arg)
+loopHandleType PhyInfo::createLoop(const char* szName, frameFunType funFrame, void* arg)
 {
 	auto& rMgr = tSingleton<loopMgr>::single();
 	auto pRet = rMgr.createLoop(szName, funFrame, arg);
@@ -140,7 +140,7 @@ loopMgr::~loopMgr()
 {
 }
 
-loopHandleType loopMgr::createLoop(char* szName, frameFunType funFrame, void* arg)
+loopHandleType loopMgr::createLoop(const char* szName, frameFunType funFrame, void* arg)
 {
 	auto& rMap =  getTempLoopMap();
 	std::string strKey = szName;

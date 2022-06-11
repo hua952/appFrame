@@ -21,7 +21,7 @@ typedef struct _PhyCallback
 	freePackFT		 fnFreePack; // Thread safety
 } PhyCallback;
 
-typedef loopHandleType (*createLoopFT)(char* szName, frameFunType funFrame, void* arg);
+typedef loopHandleType (*createLoopFT)(const char* szName, frameFunType funFrame, void* arg);
 
 typedef  int (*regMsgFT)(loopHandleType handle, uword uwMsgId, procPacketFunType pFun); // call by level 2
 typedef  int (*removeMsgFT)(loopHandleType handle, uword uwMsgId); // call by level 2

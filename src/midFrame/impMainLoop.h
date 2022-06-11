@@ -15,7 +15,7 @@ public:
 	int procArgS(int nArgC, const char* argS[]);
 	PhyCallback& getPhyCallback();  
 	ForLogicFun&  getForLogicFun();
-	static loopHandleType createLoop(char* szName, frameFunType funFrame, void* arg);
+	static loopHandleType createLoop(const char* szName, frameFunType funFrame, void* arg);
 	static int regMsg(loopHandleType handle, uword uwMsgId, procPacketFunType pFun);
 	static int removeMsg(loopHandleType handle, uword uwMsgId);
 private:		
@@ -31,7 +31,7 @@ class loopMgr
 public:
 	loopMgr();
 	~loopMgr();
-	loopHandleType createLoop(char* szName, frameFunType funFrame, void* arg);
+	loopHandleType createLoop(const char* szName, frameFunType funFrame, void* arg);
 	typedef std::map<std::string, impLoop* > tempLoopMap;
 
 	tempLoopMap& getTempLoopMap();

@@ -45,6 +45,7 @@ file(GLOB testLogicSrc src/testLogic/*.cpp)
 add_library(${testLogicName} SHARED ${testLogicSrc})
 target_include_directories(${testLogicName} PUBLIC 
 "src/common/include" 
+"src/testLogicMsg" 
 "src/include" 
 "src/logicCommon" 
 ) 
