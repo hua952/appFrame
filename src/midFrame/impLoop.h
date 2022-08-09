@@ -9,7 +9,7 @@ class impLoop
 public:
 	impLoop();
 	~impLoop();
-	int init(const char* szName);
+	int init(const char* szName, ServerIDType id, frameFunType funOnFrame = nullptr, void* argS = nullptr);
 	void clean();
 
 	bool regMsg(uword uwMsgId, procPacketFunType pFun);
@@ -18,15 +18,15 @@ public:
 	const char* name();
 	int OnLoopFrame();
 	int processOncePack(packetHead* pPack);
-	ModelIDType		id();
-	void			setId(ModelIDType id);
+	ServerIDType id();
+	//void			setId(ModelIDType id);
 	typedef arrayMap<uword, procPacketFunType> MsgMap;
 
 private:
 	MsgMap	m_MsgMap;
 	frameFunType	m_funOnFrame;
 	void*			m_pArg;
-	ModelIDType		m_id;
+	ServerIDType m_id;
 	std::unique_ptr<char[]>	 m_name;
 };
 

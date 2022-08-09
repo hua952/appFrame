@@ -16,14 +16,13 @@ typedef struct _ThreadPacketHead
 
 typedef struct _packetHead
 {
-	void*    pNext;
-	void*    pData;
+	struct _packetHead*    pNext;
+	struct _packetHead*    pPer;
 }packetHead;
 
 typedef packetHead* pPacketHead;
 
 typedef udword NetTokenType;
-typedef uword MsgIDType;
 #define c_null_msgID c_null_uword
 
 typedef struct  _netPacketHead

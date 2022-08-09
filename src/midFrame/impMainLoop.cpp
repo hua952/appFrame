@@ -12,6 +12,7 @@
 int  InitMidFrame(int nArgC, const char* argS[], PhyCallback* pCallbackS)
 {
 	tSingleton<PhyInfo>::createSingleton();
+	tSingleton<loopMgr>::createSingleton();
 	auto& rMgr = tSingleton<PhyInfo>::single();
 	auto nRet = rMgr.init(nArgC, argS, *pCallbackS);
 	return nRet;
@@ -19,24 +20,26 @@ int  InitMidFrame(int nArgC, const char* argS[], PhyCallback* pCallbackS)
 
 int getAllLoopAndStart(loopHandleType* pBuff, int nBuffNum)
 {
-	return 0;
+	auto& rMgr = tSingleton<loopMgr>::single();
+	return rMgr.getAllLoopAndStart(pBuff, nBuffNum);
 }
 
 PhyInfo::PhyInfo()
 {
 }
 
-loopHandleType PhyInfo::createLoop(const char* szName, frameFunType funFrame, void* arg)
+loopHandleType PhyInfo::createLoop(const char* szName, /*uword uwId,*/ frameFunType funFrame, void* arg)
 {
 	auto& rMgr = tSingleton<loopMgr>::single();
-	auto pRet = rMgr.createLoop(szName, funFrame, arg);
+	auto pRet = rMgr.createLoop(szName,/* uwId,*/ funFrame, arg);
 	return pRet ;
 }
 
 int PhyInfo::regMsg(loopHandleType handle, uword uwMsgId, procPacketFunType pFun)
 {
 	int nRet = 0;
-	auto pLoop = (impLoop*)(handle);
+	auto& rMgr = tSingleton<loopMgr>::single();
+	auto pLoop = rMgr.getLoop(handle);
 	do 
 	{
 		if (NULL == pLoop) {
@@ -51,7 +54,8 @@ int PhyInfo::regMsg(loopHandleType handle, uword uwMsgId, procPacketFunType pFun
 int PhyInfo::removeMsg(loopHandleType handle, uword uwMsgId)
 {
 	int nRet = 0;
-	auto pLoop = (impLoop*)(handle);
+	auto& rMgr = tSingleton<loopMgr>::single();
+	auto pLoop = rMgr.getLoop(handle);
 	do 
 	{
 		if (NULL == pLoop) {
@@ -71,7 +75,7 @@ int PhyInfo::init(int nArgC, const char* argS[], PhyCallback& info)
 	forLogic.fnAllocPack = info.fnAllocPack;
 	forLogic.fnFreePack = info.fnFreePack;
 	forLogic.fnRegMsg = regMsg;
-	forLogic.fnRemoveMsg = removeMsg;
+	//forLogic.fnRemoveMsg = removeMsg;
 	auto nRet = procArgS(nArgC, argS);
 	do
 	{
@@ -126,6 +130,12 @@ int PhyInfo::procArgS(int nArgC, const char* argS[])
 }
 
 
+CModule* PhyInfo::getModuleS (int& ModuleNum)
+{
+	ModuleNum = m_ModuleNum;
+	return m_ModuleS.get();
+}
+
 PhyCallback& PhyInfo::getPhyCallback()
 {
 	return   m_callbackS;
@@ -136,27 +146,115 @@ ForLogicFun&  PhyInfo::getForLogicFun()
 	return m_forLogic;
 }
 
+loopMgr::loopMgr():m_CurLoopNum(0), m_procId(0), m_gropId(0)
+{
+	 m_loopS = std::make_unique<impLoop[]> (c_MaxLoopNum);
+}
+
 loopMgr::~loopMgr()
 {
 }
 
-loopHandleType loopMgr::createLoop(const char* szName, frameFunType funFrame, void* arg)
+int loopMgr::createServerS()
 {
-	auto& rMap =  getTempLoopMap();
-	std::string strKey = szName;
-	auto it = rMap.find(strKey);
-	myAssert(rMap.end() == it);
-	loopHandleType pRet = NULL;
-	if(rMap.end() == it)
+	int nRet = 0;
+	/*
+	auto& rPhyInfo = tSingleton<PhyInfo>::single();
+	int ModuleNum = 0;
+	CModuleS* pMs =  getModuleS (ModuleNum);
+	for (
+	*/
+	return nRet;
+}
+static inline loopHandleType toHandle(loopHandleType g, loopHandleType p, loopHandleType l)
+{
+	loopHandleType nRet = g;
+	nRet &= GroupMark;
+	nRet <<= ProcNumBitLen;
+	p &= ProcMark;
+	nRet |= p;
+	nRet <<= LoopNumBitLen;
+	l &= LoopMark;
+	nRet |= l;
+	return nRet;
+}
+
+loopHandleType loopMgr::createLoop(const char* szName/*, uword uwId*/, frameFunType funFrame, void* arg)
+{
+	loopHandleType pRet = c_emptyLoopHandle;
+	auto uwId = m_CurLoopNum;
+	myAssert (uwId < c_MaxLoopNum);
+	if (uwId >= c_MaxLoopNum)
 	{
-		auto p = new impLoop;
-		rMap[strKey] = p;
-		pRet = p;
+		return pRet;
 	}
+	/*
+	myAssert (m_loopS[uwId] == nullptr);
+	if (m_loopS[uwId] != nullptr)
+	{
+		return pRet;
+	}
+	m_loopS[uwId] = std::make_unique<impLoop>;
+	*/
+	auto& p = m_loopS[uwId];
+	p.init(szName, uwId, funFrame, arg);
+	auto gId = gropId();
+	auto pId = procId();
+	pRet = toHandle(gId, pId, uwId);
+	m_CurLoopNum++;
 	return pRet;
 }
 
-loopMgr::tempLoopMap&  loopMgr::getTempLoopMap()
+loopHandleType	loopMgr::procId()
+{
+	return m_procId;
+}
+
+loopHandleType	loopMgr::gropId()
+{
+	return m_gropId;
+}
+
+int		loopMgr::init(loopHandleType	procId, loopHandleType	gropId)
+{
+	m_procId = procId;
+	m_gropId = gropId;
+	return 0;
+}
+
+impLoop*  loopMgr::getLoop(loopHandleType id)
+{
+	id &= LoopMark;
+	return id < m_CurLoopNum ? &m_loopS[id] : nullptr;
+}
+
+int loopMgr::getAllLoopAndStart(loopHandleType* pBuff, int nBuffNum)
+{
+	int i = 0;
+	for (; i < m_CurLoopNum && i < nBuffNum; i++)
+	{
+		auto &p = m_loopS[i];
+		pBuff[i] = p.id();
+	}
+	/*
+	auto& rMap =  getTempLoopNameMap();
+	auto nS = rMap.size();
+	for (auto it = rMap.begin(); rMap.end() != it; ++it)
+	{
+		auto v = it->second;
+		myAssert (v < myAssert);
+		if (v >= nS)
+		{
+			return 1;
+		}
+	}
+	*/
+	std::cout<<"loopMgr::getAllLoopAndStart i = "<<i<<" m_CurLoopNum = "<<m_CurLoopNum<<std::endl;
+	return i;
+}
+/*
+loopMgr::tempLoopMap&  loopMgr::getTempLoopNameMap()
 {
 	return m_tempLoopMap;
 }
+*/

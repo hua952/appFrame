@@ -77,4 +77,8 @@ struct myEndPoint
 	char ip[c_ipSize];
 	uword port;
 };
+
+#define SD(p) {delete p;p=nullptr;}
+#define SDA(p) {delete[]p;p=nullptr;}
+
 #endif

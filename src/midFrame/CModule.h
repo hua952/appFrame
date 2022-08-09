@@ -3,10 +3,13 @@
 #include <memory>
 #include "mainLoop.h"
 
+
 class CModule
 {
 public:
+	typedef int (*getServerSFunT)(const char** pBuff, int nBuffNum);
 	typedef void (*afterLoadFunT)(const ForLogicFun* pForLogic);
+	//typedef void (*RegMsgFunT)(const ForRegMsg* pForLogic);
 	typedef void (*beforeUnloadFunT)();
 	CModule();
 	~CModule();
