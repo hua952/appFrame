@@ -8,9 +8,9 @@
 #define LoopNum			(1<<LoopNumBitLen)
 #define LoopMark		(LoopNum-1)
 #define ProcNum			(1<<ProcNumBitLen)
-#define ProcMark		(ProcNum-1)
+#define ProcMark		((ProcNum-1)<<LoopNum)
 #define GroupNum		(1<<GroupNumBitLen)
-#define GroupMark		(GroupNum-1)
+#define GroupMark		((GroupNum-1)<<(LoopNumBitLen+ProcNumBitLen))
 
 #define serverNameSize  32
 /*
@@ -48,6 +48,7 @@ typedef struct _ForLogicFun
 	freePackFT		 fnFreePack; // Thread safety
 	createLoopFT	 fnCreateLoop;
 	regMsgFT		 fnRegMsg;
+	sendPackToLoopFT fnSendPackToLoop;// Thread safety
 	//removeMsgFT		 fnRemoveMsg;
 } ForLogicFun;
 /*

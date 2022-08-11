@@ -9,44 +9,6 @@
 #include "logicServer.h"
 #include "tSingleton.h"
 
-static int OnFrameSer(void* pArgS)
-{
-	//std::cout<<"OnFrameSer"<<std::endl;
-	return 0;
-}
-
-static int OnFrameCli(void* pArgS)
-{
-	//std::cout<<"OnFrameCli"<<std::endl;
-	std::string strWord;
-	std::cin>>strWord;
-	if (strWord == "send")
-	{
-		manualListAsk  ask;
-		auto pack = ask.pop();
-		auto pNH = P2NHead(pack);
-		auto& fun = getForMsgModuleFunS().fnSendPackToLoop;
-		pNH->ubyDesServId = logicServerMgr::s_SerId;
-		pNH->ubySrcServId = logicServerMgr::s_CliId;
-		fun(pack);
-	}
-	else if (strWord == "exit")
-	{
-	}
-	return 0;
-}
-
-static int OnManualListAsk(packetHead*)
-{
-	std::cout<<"OnManualListAsk"<<std::endl;
-	return 0;
-
-}
-static int OnManualListRet(packetHead*)
-{
-	std::cout<<"OnManualListRet"<<std::endl;
-	return 0;
-}
 
 //typedef  int (*regMsgFT)(loopHandleType handle, uword uwMsgId, procPacketFunType pFun); // call by level 2
 /*
@@ -92,10 +54,12 @@ static int GetServerIdByName(const char* szName)
 
 void  regMsgS(regMsgFT fnRegMsg)
 {
+	/*
 	auto nSerId = GetServerIdByName ("TestServer");
 	fnRegMsg (nSerId, CChessMsgID_manualListAsk, OnManualListAsk);
 	nSerId = GetServerIdByName ("TestClient");
 	fnRegMsg (nSerId, CChessMsgID_manualListRet, OnManualListRet);
+	*/
 }
 
 void  afterLoad(const ForLogicFun* pForLogic)

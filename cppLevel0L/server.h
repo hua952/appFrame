@@ -13,6 +13,7 @@ public:
 	bool start();
 	void run();
 	void join();
+	bool pushPack (packetHead* pack);
 	virtual bool onFrame();
 private:
 	static void ThreadFun(server* pS);

@@ -75,6 +75,7 @@ int PhyInfo::init(int nArgC, const char* argS[], PhyCallback& info)
 	forLogic.fnAllocPack = info.fnAllocPack;
 	forLogic.fnFreePack = info.fnFreePack;
 	forLogic.fnRegMsg = regMsg;
+	forLogic.fnSendPackToLoop = info.fnSendPackToLoop;
 	//forLogic.fnRemoveMsg = removeMsg;
 	auto nRet = procArgS(nArgC, argS);
 	do

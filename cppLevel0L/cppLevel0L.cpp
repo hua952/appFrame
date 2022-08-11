@@ -4,7 +4,7 @@
 
 static std::unique_ptr<pserver[]>	 g_serverS;
 static uword			g_ServerNum;
-uword getServerNum()
+serverIdType getServerNum()
 {
 	return g_ServerNum;
 }
@@ -14,9 +14,45 @@ pserver* getServerS()
 	return g_serverS.get();
 }
 
-int sendPackToLoop(packetHead*)
+void toGPL (serverIdType serverId, serverIdType& g, serverIdType& p, serverIdType& l)
+{
+	g = serverId;
+	g >>= (ProcNumBitLen + LoopNumBitLen);
+	p = serverId;
+	p &= ProcMark;
+	p >>= LoopNumBitLen;
+	l = serverId;
+	l &= LoopMark;
+}
+
+static int sendPackToLoop(packetHead* pack)
 {
 	int nRet = 0;
+	auto pNH = P2NHead(pack);
+	ubyte ubySg;
+	ubyte ubySp;
+	ubyte ubySl;
+	toGPL (pNH->ubySrcServId, ubySg, ubySp, ubySl);
+
+	ubyte ubyDg;
+	ubyte ubyDp;
+	ubyte ubyDl;
+	toGPL (pNH->ubyDesServId, ubyDg, ubyDp, ubyDl);
+	if (ubySg == ubyDg)
+	{
+		if (ubySp == ubyDp)
+		{
+			auto pServerS = getServerS();
+			auto pS = pServerS[ubyDl];
+			pS->pushPack (pack);
+		}
+		else
+		{
+		}
+	}
+	else
+	{
+	}
 	return nRet;
 }
 
@@ -24,12 +60,12 @@ void stopLoopS()
 {
 }
 
-packetHead* allocPack(udword udwSize)
+static packetHead* allocPack(udword udwSize)
 {
 	return (packetHead*)(new char [sizeof(packetHead) + udwSize]);
 }
 
-void	freePack(packetHead* pack)
+static void	freePack(packetHead* pack)
 {
 	delete [] ((char*)(pack));
 }

@@ -54,6 +54,11 @@ void server::run()
 	}
 }
 
+bool server::pushPack (packetHead* pack)
+{
+	return m_slistMsgQue.pushPack (pack);
+}
+
 bool server::onFrame()
 {
 	OnLoopFrame(m_loopHandle); // call by level 0

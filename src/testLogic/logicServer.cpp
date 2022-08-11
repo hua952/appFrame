@@ -1,5 +1,10 @@
+#include <iostream>
 #include "logicServer.h"
 #include <cstring>
+#include "msg.h"
+#include "CChessRpc.h"
+#include "CChessMsgID.h"
+#include "myAssert.h"
 
 logicServer::logicServer()
 {
@@ -33,7 +38,49 @@ int logicServer::OnServerFrame()
 	return 0;
 }
 
-void logicServer:: afterLoad(const ForLogicFun* pForLogic)
+static int OnManualListAsk(packetHead*)
+{
+	std::cout<<"OnManualListAsk"<<std::endl;
+	return 0;
+
+}
+
+static int OnManualListRet(packetHead*)
+{
+	std::cout<<"OnManualListRet"<<std::endl;
+	return 0;
+}
+
+static int OnFrameSer(void* pArgS)
+{
+	//std::cout<<"OnFrameSer"<<std::endl;
+	return 0;
+}
+
+static int OnFrameCli(void* pArgS)
+{
+	std::cout<<"OnFrameCli"<<std::endl;
+	std::string strWord;
+	std::cin>>strWord;
+	if (strWord == "send")
+	{
+		std::cout<<"Begin To Send"<<std::endl;
+		manualListAsk  ask;
+		auto pack = ask.pop();
+		auto pNH = P2NHead(pack);
+		auto& fun = getForMsgModuleFunS().fnSendPackToLoop;
+		pNH->ubyDesServId = logicServerMgr::s_SerId;
+		pNH->ubySrcServId = logicServerMgr::s_CliId;
+		fun(pack);
+	}
+	else if (strWord == "exit")
+	{
+		std::cout<<"Bey bey"<<std::endl;
+	}
+	return 0;
+}
+
+void logicServerMgr::afterLoad(const ForLogicFun* pForLogic)
 {
 	std::cout<<"In afterLoad"<<std::endl;
 	auto& rFunS = getForMsgModuleFunS();
@@ -48,5 +95,4 @@ void logicServer:: afterLoad(const ForLogicFun* pForLogic)
 	auto TestClientH = fnCreateLoop ("TestClient", OnFrameCli, nullptr);
 	myAssert (c_emptyLoopHandle	 != TestClientH);
 	fnRegMsg (TestClientH, CChessMsgID_manualListRet, OnManualListRet);
-
 }
