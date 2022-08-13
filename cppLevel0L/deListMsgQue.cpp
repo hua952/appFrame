@@ -28,10 +28,10 @@ bool deListMsgQue::pushPack (packetHead* pack)
 	{
 		std::lock_guard<std::mutex> lock(m_mtx);
 		auto pH = &m_Head;
-		pack->pNext = pH->pNext;
-		pH->pNext->pPer = pack;
-		pack->pPer = pH;
-		pH->pNext = pack;
+		pH->pPer->pNext = pack;
+		pack->pPer = pH->pPer;
+		pack->pNext = pH;
+		pH->pPer = pack;
 	}
 	return true;
 }

@@ -11,7 +11,7 @@ int OnLoopFrame(loopHandleType pThis)
 	auto& rMgr = tSingleton<loopMgr>::single();
 	auto pTH = rMgr.getLoop (pThis);
 	auto nRet = pTH->OnLoopFrame();
-	return 0;
+	return nRet;
 }
 
 int processOncePack(loopHandleType pThis, packetHead* pPack)
@@ -82,7 +82,7 @@ int impLoop::OnLoopFrame()
 	int nRet = 0;
 	if (m_funOnFrame)
 	{
-		m_funOnFrame(m_pArg);
+		nRet = m_funOnFrame(m_pArg);
 	}
 	return nRet;
 }

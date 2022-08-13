@@ -1,4 +1,5 @@
 #include <iostream>
+#include "msgPmpID.h"
 #include "logicServer.h"
 #include <cstring>
 #include "msg.h"
@@ -41,20 +42,20 @@ int logicServer::OnServerFrame()
 static int OnManualListAsk(packetHead*)
 {
 	std::cout<<"OnManualListAsk"<<std::endl;
-	return 0;
+	return procPacketFunRetType_del;
 
 }
 
 static int OnManualListRet(packetHead*)
 {
 	std::cout<<"OnManualListRet"<<std::endl;
-	return 0;
+	return  procPacketFunRetType_del;
 }
 
 static int OnFrameSer(void* pArgS)
 {
 	//std::cout<<"OnFrameSer"<<std::endl;
-	return 0;
+	return procPacketFunRetType_del;
 }
 
 static int OnFrameCli(void* pArgS)
@@ -76,8 +77,9 @@ static int OnFrameCli(void* pArgS)
 	else if (strWord == "exit")
 	{
 		std::cout<<"Bey bey"<<std::endl;
+		return procPacketFunRetType_exitAfterLoop;
 	}
-	return 0;
+	return procPacketFunRetType_del;
 }
 
 void logicServerMgr::afterLoad(const ForLogicFun* pForLogic)
@@ -91,8 +93,8 @@ void logicServerMgr::afterLoad(const ForLogicFun* pForLogic)
 	auto TestServerH = fnCreateLoop ("TestServer", OnFrameSer, nullptr);
 	myAssert (c_emptyLoopHandle	 != TestServerH);
 	auto fnRegMsg = pForLogic->fnRegMsg;
-	fnRegMsg (TestServerH, CChessMsgID_manualListAsk, OnManualListAsk);
+	fnRegMsg (TestServerH, CChess2FullMsg(CChessMsgID_manualListAsk), OnManualListAsk);
 	auto TestClientH = fnCreateLoop ("TestClient", OnFrameCli, nullptr);
 	myAssert (c_emptyLoopHandle	 != TestClientH);
-	fnRegMsg (TestClientH, CChessMsgID_manualListRet, OnManualListRet);
+	fnRegMsg (TestClientH, CChess2FullMsg(CChessMsgID_manualListRet), OnManualListRet);
 }

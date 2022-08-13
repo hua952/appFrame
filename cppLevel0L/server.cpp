@@ -1,3 +1,4 @@
+#include <iostream>
 #include "server.h"
 #include "loop.h"
 #include "cppLevel0L.h"
@@ -10,12 +11,10 @@
 server::server()
 {
 	m_loopHandle = c_emptyLoopHandle;
-	m_pTh = nullptr;
 }
 
 server::~server()
 {
-	SD(m_pTh);
 }
 
 void server::ThreadFun(server* pS)
@@ -31,7 +30,7 @@ int server::init(loopHandleType  loopHandle)
 
 bool server::start()
 {
-	m_pTh = new std::thread (server::ThreadFun, this);
+	m_pTh =std::make_unique<std::thread>(server::ThreadFun, this);
 	return true;
 }
 
@@ -52,6 +51,8 @@ void server::run()
 		}
 		std::this_thread::sleep_for(std::chrono:: milliseconds(1));
 	}
+	auto& os = std::cout;
+	os<<"Loop "<<(int)(m_loopHandle)<<" exit"<<std::endl;
 }
 
 bool server::pushPack (packetHead* pack)
@@ -61,47 +62,55 @@ bool server::pushPack (packetHead* pack)
 
 bool server::onFrame()
 {
-	OnLoopFrame(m_loopHandle); // call by level 0
-	packetHead head;
-	auto pH = &head;
-	m_slistMsgQue.getMsgS(pH);
-	auto n = pH->pNext;
 	bool bExit = false;
-	auto& rMgr = getPhyCallback();
-	auto fnFreePack = rMgr.fnFreePack;
-	while (n != pH)
+	auto nQuit = OnLoopFrame(m_loopHandle); // call by level 0
+	if (procPacketFunRetType_exitNow == nQuit)
 	{
-		auto d = n;
-		n = n->pNext;
-		auto nRet = processOncePack(m_loopHandle, d);// call by level 0
-		if (procPacketFunRetType_doNotDel == nRet)
-		{
-			auto p = d->pPer;
-			p->pNext = n;
-			n->pPer = p;
-		}
-		else
-		{
-			if (procPacketFunRetType_exitNow)
-			{
-				bExit = true;
-				break;
-			}
-			if (procPacketFunRetType_exitAfterLoop == nRet)
-			{
-				bExit = true;
-			}
-		}
+		bExit = true;
 	}
-
-	n = pH->pNext;
-	while (n != pH)
+	else
 	{
-		auto d = n;
-		n = n->pNext;
-		fnFreePack (d);
+		if (procPacketFunRetType_exitAfterLoop == nQuit)
+		{
+			bExit = true;
+		}
+		packetHead head;
+		auto pH = &head;
+		m_slistMsgQue.getMsgS(pH);
+		auto n = pH->pNext;
+		auto& rMgr = getPhyCallback();
+		auto fnFreePack = rMgr.fnFreePack;
+		while (n != pH)
+		{
+			auto d = n;
+			n = n->pNext;
+			auto nRet = processOncePack(m_loopHandle, d);// call by level 0
+			if (procPacketFunRetType_doNotDel == nRet)
+			{
+				auto p = d->pPer;
+				p->pNext = n;
+				n->pPer = p;
+			}
+			else
+			{
+				if (procPacketFunRetType_exitNow == nRet)
+				{
+					bExit = true;
+					break;
+				}
+				if (procPacketFunRetType_exitAfterLoop == nRet)
+				{
+					bExit = true;
+				}
+			}
+		}
+		n = pH->pNext;
+		while (n != pH)
+		{
+			auto d = n;
+			n = n->pNext;
+			fnFreePack (d);
+		}
 	}
 	return bExit;
 }
-
-

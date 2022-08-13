@@ -1,6 +1,7 @@
 #ifndef _server_h__
 #define _server_h__
 #include <thread>
+#include <memory>
 #include "deListMsgQue.h"
 #include "mainLoop.h"
 
@@ -17,7 +18,7 @@ public:
 	virtual bool onFrame();
 private:
 	static void ThreadFun(server* pS);
-	std::thread*	m_pTh;
+	std::unique_ptr<std::thread> m_pTh;
 	deListMsgQue	m_slistMsgQue;
 	loopHandleType  m_loopHandle;
 };
