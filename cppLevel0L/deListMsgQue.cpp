@@ -2,6 +2,8 @@
 #include "cppLevel0L.h"
 #include "comFun.h"
 #include "myAssert.h"
+#include "server.h"
+#include "tSingleton.h"
 
 deListMsgQue::deListMsgQue()
 {
@@ -11,16 +13,19 @@ deListMsgQue::deListMsgQue()
 
  deListMsgQue::~deListMsgQue()
 {
-	std::lock_guard<std::mutex> lock(m_mtx);
-	auto pH = &m_Head;
-	auto p = pH->pNext;
-	auto& rMgr = getPhyCallback();
-	while (p != pH)
+	packetHead* d = nullptr;
 	{
-		auto d = p;
-		p = p->pNext;
-		rMgr.fnFreePack(d);
+		std::lock_guard<std::mutex> lock(m_mtx);
+		auto pH = &m_Head;
+		auto p = pH->pNext;
+		while (p != pH)
+		{
+			d = p;
+			p = p->pNext;
+		}
 	}
+	auto& rMgr = tSingleton<serverMgr>::single().getPhyCallback();
+	rMgr.fnFreePack(d);
 }
 
 bool deListMsgQue::pushPack (packetHead* pack)

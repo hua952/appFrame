@@ -23,4 +23,21 @@ private:
 	loopHandleType  m_loopHandle;
 };
 typedef server* pserver;
+
+class serverMgr
+{
+public:
+	serverMgr();
+	~serverMgr();
+	int initFun (int cArg, const char* argS[]);
+	serverIdType getServerNum();
+	pserver* getServerS();
+	PhyCallback&  getPhyCallback();
+private:
+	loopHandleType	m_procId;
+	loopHandleType	m_gropId;
+	std::unique_ptr<pserver[]>	 g_serverS;
+	uword			g_ServerNum;
+	PhyCallback m_PhyCallback;
+};
 #endif

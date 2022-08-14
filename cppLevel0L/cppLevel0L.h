@@ -8,8 +8,4 @@ extern "C"
 	int initFun (int cArg, const char* argS[]);
 }
 
-serverIdType getServerNum();
-pserver* getServerS();
-PhyCallback&  getPhyCallback();
-
 #endif

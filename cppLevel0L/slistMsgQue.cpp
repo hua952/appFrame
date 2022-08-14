@@ -1,6 +1,8 @@
 #include "slistMsgQue.h"
 #include "cppLevel0L.h"
 #include "comFun.h"
+#include "server.h"
+#include "tSingleton.h"
 
 slistMsgQue::slistMsgQue()
 {
@@ -12,7 +14,7 @@ slistMsgQue::slistMsgQue()
 slistMsgQue::~slistMsgQue()
 {
 	auto p = m_Head->pNext;
-	auto& rMgr = getPhyCallback();
+	auto& rMgr = tSingleton<serverMgr>::single().getPhyCallback();
 	while (p != m_Head)
 	{
 		auto d = p;
