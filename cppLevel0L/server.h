@@ -33,7 +33,12 @@ public:
 	serverIdType getServerNum();
 	pserver* getServerS();
 	PhyCallback&  getPhyCallback();
+	loopHandleType	procId();
+	loopHandleType	gropId();
+	void			setProcId(loopHandleType proc);
+	void			setGropId(loopHandleType grop);
 private:
+	int procArgS(int nArgC, const char* argS[]);
 	loopHandleType	m_procId;
 	loopHandleType	m_gropId;
 	std::unique_ptr<pserver[]>	 g_serverS;

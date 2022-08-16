@@ -3,6 +3,7 @@
 #include "loop.h"
 #include "cppLevel0L.h"
 #include "comFun.h"
+#include "strFun.h"
 #include "myAssert.h"
 #include "tSingleton.h"
 #include <thread>         // std::thread, std::thread::id, std::this_thread::get_id
@@ -147,7 +148,6 @@ static int sendPackToLoop(packetHead* pack)
 	{
 		if (ubySp == ubyDp)
 		{
-			tSingleton<serverMgr>::createSingleton();
 			auto& rMgr = tSingleton<serverMgr>::single();
 			auto pServerS = rMgr.getServerS();
 			auto pS = pServerS[ubyDl];
@@ -182,6 +182,26 @@ serverMgr::serverMgr()
 serverMgr::~serverMgr()
 {
 }
+loopHandleType	serverMgr::procId()
+{
+	return m_procId;
+}
+
+loopHandleType	serverMgr::gropId()
+{
+	return m_gropId;
+}
+
+
+void serverMgr::setProcId(loopHandleType proc)
+{
+	m_procId = proc;
+}
+
+void			serverMgr::setGropId(loopHandleType grop)
+{
+	m_gropId = grop;
+}
 
 serverIdType 	serverMgr::getServerNum()
 {
@@ -198,6 +218,31 @@ PhyCallback&  serverMgr::getPhyCallback()
 	return m_PhyCallback;
 }
 
+
+int serverMgr::procArgS(int nArgC, const char* argS[])
+{
+	for(int i = 1; i < nArgC; i++)
+	{
+		auto pC = argS[i];
+		auto nL = strlen(pC);
+		std::unique_ptr<char[]>	 name = std::make_unique<char[]>(nL + 1);
+		strcpy(name.get(), pC);
+		const int c_BuffNum = 3;
+		char* buff[c_BuffNum];
+		auto nR = strR(name.get(), '=', buff, c_BuffNum);
+		if(2 == nR)
+		{
+			if(0 == strcmp(buff[0], "gropId")) {
+				int nId = atoi (buff[1]);
+				setGropId (nId);
+			} else if(0 == strcmp(buff[0], "procId")) {
+				int nId = atoi (buff[1]);
+				setProcId(nId);
+			}
+		}
+	}
+	return 0;
+}
 
 int serverMgr::initFun (int cArg, const char* argS[])
 {

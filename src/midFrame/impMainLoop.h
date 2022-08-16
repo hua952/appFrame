@@ -35,16 +35,19 @@ public:
 	impLoop*   getLoop(loopHandleType id);
 	loopHandleType createLoop(const char* szName,/* uword uwId,*/ frameFunType funFrame, void* arg);
 	int		init(loopHandleType	procId, loopHandleType	gropId);
+	int procArgS(int nArgC, const char* argS[]);
 	loopHandleType	procId();
 	loopHandleType	gropId();
+	void			setProcId(loopHandleType proc);
+	void			setGropId(loopHandleType grop);
 	int		createServerS();
 	int getAllLoopAndStart(loopHandleType* pBuff, int nBuffNum);
 	static const auto c_MaxLoopNum = LoopNum;
 private:	
+	int							 m_CurLoopNum;
 	loopHandleType	m_procId;
 	loopHandleType	m_gropId;
 	std::unique_ptr<impLoop[]>	 m_loopS;
-	int							 m_CurLoopNum;
 	//typedef std::map<std::string, loopHandleType> tempLoopNameMap;
 	//tempLoopNameMap& getTempLoopNameMap();
 	//tempLoopNameMap m_tempLoopMap;

@@ -110,10 +110,15 @@ int PhyInfo::procArgS(int nArgC, const char* argS[])
 		auto nR = strR(name.get(), '=', buff, c_BuffNum);
 		if(2 == nR)
 		{
-			if(0 == strcmp(buff[0], "addLogic"))
-			{
+			if(0 == strcmp(buff[0], "addLogic")) {
 				auto bI = moduleS.insert(buff[1]);
 				myAssert (bI.second);
+			} else if(0 == strcmp(buff[0], "gropId")) {
+				int nId = atoi (buff[1]);
+				tSingleton<loopMgr>::single().setGropId (nId);
+			} else if(0 == strcmp(buff[0], "procId")) {
+				int nId = atoi (buff[1]);
+				tSingleton<loopMgr>::single().setProcId(nId);
 			}
 		}
 	}
@@ -214,6 +219,16 @@ loopHandleType	loopMgr::procId()
 loopHandleType	loopMgr::gropId()
 {
 	return m_gropId;
+}
+
+void		loopMgr::	setProcId(loopHandleType proc)
+{
+	m_procId = proc;
+}
+
+void			loopMgr::setGropId(loopHandleType grop)
+{
+	m_gropId = grop;
 }
 
 int		loopMgr::init(loopHandleType	procId, loopHandleType	gropId)
