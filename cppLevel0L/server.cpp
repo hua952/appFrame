@@ -135,14 +135,14 @@ static int sendPackToLoop(packetHead* pack)
 {
 	int nRet = 0;
 	auto pNH = P2NHead(pack);
-	ubyte ubySg;
-	ubyte ubySp;
-	ubyte ubySl;
+	serverIdType ubySg;
+	serverIdType ubySp;
+	serverIdType ubySl;
 	toGPL (pNH->ubySrcServId, ubySg, ubySp, ubySl);
 
-	ubyte ubyDg;
-	ubyte ubyDp;
-	ubyte ubyDl;
+	serverIdType ubyDg;
+	serverIdType ubyDp;
+	serverIdType ubyDl;
 	toGPL (pNH->ubyDesServId, ubyDg, ubyDp, ubyDl);
 	if (ubySg == ubyDg)
 	{

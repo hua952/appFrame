@@ -39,11 +39,30 @@ int logicServer::OnServerFrame()
 	return 0;
 }
 
-static int OnManualListAsk(packetHead*)
+static int OnManualListAsk(packetHead* pSP)
 {
-	std::cout<<"OnManualListAsk"<<std::endl;
+	//std::cout<<"OnManualListAsk"<<std::endl;
+	auto pSN = P2NHead(pSP);
+	manualListRet ret;
+	ret.toPack();
+	auto pRet = ret.pop();
+	auto pN = P2NHead(pRet);
+	pN->ubySrcServId = pSN->ubyDesServId;
+	pN->ubyDesServId = pSN->ubySrcServId;
+	auto& fun = getForMsgModuleFunS().fnSendPackToLoop;
+	fun(pRet);
 	return procPacketFunRetType_del;
 
+}
+
+static int OnGiveUpCli(packetHead* pSP)
+{
+	return procPacketFunRetType_exitNow;
+}
+
+static int OnGiveUpSer(packetHead* pSP)
+{
+	return procPacketFunRetType_exitAfterLoop;
 }
 
 static int OnManualListRet(packetHead*)
@@ -76,6 +95,14 @@ static int OnFrameCli(void* pArgS)
 	}
 	else if (strWord == "exit")
 	{
+		auto& fun = getForMsgModuleFunS().fnSendPackToLoop;
+		giveUpAsk serE;
+		auto pSr = serE.pop();
+
+		auto pNSr = P2NHead(pSr);
+		pNSr->ubyDesServId = logicServerMgr::s_SerId;
+		pNSr->ubySrcServId = logicServerMgr::s_CliId;
+		fun(pSr);
 		std::cout<<"Bey bey"<<std::endl;
 		return procPacketFunRetType_exitAfterLoop;
 	}
@@ -94,7 +121,9 @@ void logicServerMgr::afterLoad(const ForLogicFun* pForLogic)
 	myAssert (c_emptyLoopHandle	 != TestServerH);
 	auto fnRegMsg = pForLogic->fnRegMsg;
 	fnRegMsg (TestServerH, CChess2FullMsg(CChessMsgID_manualListAsk), OnManualListAsk);
+	fnRegMsg (TestServerH, CChess2FullMsg(CChessMsgID_giveUpAsk), OnGiveUpSer);
 	auto TestClientH = fnCreateLoop ("TestClient", OnFrameCli, nullptr);
 	myAssert (c_emptyLoopHandle	 != TestClientH);
 	fnRegMsg (TestClientH, CChess2FullMsg(CChessMsgID_manualListRet), OnManualListRet);
+	fnRegMsg (TestClientH, CChess2FullMsg(CChessMsgID_giveUpAsk), OnGiveUpCli);
 }
