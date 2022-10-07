@@ -357,5 +357,5 @@ class tJumpListNS
     NSJumpNode  m_Head;
 };
 
-typedef tJumpListNS<pIStringKey, 6, pIStringKeyCmp, 8> pIStringKeyJumpList;
+typedef tJumpListNS<pIStringKey, 14, pIStringKeyCmp, 3> pIStringKeyJumpList;
 #endif

@@ -166,7 +166,10 @@ static int sendPackToLoop(packetHead* pack)
 
 static packetHead* allocPack(udword udwSize)
 {
-	return (packetHead*)(new char [sizeof(packetHead) + udwSize]);
+	auto pRet = (packetHead*)(new char [sizeof(packetHead) + sizeof(netPacketHead) + udwSize]);
+	auto pN = P2NHead(pRet);
+	pN->dwLength = udwLength;
+	return pRet;
 }
 
 static void	freePack(packetHead* pack)
