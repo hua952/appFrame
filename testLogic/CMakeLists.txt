@@ -3,8 +3,15 @@ set(srcS)
 file(GLOB srcS src/*.cpp)
 set(defS)
 if (WIN32)
-    MESSAGE(STATUS "windows")
+	MESSAGE(STATUS "windows")
+	#add_definitions(-DUNICODE -D_UNICODE)
 	file(GLOB defS src/*.def)
+	include_directories(
+		${CMAKE_SOURCE_DIR}/../include
+		)
+	link_directories(
+		${CMAKE_SOURCE_DIR}/../lib
+		)
 endif ()
 
 
@@ -17,5 +24,4 @@ target_include_directories(${prjName} PUBLIC
                            )
 target_link_libraries(${prjName} PUBLIC  common)
 target_link_libraries(${prjName} PUBLIC  testLogicMsg)
-target_link_libraries(${prjName} PUBLIC logicCommon)
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)

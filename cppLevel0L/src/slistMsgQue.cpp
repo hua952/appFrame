@@ -2,6 +2,7 @@
 #include "cppLevel0L.h"
 #include "comFun.h"
 #include "server.h"
+#include "serverMgr.h"
 #include "tSingleton.h"
 
 slistMsgQue::slistMsgQue()

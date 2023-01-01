@@ -20,6 +20,7 @@ manualListRet::manualListRet()
 	m_pPacket = (packetHead*)allocPacket(sizeof(manualListRetPack));
 	netPacketHead* pN = P2NHead(m_pPacket);
 	pN->uwMsgID = CChess2FullMsg(CChessMsgID_manualListRet);
+	NSetRet(pN);
 	manualListRetPack* p = ((manualListRetPack*)(N2User(pN)));
 	p->m_nodeSNum = 0;
 	pN->udwLength = sizeof(manualListRetPack) - sizeof(p->m_nodeS);
@@ -55,6 +56,7 @@ getOnceManualRet::getOnceManualRet()
 	m_pPacket = (packetHead*)allocPacket(sizeof(getOnceManualRetPack));
 	netPacketHead* pN = P2NHead(m_pPacket);
 	pN->uwMsgID = CChess2FullMsg(CChessMsgID_getOnceManualRet);
+	NSetRet(pN);
 	getOnceManualRetPack* p = ((getOnceManualRetPack*)(N2User(pN)));
 	p->m_trackNum = 0;
 	pN->udwLength = sizeof(getOnceManualRetPack) - sizeof(p->m_track);
@@ -93,6 +95,7 @@ enterServerRet::enterServerRet()
 	m_pPacket = (packetHead*)allocPacket(sizeof(enterServerRetPack));
 	netPacketHead* pN = P2NHead(m_pPacket);
 	pN->uwMsgID = CChess2FullMsg(CChessMsgID_enterServerRet);
+	NSetRet(pN);
 }
 enterServerRet::enterServerRet(packetHead* p):CMsgBase(p)
 {
@@ -119,6 +122,7 @@ wateForGameRet::wateForGameRet()
 	m_pPacket = (packetHead*)allocPacket(sizeof(wateForGameRetPack));
 	netPacketHead* pN = P2NHead(m_pPacket);
 	pN->uwMsgID = CChess2FullMsg(CChessMsgID_wateForGameRet);
+	NSetRet(pN);
 }
 wateForGameRet::wateForGameRet(packetHead* p):CMsgBase(p)
 {
@@ -160,6 +164,7 @@ giveUpRet::giveUpRet()
 	m_pPacket = (packetHead*)allocPacket(sizeof(giveUpRetPack));
 	netPacketHead* pN = P2NHead(m_pPacket);
 	pN->uwMsgID = CChess2FullMsg(CChessMsgID_giveUpRet);
+	NSetRet(pN);
 }
 giveUpRet::giveUpRet(packetHead* p):CMsgBase(p)
 {
@@ -190,6 +195,7 @@ regretRet::regretRet()
 	m_pPacket = (packetHead*)allocPacket(sizeof(regretRetPack));
 	netPacketHead* pN = P2NHead(m_pPacket);
 	pN->uwMsgID = CChess2FullMsg(CChessMsgID_regretRet);
+	NSetRet(pN);
 }
 regretRet::regretRet(packetHead* p):CMsgBase(p)
 {
@@ -220,6 +226,7 @@ acceptRegretRet::acceptRegretRet()
 	m_pPacket = (packetHead*)allocPacket(sizeof(acceptRegretRetPack));
 	netPacketHead* pN = P2NHead(m_pPacket);
 	pN->uwMsgID = CChess2FullMsg(CChessMsgID_acceptRegretRet);
+	NSetRet(pN);
 }
 acceptRegretRet::acceptRegretRet(packetHead* p):CMsgBase(p)
 {
@@ -274,6 +281,7 @@ peaceRet::peaceRet()
 	m_pPacket = (packetHead*)allocPacket(sizeof(peaceRetPack));
 	netPacketHead* pN = P2NHead(m_pPacket);
 	pN->uwMsgID = CChess2FullMsg(CChessMsgID_peaceRet);
+	NSetRet(pN);
 }
 
 peaceRet::peaceRet(packetHead* p):CMsgBase(p)
@@ -306,6 +314,7 @@ acceptPeaceRet::acceptPeaceRet()
 	m_pPacket = (packetHead*)allocPacket(sizeof(acceptPeaceRetPack));
 	netPacketHead* pN = P2NHead(m_pPacket);
 	pN->uwMsgID = CChess2FullMsg(CChessMsgID_acceptPeaceRet);
+	NSetRet(pN);
 }
 
 acceptPeaceRet::acceptPeaceRet(packetHead* p):CMsgBase(p)
@@ -352,6 +361,7 @@ readyRet::readyRet()
 	m_pPacket = (packetHead*)allocPacket(sizeof(readyRetPack));
 	netPacketHead* pN = P2NHead(m_pPacket);
 	pN->uwMsgID = CChess2FullMsg(CChessMsgID_readyRet);
+	NSetRet(pN);
 }
 readyRet::readyRet(packetHead* p):CMsgBase(p)
 {
@@ -380,6 +390,7 @@ moveRet::moveRet()
 	m_pPacket = (packetHead*)allocPacket(sizeof(moveRetPack));
 	netPacketHead* pN = P2NHead(m_pPacket);
 	pN->uwMsgID = CChess2FullMsg(CChessMsgID_moveRet);
+	NSetRet(pN);
 }
 moveRet::moveRet(packetHead* p):CMsgBase(p)
 {
@@ -436,6 +447,7 @@ watchPlayerRet::watchPlayerRet()
 	m_pPacket = (packetHead*)allocPacket(sizeof(watchPlayerRetPack));
 	netPacketHead* pN = P2NHead(m_pPacket);
 	pN->uwMsgID = CChess2FullMsg(CChessMsgID_watchPlayerRet);
+	NSetRet(pN);
 }
 watchPlayerRet::watchPlayerRet(packetHead* p):CMsgBase(p)
 {
@@ -460,6 +472,7 @@ playingGameInfoRet::playingGameInfoRet()
 	m_pPacket = (packetHead*)allocPacket(sizeof(playingGameInfoRetPack));
 	netPacketHead* pN = P2NHead(m_pPacket);
 	pN->uwMsgID = CChess2FullMsg(CChessMsgID_playingGameInfoRet);
+	NSetRet(pN);
 	playingGameInfoRetPack* p = ((playingGameInfoRetPack*)(N2User(pN)));
 	p->m_memberNum = 0;
 	pN->udwLength = sizeof(playingGameInfoRetPack) - sizeof(p->m_member);
@@ -518,6 +531,7 @@ manSRet::manSRet()
 	m_pPacket = (packetHead*)allocPacket(sizeof(manSRetPack));
 	netPacketHead* pN = P2NHead(m_pPacket);
 	pN->uwMsgID = CChess2FullMsg(CChessMsgID_manSRet);
+	NSetRet(pN);
 	manSRetPack* p = ((manSRetPack*)(N2User(pN)));
 	p->m_trackNum = 0;
 	pN->udwLength = sizeof(manSRetPack) - sizeof(p->m_track);

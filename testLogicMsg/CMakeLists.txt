@@ -7,4 +7,5 @@ target_include_directories(${prjName} PUBLIC
 							${CMAKE_SOURCE_DIR}/common/src
 							${CMAKE_SOURCE_DIR}/logicCommon/src
                            )
+					   target_link_libraries(${prjName} PUBLIC  common logicCommon)
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)

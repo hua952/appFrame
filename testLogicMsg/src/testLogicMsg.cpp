@@ -1,5 +1,5 @@
 #include "testLogicMsg.h"
-
+/*
 static const ForMsgModuleFunS* s_g_ForMsgModuleFunS = NULL;
 int  initTestLogicMsg(const ForMsgModuleFunS* pFunS)
 {
@@ -8,7 +8,8 @@ int  initTestLogicMsg(const ForMsgModuleFunS* pFunS)
 	return nRet;
 }
 
-const ForMsgModuleFunS*  getForMsgModuleFunS()
+const ForMsgModuleFunS*  getForMsgModuleFunSPt()
 {
 	return s_g_ForMsgModuleFunS;
 }
+*/

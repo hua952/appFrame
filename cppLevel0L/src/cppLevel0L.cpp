@@ -2,6 +2,8 @@
 #include <memory>
 #include "cppLevel0L.h"
 #include "tSingleton.h"
+#include "serverMgr.h"
+
 int initFun (int cArg, const char* argS[])
 {
 	tSingleton<serverMgr>::createSingleton();

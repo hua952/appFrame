@@ -1,0 +1,5 @@
+LIBRARY
+EXPORTS
+	createTcpServer @1
+	delTcpServer    @2
+	initGlobal      @3

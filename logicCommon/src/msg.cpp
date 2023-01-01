@@ -57,12 +57,6 @@ MsgRpcType CRetMsgBase::RpcType()
     return eMsgRpc_Ret;
 }
 
-ForMsgModuleFunS& getForMsgModuleFunS()
-{
-	static ForMsgModuleFunS s_ForMsgModuleFunS;
-	return  s_ForMsgModuleFunS;
-}
-
 void releasePack(packetHead* p)
 {
 	if(NULL == p)

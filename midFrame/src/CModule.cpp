@@ -1,6 +1,7 @@
 #include"CModule.h"
 #include <stdlib.h>
 #include <string.h>
+#include "strFun.h"
 
 CModule::CModule()
 {
@@ -10,7 +11,7 @@ CModule::CModule()
 
 CModule::~CModule()
 {
-	unload();
+	//unload();
 }
 
 const char* CModule::name()
@@ -26,3 +27,17 @@ int CModule::init(const char* szName)
 	strcpy(p, szName);
 	return 0;
 }
+
+int CModule::load(const ForLogicFun* pForLogic)
+{
+	int nRet = 0;
+	auto pBuff = m_name.get ();
+	const int c_BuffNum = 3;
+	char* buff[c_BuffNum];
+	auto nR = strR(pBuff, '+', buff, c_BuffNum);
+	auto szName = buff[0];
+	//pForLogic->szServerTxt = buff[1];
+	nRet = load_os (szName, pForLogic);
+	return nRet;
+}
+

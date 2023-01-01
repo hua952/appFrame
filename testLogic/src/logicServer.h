@@ -23,12 +23,15 @@ class logicServerMgr
 public:
 	enum serverIdS
 	{
-		serverIdS_TestServer,
-		serverIdS_TestClient,
+		serverIdS_ThreadServer,
+		serverIdS_ThreadClient,
 		serverIdS_Num
 	};
+	/*
 	static const  ServerIDType s_SerId = 0;
 	static const  ServerIDType s_CliId = 1;
+	static const  ServerIDType s_SerB = 2;
+	*/
 	void  afterLoad(const ForLogicFun* pForLogic);
 private:
 };

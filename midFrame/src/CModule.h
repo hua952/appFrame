@@ -16,6 +16,7 @@ public:
 	int init(const char* szName);
 	const char* name();
 	int load(const ForLogicFun* pForLogic);
+	int load_os (const char* szName, const ForLogicFun* pForLogic);
 private:
 	int unload();
 	beforeUnloadFunT	m_onUnloadFun;

@@ -13,7 +13,8 @@ int loadLevel0(const char* levelName, int cArg, const char* argS[])
 	{
 		if(!handle) {
 			nRet = 11;
-			ws<<"load module "<<levelName<<" error"<<std::endl;
+			auto las = GetLastError ();
+			ws<<"load module "<<levelName<<" error lastErr = "<<las<<std::endl;
 			break;
 		}
 		typedef int (*initFunType) (int cArg, const char* argS[]);

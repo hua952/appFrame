@@ -2,7 +2,7 @@
 #include<string.h>
 #include"strFun.h"
 
-void strNCpy(char* szD, const char* szS, int nSize)
+void strNCpy(char* szD, int nSize, const char* szS)
 {
     strncpy(szD, szS, nSize);
     szD[nSize - 1] = 0;

@@ -2,6 +2,16 @@
 #define _Msg_h___
 #include"packet.h"
 #include"mainLoop.h"
+#include "comFun.h"
+
+typedef struct _ForMsgModuleFunS
+{
+	sendPackToLoopFT fnSendPackToLoop;// Thread safety
+	allocPackFT		 fnAllocPack; // Thread safety
+	freePackFT		 fnFreePack; // Thread safety
+	logMsgFT		 fnLogMsg;
+} ForMsgModuleFunS;
+
 
 enum MsgRpcType
 {
@@ -38,9 +48,9 @@ public:
 	virtual MsgRpcType RpcType();
 };
 
+ForMsgModuleFunS& getForMsgModuleFunS();
 extern "C"
 {
-	ForMsgModuleFunS& getForMsgModuleFunS();
 	packetHead* allocPacket(udword udwS);
 	void releasePack(packetHead* p);
 }

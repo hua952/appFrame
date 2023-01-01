@@ -1,6 +1,7 @@
 #ifndef _loop_h_
 #define _loop_h_
 #include "packet.h"
+#include "comFun.h"
 
 enum procPacketFunRetType
 {
@@ -12,7 +13,6 @@ enum procPacketFunRetType
 
 typedef int (*frameFunType)(void* arg);
 //typedef void* loopHandleType;
-typedef ubyte loopHandleType;
 typedef int (*procPacketFunType)(packetHead*);
 typedef ubyte ServerIDType;
 typedef uword MsgIdT;
@@ -27,7 +27,7 @@ extern "C"
 
 	int OnLoopFrame(loopHandleType pThis); // call by level 0
 	int processOncePack(loopHandleType pThis, packetHead* pPack);// call by level 0
-
+	int onWriteOncePack(loopHandleType pThis, packetHead* pPack);// call by level 0
 	//int loadLogicModle(char* szPath);
 	//int unLoadLogicModle(char* szPath);
 }

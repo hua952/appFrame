@@ -10,11 +10,14 @@ typedef udword SessionIDType;
 
 enum SessionState
 {
-	SessionState_UnConnent,
+	SessionState_waitCon,
+	SessionState_Offline,
 	SessionState_Online,
-	SessionState_Offline
+	SessionState_close,
+	SessionState_Unknow,
 };
 
+class ITcpServer;
 class ISession
 {
  public:
@@ -22,13 +25,14 @@ class ISession
     virtual int send(packetHead* pack) = 0;
     virtual int close() = 0;
 	virtual void*   userData() = 0;
-	virtual void    setUserData(void* pData) = 0;
+	virtual void    setUserData(void* pData, int len) = 0;
+	//virtual void    setUserData(void* pData) = 0;
 	virtual SessionIDType id() = 0;
-	virtual    void setId(SessionIDType id) = 0;
+	virtual void setId(SessionIDType id) = 0;
+	virtual ITcpServer* getServer () = 0;
 };
 
-typedef Session* PSession;
-
+//typedef Session* PSession;
 
 typedef packetHead* (*allocPackFTForSession)(udword udwSize);
 typedef void		(*freePackFTForSession)(packetHead* pack);
@@ -60,7 +64,7 @@ struct createSessionServerData
 extern "C"
 {
 	int initSessionGlobalData(const SessionInitData& initData);
-	int createSessionServer(const createSessionServerData& initData, udword& serverId)
+	int createSessionServer(const createSessionServerData& initData, udword& serverId);
 }
 
 #endif

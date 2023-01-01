@@ -1,7 +1,7 @@
 #ifndef _testLogicMsg_h__
 #define _testLogicMsg_h__
 #include "mainLoop.h"
-
+#include "msg.h"
 enum testLogicMsgIdType
 {
 	enTestLogicAsk1,
@@ -12,6 +12,6 @@ enum testLogicMsgIdType
 
 #define testLogicMsgIdBegin 0
 
-int  initTestLogicMsg(const ForMsgModuleFunS* pFunS);
-const ForMsgModuleFunS*  getForMsgModuleFunS();
+//int  initTestLogicMsg(const ForMsgModuleFunS* pFunS);
+//const ForMsgModuleFunS*  getForMsgModuleFunSPt();
 #endif

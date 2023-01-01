@@ -20,6 +20,8 @@ typedef ubyte* pubyte;
 //typedef char*  pChar;
 typedef void* PVoid;
 
+typedef uword loopHandleType;
+
 #define MyFalse false
 #define MyTrue true
 #define Null	NULL

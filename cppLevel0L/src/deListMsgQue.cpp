@@ -4,6 +4,7 @@
 #include "myAssert.h"
 #include "server.h"
 #include "tSingleton.h"
+#include "serverMgr.h"
 
 deListMsgQue::deListMsgQue()
 {

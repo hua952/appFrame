@@ -25,15 +25,16 @@ typedef packetHead* pPacketHead;
 typedef udword NetTokenType;
 #define c_null_msgID c_null_uword
 
-typedef ubyte   serverIdType;
+//typedef ubyte   serverIdType;
+typedef uword serverIdType;
 typedef struct  _netPacketHead
  {
 	udword					udwLength;
-	udword					udwAccID;
-	uword					uwMsgID;
+	NetTokenType			dwToKen;
 	serverIdType	ubySrcServId;
 	serverIdType	ubyDesServId;
-	NetTokenType			dwToKen;
+	uword					uwMsgID;
+	uword                   uwTag;
  }netPacketHead ,*pNetPacketHead;
 
 #define     P2NHead(p)  ((pNetPacketHead)(p+1))
@@ -45,6 +46,9 @@ typedef struct  _netPacketHead
 #define     T2NHead(p)  ((PNetPacketHead)(p+1))
 #define     N2THead(p)  ((PThreadPacketHead)(p-1))
 
+#define     NIsRet(p) ((p->uwTag&1))
+#define     NSetRet(p) ((p->uwTag|=1))
+
 //#define     ThreadHeadSize (sizeof(ThreadPacketHead))
 #define		PacketHeadSize    (sizeof(packetHead))
 #define     NetMsgLenSize  (sizeof(netPacketHead))
@@ -52,4 +56,8 @@ typedef struct  _netPacketHead
 #define     AllPacketHeadSize  (PacketHeadSize+NetHeadSize)
 //#define     NetPacketHeadSize (sizeof(NetPacketHead))
 //#define     FullPacketHeadSize   (sizeof(PacketHead)+NetPacketHeadSize)
+
+typedef packetHead* (*allocPackFT)(udword udwSize);
+typedef void		(*freePackFT)(packetHead* pack);
+typedef int (*processNetPackFunT)(packetHead* pack, uqword session);
 #endif

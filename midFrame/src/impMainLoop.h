@@ -5,8 +5,8 @@
 #include <map>
 #include "tJumpListNS.h"
 #include <string>
-
-class CModule;
+#include "CModule.h"
+//class CModule;
 class PhyInfo
 {
 public:
@@ -16,7 +16,7 @@ public:
 	CModule* getModuleS (int& ModuleNum);
 	PhyCallback& getPhyCallback();  
 	ForLogicFun&  getForLogicFun();
-	static loopHandleType createLoop(const char* szName,/* uword uwId,*/ frameFunType funFrame, void* arg);
+	static int createServer (const char* szName, loopHandleType serId, serverNode* pNode, frameFunType funFrame, void* arg);
 	static int regMsg(loopHandleType handle, uword uwMsgId, procPacketFunType pFun);
 	static int removeMsg(loopHandleType handle, uword uwMsgId);
 private:		
@@ -33,7 +33,8 @@ public:
 	loopMgr();
 	~loopMgr();
 	impLoop*   getLoop(loopHandleType id);
-	loopHandleType createLoop(const char* szName,/* uword uwId,*/ frameFunType funFrame, void* arg);
+	int createServer(const char* szName, loopHandleType serId,
+			serverNode* pNode, frameFunType funFrame, void* arg);
 	int		init(loopHandleType	procId, loopHandleType	gropId);
 	int procArgS(int nArgC, const char* argS[]);
 	loopHandleType	procId();
@@ -41,13 +42,16 @@ public:
 	void			setProcId(loopHandleType proc);
 	void			setGropId(loopHandleType grop);
 	int		createServerS();
-	int getAllLoopAndStart(loopHandleType* pBuff, int nBuffNum);
-	static const auto c_MaxLoopNum = LoopNum;
+	int getAllLoopAndStart(serverNode* pBuff, int nBuffNum);
+	//static const auto c_MaxLoopNum = LoopNum;
 private:	
 	int							 m_CurLoopNum;
 	loopHandleType	m_procId;
 	loopHandleType	m_gropId;
-	std::unique_ptr<impLoop[]>	 m_loopS;
+	//std::unique_ptr<impLoop[]>	 m_loopS;
+
+	std::unique_ptr<impLoop>	 m_loopS [LoopNum];
+
 	//typedef std::map<std::string, loopHandleType> tempLoopNameMap;
 	//tempLoopNameMap& getTempLoopNameMap();
 	//tempLoopNameMap m_tempLoopMap;
