@@ -73,10 +73,11 @@ typedef struct _ForRegMsg{
 struct serverEndPointInfo
 {
 	char              ip[16];
-	udword            udwUnuse;
 	uword             port;
 	ServerIDType	  targetHandle;
+	uword             unUse;
 	bool              bDef;
+	bool              bRegHandle;
 };
 struct serverNode
 {

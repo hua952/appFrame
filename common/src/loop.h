@@ -14,7 +14,7 @@ enum procPacketFunRetType
 typedef int (*frameFunType)(void* arg);
 //typedef void* loopHandleType;
 typedef int (*procPacketFunType)(packetHead*);
-typedef ubyte ServerIDType;
+typedef loopHandleType  ServerIDType;
 typedef uword MsgIdT;
 #define c_emptyModelId 255
 #define c_emptyLoopHandle	0xff

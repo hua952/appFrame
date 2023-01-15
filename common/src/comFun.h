@@ -82,6 +82,8 @@ typedef  bool (*ComTimerFun)(void*);
 
 loopHandleType  toHandle (loopHandleType  p, loopHandleType l);
 bool            fromHandle (loopHandleType handle, loopHandleType &p, loopHandleType& l);
+bool            isPathExit (const char* szPath);
+int             myMkdir (const char* szPath);
 #define SD(p) {delete p;p=nullptr;}
 #define SDA(p) {delete[]p;p=nullptr;}
 

@@ -27,13 +27,14 @@ typedef udword NetTokenType;
 
 //typedef ubyte   serverIdType;
 typedef uword serverIdType;
+typedef uword msgIdType;
 typedef struct  _netPacketHead
  {
 	udword					udwLength;
 	NetTokenType			dwToKen;
 	serverIdType	ubySrcServId;
 	serverIdType	ubyDesServId;
-	uword					uwMsgID;
+	msgIdType		uwMsgID;
 	uword                   uwTag;
  }netPacketHead ,*pNetPacketHead;
 

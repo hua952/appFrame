@@ -4,10 +4,11 @@ file(GLOB srcS src/*.cpp)
 set(defS)
 set(osSrc)
 if (WIN32)
-	MESSAGE(STATUS "windows")
 	#add_definitions(-DUNICODE -D_UNICODE)
 	file(GLOB defS src/*.def)
 	file(GLOB osSrc src/win/*.cpp)
+
+	MESSAGE(STATUS "windows ${prjName} osSrc =  ${osSrc}")
 	include_directories(
 		${CMAKE_SOURCE_DIR}/../include
 		)

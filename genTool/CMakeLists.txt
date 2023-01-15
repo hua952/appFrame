@@ -1,0 +1,27 @@
+SET(prjName genTool)
+set(srcS)
+file(GLOB srcS src/*.cpp)
+
+set(osSrc)
+if (UNIX)
+    MESSAGE(STATUS "unix")
+	file(GLOB osSrc /src/unix/*.cpp)
+elseif (WIN32)
+    MESSAGE(STATUS "windows")
+	#file(GLOB osSrc /src/win/*.cpp)
+	aux_source_directory(src/win osSrc)
+endif ()
+
+include_directories(
+							${CMAKE_SOURCE_DIR}/../include
+							)
+
+add_executable (${prjName} ${srcS} ${osSrc})
+target_include_directories(${prjName} PUBLIC 
+							src
+							${CMAKE_SOURCE_DIR}/common/src
+							${CMAKE_SOURCE_DIR}/cLog/src
+                           )
+
+target_link_libraries(${prjName} PUBLIC  common cLog)
+SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)

@@ -111,6 +111,7 @@ void logicServerMgr::afterLoad(const ForLogicFun* pForLogic)
 	ep.port = 11000;
 	ep.targetHandle = AppTestServerHandle;
 	ep.bDef = true;
+	ep.bRegHandle = false;
 	node.listenerNum = 0;
 	fnCreateLoop ("TestServer", TestServerHandle,  &node, OnFrameCli, nullptr);
 	auto TestClientH = TestServerHandle;

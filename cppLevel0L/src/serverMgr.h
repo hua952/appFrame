@@ -25,7 +25,6 @@ public:
     void  setDelTcpServerFn (delTcpServerFT va);
 	int   initNetServer (const char* szLibname);
 	server*         getOutServer();
-    int sendByOutServer (packetHead* pack);
 private:
     delTcpServerFT  m_delTcpServerFn;
     createTcpServerFT  m_createTcpServerFn;

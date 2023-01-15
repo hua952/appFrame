@@ -67,14 +67,6 @@ serverMgr::serverMgr()
 	m_delTcpServerFn = nullptr;
 }
 
-int serverMgr::sendByOutServer (packetHead* pack)
-{
-	int nRet = procPacketFunRetType_del;
-	auto pUp = getOutServer ();
-	nRet = pUp->sendBySession (pack);
-	return nRet;
-}
-
 server*  serverMgr::getOutServer()
 {
 	auto n = rand () % m_outNum;

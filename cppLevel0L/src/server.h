@@ -21,6 +21,7 @@ public:
 	void join();
 	bool pushPack (packetHead* pack);
     int sendBySession(packetHead* pack);
+	int judgeRetSend (ISession* session, packetHead* pack);
 	bool procProx(packetHead* pack);
 	virtual bool onFrame();
     typedef std::map<loopHandleType, ISession*> serverSessionMapT;
@@ -29,7 +30,12 @@ public:
 	//typedef std::map<SessionIDType, ISession*>  allSessionMap;
     serverSessionMapT&    serverSessionMap();
     //allSessionMap&    allSessionS ();
-	//typedef std::unordered_map<NetTokenType, NetTokenType>  tokenMap;
+	struct tokenInfo
+	{
+		NetTokenType   oldToken;
+		SessionIDType  sessionId;
+	};
+	typedef std::unordered_map<NetTokenType, tokenInfo>  tokenMap;
     ISession*    defSession ();
     void  setDefSession (ISession* va);
     NetTokenType	nextToken ();
@@ -37,10 +43,11 @@ public:
 	loopHandleType  myProId ();
 	loopHandleType  myLoopId ();
 	loopHandleType  myHandle ();
-    //tokenMap&    tokenS ();
+    tokenMap&    tokenS ();
 	cTimerMgr&   getTimerMgr ();
+	ITcpServer*  getTcpServer ();
 private:
-    //tokenMap  m_tokenS;
+    tokenMap  m_tokenS;
 	cTimerMgr          m_timerMgr;
     NetTokenType	m_nextToken;
     ISession*  m_defSession;

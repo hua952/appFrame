@@ -12,7 +12,6 @@ template<class T, class CompF = LessComp<T>>
 class arraySet
 {
 public:
-
     arraySet(arrayMapIndexType MaxNodeNum = 8)
     {
         m_udwMaxTNum = MaxNodeNum;
@@ -29,6 +28,20 @@ public:
 		TQuickSort<T*, T, CompF> qs(pT, m_udwTNum);
 		qs.sort();
 	}
+
+	int init (const T* pA, arrayMapIndexType udwNum)
+	{
+		int nRet = 0;
+		m_udwMaxTNum = udwNum;
+		m_pTS = std::make_unique<T[]>(udwNum);
+		auto pT = m_pTS.get();
+		memcpy(pT, pA, udwNum * sizeof(T));
+		m_udwTNum = udwNum;
+		TQuickSort<T*, T, CompF> qs(pT, m_udwTNum);
+		qs.sort();
+		return nRet;
+	}
+
     ~arraySet()
     {
     }
@@ -163,6 +176,10 @@ public:
     }
 	arrayMap(NodeType* pA, arrayMapIndexType udwNum):m_Set(pA, udwNum)
 	{
+	}
+	int init (NodeType* pA, arrayMapIndexType udwNum)
+	{
+		return m_Set.init (pA, udwNum);
 	}
 	typedef bool (*visitFun)(void* pU, K& k, V& v);
 	void visit(void* pU, visitFun pF)
