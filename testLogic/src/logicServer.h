@@ -33,6 +33,8 @@ public:
 	static const  ServerIDType s_SerB = 2;
 	*/
 	void  afterLoad(const ForLogicFun* pForLogic);
+	ForLogicFun&  getForLogicFun ();
 private:
+	ForLogicFun   m_ForLogicFun;
 };
 #endif

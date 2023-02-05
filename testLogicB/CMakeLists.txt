@@ -6,6 +6,7 @@ if (WIN32)
 	MESSAGE(STATUS "windows")
 	#add_definitions(-DUNICODE -D_UNICODE)
 	file(GLOB defS src/*.def)
+	add_definitions(-w)
 	include_directories(
 		${CMAKE_SOURCE_DIR}/../include
 		)

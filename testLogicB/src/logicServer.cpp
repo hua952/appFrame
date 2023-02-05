@@ -42,12 +42,12 @@ int logicServer::OnServerFrame()
 	return 0;
 }
 
-static int OnGiveUpCli(packetHead* pSP)
+static int OnGiveUpCli(packetHead* pSP, procPacketArg* pArg)
 {
 	return procPacketFunRetType_exitNow;
 }
 
-static int OnGiveUpSer(packetHead* pSP)
+static int OnGiveUpSer(packetHead* pSP, procPacketArg* pArg)
 {
 	return procPacketFunRetType_exitAfterLoop;
 }
@@ -63,14 +63,14 @@ static int OnFrameCli(void* pArgS)
 	return procPacketFunRetType_del;
 }
 
-static int OnMoveRet (packetHead* pSP)
+static int OnMoveRet (packetHead* pSP, procPacketArg* pArg)
 {
 	int nRet = procPacketFunRetType_del;
 	gInfo ("OnMoveRet");
 	return nRet;
 }
 
-static int OnRegretAsk (packetHead* pSP)
+static int OnRegretAsk (packetHead* pSP, procPacketArg* pArg)
 {
 	gInfo ("OnRegretAsk");
 	auto pSN = P2NHead(pSP);

@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <fstream>
 #include <sstream>
+#include <string>
 //#include <unistd.h>
 //#include <dirent.h>
 #include"appMgr.h"
@@ -10,6 +11,8 @@
 #include <memory>
 #include "rLog.h"
 #include "comFun.h"
+#include "msgTool.h"
+#include "tSingleton.h"
 #include "CMakeListsCreator.h"
 #include "defFileCrector.h"
 #include "exportFunCrector.h"
@@ -33,6 +36,73 @@ app::~app()
 appType  app::getAppType()
 {
 	return m_appType;
+}
+
+void app:: getGenPath (std::unique_ptr<char[]>& path)
+{
+	std::string strT = tSingleton<msgTool>::single().projectHome();
+	strT += m_name;
+	strT += "/src/gen/";
+	auto nL = strT.length();
+	path = std::make_unique<char[]>(nL + 1);
+	auto p = path.get();
+	strNCpy (p, nL + 1, strT.c_str());
+}
+
+void app::getAppPath (std::unique_ptr<char[]>& path)
+{
+	std::string strT = tSingleton<msgTool>::single().projectHome();
+	strT += m_name;
+	strT += "/";
+	auto nL = strT.length();
+	path = std::make_unique<char[]>(nL + 1);
+	auto p = path.get();
+	strNCpy (p, nL + 1, strT.c_str());
+}
+
+void app::getProcMsgPath (std::unique_ptr<char[]>& path)
+{
+	std::string strT = tSingleton<msgTool>::single().projectHome();
+	strT += m_name;
+	strT += "/src/ProcMsg/";
+	auto nL = strT.length();
+	path = std::make_unique<char[]>(nL + 1);
+	auto p = path.get();
+	strNCpy (p, nL + 1, strT.c_str());
+}
+
+void app:: getDefFilePath (std::unique_ptr<char[]>& path)
+{
+	std::unique_ptr<char[]> genPath;
+	getGenPath (path);
+	std::string strT = path.get();
+	strT += "win/";
+	auto nL = strT.length();
+	path = std::make_unique<char[]>(nL + 1);
+	auto p = path.get();
+	strNCpy (p, nL + 1, strT.c_str());
+}
+
+int  app::initPath ()
+{
+	int nRet = 0;
+	{
+	std::unique_ptr<char[]> path;
+	getGenPath (path);
+	myMkdir (path.get());
+	}
+	{
+	std::unique_ptr<char[]> path;
+	getProcMsgPath(path);
+	myMkdir (path.get());
+	}
+	{
+	std::unique_ptr<char[]> path;
+	getDefFilePath(path);
+	myMkdir (path.get());
+	}
+
+	return nRet;
 }
 
 void	 app::setAppType(appType at)
@@ -126,6 +196,26 @@ app::procRpcInfoList& app::procRpcList()
 {
 	return m_procRpcInfoList;
 }
+/*
+app::vModelT&  app::  modelS ()
+{
+	return m_ModelS;
+}
+*/
+realServer::appList& realServer:: getAppList ()
+{
+	return m_appList;
+}
+
+const char* realServer::name ()
+{
+	return m_name.get();
+}
+
+void        realServer::setName (const char* szName)
+{
+	strCpy (szName, m_name);
+}
 
 appMgr::appMgr()
 {
@@ -133,126 +223,100 @@ appMgr::appMgr()
 
 appMgr::~appMgr()
 {
-	/*
-	m_appList.visit(NULL, [](void* pU, pApp& p){
-			p->~app();
-			SD(p);
-			return true;
-			});
-			*/
 }
 
+appMgr::vRealServerListT& appMgr::realServerList ()
+{
+	return m_realServerList;
+}
+/*
 bool appMgr::insert(std::shared_ptr<app> pA)
-//bool appMgr::insert(app* pA)
 {
 	m_appList.push_back(pA);
 	return 	true;
 }
+*/
+int appMgr::writeRootCMakeFile ()
+{
+	int nRet = 0;
+	
+	std::string szFilename = tSingleton<msgTool>::single ().projectHome();
+	szFilename += "CMakeLists.txt";
+	std::ofstream os(szFilename);
+	const char* szCon = R"(cmake_minimum_required(VERSION 3.16) 
+set(BUILD_USE_64BITS on)
+SET(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -g -ggdb ")
+SET(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3 -Wall")
+set(CMAKE_CXX_STANDARD 17) 
+set(CMAKE_CXX_STANDARD_REQUIRED True) 
+project(logicModel))";
+	os<<szCon<<std::endl;
+	auto& rTool = tSingleton<msgTool>::single ();
 
+	auto& rRealS = realServerList ();
+	for (auto iter = rRealS.begin (); rRealS.end () != iter; ++iter) {
+		auto& rList = iter->get()->getAppList ();
+		auto pHome = rTool.projectHome ();
+		for (auto it = rList.begin (); rList.end () != it; ++it) {
+			auto p = it->get();
+			os<<"add_subdirectory ("<<it->get()->name()<<")"<<std::endl;
+		}
+		const char* szEnd = R"(SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
+SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
+)";
+		os<<szEnd;
+	}
+	
+	return nRet;
+}
 
 int  appMgr::procApp()
 {
 	int nRet = 0;
-	auto& rList = m_appList;
+	writeRootCMakeFile ();
+	auto& rTool = tSingleton<msgTool>::single ();
+
+	auto& rRealS = realServerList ();
+	for (auto iter = rRealS.begin (); rRealS.end () != iter; ++iter) {
+	auto& rList = iter->get()->getAppList ();
+	auto pHome = rTool.projectHome ();
+	rTrace (__FUNCTION__<<" appList size = "<<rList.size ());
 	for (auto it = rList.begin (); rList.end () != it; ++it) {
 		auto p = it->get();
-		std::string strBase = p->projectDir();
-		strBase += p->name();
-		std::string strProject = strBase;
-		strProject += "/";
-		strBase += "/src/";
-		std::string strSrcDir = strBase;
-		std::string strGen = strBase + "gen/";
-		//rTrace(__FUNCTION__<<" 000");
-		if (!isPathExit (strGen.c_str())) {
-			std::string sys = "mkdir -p ";
-			sys += strGen;
-			rDebug (__FUNCTION__<<" will create Path = "<<strGen.c_str());
-			auto nR = myMkdir (strGen.c_str()); //system(sys.c_str());
-			if (0 != nR) {
-				auto nErr = errno;
-				rError (__FUNCTION__<<" create path error path = "<<strGen.c_str()<<"nErr = "<<nErr);
-			}
-		}
-		//rTrace(__FUNCTION__<<" 111");
-		std::string strProcMsg = strBase + "procMsg/";
-		if (!isPathExit (strProcMsg.c_str()) ){
-			std::string sys = "mkdir -p ";
-			sys += strProcMsg;
-			rDebug (__FUNCTION__<<" will create Path = "<<strProcMsg.c_str());
-			auto nR = myMkdir (strProcMsg.c_str()); //system(sys.c_str());
-			if (0 != nR) {
-				auto nErr = errno;
-				rError (__FUNCTION__<<" create path error path = "<<strGen.c_str()<<"nErr = "<<nErr);
-			}
-		}
-		//rTrace(__FUNCTION__<<" 222");
-		/*
-		std::string strMakeFile = strProject + "Makefile";
-		if (!isPathExit (strMakeFile.c_str())) {
-			makeFileCreator file(strMakeFile.c_str(), p);
-		}
-		*/
-		std::string strCMakeFile = strProject + "CMakeLists.txt";
+		p->initPath ();
+		std::unique_ptr<char[]> pProcMsgPath;
+		p->getProcMsgPath (pProcMsgPath);
+		std::string strProcMsg = pProcMsgPath.get(); // strBase + "procMsg/";
+		std::unique_ptr<char[]> appPath;
+		p->getAppPath (appPath);
+		std::string strCMakeFile = appPath.get();
+		strCMakeFile += "CMakeLists.txt";
 		if (!isPathExit (strCMakeFile.c_str())) {
 			CMakeListsCreator file(strCMakeFile.c_str(), p);
 		}
-		//rTrace(__FUNCTION__<<" 333");
-		appFileCreator appF(strSrcDir.c_str(), p->name());	
+		std::unique_ptr<char[]> genPath;
+		p->getGenPath (genPath);
+		appFileCreator appF(genPath.get(), p->name());	
 		appF.writeH();
-		//rTrace(__FUNCTION__<<" 444");
 		appF.writeCpp();
 
-		std::string exportFunFileH = strBase;
+		std::string exportFunFileH = genPath.get(); // strBase;
 		exportFunFileH += "exportFun.h";
 		writeExportFunH (exportFunFileH.c_str ());
-		std::string exportFunFileCpp = strBase;
+		std::string exportFunFileCpp = genPath.get(); // strBase;
 		exportFunFileCpp += "exportFun.cpp";
 		writeExportFunCpp (exportFunFileCpp.c_str ());
 
-		std::string defFunFile = strBase;
+		std::unique_ptr<char[]> defPath;
+		p->getDefFilePath (defPath);
+		std::string defFunFile = defPath.get(); // strBase;
 		defFunFile += "defFun.def";
 		writeDefFile (defFunFile.c_str ());
 		rTrace(__FUNCTION__<<" 555");
 		int  nR = procOnceApp(p);
 		assert(0 == nR);
 	}
-/*
-	m_appList.visit(this, [](void* pU, pApp& p){
-			appMgr* pThis = (appMgr*)pU;
-				std::string strBase = p->projectDir();
-				strBase += p->name();
-				std::string strProject = strBase;
-				strProject += "/";
-				strBase += "/src/";
-				std::string strSrcDir = strBase;
-				std::string strGen = strBase + "gen/";
-				//if (access(strGen.c_str(),R_OK) !=0) {
-				if (!isPathExit (strGen.c_str()) {
-					std::string sys = "mkdir -p ";
-					sys += strGen;
-					system(sys.c_str());
-				}
-				std::string strProcMsg = strBase + "procMsg/";
-				if (!isPathExit (strProcMsg.c_str()) ){
-				//if (access(strProcMsg.c_str(),R_OK) !=0) {
-					std::string sys = "mkdir -p ";
-					sys += strProcMsg;
-					system(sys.c_str());
-				}
-				std::string strMakeFile = strProject + "Makefile";
-				if (!isPathExit (strMakeFile.c_str())) {
-				//if (access(strMakeFile.c_str(),R_OK) !=0) {
-					makeFileCreator file(strMakeFile.c_str(), p);
-				}
-				appFileCreator appF(strSrcDir.c_str(), p->name());	
-				appF.writeH();
-				appF.writeCpp();
-				int  nR = pThis->procOnceApp(p);
-				assert(0 == nR);
-				return true;
-			});
-			*/
+	}
 	return 0;
 }
 
@@ -329,8 +393,8 @@ public:
 		{
 			m_arryRegFun<<"int reg"<<szPmpName<<"_"<<szArryName<<"MsgPmp()"<<std::endl;
 		}
-		m_arryRegFun<<"{"<<std::endl
-			<<"LOG_FUN_CALL"<<std::endl;
+		m_arryRegFun<<"{"<<std::endl;
+			//<<"LOG_FUN_CALL"<<std::endl;
 		if(0 == strlen(szPmpName))
 		{
 			if(!m_pApp->m_procRpcInfoList.empty())
@@ -370,7 +434,7 @@ public:
 				{
 					m_proc<<std::endl<<"procMsgRetType	"<<sFun.str()<<"(packetHead* pPack, pPacketHead& pRet)"<<std::endl
 						<<"{"<<std::endl
-						<<"LOG_FUN_CALL"<<std::endl
+						//<<"LOG_FUN_CALL"<<std::endl
 						<<std::endl
 						<<"	return eProcPass;"<<std::endl
 						<<"}"<<std::endl;
@@ -503,7 +567,6 @@ static  bool s_visitProcRpc(void* pU, app::procRpcInfo& node)
 			szPmpName = pThis->strPmpName.c_str();
 			szClassName = pThis->m_pmpClass.c_str();
 		}
-		//pThis->pInfo = new_stProcArrayInfo(pThis->pApp, pThis->strBase.c_str(), pRet[0], szPmpName, szClassName);
 		pThis->pInfo = std::make_unique<stProcArrayInfo>(pThis->pApp, pThis->strBase.c_str(), pRet[0], szPmpName, szClassName);
 		pThis->ssRegInc<<"#include\""<<pThis->pInfo->m_arryName<<"MsgID.h\""<<std::endl;
 	}
@@ -511,8 +574,7 @@ static  bool s_visitProcRpc(void* pU, app::procRpcInfo& node)
 	assert(pRpc);
 	if(!pRpc)
 	{
-		//del_stProcArrayInfo(pThis->pInfo);
-		//pThis->pInfo = NULL;
+		rError (!pRpc);
 		exit(1);
 	}
 
@@ -537,8 +599,8 @@ static  bool s_visitProcRpc(void* pU, app::procRpcInfo& node)
 			sFun<<"player* pPl, ";
 		}
 		pThis->pInfo->m_of<<"(packetHead* pAsk, pPacketHead& pRet)"<<std::endl
-			<<"{"<<std::endl
-			<<"LOG_FUN_CALL"<<std::endl;
+			<<"{"<<std::endl;
+			//<<"LOG_FUN_CALL"<<std::endl;
 	}
 	if(node.m_bAsk)
 	{
@@ -732,7 +794,7 @@ int  appMgr::procOnceApp(app* pApp)
 	std::stringstream regOF;
 			regOF<<"int regMsgPmp()"<<std::endl
 			<<"{"<<std::endl
-			<<"	LOG_FUN_CALL"<<std::endl
+			//<<"	LOG_FUN_CALL"<<std::endl
 			<<"		udword nR = 0;"<<std::endl;
 
 	th.pRegOF = &regOF; 

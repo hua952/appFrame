@@ -19,7 +19,7 @@ static int OnFrameCli(void* pArgS)
 	return procPacketFunRetType_del;
 }
 
-static int OnMoveAsk (packetHead* pSP)
+static int OnMoveAsk (packetHead* pSP, procPacketArg* pArg)
 {
 	gInfo (__FUNCTION__);
 	auto pSN = P2NHead(pSP);
@@ -29,6 +29,7 @@ static int OnMoveAsk (packetHead* pSP)
 	auto pN = P2NHead(pRet);
 	pN->ubySrcServId = pSN->ubyDesServId;
 	pN->ubyDesServId = pSN->ubySrcServId;
+	pN->dwToKen = pSN->dwToKen;
 	auto& fun = getForMsgModuleFunS().fnSendPackToLoop;
 	fun(pRet);
 	return procPacketFunRetType_del;

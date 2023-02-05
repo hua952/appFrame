@@ -11,6 +11,7 @@
 //#include "tVector.h"
 #include <vector>
 #include "appMgr.h"
+#include <string>
 
 using namespace rapidxml;  
 class msgTool//:public tSingleton<msgTool>
@@ -25,6 +26,19 @@ public:
 	int startProcMsg(const char* szFile);
 	bool isBaseDataType(const char* szType);
 	const char* findDataType(const char* szT);
+	const char* projectHome ();
+	const char* frameHome ();
+	const char* frameBinPath ();
+	const char* frameLibPath ();
+	const char* outPutPath ();
+	const char* depIncludeHome ();
+	void setDepIncludeHome (const char* szPath);
+	const char* depLibHome ();
+	void setDepLibHome (const char* szPath);
+	void        setFrameHome (const char* szPath);
+	void        getDefMsgPath (std::unique_ptr<char[]>& path);
+	void  setProjectHome (const char* pHome);
+	void  initPath();
 protected:
 	typedef arraySet<cpchar, cpcharCmp> dataTypeSet;
 	dataTypeSet m_dataTypeSet;
@@ -36,16 +50,21 @@ protected:
 	int procData(rapidxml::xml_node<char> * pData, rpcMgr::dataInfo& rData);
 
 	int procAppS(rapidxml::xml_node<char> * pRpc);
-	int procOnceApp(rapidxml::xml_node<char> * pApp);
-	int appProcOnceRpcArry(rapidxml::xml_node<char> * pApp, const char* szPmpName = NULL, const char* szPmpClass = NULL, const char* szNextPmp = NULL);
+	int procOnceApp(rapidxml::xml_node<char> * pApp, realServer* pReal);
+	int appProcOnceRpcArry(app* pCurApp, rapidxml::xml_node<char> * pApp, const char* szPmpName = NULL, const char* szPmpClass = NULL, const char* szNextPmp = NULL);
 
 	int procCmd1(char* szText);
 	//pIStringKeyVector    m_vStruct;
 	//pIStringKeyArraySet  m_vRpc;
 	//rpcMgr::rpcArryInfo* m_pCurRpcArry;
 	std::shared_ptr<rpcMgr::rpcArryInfo>  m_pCurRpcArry;
-	//app*				 m_pCurApp;
-	std::shared_ptr<app>			 m_pCurApp;
 	char	  m_defFile[rpcMgr::c_dirSize];
+	std::unique_ptr <char[]> m_projectHome;
+	std::unique_ptr <char[]> m_frameHome;
+	std::unique_ptr <char[]> m_frameBinPath;
+	std::unique_ptr <char[]> m_frameLibPath;
+	std::unique_ptr <char[]> m_depIncludeHome;
+	std::unique_ptr <char[]> m_depLibHome;
+	std::unique_ptr <char[]> m_outPutPath;
 };
 #endif

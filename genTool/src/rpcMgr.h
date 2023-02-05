@@ -111,12 +111,13 @@ public:
 	void          writeRpcArryH();
 	void          writeRpcArryCpp();
 	void          writeMsgH(std::ofstream& os, msgInfo& rMsg);
-	void          writeMsgCpp(rpcArryInfo* pA,std::ofstream& os, msgInfo& rMsg);
+	void          writeMsgCpp(rpcArryInfo* pA,std::ofstream& os, msgInfo& rMsg, bool bRet);
 	void		  writeInitMsgCpp();
 	void		  writeRpcArry2js();
 	void		  writeRpcArry2Ts();
 	int			  chickDataTypeS();	
-	char		  m_cppLibDir[c_dirSize];
+	int			  mkDirS ();
+	//char		  m_cppLibDir[c_dirSize];
 	char		  m_jsLibDir[c_dirSize];
 	char		  m_tsLibDir[c_dirSize];
 	int			  m_OrderS;

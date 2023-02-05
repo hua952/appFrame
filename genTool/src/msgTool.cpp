@@ -11,56 +11,7 @@
 #include"tSingleton.h"
 #include "strFun.h"
 #include "rLog.h"
-/*
-static rpcMgr::rpcArryInfo* s_newRpcArry()
-{
-	IMemMgr* pMem = GetMemMgr();
-	rpcMgr::rpcArryInfo* p = (rpcMgr::rpcArryInfo*)(pMem->Malloc(sizeof(rpcMgr::rpcArryInfo)));
-	p = new (p) rpcMgr::rpcArryInfo;
-	return p;
-}
 
-static void s_delRpcArry(rpcMgr::pRpcArryInfo& p)
-{
-	if(NULL != p)
-	{
-		p->~rpcArryInfo();
-		SD(p);
-	}
-}
-static rpcMgr::rpcInfo* s_newRpc()
-{
-	IMemMgr* pMem = GetMemMgr();
-	rpcMgr::rpcInfo* p = (rpcMgr::rpcInfo*)(pMem->Malloc(sizeof(rpcMgr::rpcInfo)));
-	p = new (p) rpcMgr::rpcInfo;
-	return p;
-}
-
-static void s_delRpc(rpcMgr::pRpcInfo& p)
-{
-	if(NULL != p)
-	{
-		p->~rpcInfo();
-		SD(p);
-	}
-}
-static rpcMgr::structInfo* s_newStruct()
-{
-	IMemMgr* pMem = GetMemMgr();
-	rpcMgr::structInfo* p = (rpcMgr::structInfo*)(pMem->Malloc(sizeof(rpcMgr::structInfo)));
-	p = new (p) rpcMgr::structInfo;
-	return p;
-}
-
-static void s_delStruct(rpcMgr::structInfo* p)
-{
-	if(NULL != p)
-	{
-		p->~structInfo();
-		SD(p);
-	}
-}
-*/
 msgTool::msgTool(): m_dataTypeSet(8)
 {
   m_dataTypeSet.insert(g_sbyte);
@@ -76,6 +27,7 @@ msgTool::msgTool(): m_dataTypeSet(8)
   m_dataTypeSet.insert(g_float64);
   //m_pCurRpcArry.reset ();// m_pCurRpcArry = NULL;
   m_defFile[0] = 0;
+  strCpy (R"(${PROJECT_SOURCE_DIR}/bin)", m_outPutPath);
 }
 
 const char* msgTool::findDataType(const char* szT)
@@ -105,27 +57,23 @@ int msgTool::procRpc1(rapidxml::xml_node<char> * pRpc)
 	strNCpy(m_pCurRpcArry->m_name, rpcMgr::c_nameSize, pRpc->name());
 	//rTrace (__FUNCTION__<<" 000 bbb");
 	rapidxml::xml_attribute<char> * p2JS = pRpc->first_attribute(g_2js);
-	if(p2JS)
-	{
+	if(p2JS) {
 		m_pCurRpcArry->m_b2js = atoi(p2JS->value()) != 0;
 	}
-	for(rapidxml::xml_node<>* pCall = pRpc->first_node(); NULL != pCall; pCall = pCall->next_sibling())
-	  {
+	for(rapidxml::xml_node<>* pCall = pRpc->first_node(); NULL != pCall; pCall = pCall->next_sibling()) {
 		nRet =  procStruct(pCall);
 		assert(0 == nRet);
-		if(0 != nRet)
-		{
+		if(0 != nRet) {
+			rError ("procStruct != 0");
 			//s_delRpcArry(m_pCurRpcArry);
 			return 1;
 		}
-	  }
+	}
 	//rTrace (__FUNCTION__<<" 111");
-  for(rapidxml::xml_node<>* pCall = pRpc->first_node(); NULL != pCall; pCall = pCall->next_sibling())
-  {
+  for(rapidxml::xml_node<>* pCall = pRpc->first_node(); NULL != pCall; pCall = pCall->next_sibling()) {
 	nRet =  procRpc2(pCall);
 	assert(0 == nRet);
-	if(0 != nRet)
-	{
+	if(0 != nRet) {
 		//s_delRpcArry(m_pCurRpcArry);
 		return 1;
 	}
@@ -145,36 +93,29 @@ int msgTool::procStruct(rapidxml::xml_node<char> * pRpc)
 {
 	//rTrace (__FUNCTION__);
 	rapidxml::xml_node<>* pAsk = pRpc->first_node(g_Ask);
-	if(pAsk)
-	{
+	if(pAsk) {
 		return 0;//It's msg  Not Struct
 	}
 	rapidxml::xml_node<>* pRet = pRpc->first_node(g_Ret);
 	assert(!pRet);
-	if(pRet)
-	{
-		std::cout<<pRpc->name()<<"is not a msg and not a struct"<<std::endl;
+	if(pRet) {
+		rError ("is not a msg and not a struct");
 		return 1;// It is not a msg and not a struct
 	}
 	//rpcMgr::structInfo* pSt = s_newStruct();
 	auto pSt = std::make_shared<rpcMgr::structInfo>();
 	rapidxml::xml_attribute<char> * pCommit = pRpc->first_attribute(g_commit);
-	if(pCommit)
-	{
+	if(pCommit) {
 		strNCpy(pSt->m_strCommit, NameSize, pCommit->value());
-	}
-	else
-	{
+	} else {
 		pSt->m_strCommit[0] = 0;
 	}
 
 	int nR = procStructData(pRpc,  *pSt);
 	assert(0 == nR);
-	if(0 != nR)
-	{
+	if(0 != nR) {
 		return 1;
 	}
-
 	
 	strNCpy(pSt->m_name, NameSize, pRpc->name());
 	m_pCurRpcArry->m_pStructInfoSet [pSt->m_name] = pSt;//m_pCurRpcArry->m_pStructInfoSet.insert(pSt);
@@ -247,6 +188,7 @@ int msgTool::procRpc2(rapidxml::xml_node<char> * pRpc)
 
 int msgTool::procStructData(rapidxml::xml_node<char> * pMsg, rpcMgr::structInfo& rMsg)
 {
+	//rTrace (__FUNCTION__);
 	rapidxml::xml_attribute<char> * pRWP = pMsg->first_attribute(g_RWPack);
 	if(pRWP)
 	{
@@ -327,7 +269,7 @@ int msgTool::procMsg(rapidxml::xml_node<char> * pMsg, rpcMgr::msgInfo& rMsg)
 int msgTool::procData(rapidxml::xml_node<char> * pData, rpcMgr::dataInfo& rData)
 {
 	strNCpy(rData.m_name, rpcMgr::c_nameSize, pData->name());
-
+	rTrace (__FUNCTION__<<" name = "<<rData.m_name);
 	rapidxml::xml_attribute<char> * pDataType = pData->first_attribute(g_dataType);
 	assert(pDataType);
 	if(NULL == pDataType)
@@ -375,7 +317,9 @@ int msgTool::startProcMsg(const char* szFile)
 {
 	rDebug (__FUNCTION__<<" szFile = "<<szFile);
 	int nRet = 0;
-    rapidxml::file<> fdoc(szFile);
+	std::string strT = projectHome ();
+	strT += szFile;
+    rapidxml::file<> fdoc(strT.c_str());
 	rapidxml::xml_document<> doc;
 	doc.parse<0>(fdoc.data());
 	rapidxml::xml_node<> *root = doc.first_node();
@@ -392,11 +336,74 @@ int msgTool::startProcMsg(const char* szFile)
 			assert(0 == nRet);
 			if(0 != nRet)
 			{
+				rError ("procRpc1 != 0");
 				return 1;
 			}
 		}
 	}
 	return 0;
+}
+
+const char* msgTool::projectHome ()
+{
+	return m_projectHome.get ();
+}
+
+void  msgTool::getDefMsgPath (std::unique_ptr<char[]>& path)
+{
+	std::string strT = projectHome ();
+	strT += "defMsg/src/";
+	strCpy (strT.c_str (), path);
+}
+
+void msgTool:: setProjectHome (const char* szPath)
+{
+	strCpy (szPath, m_projectHome);
+}
+
+const char* msgTool::frameHome ()
+{
+	return m_frameHome.get ();
+}
+
+const char* msgTool::depIncludeHome ()
+{
+	return m_depIncludeHome.get ();
+}
+
+const char* msgTool::depLibHome ()
+{
+	return m_depLibHome.get ();
+}
+
+void msgTool::setDepIncludeHome (const char* szPath)
+{
+	strCpy (szPath, m_depIncludeHome);
+}
+
+void msgTool::setDepLibHome (const char* szPath)
+{
+	strCpy (szPath, m_depLibHome);
+}
+
+void msgTool::setFrameHome (const char* szPath)
+{
+	strCpy (szPath, m_frameHome);
+}
+
+const char* msgTool::frameBinPath ()
+{
+	return m_frameBinPath.get();
+}
+
+const char* msgTool::frameLibPath ()
+{
+	return m_frameLibPath.get();
+}
+
+const char* msgTool::outPutPath ()
+{
+	return m_outPutPath.get();
 }
 
 int msgTool::start(const char* szFile)
@@ -407,27 +414,55 @@ int msgTool::start(const char* szFile)
 	doc.parse<0>(fdoc.data());
 	rapidxml::xml_node<> *root = doc.first_node();
 
-    for(rapidxml::xml_node<char> * pRpc = root->first_node();  NULL != pRpc; pRpc = pRpc->next_sibling())
-	{
-		if(0 != strcmp(pRpc->name(),"msgFile"))
-		{
+	for(rapidxml::xml_node<char> * pRpc = root->first_node();  NULL != pRpc; pRpc = pRpc->next_sibling()) {
+		if(0 == strcmp(pRpc->name(), "projectHome")) {
+			auto szPath = pRpc->value ();
+			tSingleton<msgTool>::single().setProjectHome (szPath);
+			continue;
+		} if(0 == strcmp(pRpc->name(), "frameHome")) {
+			auto szPath = pRpc->value ();
+			tSingleton<msgTool>::single().setFrameHome(szPath);
+			continue;
+		} if(0 == strcmp(pRpc->name(), "depIncludeHome")) {
+			auto szPath = pRpc->value ();
+			tSingleton<msgTool>::single().setDepIncludeHome(szPath);
+			continue;
+		} if(0 == strcmp(pRpc->name(), "depLibHome")) {
+			auto szPath = pRpc->value ();
+			tSingleton<msgTool>::single().setDepLibHome(szPath);
+			continue;
+		} if(0 == strcmp(pRpc->name(), "frameBinPath")) {
+			strCpy (pRpc->value (), m_frameBinPath);
+			continue;
+		} if(0 == strcmp(pRpc->name(), "frameLibPath")) {
+			strCpy (pRpc->value (), m_frameLibPath);
+			continue;
+		} if(0 == strcmp(pRpc->name(), "outPutPath")) {
+			strCpy (pRpc->value (), m_outPutPath);
+			continue;
+		}
+	}
+
+    for(rapidxml::xml_node<char> * pRpc = root->first_node();  NULL != pRpc; pRpc = pRpc->next_sibling()) {
+		if(0 != strcmp(pRpc->name(),"msgFile")) {
 			continue;
 		}
 
 		rapidxml::xml_attribute<char> * pAppType = pRpc->first_attribute("file");
-		if(!pAppType)
-		{
+		if(!pAppType) {
+			rTrace ("not find attr file");
 			return 2;
 		}
 		int nR = startProcMsg(pAppType->value());	
 		rTrace (__FUNCTION__<<" after startProcMsg nR = "<<nR);
-		if(0 != nR)
-		{
+		if(0 != nR) {
 			rWarn (__FUNCTION__<<" 0 != nR");
 			return 1;
 		}
 	}
 	auto& rRpc = tSingleton<rpcMgr>::single();
+	initPath ();
+	//rRpc.mkDirS ();
 	rRpc.chickDataTypeS();
 	//rTrace (__FUNCTION__<<" 000");
 	procAppS(root);
@@ -449,6 +484,14 @@ int msgTool::start(const char* szFile)
 	rApp.procApp();
 	rTrace (__FUNCTION__<<" 888");
 	return 0;
+}
+
+void msgTool:: initPath()
+{
+	myMkdir (projectHome ());
+	std::unique_ptr<char[]> path;
+	getDefMsgPath (path);
+	myMkdir (path.get());
 }
 
 int msgTool::procCmd1(char* szText)
@@ -502,21 +545,26 @@ int msgTool::init(int nArgC, char* argS[])
 
 int msgTool::procAppS(rapidxml::xml_node<char> * pRoot)
 {
-	for(rapidxml::xml_node<char> * pApp = pRoot->first_node();  NULL != pApp; pApp= pApp->next_sibling())
-	{
-		if(0 != strcmp(g_app, pApp->name()))
-		{
+	auto& rRealS = tSingleton<appMgr>::single ().realServerList ();
+	for(rapidxml::xml_node<char> * pApp = pRoot->first_node();  NULL != pApp; pApp= pApp->next_sibling()) {
+		if(0 != strcmp(g_app, pApp->name())) {
 			continue;
 		}
-
-		for(rapidxml::xml_node<char> * pC = pApp->first_node();  NULL != pC; pC = pC->next_sibling())
-		{
-			int nR = procOnceApp(pC);
-			assert(0==nR);
-			if(0 != nR)
-			{
-				return 1;
+		for(rapidxml::xml_node<char> * pC = pApp->first_node();  NULL != pC; pC = pC->next_sibling()) {
+			auto pReal = std::make_shared<realServer>();
+			pReal->setName (pC->name ());
+			for(auto pCC = pC->first_node();  NULL != pCC; pCC = pCC->next_sibling()) {
+				if (0 == strcmp ("module", pCC->name ())) {
+					for(auto pCCC = pCC->first_node();  NULL != pCCC; pCCC = pCCC->next_sibling()) {
+						int nR = procOnceApp(pCCC, pReal.get());
+						assert(0==nR);
+						if(0 != nR) {
+							return 1;
+						}
+					}
+				}
 			}
+			rRealS.push_back (pReal);
 		}
 	}
 	return 0;
@@ -539,13 +587,13 @@ static void delApp(app* p)
 	}
 }
 */
-int msgTool::procOnceApp(rapidxml::xml_node<char> * pAppNode)
+int msgTool::procOnceApp(rapidxml::xml_node<char> * pAppNode, realServer* pReal)
 {
-	m_pCurApp = std::make_shared<app>();//m_pCurApp = newApp();	
+	auto pCurApp = std::make_shared<app>();//m_pCurApp = newApp();	
 	rapidxml::xml_attribute<char> * pProjectDir = pAppNode->first_attribute(g_projectDir );
 	if(pProjectDir)
 	{
-		strNCpy(m_pCurApp->m_projectDir,DirSize, pProjectDir->value());
+		strNCpy(pCurApp->m_projectDir,DirSize, pProjectDir->value());
 	}
 	rapidxml::xml_attribute<char> * pAppType = pAppNode->first_attribute("appType");
 	if(pAppType)
@@ -555,18 +603,17 @@ int msgTool::procOnceApp(rapidxml::xml_node<char> * pAppNode)
 			return 0;
 		}
 	}
-	strNCpy(m_pCurApp->m_name, NameSize, pAppNode->name());
+	strNCpy(pCurApp->m_name, NameSize, pAppNode->name());
 	for(rapidxml::xml_node<char> * pC = pAppNode->first_node();  NULL != pC;  pC = pC->next_sibling())
 	{
 		if(0 == strcmp(g_procRpc, pC->name()))
 		{
 			for(rapidxml::xml_node<char> * pArry = pC->first_node();  NULL != pArry;  pArry = pArry->next_sibling())
 			{
-				int n = appProcOnceRpcArry(pArry);
+				int n = appProcOnceRpcArry(pCurApp.get(), pArry);
 				assert(0 == n);
 				if(0 != n)
 				{
-					m_pCurApp.reset();//SD(m_pCurApp);
 					return 1;
 				}
 			}
@@ -599,11 +646,10 @@ int msgTool::procOnceApp(rapidxml::xml_node<char> * pAppNode)
 					}
 					for(rapidxml::xml_node<char> * pArry = pP->first_node();  NULL != pArry;  pArry = pArry->next_sibling())
 					{
-						int n = appProcOnceRpcArry(pArry, pPmp->name(), szClassName, szNextPmp);
+						int n = appProcOnceRpcArry(pCurApp.get(), pArry, pPmp->name(), szClassName, szNextPmp);
 						assert(0 == n);
 						if(0 != n)
 						{
-							m_pCurApp.reset();//SD(m_pCurApp);
 							return 1;
 						}
 					}
@@ -611,22 +657,13 @@ int msgTool::procOnceApp(rapidxml::xml_node<char> * pAppNode)
 			}
 		}
 	}
-	//bool bOK = appMgr::single().insert(m_pCurApp);
-	bool bOK = tSingleton<appMgr>::single().insert(m_pCurApp);
-	/*
-	assert(bOK);
-	if(!bOK)
-	{
-		SD(m_pCurApp);
-	}
-	m_pCurApp = NULL;
-	*/
-	m_pCurApp.reset ();
+	auto& rAppS = pReal->getAppList ();	
+	rAppS.push_back (pCurApp);
 
 	return 0;
 }
 
-int msgTool::appProcOnceRpcArry(rapidxml::xml_node<char> * pArry, const char* szPmpName, const char* szClassName, const char* szNextPmp)
+int msgTool::appProcOnceRpcArry(app* pCurApp, rapidxml::xml_node<char> * pArry, const char* szPmpName, const char* szClassName, const char* szNextPmp)
 {
 	for(rapidxml::xml_node<char> * pC = pArry->first_node();  NULL != pC;  pC = pC->next_sibling())
 	{
@@ -661,7 +698,6 @@ int msgTool::appProcOnceRpcArry(rapidxml::xml_node<char> * pArry, const char* sz
 				assert(0 == n);
 				if(0 != n)
 				{
-					m_pCurApp.reset();//SD(m_pCurApp);
 					return 1;
 				}
 				bAsk = false;
@@ -692,7 +728,7 @@ int msgTool::appProcOnceRpcArry(rapidxml::xml_node<char> * pArry, const char* sz
 		{
 			bNP = atoi(pNP->value());
 		}
-		m_pCurApp->addProcRpcInfo(str.c_str(), bAsk, bExit, szPmpName, szClassName, szNextPmp, szConName, sendType, bPass, pNP);
+		pCurApp->addProcRpcInfo(str.c_str(), bAsk, bExit, szPmpName, szClassName, szNextPmp, szConName, sendType, bPass, pNP);
 	}
 		return 0;
 }

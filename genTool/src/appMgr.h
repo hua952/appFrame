@@ -42,10 +42,14 @@ public:
 		procRpcInfoList* pList;
 	};
 	typedef std::map<std::string,/* std::pair<std::string, procRpcInfoList*>*/stPmpInfo> otherPmpMap;
-
 	bool addProcRpcInfo(const char* szName, bool bAsk, bool bExit, const char* szPmpName, const char* szClassName,
 			const char* szNextPmp, const char* conName, int sendType, bool bPass, bool bNeetPlayer);
 	const char* projectDir();
+	void getGenPath (std::unique_ptr<char[]>& path);
+	void getAppPath (std::unique_ptr<char[]>& path);
+	void getDefFilePath (std::unique_ptr<char[]>& path);
+	void getProcMsgPath (std::unique_ptr<char[]>& path);
+	int  initPath ();
 	appType  getAppType();
 	void	 setAppType(appType at);
 	procRpcInfoList&  procRpcList();
@@ -57,6 +61,18 @@ public:
 };
 typedef app* pApp;
 
+class realServer
+{
+public:
+	typedef std::vector<std::shared_ptr<app>> appList;
+	appList&  getAppList ();
+	const char* name ();
+	void        setName (const char* szName);
+private:
+	appList		m_appList;
+	std::unique_ptr <char[]> m_name;
+};
+
 class appMgr
 {
 public:
@@ -65,9 +81,12 @@ public:
 	bool insert(std::shared_ptr<app> pA);
 	int  procApp();
 	int  procOnceApp(app* pApp);
-	//typedef tJumpListNS<app*, 4> appList;
-	typedef std::vector<std::shared_ptr<app>> appList;
+	typedef std::vector<std::shared_ptr<realServer>> vRealServerListT;
+	//appList&  getAppList ();
+	int writeRootCMakeFile ();
+	vRealServerListT& realServerList ();
 private:
-	appList		m_appList;
+	vRealServerListT m_realServerList;
+	//appList		m_appList;
 };
 #endif

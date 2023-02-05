@@ -4,6 +4,7 @@ file(GLOB srcS src/*.cpp)
 set(defS)
 if (WIN32)
     MESSAGE(STATUS "windows")
+	add_definitions(-w)
 	include_directories(
 							${CMAKE_SOURCE_DIR}/../include
 							)

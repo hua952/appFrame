@@ -72,7 +72,9 @@ int impLoop::processOncePack(packetHead* pPack)
 						<<"  ubyDesServId ="<<(int)pN->ubyDesServId<<" handle = "<<(int)m_id<<" pF = "<<pF);
 						*/
 	if(pF) {
-		nRet = pF(pPack);
+		procPacketArg argP;
+		argP.handle = id ();
+		nRet = pF(pPack, &argP);
 	} else {
 		mWarn (__FUNCTION__<<" not find fun msgId = "<<pN->uwMsgID
 						<<"  ubyDesServId ="<<(int)pN->ubyDesServId<<" handle = "<<(int)m_id

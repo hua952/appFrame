@@ -41,9 +41,7 @@ int writeExportFunCpp (const char* szFilename)
 #include <string>
 #include "exportFun.h"
 #include "msg.h"
-#include "CChessMsgID.h"
 #include "myAssert.h"
-#include "CChessRpc.h"
 #include "logicServer.h"
 #include "tSingleton.h"
 #include "gLog.h"

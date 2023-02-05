@@ -23,19 +23,7 @@ void	rpcMgr::writeRpcArry2Ts()
 	std::stringstream sIn;
 	os<<"#include\"rpcMgr.h\""<<std::endl
 		<<"#include\"tSingleton.h\""<<std::endl;
-
-	//arrayMapIndexType nS = m_pRpcArryS.size();
-	//for(arrayMapIndexType i = 0; i < nS; i++)
-	for (auto it = m_pRpcArryS.begin (); m_pRpcArryS.end() != it; ++it)
-	{
-		/*
-		pIStringKey* pp = m_pRpcArryS.getNodeByIndex(i);
-		if(NULL == pp)
-		{
-			continue;
-		}
-		pRpcArryInfo p = dynamic_cast<pRpcArryInfo>(*pp);
-		*/
+	for (auto it = m_pRpcArryS.begin (); m_pRpcArryS.end() != it; ++it) {
 		auto p = it->get();
 		if(!p)
 		{
@@ -81,57 +69,11 @@ void  rpcMgr::writeVDataTS(const char* szPer, std::stringstream& os,  dataVector
 
 void  rpcMgr:: writeOnceRpcArry2TS(std::stringstream &os, rpcArryInfo* pA)
 {
-	/*
-		temp::visitDataTS data;
-	data.pMgr = this;
-	data.ps = &os;
-	data.pA = pA;
-	pA->m_pStructInfoSet.visit(&data,[](void* pU, pIStringKey& pI){
-				structInfo* pSt = dynamic_cast<structInfo*>(pI);	
-				if(NULL == pSt)
-				{
-					return true;
-				}
-
-				temp::visitDataTS& rdata = *((temp::visitDataTS*)(pU));
-				std::stringstream&os = *rdata.ps;
-				if(pSt->m_vData.size()==  0)
-				{
-					return true;
-				}
-
-				rdata.pMgr->writeVDataTS("", os,  pSt->m_vData, pSt->name());
-				os<<std::endl;
-				return true;
-			});
-			*/
 	for (auto it = pA->m_pStructInfoSet.begin (); pA->m_pStructInfoSet.end () != it; ++it) {
 		auto pSt = it->second.get();
 		writeVDataTS("", os,  pSt->m_vData, pSt->name());
 		os<<std::endl;
 	}
-	/*
-	temp::visitDataTS data2;
-	data2.pMgr = this;
-	data2.ps = &os;
-	data2.pA = pA;
-	pA->m_pRpcInfoSet.visit(&data2, [](void* pU, pRpcInfo& pI){
-			rpcMgr::pRpcInfo pRpc =  dynamic_cast<rpcMgr::pRpcInfo>(pI);
-			assert(pRpc);
-			temp::visitDataTS* pD = (temp::visitDataTS*)pU;
-			std::stringstream& os = *pD->ps;
-
-			pD->pMgr->writeVDataTS("", os,  pRpc->m_ask.m_vData, pRpc->m_ask.m_packName.c_str());	
-
-			os<<std::endl;
-			if(pRpc->m_bRet)
-			{
-				pD->pMgr->writeVDataTS("", os,  pRpc->m_ret.m_vData, pRpc->m_ret.m_packName.c_str());	
-				os<<std::endl;
-			}
-			return true;
-		});
-		*/
 	for (auto it = pA->m_pRpcInfoSet.begin (); pA->m_pRpcInfoSet.end () != it; ++it) {
 		auto pRpc = it->get();
 		writeVDataTS("", os,  pRpc->m_ask.m_vData, pRpc->m_ask.m_packName.c_str());

@@ -1,0 +1,181 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<servers>
+	<msgFile file="../../fileS/msgdef/gameMsg.xml"/>
+	<msgFile file="../../fileS/msgdef/cChess.xml"/>
+	<app>
+		<testServer projectDir="../">
+			<procRpc>
+				<test>
+					<doTest askType="ask"/>
+					<doTestString  askType="ask"/>
+					<exit askType="ask" exit="1"/>
+				</test>
+			</procRpc>
+		</testServer>
+		<testClient projectDir="../">
+			<procRpc>
+				<test>
+					<doTest askType="ret"/>
+					<doTestString  askType="ret"/>
+				</test>
+			</procRpc>
+		</testClient>
+		<CCGateServer projectDir="../">
+			<msgPmp>
+				<cli2AccRrout className="onceProcMsgPmp" nextpmp="gatePmp">
+					<procRpc>
+						<login>
+							<addAcc askType="ask" conName="conAcc" sendType="0"/>
+							<addAcc askType="ret" conName="conAcc" sendType="1"/>
+						</login>
+						<CChess>
+							<manualList conName="cChessAsian" sendType="0" askType="ask"/>
+							<manualList conName="cChessAsian" sendType="1" askType="ret"/>
+							<getOnceManual conName="cChessAsian" sendType="0"  askType="ask"/>
+							<getOnceManual conName="cChessAsian" sendType="1"  askType="ret"/>
+							<enterServer conName="cChessAsian" sendType="0"  askType="ask"/>
+							<enterServer conName="cChessAsian" sendType="1"  askType="ret"/>
+							<wateForGame conName="cChessAsian" sendType="0"  askType="ask"/>
+							<wateForGame conName="cChessAsian" sendType="1"  askType="ret"/>
+							<createGame conName="cChessAsian" sendType="3"  askType="ask"/>
+							<gameEnd conName="cChessAsian" sendType="3"   askType="ask"/>
+							<giveUp conName="cChessAsian" sendType="0"   askType="ask"/>
+							<giveUp conName="cChessAsian" sendType="1"   askType="ret"/>
+							<regret conName="cChessAsian" sendType="0"   askType="ask"/>
+							<regret conName="cChessAsian" sendType="1"   askType="ret"/>
+							<acceptRegret conName="cChessAsian" sendType="0"   askType="ask"/>
+							<acceptRegret conName="cChessAsian" sendType="1"   askType="ret"/>
+							<ntfRegret conName="cChessAsian" sendType="3"   askType="ask"/>
+							<ntfReqRegret conName="cChessAsian" sendType="2"   askType="ask"/>
+							<ntfRefuseRegret conName="cChessAsian" sendType="3"   askType="ask"/>
+							<peace conName="cChessAsian" sendType="0"   askType="ask"/>
+							<peace conName="cChessAsian" sendType="1"   askType="ret"/>
+							<acceptPeace conName="cChessAsian" sendType="0"   askType="ask"/>
+							<acceptPeace conName="cChessAsian" sendType="1"   askType="ret"/>
+							<ntfReqPeace conName="cChessAsian" sendType="2"   askType="ask"/>
+							<ntfRefusePeace conName="cChessAsian" sendType="3"   askType="ask"/>
+							<ready conName="cChessAsian" sendType="0"   askType="ask"/>
+							<ready conName="cChessAsian" sendType="1"   askType="ret"/>
+							<move conName="cChessAsian" sendType="0"   askType="ask"/>
+							<move conName="cChessAsian" sendType="1"   askType="ret"/>
+							<moveNtf conName="cChessAsian" sendType="3"   askType="ask"/>
+							<playerEnter conName="cChessAsian" sendType="3"   askType="ask"/>
+							<playingGameInfo conName="cChessAsian" sendType="0"   askType="ask"/>
+							<playingGameInfo conName="cChessAsian" sendType="1"   askType="ret"/>
+							<manS conName="cChessAsian" sendType="0"   askType="ask"/>
+							<manS conName="cChessAsian" sendType="1"   askType="ret"/>
+
+							<watchPlayer conName="cChessAsian" sendType="0"   askType="ask"/>
+							<watchPlayer conName="cChessAsian" sendType="1"   askType="ret"/>
+
+						</CChess>
+					</procRpc>
+				</cli2AccRrout>
+				<gatePmp  nextPmpDef="1">
+					<procRpc>
+						<login>
+							<doLogin askType="ask"/>
+							<doLogin askType="ret"/>
+							<doReLogin askType="ask"/>
+							<doReLogin askType="ret"/>
+						</login>
+						<test>
+							<doTest askType="ask"/>
+							<doTestString  askType="ask"/>
+							<exit askType="ask" exit="1"/>
+						</test>
+						<sysfun>
+							<addToChan askType="ask"/>
+							<removeFromChan naskType="ask"/>
+							<delChan askType="ask"/>
+							<accLogin askType="ask"/>
+						</sysfun>
+					</procRpc>
+				</gatePmp>
+			</msgPmp>
+		</CCGateServer>
+
+		<accServer projectDir="../">
+			<msgPmp>
+			<accPmp  nextPmpDef="1">
+			<procRpc>
+				<test>
+					<doTest askType="ask"/>
+					<doTestString  askType="ask"/>
+					<exit askType="ask" exit="1"/>
+				</test>
+			</procRpc>
+			</accPmp>
+			</msgPmp>
+		</accServer>
+
+		<CCAsianServer projectDir="../">
+			<msgPmp>
+			<ccAsianPmp>
+			<procRpc>
+				<CChess>
+					<manualList askType="ask"/>
+					<getOnceManual askType="ask"/>
+					<wateForGame askType="ask" neetPlayer="1"/>
+					<giveUp askType="ask" neetPlayer="1"/>
+					<regret neetPlayer="1" askType="ask"/>
+					<acceptRegret neetPlayer="1" askType="ask"/>
+					<peace neetPlayer="1" askType="ask"/>
+					<acceptPeace neetPlayer="1" askType="ask"/>
+					<ready neetPlayer="1" askType="ask"/>
+					<move neetPlayer="1" askType="ask"/>
+					<playingGameInfo askType="ask" neetPlayer="1"/>
+					<manS neetPlayer="1" askType="ask"/>
+					<watchPlayer  askType="ask" neetPlayer="1"/>
+				</CChess>
+				<sysfun>
+					<accOffline askType="ask"/>
+					<accReonline askType="ask"/>
+				</sysfun>
+			</procRpc>
+		</ccAsianPmp>
+		</msgPmp>
+		</CCAsianServer>
+
+		<CCAsianGame appType="ts" projectDir="../">
+			<procRpc>
+				<login>
+					<addAcc askType="ret"/>
+					<doLogin askType="ret"/>
+					<doReLogin askType="ret"/>
+					<kick askType="ask" />
+				</login>
+				<test>
+					<doTest askType="ret"/>
+					<doTestString  askType="ret"/>
+				</test>
+				<CChess>
+					<manualList askType="ret"/>
+					<getOnceManual  askType="ret"/>
+					<enterServer  askType="ret"/>
+					<wateForGame  askType="ret"/>
+					<createGame  askType="ask"/>
+					<gameEnd askType="ask"/>
+					<giveUp  askType="ret"/>
+					<regret  askType="ret"/>
+					<acceptRegret askType="ret"/>
+					<ntfReqRegret askType="ask"/>
+					<ntfRegret askType="ask"/>
+					<ntfRefuseRegret askType="ask"/>
+					<peace  askType="ret"/>
+					<acceptPeace askType="ret"/>
+					<ntfReqPeace askType="ask"/>
+					<ntfRefusePeace askType="ask"/>
+					<ready  askType="ret"/>
+					<move  askType="ret"/>
+					<moveNtf  askType="ask"/>
+					<playerEnter  askType="ask"/>
+					<playingGameInfo  askType="ret"/>
+					<manS askType="ret"/>
+					<watchPlayer  askType="ret"/>
+				</CChess>
+			</procRpc>
+		</CCAsianGame>
+	</app>
+</servers>
+

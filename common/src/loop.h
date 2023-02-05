@@ -11,9 +11,14 @@ enum procPacketFunRetType
 	procPacketFunRetType_exitAfterLoop
 };
 
+typedef struct _procPacketArg
+{
+	loopHandleType handle;
+} procPacketArg;
+
 typedef int (*frameFunType)(void* arg);
 //typedef void* loopHandleType;
-typedef int (*procPacketFunType)(packetHead*);
+typedef int (*procPacketFunType)(packetHead*, procPacketArg*);
 typedef loopHandleType  ServerIDType;
 typedef uword MsgIdT;
 #define c_emptyModelId 255

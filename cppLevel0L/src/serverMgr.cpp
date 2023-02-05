@@ -65,6 +65,17 @@ serverMgr::serverMgr()
 	m_outNum = 1;
 	m_createTcpServerFn = nullptr;
 	m_delTcpServerFn = nullptr;
+	m_packSendInfoTime = 5000;
+}
+
+udword  serverMgr::  packSendInfoTime ()
+{
+    return m_packSendInfoTime;
+}
+
+void serverMgr:: setPackSendInfoTime (udword  va)
+{
+    m_packSendInfoTime = va;
 }
 
 server*  serverMgr::getOutServer()
@@ -158,6 +169,16 @@ static int sAddComTimer(loopHandleType pThis, udword firstSetp, udword udwSetp,
 	return nRet;
 }
 */
+static NetTokenType   sNextToken(loopHandleType pThis)
+{
+	NetTokenType   nRet = 0;
+	auto& rMgr = tSingleton<serverMgr>::single();
+	auto pTH = rMgr.getServer(pThis);
+	if (pTH) {
+		nRet = pTH->nextToken ();
+	}
+	return nRet;
+}
 
 server*   serverMgr::      getServer(loopHandleType handle)
 {
@@ -170,7 +191,7 @@ server*   serverMgr::      getServer(loopHandleType handle)
 }
 int serverMgr::initFun (int cArg, const char* argS[])
 {
-	std::cout<<"start main"<<std::endl;
+	//std::cout<<"start main"<<std::endl;
 	int nRet = 0;
 	procArgS (cArg, argS);
 	auto& rMgr = getPhyCallback();
@@ -179,6 +200,7 @@ int serverMgr::initFun (int cArg, const char* argS[])
 	rMgr.fnAllocPack = allocPack;
 	rMgr.fnFreePack = freePack;
 	rMgr.fnLogMsg = logMsg;
+	rMgr.fnNextToken = sNextToken;
 	//rMgr.fnAddComTimer = sAddComTimer;// Thread safety
 	do {
 		auto nInitLog = initLog ("appFrame", "appFrameLog.log", 0);

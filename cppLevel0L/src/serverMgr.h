@@ -25,7 +25,10 @@ public:
     void  setDelTcpServerFn (delTcpServerFT va);
 	int   initNetServer (const char* szLibname);
 	server*         getOutServer();
+    udword    packSendInfoTime ();
+    void  setPackSendInfoTime (udword va);
 private:
+    udword  m_packSendInfoTime;
     delTcpServerFT  m_delTcpServerFn;
     createTcpServerFT  m_createTcpServerFn;
     ubyte  m_outNum;

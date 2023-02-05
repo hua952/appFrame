@@ -1,4 +1,6 @@
 #include "CMakeListsCreator.h"
+#include "msgTool.h"
+#include "tSingleton.h"
 #include "myAssert.h"
 #include "appMgr.h"
 
@@ -17,27 +19,49 @@ dword CMakeListsCreator::init(const char* szFilename, app* pApp)
 	std::ofstream os(szFilename);
 	const char* szAppName = pApp->name();
 	os<<"SET(prjName "<<szAppName<<")"<<std::endl;
-	const char* szCon = R"(set(srcS)
-file(GLOB srcS src/*.cpp)
+	const char* szCon = R"(set(genSrcS)
+file(GLOB genSrcS src/gen/*.cpp)
 set(defS)
+set(libPath)
+set(libDep)
 if (WIN32)
 	MESSAGE(STATUS "windows")
-	file(GLOB defS src/*.def)
-	include_directories(
-		${CMAKE_SOURCE_DIR}/../include
+	file(GLOB defS src/gen/win/*.def)
+	include_directories()";
+	auto& rTool = tSingleton<msgTool>::single ();
+	auto depInc = rTool.depIncludeHome ();
+	os<<szCon<<depInc<<")"<<std::endl;
+	auto depLib = rTool.depLibHome ();
+
+	os<<"list(APPEND libDep "<<depLib<<")"<<std::endl;
+const char* szC2 = R"(endif ()
+add_library(${prjName} SHARED ${genSrcS} ${defS})
+	include_directories()";
+	auto framePath = rTool.frameHome ();
+	os<<szC2<<std::endl
+	<<"    "<<framePath<<"common/src"<<std::endl
+	<<"    "<<framePath<<"logicCommon/src"<<std::endl
+	<<"    "<<framePath<<"cLog/src"<<std::endl
+                           <<")"<<std::endl;
+	auto libPath = rTool.frameLibPath ();
+
+	os<<"list(APPEND libPath "<<libPath<<")"<<std::endl;
+	const char* szC3 = R"(link_directories(${libPath} ${libDep})
+if (UNIX)
+	target_link_libraries(${prjName} PUBLIC
+		common
+		logicCommon
+		cLog
 		)
-	link_directories(
-		${CMAKE_SOURCE_DIR}/../lib
-		)
+elseif (WIN32)
+	target_link_libraries(${prjName} PUBLIC)";
+	auto outPath = rTool.outPutPath ();
+	os<<szC3<<std::endl
+		<<libPath<<R"(common.lib)"<<std::endl
+		<<libPath<<R"(logicCommon.lib)"<<std::endl
+		<<libPath<<R"(cLog.lib)"<<std::endl
+		<<R"()
 endif ()
-add_library(${prjName} SHARED ${srcS} ${defS})
-target_include_directories(${prjName} PUBLIC 
-							${CMAKE_SOURCE_DIR}/common/src
-							${CMAKE_SOURCE_DIR}/logicCommon/src
-							${CMAKE_SOURCE_DIR}/cLog/src
-                           )
-target_link_libraries(${prjName} PUBLIC  common)
-SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin))";
-os<<szCon;
+SET(LIBRARY_OUTPUT_PATH )"<<outPath<<R"())";
 return 0;
 }

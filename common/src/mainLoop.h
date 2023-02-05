@@ -35,6 +35,7 @@ typedef int (*logMsgFT) (const char* logName, const char* szMsg, uword wLevel);
 
 typedef int (*addComTimerFT)(loopHandleType pThis, udword firstSetp, udword udwSetp,
 		ComTimerFun pF, void* pUsrData, udword userDataLen);
+typedef NetTokenType   (*nextTokenFT)(loopHandleType pThis);
 typedef struct _PhyCallback
 {
 	sendPackToLoopFT fnSendPackToLoop;// Thread safety
@@ -43,6 +44,7 @@ typedef struct _PhyCallback
 	freePackFT		 fnFreePack; // Thread safety
 	logMsgFT		 fnLogMsg;// Thread safety
     //addComTimerFT    fnAddComTimer;// Thread safety
+	nextTokenFT      fnNextToken;
 } PhyCallback;
 
 struct  serverNode;
@@ -60,6 +62,7 @@ typedef struct _ForLogicFun
 	sendPackToLoopFT fnSendPackToLoop;// Thread safety
 	logMsgFT		 fnLogMsg;
     addComTimerFT    fnAddComTimer;// Thread safety
+	nextTokenFT      fnNextToken;
 	//char*			 szServerTxt;
 	//removeMsgFT		 fnRemoveMsg;
 } ForLogicFun;

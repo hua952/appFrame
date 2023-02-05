@@ -19,9 +19,9 @@ public:
 	bool start();
 	void run();
 	void join();
-	bool pushPack (packetHead* pack);
+	bool pushPack (packetHead* pack); // Thread safety
     int sendBySession(packetHead* pack);
-	int judgeRetSend (ISession* session, packetHead* pack);
+	//int judgeRetSend (ISession* session, packetHead* pack);
 	bool procProx(packetHead* pack);
 	virtual bool onFrame();
     typedef std::map<loopHandleType, ISession*> serverSessionMapT;

@@ -19,10 +19,12 @@ dword appFileCreator::writeH()
 	//strFile += m_szAppName;
 	strFile += "logicServer.h";
 	//strFile += ".h";
+	/*
 	bool ifs = isPathExit (strFile.c_str());
 	if (ifs) {
 		return 0;
 	}
+	*/
 	std::ofstream of(strFile.c_str());
 /*
 	of<<"#ifndef _"<<m_szAppName<<"_h_"<<std::endl
@@ -57,57 +59,6 @@ private:
 
 dword appFileCreator::writeCpp()
 {
-	/*
-	std::string strFile = m_szSrcDir;
-	strFile += m_szAppName;
-	strFile += ".cpp";
-	bool ifs = isPathExit (strFile.c_str());
-	if (ifs) {
-		return 0;
-	}
-	std::ofstream of(strFile.c_str());
-	of<<"#include<signal.h>"<<std::endl
-		<<"#include \""<<m_szAppName<<".h\""<<std::endl
-		<<"#include <unistd.h>"<<std::endl
-		<<"#include <fcntl.h>"<<std::endl
-		<<"#include\"cTimer.h\""<<std::endl
-		<<"#include \"strFun.h\""<<std::endl
-		<<"#include\"rlog.h\""<<std::endl
-		<<"#include<string.h>"<<std::endl
-		<<"#include\"funLog.h\""<<std::endl
-		<<"int initMsg();"<<std::endl
-		<<"int regMsgPmp();"<<std::endl
-		<<"dword "<<m_szAppName<<":: init(int argc, char* arg[], iNet* pNet, iFrame* pF)"<<std::endl
-		<<"{"<<std::endl
-		<<"LOG_FUN_CALL"<<std::endl
-		<<"	dword dwRet = comLogic::init(argc, arg, pNet, pF);"<<std::endl
-		<<"	if(0 != dwRet)"<<std::endl
-		<<"	{"<<std::endl
-		<<"		return 1;"<<std::endl
-		<<"	}"<<std::endl
-		<<"	dwRet = initMsg();"<<std::endl
-		<<"	dwRet = regMsgPmp();"<<std::endl
-		<<"	return 0;"<<std::endl
-		<<"}"<<std::endl
-		<<std::endl
-		<<"void "<<m_szAppName<<"::onExit()"<<std::endl
-		<<"{"<<std::endl
-		<<"	comLogic::onExit();"<<std::endl
-		<<"}"<<std::endl
-		<<"void "<<m_szAppName<<"::onSignal(int nSig)"<<std::endl
-		<<"{"<<std::endl
-		<<"}"<<std::endl
-		<<std::endl
-		<<"extern\"C\""<<std::endl
-		<<"{"<<std::endl
-		<<"	iLogic* getReLogic();"<<std::endl
-		<<"}"<<std::endl
-		<<"iLogic* getReLogic()"<<std::endl
-		<<"{"<<std::endl
-		<<"	static "<<m_szAppName<<"	s_ser;"<<std::endl
-		<<"	return &s_ser;"<<std::endl
-		<<"}"<<std::endl;
-		*/
 	std::string strFile = m_szSrcDir;
 	strFile += "logicServer.cpp";
 	bool ifs = isPathExit (strFile.c_str());
@@ -116,7 +67,6 @@ dword appFileCreator::writeCpp()
 	}
 	std::ofstream of(strFile.c_str());
 	const char* szCon = R"(#include <iostream>
-#include "msgPmpID.h"
 #include "logicServer.h"
 #include <cstring>
 #include "msg.h"

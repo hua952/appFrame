@@ -1,0 +1,216 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<servers>
+	<rpc>
+		<CChess tojs="1" cppDir="../libMsg/src">
+			<playerInfo>
+				<accID dataType="udword"/>
+				<score dataType="udword"/>
+				<head dataType="udword"/>
+				<lv dataType="uword"/>
+				<side dataType="ubyte"/>
+				<name dataType="char" length="32" zeroEnd="0" commit="昵称"/>
+			</playerInfo>
+			<trackNode>
+				<from dataType="ubyte"/>
+				<to dataType="ubyte"/>
+				<fromManType dataType="ubyte"/>
+				<toManType dataType="ubyte"/>
+			</trackNode>
+			<manualListNode>
+				<id dataType="udword"/>
+				<time dataType="udword" commit="比赛时间"/>
+				<endState dataType="ubyte" commit="比赛结果"/>
+				<winSide dataType="ubyte" commit="胜方"/>
+				<firstPlayer dataType="playerInfo"/>
+				<secondPlayer dataType="playerInfo"/>
+			</manualListNode>
+			<manualList>
+				<ask>
+				</ask>
+				<ret>
+					<id dataType="udword"/>
+					<nodeS dataType="manualListNode" length="1024" haveSize="1" zeroEnd="0" commit="昵称"/>
+				</ret>
+			</manualList>
+			<getOnceManual>
+				<ask>
+				</ask>
+				<ret>
+					<id dataType="udword"/>
+					<manS dataType="uword" length="16" commit="棋子"/> 
+					<track dataType="trackNode" length="1024" haveSize="1" commit="棋谱"> </track>
+				</ret>
+			</getOnceManual>
+			<enterServer>
+				<ask>
+					<accName dataType="char" length="32" zeroEnd="1"></accName>
+					<head dataType="uword" ></head>
+					<sinCode dataType="char" length="257" zeroEnd="1"></sinCode>
+				</ask>
+				<ret>
+					<result dataType="udword" />
+					<exp dataType="udword" />
+					<lv dataType="uword" />
+					<trackLen dataType="uword" />
+					<state dataType="ubyte" />
+					<inRoomState dataType="ubyte" />
+				</ret>
+			</enterServer>
+			<wateForGame>
+				<ask >
+				</ask>
+				<ret>
+					<result dataType="udword" />
+				</ret>
+			</wateForGame>
+			<gameEnd>
+				<ask>
+					<newExp dataType="udword" length="2" haveSize="0" commit="最新成绩"> </newExp>
+					<endState dataType="ubyte"/>
+					<winSide dataType="ubyte" />
+				</ask>
+			</gameEnd>
+			<giveUp>
+				<ask>
+				</ask>
+				<ret>
+					<result dataType="udword" />
+				</ret>
+			</giveUp>
+			<regret>
+				<ask>
+					<trackLen dataType="uword" />
+				</ask>
+				<ret>
+					<result dataType="udword" />
+				</ret>
+			</regret>
+			<acceptRegret>
+				<ask>
+					<accept dataType="ubyte" />
+				</ask>
+				<ret>
+					<result dataType="udword" />
+				</ret>
+			</acceptRegret>
+			<ntfReqRegret>
+				<ask>
+				</ask>
+			</ntfReqRegret>
+			<ntfRefuseRegret>
+				<ask>
+				</ask>
+			</ntfRefuseRegret>
+			<ntfRegret>
+				<ask>
+				</ask>
+			</ntfRegret>
+
+			<peace>
+				<ask>
+				</ask>
+				<ret>
+					<result dataType="udword" />
+				</ret>
+			</peace>
+			<acceptPeace>
+				<ask>
+					<accept dataType="ubyte" />
+				</ask>
+				<ret>
+					<result dataType="udword" />
+				</ret>
+			</acceptPeace>
+			<ntfReqPeace>
+				<ask>
+				</ask>
+			</ntfReqPeace>
+			<ntfRefusePeace>
+				<ask>
+				</ask>
+			</ntfRefusePeace>
+			<ready>
+				<ask>
+				</ask>
+				<ret>
+					<result dataType="udword" />
+				</ret>
+			</ready>
+			<move>
+				<ask>
+					<oldPos dataType="ubyte" />
+					<newPos dataType="ubyte" />
+				</ask>
+				<ret>
+					<result dataType="udword" />
+				</ret>
+			</move>
+			<moveNtf>
+				<ask>
+					<leafTime dataType="udword" length="2" haveSize="0"/>
+					<oldPos dataType="ubyte" />
+					<newPos dataType="ubyte" />
+					<side dataType="ubyte" />
+				</ask>
+			</moveNtf>
+			<createGame>
+				<ask>
+					<roomID dataType="udword"/>
+					<sideTime dataType="udword"	commit="局时(单位毫秒)"/>
+					<setpTime dataType="udword" commit="步时(单位毫秒)"/>
+					<setpAddTime dataType="udword" commit="步加时(单位毫秒)"/>
+					<first dataType="ubyte"/>
+					<rad dataType="ubyte"/>
+					<mainPlayer dataType="playerInfo" length="2" haveSize="0"/>
+				</ask>
+			</createGame>
+			<watchPlayer>
+				<ask>
+					<teagerID dataType="udword"/>
+				</ask>
+				<ret>
+					<result dataType="udword"/>
+				</ret>
+			</watchPlayer>
+
+			<playingGameInfo>
+				<ask>
+				</ask>
+				<ret>
+					<result dataType="udword" />
+					<roomID dataType="udword"/>
+					<sideTime dataType="udword"	commit="局时(单位毫秒)"/>
+					<setpTime dataType="udword" commit="步时(单位毫秒)"/>
+					<setpAddTime dataType="udword" commit="步加时(单位毫秒)"/>
+					<leafTime dataType="udword" length="2" haveSize="0"/>
+					<setpLeaf dataType="udword" length="2" haveSize="0"/>
+					<first dataType="ubyte"/>
+					<rad dataType="ubyte"/>
+					<member dataType="playerInfo" length="256" haveSize="1"/>
+				</ret>
+			</playingGameInfo>
+			<playerEnter>
+				<ask>
+					<player dataType="playerInfo"/>
+				</ask>
+			</playerEnter>
+			<roomDis>
+				<ask>
+				</ask>
+			</roomDis>
+			<manS>
+				<ask>
+				</ask>
+				<ret>
+					<result dataType="udword" />
+					<gameState dataType="ubyte" />
+					<endState dataType="ubyte" />
+					<winSide dataType="ubyte" />
+					<manS dataType="uword" length="16" commit="棋子"/> 
+					<track dataType="trackNode" length="512" haveSize="1" commit="棋谱"/>
+				</ret>
+			</manS>
+		</CChess>
+	</rpc>
+</servers>
+

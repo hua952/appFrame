@@ -8,6 +8,14 @@ void strNCpy(char* szD, int nSize, const char* szS)
     szD[nSize - 1] = 0;
 }
 
+void strCpy (const char* szSrc, std::unique_ptr<char[]>& pDec)
+{
+	auto len = strlen (szSrc);
+	pDec = std::make_unique<char []> (len + 1);
+	auto p = pDec.get();
+	strNCpy (p, len + 1, szSrc);
+}
+
 int strR(char* szText, char sp, char** pBuf, int BufNum)
 {
 	if(NULL == szText || NULL == pBuf || 0 == BufNum)

@@ -103,10 +103,20 @@ rpcMgr::rpcArryInfo::~rpcArryInfo()
 
 rpcMgr::rpcMgr()
 {
-	strNCpy(m_cppLibDir, c_dirSize, "../libMsg/src");
+	//strNCpy(m_cppLibDir, c_dirSize, "../libMsg/src");
 	strNCpy(m_jsLibDir, c_dirSize, "../CCAsianGame/src");
 	strNCpy(m_tsLibDir, c_dirSize, "../msg2ts/src");
     //m_OrderS = 0;
+}
+
+int	rpcMgr::mkDirS ()
+{
+	int nRet = 0;
+	//myMkdir (projectHome());
+	//myMkdir (m_cppLibDir);
+	//myMkdir (m_jsLibDir);
+	//myMkdir (m_tsLibDir);
+	return nRet;
 }
 
 rpcMgr::~rpcMgr()
@@ -288,9 +298,11 @@ int	rpcMgr::chickDataTypeS()
 
 void rpcMgr:: writeMsgPmpID()
 {
-	const int c_BuffSize = 64;
+	const int c_BuffSize = 128;
 	char szFilename[c_BuffSize]={0};
-	snprintf(szFilename, c_BuffSize, "%s/msgPmpID.h", m_cppLibDir);
+	std::unique_ptr<char[]> path;
+	tSingleton<msgTool>::single().getDefMsgPath(path);
+	snprintf(szFilename, c_BuffSize, "%s/msgPmpID.h", path.get());
 	std::ofstream os(szFilename);
 
 	os<<"#ifndef _msgPmpID_h__"<<std::endl
@@ -311,18 +323,16 @@ void rpcMgr:: writeMsgPmpID()
 	*/	
 	os<<"};"<<std::endl
 		<<std::endl;
+	/*
 	for(arrayMapIndexType i = 0; i <  m_pRpcArryS.size(); i++)
 	for (auto it = m_pRpcArryS.begin(); m_pRpcArryS.end() != it; ++it)
 	{
-		/*
-		pIStringKey* pp = m_pRpcArryS.getNodeByIndex(i);
-		pRpcArryInfo pA = dynamic_cast<pRpcArryInfo>(*pp); 
-		if(NULL == pA)
-		{
-			continue;
-		}
-		*/
 		auto pA = it->get();
+		os<<"#define "<<pA->name()<<"2FullMsg(p) ((uword)((msgPmpID_"<<pA->name()<<" * 100)+p))"<<std::endl;
+	}
+	*/
+	for (auto it = m_rpcV.begin (); m_rpcV.end () != it; ++it) {
+		auto& pA = *it;
 		os<<"#define "<<pA->name()<<"2FullMsg(p) ((uword)((msgPmpID_"<<pA->name()<<" * 100)+p))"<<std::endl;
 	}
 	os<<std::endl
@@ -388,9 +398,11 @@ static bool s_visit(void* pU, rpcMgr::pRpcInfo& pS)
 */
 void rpcMgr:: writeOnceMsgID(rpcArryInfo* pA, bool bAuto)
 {
-	const int c_BuffSize = 64;
+	const int c_BuffSize = 128;
 	char szFilename[c_BuffSize]={0};
-	snprintf(szFilename, c_BuffSize, "%s/%sMsgID.h", m_cppLibDir, pA->name());
+	std::unique_ptr<char[]> path;
+	tSingleton<msgTool>::single().getDefMsgPath(path);
+	snprintf(szFilename, c_BuffSize, "%s/%sMsgID.h", path.get(), pA->name());
 	std::ofstream os(szFilename);
 
 	os<<"#ifndef _"<<pA->name()<<"MsgID_h__"<<std::endl
@@ -536,9 +548,11 @@ void rpcMgr::writeVDataH(const char* szPer, std::ofstream& os, rpcMgr::structInf
 
 void rpcMgr::writeOnceRpcArryH(rpcArryInfo* pA)
 {
-	const int c_BuffSize = 64;
+	const int c_BuffSize = 128;
 	char szFilename[c_BuffSize]={0};
-	snprintf(szFilename, c_BuffSize, "%s/%sRpc.h", m_cppLibDir, pA->name());
+	std::unique_ptr<char[]> path;
+	tSingleton<msgTool>::single().getDefMsgPath(path);
+	snprintf(szFilename, c_BuffSize, "%s/%sRpc.h", path.get(), pA->name());
 	std::ofstream os(szFilename);
 	
 	os<<"#ifndef _"<<pA->name()<<"_rpc_h__"<<std::endl
@@ -575,9 +589,11 @@ void rpcMgr::writeOnceRpcArryH(rpcArryInfo* pA)
 
 void  rpcMgr:: writeInitMsgCpp()
 {
-	const int c_BuffSize = 64;
+	const int c_BuffSize = 128;
 	char szFilename[c_BuffSize]={0};
-	snprintf(szFilename, c_BuffSize, "%s/libMsg.cpp", m_cppLibDir);
+	std::unique_ptr<char[]> path;
+	tSingleton<msgTool>::single().getDefMsgPath(path);
+	snprintf(szFilename, c_BuffSize, "%s/libMsg.cpp", path.get());
 	std::ofstream os(szFilename);
 
 	os<<"#include<stdlib.h>"<<std::endl
@@ -638,13 +654,13 @@ void  rpcMgr:: writeRpcArryCpp()
 	}
 }
 
-void  rpcMgr:: writeMsgCpp(rpcArryInfo* pA, std::ofstream& os, msgInfo& rMsg)
+void  rpcMgr:: writeMsgCpp(rpcArryInfo* pA, std::ofstream& os, msgInfo& rMsg, bool bRet)
 {
 	dataVector& vData = rMsg.m_vData; 
 	udword udwS = vData.size(); 
 	os<<rMsg.name()<<"::"<<rMsg.name()<<"()"<<std::endl
-		<<"{"<<std::endl
-		<<"LOG_FUN_CALL"<<std::endl;
+		<<"{"<<std::endl;
+		//<<"LOG_FUN_CALL"<<std::endl;
 	if(udwS > 0)
 	{
 		os<<"	m_pPacket = (packetHead*)allocPacket(sizeof("<<rMsg.name()<<"Pack));"<<std::endl;
@@ -655,7 +671,9 @@ void  rpcMgr:: writeMsgCpp(rpcArryInfo* pA, std::ofstream& os, msgInfo& rMsg)
 	}
 	os<<"	netPacketHead* pN = P2NHead(m_pPacket);"<<std::endl
 		<<"	pN->dwMsgID = "<<pA->name()<<"2FullMsg("<<rMsg.m_msgIDName<<");"<<std::endl;
-
+		if (bRet) {
+			os<<"    NSetRet(pN);"<<std::endl;
+		}
 	std::string strMsgPackname = rMsg.name();
 	strMsgPackname += "Pack";
 
@@ -755,10 +773,10 @@ static bool s_visitWriteRpcCpp(void* pU, rpcMgr::pRpcInfo& pS)
 	temp::visitData * pD = (temp::visitData*)pU;
 	std::ofstream& os = *pD->ps;
 
-	pD->pMgr->writeMsgCpp(pD->pA, os, pRpc->m_ask);	
+	pD->pMgr->writeMsgCpp(pD->pA, os, pRpc->m_ask, false);	
 	if(pRpc->m_bRet)
 	{
-		pD->pMgr->writeMsgCpp(pD->pA, os, pRpc->m_ret);
+		pD->pMgr->writeMsgCpp(pD->pA, os, pRpc->m_ret, true);
 	}
 	return true;
 }
@@ -880,9 +898,11 @@ void rpcMgr::writeVDataCpp(const char* szPer, std::ofstream& os, rpcMgr::structI
 
 void   rpcMgr::  writeOnceRpcArryCpp(rpcArryInfo* pA)
 {
-	const int c_BuffSize = 64;
+	const int c_BuffSize = 128;
 	char szFilename[c_BuffSize]={0};
-	snprintf(szFilename, c_BuffSize, "%s/%sRpc.cpp", m_cppLibDir, pA->name());
+	std::unique_ptr<char[]> path;
+	tSingleton<msgTool>::single().getDefMsgPath(path);
+	snprintf(szFilename, c_BuffSize, "%s/%sRpc.cpp", path.get(), pA->name());
 	std::ofstream os(szFilename);
 	
 	os<<"#include<assert.h>"<<std::endl
@@ -937,7 +957,7 @@ void   rpcMgr::  writeOnceRpcArryCpp(rpcArryInfo* pA)
 
 	os<<"static void s_RegRPC(uword uwAsk, uword uwRet, udword askMaxSize, udword retMaxSize)"<<std::endl
 		<<"{"<<std::endl
-		<<"LOG_FUN_CALL"<<std::endl
+		//<<"LOG_FUN_CALL"<<std::endl
 		<<"	assert(uwAsk < 256 && uwRet < 256);"<<std::endl
 		<<"	CMsgMgr& msgMgr =  CMsgMgr::single();"<<std::endl
 		<<"	uwAsk = "<<pA->name()<<"2FullMsg(uwAsk);"<<std::endl
@@ -947,15 +967,15 @@ void   rpcMgr::  writeOnceRpcArryCpp(rpcArryInfo* pA)
 		
 		<<"static void s_RegMsg(uword uwAsk, udword askMaxSize)"<<std::endl
 		<<"{"<<std::endl
-		<<"LOG_FUN_CALL"<<std::endl
+		//<<"LOG_FUN_CALL"<<std::endl
 		<<"	assert(uwAsk < 256);"<<std::endl
 		<<"	CMsgMgr& msgMgr =  CMsgMgr::single();"<<std::endl
 		<<"	msgMgr.regMsg("<<pA->name()<<"2FullMsg(uwAsk), askMaxSize);"<<std::endl
 		<<"}"<<std::endl
 
 		<<"int "<<pA->name()<<"MsgInfoReg()"<<std::endl
-		<<"{"<<std::endl
-		<<"LOG_FUN_CALL"<<std::endl;
+		<<"{"<<std::endl;
+		//<<"LOG_FUN_CALL"<<std::endl;
 
 		for (auto it = pA->m_pRpcInfoSet.begin (); pA->m_pRpcInfoSet.end () != it; ++it) {
 			auto p = it->get();
