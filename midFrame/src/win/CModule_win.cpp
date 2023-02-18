@@ -7,13 +7,13 @@
 #include "impMainLoop.h"
 #include "mLog.h"
 
-int CModule::load_os (const char* szName, const ForLogicFun* pForLogic)
+int CModule::load_os (const char* szName, ForLogicFun* pForLogic)
 {
 	int nRet = 0;
-	mTrace ("At Then begin of CModule::load szName = "<<szName);
+	//mTrace ("At Then begin of CModule::load szName = "<<szName);
 	//HINSTANCE hdll;
 	auto hdll = LoadLibraryA(szName);
-	mTrace (" After LoadLibraryA hdll = "<<hdll);
+	//mTrace (" After LoadLibraryA hdll = "<<hdll);
 	//myAssert(hdll);
 	do {
 		if(!hdll){
@@ -26,7 +26,7 @@ int CModule::load_os (const char* szName, const ForLogicFun* pForLogic)
 		//auto funOnLoad = (afterLoadFunT)(dlsym(m_handle, "afterLoad"));
 		auto funOnLoad = (afterLoadFunT)(GetProcAddress(hdll, "afterLoad"));
 		//myAssert(funOnLoad);
-		mTrace (" After GetProcAddress afterLoadh funOnLoad = "<<funOnLoad);
+		//mTrace (" After GetProcAddress afterLoadh funOnLoad = "<<funOnLoad);
 		if(!funOnLoad)
 		{
 			mWarn ("funOnLoad empty error is");
@@ -35,15 +35,15 @@ int CModule::load_os (const char* szName, const ForLogicFun* pForLogic)
 		}
 		//m_onUnloadFun = (beforeUnloadFunT)(dlsym(m_handle, "beforeUnload"));
 		m_onUnloadFun = (beforeUnloadFunT)(GetProcAddress(hdll, "beforeUnload"));
-		mTrace (" After GetProcAddress beforeUnload funOnLoad = "<<m_onUnloadFun);
+		//mTrace (" After GetProcAddress beforeUnload funOnLoad = "<<m_onUnloadFun);
 		m_handle = hdll;
-		mTrace (" before call funOnLoad");
+		//mTrace (" before call funOnLoad");
 		try {
 			funOnLoad(pForLogic);
 		} catch (...) {
 			mTrace ("catch error");
 		}
-		mTrace (" after call funOnLoad");
+		//mTrace (" after call funOnLoad");
 	}while(0);
 	return nRet;
 }

@@ -22,7 +22,7 @@ int  InitMidFrame(int nArgC, const char* argS[], PhyCallback* pCallbackS)
 
 int getAllLoopAndStart(serverNode* pBuff, int nBuffNum)
 {
-	mInfo (" At then begin of getAllLoopAndStart");
+	//mInfo (" At then begin of getAllLoopAndStart");
 	auto& rMgr = tSingleton<loopMgr>::single();
 	return rMgr.getAllLoopAndStart(pBuff, nBuffNum);
 }
@@ -33,12 +33,14 @@ PhyInfo::PhyInfo()
 
 int PhyInfo::createServer (const char* szName, loopHandleType serId, serverNode* pNode, frameFunType funFrame, void* arg)
 {
+	//mTrace ("At the begin");
 	auto& rMgr = tSingleton<loopMgr>::single();
 	auto pRet = rMgr.createServer(szName, serId, pNode, funFrame, arg);
+	//mTrace ("At the end");
 	return pRet ;
 }
 
-int PhyInfo::regMsg(loopHandleType handle, uword uwMsgId, procPacketFunType pFun)
+int PhyInfo::regMsg(loopHandleType handle, uword uwMsgId, procRpcPacketFunType pFun)
 {
 	int nRet = 0;
 	auto& rMgr = tSingleton<loopMgr>::single();
@@ -83,7 +85,66 @@ static int sAddComTimer(loopHandleType pThis, udword firstSetp, udword udwSetp,
 	rTimeMgr.addComTimer (firstSetp, udwSetp, pF, pUsrData, userDataLen);
 	return nRet;
 }
-
+static sendPackToLoopFT g_sendPackToLoopFun = nullptr;
+static int sSendPackToLoopFun(packetHead* pack)
+{
+	int nRet = procPacketFunRetType_del;
+	auto pN = P2NHead (pack);
+	auto& rMgr = tSingleton<loopMgr>::single ();
+	auto curHandleFun = tSingleton<PhyInfo>::single ().getPhyCallback().fnGetCurServerHandle;
+	auto curHandle = curHandleFun ();
+	myAssert (pN->ubySrcServId == curHandle);
+	auto pS = rMgr.getLoop(pN->ubySrcServId);
+	myAssert (pS);
+	auto& rMsgInfoS = tSingleton<loopMgr>::single ().defMsgInfoMgr ();
+	bool bIsRet = rMsgInfoS.isRetMsg (pN->uwMsgID);
+	if (!bIsRet) {
+		auto retMsg = rMsgInfoS.getRetMsg(pN->uwMsgID);
+		if (c_null_msgID  != retMsg) {
+			auto& rMap = pS->tokenMsgS ();
+			/*
+			mTrace ("will insert ask pack -----dwToKen = "<<pN->dwToKen<<" msgId = "
+					<<pN->uwMsgID<<" retMsg = "<<retMsg<<" map.size = "<<rMap.size());
+					*/
+			auto bRet = rMap.insert (std::make_pair(pN->dwToKen, pack));
+			myAssert (bRet.second);
+			//mTrace (" save ask pack dwToKen = "<<pN->dwToKen<<" msgId = "<<pN->uwMsgID);
+			auto addTimerFun = tSingleton<PhyInfo>::single().getForLogicFun().fnAddComTimer;
+			auto delTime = rMgr.delSendPackTime ();
+			std::pair<NetTokenType, loopHandleType> pa;
+			pa.first = pN->dwToKen;
+			pa.second = pN->ubySrcServId;
+			addTimerFun (pN->ubySrcServId, delTime, delTime, [] (void* pUP) {
+					auto pArg = (std::pair<NetTokenType, loopHandleType>*) pUP; 
+					auto handle = pArg->second;
+					auto& rMgr = tSingleton<loopMgr>::single ();
+					auto pS = rMgr.getLoop(handle);
+					auto& rMap = pS->tokenMsgS ();
+					auto it = rMap.find (pArg->first);
+					if (rMap.end() != it) {
+						//mTrace (" 44444444444 ");
+						auto fnFree = tSingleton<PhyInfo>::single (). getPhyCallback().fnFreePack;
+						auto dPack = it->second;
+						auto pDN = P2NHead (dPack);
+						mTrace ("pArg->first = "<<pArg->first<<" handle = "<<handle);
+						mWarn (" pack delete by timer dwToKen = "<<pDN->dwToKen<<" msgId = "<<pDN->uwMsgID);
+						fnFree (dPack);
+						rMap.erase (it);
+					}
+					//mTrace ("  33333333333333  ");
+					return false;
+				},
+				&pa, sizeof (pa));
+		}
+	}
+	nRet = g_sendPackToLoopFun (pack); // must in the end
+	
+	return nRet;
+}
+static iRpcInfoMgr* sGetIRpcInfoMgr()
+{
+	return &tSingleton<loopMgr>::single().defMsgInfoMgr();
+}
 
 int PhyInfo::init(int nArgC, const char* argS[], PhyCallback& info)
 {
@@ -93,10 +154,12 @@ int PhyInfo::init(int nArgC, const char* argS[], PhyCallback& info)
 	forLogic.fnAllocPack = info.fnAllocPack;
 	forLogic.fnFreePack = info.fnFreePack;
 	forLogic.fnRegMsg = regMsg;
-	forLogic.fnSendPackToLoop = info.fnSendPackToLoop;
+	g_sendPackToLoopFun = info.fnSendPackToLoop;
+	forLogic.fnSendPackToLoop = /*info.fnSendPackToLoop; // */ sSendPackToLoopFun;
 	forLogic.fnLogMsg = info.fnLogMsg;
 	forLogic.fnAddComTimer = sAddComTimer;//m_callbackS.fnAddComTimer;
 	forLogic.fnNextToken = info.fnNextToken;
+	forLogic.fnGetIRpcInfoMgr = sGetIRpcInfoMgr;
 	//forLogic.fnRemoveMsg = removeMsg;
 	auto nRet = procArgS(nArgC, argS);
 	do
@@ -105,7 +168,7 @@ int PhyInfo::init(int nArgC, const char* argS[], PhyCallback& info)
 		{
 			break;
 		}
-		mInfo ("before load moduleS moduleNum = "<<m_ModuleNum);
+		//mInfo ("before load moduleS moduleNum = "<<m_ModuleNum);
 		auto& rModuleS = m_ModuleS;
 		for(auto i = 0; i < m_ModuleNum; i++)
 		{
@@ -159,7 +222,6 @@ int PhyInfo::procArgS(int nArgC, const char* argS[])
 	return 0;
 }
 
-
 CModule* PhyInfo::getModuleS (int& ModuleNum)
 {
 	ModuleNum = m_ModuleNum;
@@ -175,14 +237,21 @@ ForLogicFun&  PhyInfo::getForLogicFun()
 {
 	return m_forLogic;
 }
-
+ 
 loopMgr::loopMgr():m_CurLoopNum(0), m_procId(0), m_gropId(0)
 {
 	 //m_loopS = std::make_unique<impLoop[]> (c_MaxLoopNum);
+
+    m_delSendPackTime = 5000;
 }
 
 loopMgr::~loopMgr()
 {
+}
+
+udword  loopMgr::delSendPackTime ()
+{
+	return m_delSendPackTime;
 }
 
 int loopMgr::createServerS()
@@ -240,9 +309,14 @@ int loopMgr::createServer(const char* szName, loopHandleType serId,  serverNode*
 	p = std::make_unique<impLoop> ();
 	p->init(szName, serId, pNode, funFrame, arg);
 	m_CurLoopNum++;
-	mInfo ("createServer szName = "<<szName);
+	mInfo ("createServer szName = "<<szName<<" pid = "<<pid<<" sid = "<<sid<<" m_CurLoopNum = "<<m_CurLoopNum);
 	pRet = serId;
 	return pRet;
+}
+
+msgMgr&	loopMgr::defMsgInfoMgr ()
+{
+	return m_defMsgInfoMgr;
 }
 
 loopHandleType	loopMgr::procId()
@@ -284,13 +358,18 @@ impLoop*  loopMgr::getLoop(loopHandleType id)
 
 int loopMgr::getAllLoopAndStart(serverNode* pBuff, int nBuffNum)
 {
-	int i = 0;
 	auto pid = procId ();
-	for (; i < m_CurLoopNum && i < nBuffNum; i++)
+	//mTrace ("will start all loop m_CurLoopNum = "<<m_CurLoopNum);
+	int nRet = 0;
+	for (auto i = 0; i < LoopNum && nRet < nBuffNum; i++)
 	{
 		auto &p = m_loopS[i];
-		auto &node = pBuff[i];
+		if (!p) {
+			continue;
+		}
+		auto &node = pBuff[nRet++];
 		auto pNode = p->getServerNode ();
+		//mTrace ("get server i = "<<i<<" pNode = "<<pNode);
 		if (pNode) {
 			node = *pNode;
 		} else {
@@ -314,8 +393,9 @@ int loopMgr::getAllLoopAndStart(serverNode* pBuff, int nBuffNum)
 		}
 	}
 	*/
-	std::cout<<"loopMgr::getAllLoopAndStart i = "<<i<<" m_CurLoopNum = "<<m_CurLoopNum<<std::endl;
-	return i;
+	//std::cout<<"loopMgr::getAllLoopAndStart i = "<<i<<" m_CurLoopNum = "<<m_CurLoopNum<<std::endl;
+	mTrace ("at the end nRet = "<<nRet);
+	return nRet;
 }
 /*
 loopMgr::tempLoopMap&  loopMgr::getTempLoopNameMap()

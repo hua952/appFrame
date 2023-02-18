@@ -46,6 +46,7 @@ public:
     tokenMap&    tokenS ();
 	cTimerMgr&   getTimerMgr ();
 	ITcpServer*  getTcpServer ();
+	static thread_local  loopHandleType      s_loopHandleLocalTh;
 private:
     tokenMap  m_tokenS;
 	cTimerMgr          m_timerMgr;

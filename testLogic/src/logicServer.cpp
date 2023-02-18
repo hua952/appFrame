@@ -8,7 +8,7 @@
 #include "CChessMsgID.h"
 #include "myAssert.h"
 #include "tSingleton.h"
-#include "gen/loopHandleS.h"
+#include "loopHandleS.h"
 
 logicServer::logicServer()
 {
@@ -42,42 +42,61 @@ int logicServer::OnServerFrame()
 	return 0;
 }
 
-static int OnManualListAsk(packetHead* pSP, procPacketArg* pArg)
+static int OnManualListAsk(packetHead* pSP, pPacketHead& pRet, procPacketArg* pArg)
 {
 	gDebug ("rec ManualListAsk");
+	/*
 	auto pSN = P2NHead(pSP);
 	regretAsk ret;
 	ret.toPack();
-	auto pRet = ret.pop();
+	pRet = ret.pop();
 	auto pN = P2NHead(pRet);
 	pN->ubySrcServId = pSN->ubyDesServId;
 	pN->ubyDesServId = TestServerHandle;
 	auto& fun = getForMsgModuleFunS().fnSendPackToLoop;
 	fun(pRet);
+	*/
+	manualListRet  ret;
+	pRet = ret.pop ();
 	return procPacketFunRetType_del;
 }
 
-static int OnGiveUpCli(packetHead* pSP, procPacketArg* pArg)
+static int OnGiveUpCli(packetHead* pSP, pPacketHead& pRet, procPacketArg* pArg)
 {
 	return procPacketFunRetType_exitNow;
 }
 
-static int OnGiveUpSer(packetHead* pSP, procPacketArg* pArg)
+static int OnGiveUpSer(packetHead* pSP, pPacketHead& pRet, procPacketArg* pArg)
 {
 	return procPacketFunRetType_exitAfterLoop;
 }
  
-static int OnMoveRet(packetHead* pack, procPacketArg* pArg)
+static int OnMoveRet(packetHead* pack, pPacketHead& pRet, procPacketArg* pArg)
 {
 	int nRet = procPacketFunRetType_del;
 	gDebug ("OnMoveRet");
 	return nRet;
 }
 
-static int OnManualListRet(packetHead* pack, procPacketArg* pArg)
+static int OnManualListRet(packetHead* pack, pPacketHead& pRet, procPacketArg* pArg)
 {
 	int nRet = procPacketFunRetType_del;
 	gDebug ("OnManualListRet");
+	regretAsk ask;
+	auto packNew = ask.pop();
+	auto pNH = P2NHead(packNew);
+	auto& rSMgr = tSingleton<logicServerMgr>::single ();
+	auto fnNextToken = getForMsgModuleFunS ().fnNextToken;
+	pNH->dwToKen = fnNextToken (ThreadClientHandle);
+	gTrace (" get token info handle = "<<ThreadClientHandle<<" token = "<<pNH->dwToKen);
+	//gTrace(" 222222");
+	auto fun = getForMsgModuleFunS().fnSendPackToLoop;
+	//gTrace(" 333333");
+	pNH->ubyDesServId = TestServerHandle;
+	pNH->ubySrcServId = ThreadClientHandle;
+	//gTrace ("Will call send fun");
+	fun(packNew);
+	/*
 	moveAsk ask;
 	ask.toPack ();
 	auto pSend = ask.pop();
@@ -89,62 +108,47 @@ static int OnManualListRet(packetHead* pack, procPacketArg* pArg)
 	pN->dwToKen = fnNextToken (pArg->handle);
 	auto fun = getForMsgModuleFunS().fnSendPackToLoop;
 	fun(pSend);
+	*/
 	return  nRet;
 }
 
 static int OnFrameSer(void* pArgS)
 {
-	//std::cout<<"OnFrameSer"<<std::endl;
+	//gTrace ("At the begin"); 
 	return procPacketFunRetType_del;
 }
 
-static int OnRegretRet (packetHead* pSP, procPacketArg* pArg)
+static int OnRegretRet (packetHead* pSP, pPacketHead& pRet, procPacketArg* pArg)
 {
 	gInfo ("OnRegretRet ");
+	/*
 	auto pSN = P2NHead(pSP);
 	manualListRet ret;
 	ret.toPack();
-	auto pRet = ret.pop();
+	pRet = ret.pop();
 	auto pN = P2NHead(pRet);
 	pN->ubySrcServId = pSN->ubyDesServId;
 	pN->ubyDesServId =  ThreadClientHandle;
 	auto& fun = getForMsgModuleFunS().fnSendPackToLoop;
 	fun(pRet);
-
+	*/
+	moveAsk ask;
+	ask.toPack ();
+	auto pSend = ask.pop();
+	auto pN = P2NHead (pSend);
+	auto& rSMgr = tSingleton<logicServerMgr>::single ();
+	pN->ubySrcServId = ThreadClientHandle;
+	pN->ubyDesServId = AppTestServerHandle;
+	auto fnNextToken = getForMsgModuleFunS().fnNextToken;
+	pN->dwToKen = fnNextToken (pArg->handle);
+	auto fun = getForMsgModuleFunS().fnSendPackToLoop;
+	fun(pSend);
 	return procPacketFunRetType_del;
 }
 
 static int OnFrameCli(void* pArgS)
 {
-	/*
-	std::cout<<"OnFrameCli"<<std::endl;
-	std::string strWord;
-	std::cin>>strWord;
-	if (strWord == "send")
-	{
-		std::cout<<"Begin To Send"<<std::endl;
-		manualListAsk  ask;
-		auto pack = ask.pop();
-		auto pNH = P2NHead(pack);
-		auto& fun = getForMsgModuleFunS().fnSendPackToLoop;
-		pNH->ubyDesServId = logicServerMgr::s_SerId;
-		pNH->ubySrcServId = logicServerMgr::s_CliId;
-		fun(pack);
-	}
-	else if (strWord == "exit")
-	{
-		auto& fun = getForMsgModuleFunS().fnSendPackToLoop;
-		giveUpAsk serE;
-		auto pSr = serE.pop();
-
-		auto pNSr = P2NHead(pSr);
-		pNSr->ubyDesServId = logicServerMgr::s_SerId;
-		pNSr->ubySrcServId = logicServerMgr::s_CliId;
-		fun(pSr);
-		std::cout<<"Bey bey"<<std::endl;
-		return procPacketFunRetType_exitAfterLoop;
-	}
-	*/
+	//gTrace ("At the begin"); 
 	return procPacketFunRetType_del;
 }
 
@@ -154,48 +158,53 @@ static bool sSendMsg (void* pUserData)
 	manualListAsk  ask;
 	auto pack = ask.pop();
 	auto pNH = P2NHead(pack);
-	auto pTemp = (uqword)(pUserData);
-	auto pTh = (loopHandleType)(pTemp);
+	//auto pTemp = (uqword)(pUserData);
+	auto pTh = *(loopHandleType*)(pUserData);
+	//gTrace(" aaaaaaa pTh = "<<pTh);
 	auto& rSMgr = tSingleton<logicServerMgr>::single ();
-	auto fnNextToken = rSMgr.getForLogicFun ().fnNextToken;
+	auto fnNextToken = getForMsgModuleFunS ().fnNextToken;
+	//gTrace(" 111111 fnNextToken = "<<fnNextToken );
 	pNH->dwToKen = fnNextToken (pTh);
+	//gTrace(" 222222");
 	auto fun = getForMsgModuleFunS().fnSendPackToLoop;
+	//gTrace(" 333333");
 	pNH->ubyDesServId = ThreadServerHandle;
 	pNH->ubySrcServId = ThreadClientHandle;
+	//gTrace ("Will call send fun");
 	fun(pack);
 	return true;
 }
-
+/*
 ForLogicFun&  logicServerMgr::getForLogicFun ()
 {
 	return m_ForLogicFun;
 }
-
-void logicServerMgr::afterLoad(const ForLogicFun* pForLogic)
+*/
+void logicServerMgr::afterLoad(ForLogicFun* pForLogic)
 {
-	m_ForLogicFun = *pForLogic;
-	auto& rFunS = getForMsgModuleFunS();
-	rFunS.fnSendPackToLoop = pForLogic->fnSendPackToLoop;
-	rFunS.fnAllocPack = pForLogic->fnAllocPack;
-	rFunS.fnFreePack = pForLogic->fnFreePack;
-	rFunS.fnLogMsg = pForLogic->fnLogMsg;
+	//setForMsgModuleFunS (pForLogic);
+	auto& rForMsg = getForMsgModuleFunS();
+	rForMsg = *pForLogic;
 	gDebug ("In logicServerMgr::afterLoad testLogic");
 	auto fnCreateLoop = pForLogic->fnCreateLoop;
+	gTrace ("will call fnCreateLoop");
 	fnCreateLoop ("ThreadServer", ThreadServerHandle, nullptr, OnFrameSer, nullptr);
+	gTrace ("after call fnCreateLoop");
 	auto TestServerH = ThreadServerHandle;
 	myAssert (c_emptyLoopHandle	 != TestServerH);
 	auto fnRegMsg = pForLogic->fnRegMsg;
 	fnRegMsg (TestServerH, CChess2FullMsg(CChessMsgID_manualListAsk), OnManualListAsk);
-	fnRegMsg (TestServerH, CChess2FullMsg(CChessMsgID_regretRet), OnRegretRet);
-	fnRegMsg (TestServerH, CChess2FullMsg(CChessMsgID_giveUpAsk), OnGiveUpSer);
+	//fnRegMsg (TestServerH, CChess2FullMsg(CChessMsgID_regretRet), OnRegretRet);
+	//fnRegMsg (TestServerH, CChess2FullMsg(CChessMsgID_giveUpAsk), OnGiveUpSer);
 	fnCreateLoop ("ThreadClient", ThreadClientHandle, nullptr, OnFrameCli, nullptr);
     auto TestClientH = ThreadClientHandle;
 	myAssert (c_emptyLoopHandle	 != TestClientH);
 	fnRegMsg (TestClientH, CChess2FullMsg(CChessMsgID_manualListRet), OnManualListRet);
+	fnRegMsg (TestClientH, CChess2FullMsg(CChessMsgID_regretRet), OnRegretRet);
 	fnRegMsg (TestClientH, CChess2FullMsg(CChessMsgID_moveRet), OnMoveRet);
-	fnRegMsg (TestClientH, CChess2FullMsg(CChessMsgID_giveUpAsk), OnGiveUpCli);
+	//fnRegMsg (TestClientH, CChess2FullMsg(CChessMsgID_giveUpAsk), OnGiveUpCli);
 	auto fnAddComTimer = pForLogic->fnAddComTimer;
 	gInfo (" before fnAddComTimer testLogic");
-	fnAddComTimer (ThreadClientHandle, 10000, 10000,  sSendMsg, (void*)ThreadClientHandle, 0);
+	fnAddComTimer (TestClientH, 500, 10000,  sSendMsg, &TestClientH, sizeof(TestClientH));
 	gInfo (" At then end of afterLoad testLogic");
 }

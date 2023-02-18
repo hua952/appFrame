@@ -1,5 +1,6 @@
 #include <iostream>
 #include <sstream>
+#include <thread>
 #include "serverMgr.h"
 #include "strFun.h"
 #include "loop.h"
@@ -13,12 +14,35 @@ static packetHead* allocPack(udword udwSize)
 	auto pN = P2NHead(pRet);
 	pN->udwLength = udwSize;
 	pN->uwTag = 0;
+	//rTrace (" after allocPack pack = "<<pRet);
 	return pRet;
 }
 
 static void	freePack(packetHead* pack)
 {
+	//rTrace (" begin freePack pack = "<<pack);
+	auto pN = P2NHead (pack);
+	rTrace (" will delete pack msgID = "<<pN->uwMsgID<<" token = "<<pN->dwToKen
+			<<" srcHandle = "<<(int)(pN->ubySrcServId)<<" desHandle = "<<(int)(pN->ubyDesServId)
+			<<" pack = "<<pack);
+	/*
+	std::stringstream oss;
+	TraceStack(oss);
+	rTrace (oss.str().c_str());
+	*/
+	/*
+	std::unique_ptr<char[]> pStack;
+	showTraceStack(pStack);
+	rTrace (pStack.get());
+	*/
 	delete [] ((char*)(pack));
+	//rTrace (" after freePack pack = "<<pack);
+}
+
+void  freePackInLevel0(ServerIDType id, packetHead* pack)
+{
+	onFreePack (id, pack);
+	freePack (pack);
 }
 
 
@@ -41,8 +65,8 @@ static int sendPackToLoop(packetHead* pack)
 			<<" SP = "<<(int)(ubySp)<<" DP = "<<(int)(ubyDp));
 			*/
 	if (ubySp == ubyDp) {
-		auto pServerS = rMgr.getServerS();
-		pS = pServerS[ubyDl];
+		//auto pServerS = rMgr.getServerS();
+		pS = rMgr.getServer (pNH->ubyDesServId); // pServerS[ubyDl];
 		//rTrace ("send pack did = "<<(int)ubyDl<<" pS = "<<pS);
 	} else {
 		pS = rMgr.getOutServer ();
@@ -68,6 +92,14 @@ serverMgr::serverMgr()
 	m_packSendInfoTime = 5000;
 }
 
+udword  serverMgr::  delSendPackTime ()
+{
+    return m_delSendPackTime;
+}
+void  serverMgr::setDelSendPackTime (udword  va)
+{
+    m_delSendPackTime = va;
+}
 udword  serverMgr::  packSendInfoTime ()
 {
     return m_packSendInfoTime;
@@ -177,18 +209,33 @@ static NetTokenType   sNextToken(loopHandleType pThis)
 	if (pTH) {
 		nRet = pTH->nextToken ();
 	}
+	//rTrace (" 00000000000  handle = "<<pThis<<" ret token = "<<nRet);
 	return nRet;
 }
 
 server*   serverMgr::      getServer(loopHandleType handle)
 {
 	server* pRet = nullptr;
+	/*
 	loopHandleType  pid = 0;
 	loopHandleType  sid = 0;
 	fromHandle (handle, pid, sid);
 	pRet = g_serverS[sid];
+	*/
+	for (auto i = 0; i < g_ServerNum; i++) {
+		auto curH = g_serverS[i]->myHandle ();
+		if (curH == handle) {
+			pRet = g_serverS[i];
+			break;
+		}
+	}
 	return pRet;
 }
+static loopHandleType      getCurServerHandle ()
+{
+	return server::s_loopHandleLocalTh;
+}
+
 int serverMgr::initFun (int cArg, const char* argS[])
 {
 	//std::cout<<"start main"<<std::endl;
@@ -201,6 +248,7 @@ int serverMgr::initFun (int cArg, const char* argS[])
 	rMgr.fnFreePack = freePack;
 	rMgr.fnLogMsg = logMsg;
 	rMgr.fnNextToken = sNextToken;
+	rMgr.fnGetCurServerHandle = getCurServerHandle; // Thread safety
 	//rMgr.fnAddComTimer = sAddComTimer;// Thread safety
 	do {
 		auto nInitLog = initLog ("appFrame", "appFrameLog.log", 0);
@@ -217,9 +265,20 @@ int serverMgr::initFun (int cArg, const char* argS[])
 		rInfo ("InitMidFrame end");
 		const auto c_maxLoopNum = 10;
 		serverNode loopHandleS[c_maxLoopNum];
-		auto loopNum =  getAllLoopAndStart(loopHandleS, c_maxLoopNum);
-		rInfo ("initFun loopNum = "<<loopNum);
-		if (loopNum > 0) {
+		auto proLoopNum =  getAllLoopAndStart(loopHandleS, c_maxLoopNum);
+		/*
+		for (decltype (proLoopNum) i = 0; i < proLoopNum - 1; i++) {
+			for (decltype (proLoopNum) j = i + 1; i < proLoopNum; j++) {
+				if (loopHandleS[j].handle < loopHandleS[i].handle) {
+					auto pTemp = loopHandleS[i];
+					loopHandleS[i] = loopHandleS[j];
+					loopHandleS[j] = pTemp;
+				}
+			}
+		}
+		*/
+		rInfo ("initFun proLoopNum = "<<proLoopNum);
+		if (proLoopNum > 0) {
 			auto pNetLibName = m_netLibName.get();
 			rTrace ("will int net "<<pNetLibName);
 			auto nNetInit = initNetServer (pNetLibName);
@@ -227,22 +286,22 @@ int serverMgr::initFun (int cArg, const char* argS[])
 				rError ("initNetServer error nNetInit = "<<nNetInit);
 				break;
 			}
-			g_ServerNum = loopNum;
-			g_serverS = std::make_unique<pserver[]>(loopNum);
-			std::unique_ptr<server[]>	pServerImpS =  std::make_unique<server[]>(loopNum);
+			g_ServerNum = proLoopNum;
+			g_serverS = std::make_unique<pserver[]>(proLoopNum);
+			std::unique_ptr<server[]>	pServerImpS =  std::make_unique<server[]>(proLoopNum);
 			auto pServerS = getServerS();
 			auto pImpS = pServerImpS.get();
-			for (int i = 0; i < loopNum; i++ ) {
+			for (int i = 0; i < proLoopNum; i++ ) {
 				pServerS[i] = &pImpS[i];
-				auto loopH = loopHandleS [i].handle;
+				//auto loopH = loopHandleS [i].handle;
 				auto p = pServerS [i];
 				p->init (&loopHandleS[i]);
 			}
-			for (int i = 0; i < loopNum; i++ ) {
+			for (int i = 0; i < proLoopNum; i++ ) {
 				auto p = pServerS[i];
 				p->start();
 			}
-			for (int i = 0; i < loopNum; i++ ) {
+			for (int i = 0; i < proLoopNum; i++ ) {
 				auto p = pServerS [i];
 				p->join();
 			}

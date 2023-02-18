@@ -5,7 +5,7 @@
 #include "msgPmpID.h"
 #include "gLog.h"
 #include "strFun.h"
-#include "gen/loopHandleS.h"
+#include "loopHandleS.h"
 
 logicServerMgr::logicServerMgr ()
 {
@@ -19,27 +19,25 @@ static int OnFrameCli(void* pArgS)
 	return procPacketFunRetType_del;
 }
 
-static int OnMoveAsk (packetHead* pSP, procPacketArg* pArg)
+static int OnMoveAsk (packetHead* pSP, pPacketHead& pRet, procPacketArg* pArg)
 {
-	gInfo (__FUNCTION__);
+	gInfo ("rec MoveAsk ");
 	auto pSN = P2NHead(pSP);
 	moveRet ret;
 	ret.toPack();
-	auto pRet = ret.pop();
+	pRet = ret.pop();
 	auto pN = P2NHead(pRet);
-	pN->ubySrcServId = pSN->ubyDesServId;
-	pN->ubyDesServId = pSN->ubySrcServId;
-	pN->dwToKen = pSN->dwToKen;
 	auto& fun = getForMsgModuleFunS().fnSendPackToLoop;
 	fun(pRet);
 	return procPacketFunRetType_del;
 }
-
+/*
 ForMsgModuleFunS& getForMsgModuleFunS()
 {
 	static ForMsgModuleFunS s_ForMsgModuleFunS;
 	return  s_ForMsgModuleFunS;
 }
+*/
 /*
 struct serverNode
 {
@@ -53,14 +51,12 @@ struct serverNode
 };
 */
 
-void  logicServerMgr::afterLoad(const ForLogicFun* pForLogic)
+void  logicServerMgr::afterLoad(ForLogicFun* pForLogic)
 {
-	auto& rFunS = getForMsgModuleFunS();
-	rFunS.fnSendPackToLoop = pForLogic->fnSendPackToLoop;
-	rFunS.fnAllocPack = pForLogic->fnAllocPack;
-	rFunS.fnFreePack = pForLogic->fnFreePack;
-	rFunS.fnLogMsg = pForLogic->fnLogMsg;
-	gDebug ("In afterLoad appTestServer");
+	gDebug ("At the begin of appTestServer");
+	//setForMsgModuleFunS (pForLogic);
+	auto& rForMsg = getForMsgModuleFunS();
+	rForMsg = *pForLogic;
 	auto fnCreateLoop = pForLogic->fnCreateLoop;
 	auto fnRegMsg = pForLogic->fnRegMsg;
 	serverNode node;

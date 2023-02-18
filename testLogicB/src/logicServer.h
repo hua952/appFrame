@@ -31,7 +31,7 @@ public:
 	static const  ServerIDType s_CliId = 1;
 	static const  ServerIDType s_SerB = 2;
 	*/
-	void  afterLoad(const ForLogicFun* pForLogic);
+	void  afterLoad(ForLogicFun* pForLogic);
 private:
 };
 #endif

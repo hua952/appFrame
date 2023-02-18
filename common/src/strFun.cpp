@@ -16,6 +16,14 @@ void strCpy (const char* szSrc, std::unique_ptr<char[]>& pDec)
 	strNCpy (p, len + 1, szSrc);
 }
 
+void wstrCpy (const wchar_t* szSrc, std::unique_ptr<wchar_t[]>& pDec)
+{
+	auto len = wcslen(szSrc);
+	pDec = std::make_unique<wchar_t[]> (len + 1);
+	auto p = pDec.get();
+	wcscpy_s (p, len + 1, szSrc);
+}
+
 int strR(char* szText, char sp, char** pBuf, int BufNum)
 {
 	if(NULL == szText || NULL == pBuf || 0 == BufNum)

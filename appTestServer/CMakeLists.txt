@@ -22,6 +22,6 @@ target_include_directories(${prjName} PUBLIC
 							${CMAKE_SOURCE_DIR}/testLogicMsg/src
 							${CMAKE_SOURCE_DIR}/logicCommon/src
                            )
-target_link_libraries(${prjName} PUBLIC  common)
-target_link_libraries(${prjName} PUBLIC  testLogicMsg)
+target_link_libraries(${prjName} PUBLIC testLogicMsg logicCommon common)
+#target_link_libraries(${prjName} PUBLIC testLogicMsg)
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)

@@ -7,7 +7,7 @@
 #include "CChessRpc.h"
 #include "CChessMsgID.h"
 #include "myAssert.h"
-#include "gen/loopHandleS.h"
+#include "loopHandleS.h"
 #include "strFun.h"
 
 logicServer::logicServer()
@@ -42,12 +42,12 @@ int logicServer::OnServerFrame()
 	return 0;
 }
 
-static int OnGiveUpCli(packetHead* pSP, procPacketArg* pArg)
+static int OnGiveUpCli(packetHead* pSP, pPacketHead& pRet, procPacketArg* pArg)
 {
 	return procPacketFunRetType_exitNow;
 }
 
-static int OnGiveUpSer(packetHead* pSP, procPacketArg* pArg)
+static int OnGiveUpSer(packetHead* pSP, pPacketHead& pRet, procPacketArg* pArg)
 {
 	return procPacketFunRetType_exitAfterLoop;
 }
@@ -63,20 +63,20 @@ static int OnFrameCli(void* pArgS)
 	return procPacketFunRetType_del;
 }
 
-static int OnMoveRet (packetHead* pSP, procPacketArg* pArg)
+static int OnMoveRet (packetHead* pSP, pPacketHead& pRet, procPacketArg* pArg)
 {
 	int nRet = procPacketFunRetType_del;
 	gInfo ("OnMoveRet");
 	return nRet;
 }
 
-static int OnRegretAsk (packetHead* pSP, procPacketArg* pArg)
+static int OnRegretAsk (packetHead* pSP, pPacketHead& pRet, procPacketArg* pArg)
 {
 	gInfo ("OnRegretAsk");
 	auto pSN = P2NHead(pSP);
 	regretRet ret;
 	ret.toPack();
-	auto pRet = ret.pop();
+	pRet = ret.pop();
 	auto pN = P2NHead(pRet);
 	pN->ubySrcServId = pSN->ubyDesServId;
 	pN->ubyDesServId = pSN->ubySrcServId;
@@ -84,24 +84,13 @@ static int OnRegretAsk (packetHead* pSP, procPacketArg* pArg)
 	fun(pRet);
 	return procPacketFunRetType_del;
 }
-/*
- struct serverEndPointInfo
+
+void logicServerMgr::afterLoad(ForLogicFun* pForLogic)
 {
-	char              ip[16];
-	udword            udwUnuse;
-	uword             port;
-	ServerIDType	  targetHandle;
-	bool              bDef;
-};
-*/
-void logicServerMgr::afterLoad(const ForLogicFun* pForLogic)
-{
-	auto& rFunS = getForMsgModuleFunS();
-	rFunS.fnSendPackToLoop = pForLogic->fnSendPackToLoop;
-	rFunS.fnAllocPack = pForLogic->fnAllocPack;
-	rFunS.fnFreePack = pForLogic->fnFreePack;
-	rFunS.fnLogMsg = pForLogic->fnLogMsg;
 	gDebug ("In afterLoad serverB ");
+	//setForMsgModuleFunS (pForLogic);
+	auto& rForMsg = getForMsgModuleFunS();
+	rForMsg = *pForLogic;
 	auto fnCreateLoop = pForLogic->fnCreateLoop;
 	auto fnRegMsg = pForLogic->fnRegMsg;
 	serverNode node;
@@ -117,7 +106,7 @@ void logicServerMgr::afterLoad(const ForLogicFun* pForLogic)
 	auto TestClientH = TestServerHandle;
 	myAssert (c_emptyLoopHandle	 != TestClientH);
 	fnRegMsg (TestClientH, CChess2FullMsg(CChessMsgID_regretAsk), OnRegretAsk);
-	fnRegMsg (TestClientH, CChess2FullMsg(CChessMsgID_moveRet), OnMoveRet);
-	fnRegMsg (TestClientH, CChess2FullMsg(CChessMsgID_giveUpAsk), OnGiveUpCli);
+	//fnRegMsg (TestClientH, CChess2FullMsg(CChessMsgID_moveRet), OnMoveRet);
+	//fnRegMsg (TestClientH, CChess2FullMsg(CChessMsgID_giveUpAsk), OnGiveUpCli);
 	gInfo (" At then end of afterLoad serverB ");
 }

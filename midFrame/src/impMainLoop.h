@@ -6,6 +6,8 @@
 #include "tJumpListNS.h"
 #include <string>
 #include "CModule.h"
+#include "msgMgr.h"
+
 //class CModule;
 class PhyInfo
 {
@@ -17,7 +19,7 @@ public:
 	PhyCallback& getPhyCallback();  
 	ForLogicFun&  getForLogicFun();
 	static int createServer (const char* szName, loopHandleType serId, serverNode* pNode, frameFunType funFrame, void* arg);
-	static int regMsg(loopHandleType handle, uword uwMsgId, procPacketFunType pFun);
+	static int regMsg(loopHandleType handle, uword uwMsgId, procRpcPacketFunType pFun);
 	static int removeMsg(loopHandleType handle, uword uwMsgId);
 private:		
 	PhyCallback  m_callbackS;
@@ -43,9 +45,13 @@ public:
 	void			setGropId(loopHandleType grop);
 	int		createServerS();
 	int getAllLoopAndStart(serverNode* pBuff, int nBuffNum);
+	msgMgr&	defMsgInfoMgr (); // Thread safety
+	udword  delSendPackTime ();
 	//static const auto c_MaxLoopNum = LoopNum;
 private:	
-	int							 m_CurLoopNum;
+    udword  m_delSendPackTime;
+	msgMgr						m_defMsgInfoMgr;
+	int							m_CurLoopNum;
 	loopHandleType	m_procId;
 	loopHandleType	m_gropId;
 	//std::unique_ptr<impLoop[]>	 m_loopS;

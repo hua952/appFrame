@@ -15,20 +15,24 @@ public:
 	int init(const char* szName, ServerIDType id, serverNode* pNode, frameFunType funOnFrame = nullptr, void* argS = nullptr);
 	void clean();
 
-	bool regMsg(uword uwMsgId, procPacketFunType pFun);
+	bool regMsg(uword uwMsgId, procRpcPacketFunType pFun);
 	bool	removeMsg(uword uwMsgId);
-	procPacketFunType findMsg(uword uwMsgId);
+	procRpcPacketFunType findMsg(uword uwMsgId);
 	const char* name();
 	int OnLoopFrame();
 	int processOncePack(packetHead* pPack);
 	int onWriteOncePack(packetHead* pPack);
+	void onFreePack(packetHead* pPack);
 	ServerIDType id();
 	cTimerMgr&    getTimerMgr();
 	serverNode*   getServerNode ();
 	//void			setId(ModelIDType id);
 	//typedef arrayMap<uword, procPacketFunType> MsgMap;
-	typedef std::map<uword, procPacketFunType> MsgMap;
+	typedef std::map<uword, procRpcPacketFunType> MsgMap;
+	typedef std::map<NetTokenType, packetHead*>  tokenMsgMap;
+    tokenMsgMap&    tokenMsgS ();
 private:
+    tokenMsgMap  m_tokenMsgS;
 	cTimerMgr          m_timerMgr;
 	serverNode		   m_serverNode;
 	MsgMap	m_MsgMap;

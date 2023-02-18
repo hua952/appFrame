@@ -7,7 +7,8 @@ if (WIN32)
 	#add_definitions(-DUNICODE -D_UNICODE)
 	file(GLOB defS src/*.def)
 	file(GLOB osSrc src/win/*.cpp)
-	add_definitions(-w)
+	#add_definitions(-w)
+	#add_definitions(-DWIN32_LEAN_AND_MEAN)
 	MESSAGE(STATUS "windows ${prjName} osSrc =  ${osSrc}")
 	include_directories(
 		${CMAKE_SOURCE_DIR}/../include

@@ -171,25 +171,7 @@ static int sProcessNetPackFun(ISession* session, packetHead* pack)
 	auto pITcp = session->getServer ();
 	auto pServer = (server*)(pITcp->userData());
 	auto pN = P2NHead (pack);
-	if (!NIsRet (pN)) {
-		rTrace(__FUNCTION__<<" before change token = "<<pN->dwToKen);
-		server::tokenInfo info;
-		info.oldToken = pN->dwToKen;
-		info.sessionId = session->id ();
-		auto newToken = pServer->nextToken ();
-		rTrace(__FUNCTION__<<" will change will token = "<<newToken);
-		auto& rTM = pServer->tokenS ();
-		rTM [newToken] = info;
-		pN->dwToKen = newToken;
-		auto& rTimeMgr = pServer->getTimerMgr ();
-		std::pair<server*, NetTokenType> argS;
-		argS.first = pServer;
-		argS.second = newToken;
-		auto& rMgr = tSingleton<serverMgr>::single ();
-		auto timeOut = rMgr.packSendInfoTime ();
-		rTimeMgr.addComTimer (5000, sDelTokenInfo, &argS, sizeof (argS));
-		rTrace(" chang token oldToken = "<<info.oldToken<<" newToken = "<<newToken);
-	}
+	
 	loopHandleType  proId;
 	loopHandleType  serId;
 	fromHandle (pN->ubyDesServId, proId, serId);
@@ -199,25 +181,42 @@ static int sProcessNetPackFun(ISession* session, packetHead* pack)
 	auto myH = pServer->myHandle ();
 	fromHandle (myH, myPId, mySId);
 	if (myPId == proId) {
+		if (!NIsRet (pN)) {
+			rTrace(__FUNCTION__<<" before change token = "<<pN->dwToKen);
+			server::tokenInfo info;
+			info.oldToken = pN->dwToKen;
+			info.sessionId = session->id ();
+			auto newToken = pServer->nextToken ();
+			rTrace(__FUNCTION__<<" will change will token = "<<newToken);
+			auto& rTM = pServer->tokenS ();
+			rTM [newToken] = info;
+			pN->dwToKen = newToken;
+			auto& rTimeMgr = pServer->getTimerMgr ();
+			std::pair<server*, NetTokenType> argS;
+			argS.first = pServer;
+			argS.second = newToken;
+			auto& rMgr = tSingleton<serverMgr>::single ();
+			auto timeOut = rMgr.packSendInfoTime ();
+			rTimeMgr.addComTimer (5000, sDelTokenInfo, &argS, sizeof (argS));
+			rTrace(" chang token oldToken = "<<info.oldToken<<" newToken = "<<newToken);
+		}
 		if (mySId == serId) {
 			nRet = myProcessNetPackFun (pServer, session, pack);
 		} else {
 			auto& rMgr = tSingleton<serverMgr>::single();
 			auto pServerS = rMgr.getServerS();
-			auto pS = pServerS[serId];
+			auto pS = rMgr.getServer (pN->ubyDesServId);// pServerS[serId];
 			//rTrace(__FUNCTION__<<" before pushPack pack = "<<pack<<" serId = "<<(int)serId<<" msgId = "<<pN->uwMsgID<<" length = "<<pN->udwLength);
 			pS->pushPack (pack);
 			nRet = procPacketFunRetType_doNotDel;
 		}
 	} else {
-		/*
 		   auto& rMgr = tSingleton<serverMgr>::single();
 		   auto pOut = rMgr.getOutServer ();
 		   myAssert (pOut);
 		   pOut->pushPack (pack);
 		   nRet = procPacketFunRetType_doNotDel;
-		   */
-		pServer->pushPack (pack);
+		//pServer->pushPack (pack);
 	}
 	return nRet;
 }
@@ -277,14 +276,17 @@ static void sOnClose(ISession* session)
 static void sOnWritePack(ISession* session, packetHead* pack)
 {
 	auto pN = P2NHead (pack);
+	auto& rMgr = tSingleton<serverMgr>::single().getPhyCallback();
+	auto fnFreePack = rMgr.fnFreePack;
 	if (pN->uwMsgID < framMsgIdBegin) {
 		auto pITcp = session->getServer ();
 		auto pServer = (server*)(pITcp->userData ());
 		auto myHand = pServer->myHandle ();
-		onWriteOncePack (myHand, pack);
+		auto nRet = onWriteOncePack (myHand, pack);
+		if (procPacketFunRetType_del == nRet) {
+			fnFreePack (pack);
+		}
 	} else {
-		auto& rMgr = tSingleton<serverMgr>::single().getPhyCallback();
-		auto fnFreePack = rMgr.fnFreePack;
 		fnFreePack (pack);
 	}
 }
@@ -407,6 +409,7 @@ int server::init(serverNode* pMyNode)
 	return nRet;
 }
 
+thread_local  loopHandleType  server::s_loopHandleLocalTh = c_emptyLoopHandle;
 bool server::start()
 {
 	m_pTh =std::make_unique<std::thread>(server::ThreadFun, this);
@@ -421,6 +424,7 @@ void server::join()
 
 void server::run()
 {
+	s_loopHandleLocalTh = m_loopHandle;
 	while(true)
 	{
 		auto bExit = onFrame();
@@ -456,15 +460,16 @@ bool server::procProx(packetHead* pack)
 			<<"  ubyDesServId ="<<(int)pN->ubyDesServId<<" myHandle = "<<(int)myHand<<" token = "<<pN->dwToKen);
 			*/
 	if (myPId == ubyPId) {
-		myAssert (mySId == ubySId);
 		if (mySId == ubySId) {
 			bRet = false;
 		} else {
-			rWarn ("mySId != ubySId msgId = "<<pN->uwMsgID<<" token = "<<pN->dwToKen);
+			rWarn ("mySId != ubySId msgId = "<<pN->uwMsgID<<" token = "<<pN->dwToKen<<" mySId = "
+					<<(int)mySId<<" ubySId = "<<(int)ubySId);
 			auto& rMgr = tSingleton<serverMgr>::single().getPhyCallback();
 			auto fnFreePack = rMgr.fnFreePack;
 			fnFreePack (pack);
 		}
+		//myAssert (mySId == ubySId);
 	} else {
 		//sendBySession (pack);
 		auto& rTM = tokenS ();
@@ -523,8 +528,8 @@ bool server::procProx(packetHead* pack)
 				pSession->send (pack);
 			} else {
 				rWarn (__FUNCTION__<<" pSession is empty msgId = "<<pN->uwMsgID<<"  ubyDesServId ="<<(int)pN->ubyDesServId);
-				auto fnFreePack = tSingleton<serverMgr>::single().getPhyCallback().fnFreePack;
-				fnFreePack (pack);
+				//auto fnFreePack = tSingleton<serverMgr>::single().getPhyCallback().fnFreePack;
+				freePackInLevel0(pN->ubySrcServId, pack); // fnFreePack (pack);
 			}
 		}
 	}
@@ -544,7 +549,8 @@ bool server::onFrame()
 	if (pNet) {
 		pNet->onLoopFrame ();
 	}
-	auto nQuit = OnLoopFrame(m_loopHandle); // call by level 0
+	auto myHandle = m_loopHandle;
+	auto nQuit = OnLoopFrame(myHandle); // call by level 0
 	if (procPacketFunRetType_exitNow == nQuit) {
 		bExit = true;
 	} else {
@@ -556,7 +562,6 @@ bool server::onFrame()
 		m_slistMsgQue.getMsgS(pH);
 		auto n = pH->pNext;
 		auto& rMgr = tSingleton<serverMgr>::single().getPhyCallback();
-		auto fnFreePack = rMgr.fnFreePack;
 		while (n != pH) {
 			auto d = n;
 			n = n->pNext;
@@ -592,9 +597,12 @@ bool server::onFrame()
 		while (n != pH) {
 			auto d = n;
 			n = n->pNext;
-			fnFreePack (d);
+			auto pN = P2NHead (d);
+			//rTrace (" 111111111111 dwToKen = "<<pN->dwToKen<<" msgId = "<<pN->uwMsgID);
+			freePackInLevel0 (myHandle, d);  //fnFreePack (d);
 		}
 	}
+	//rTrace (" At then end ");
 	return bExit;
 }
 

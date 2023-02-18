@@ -19,7 +19,8 @@ msgMgr::~msgMgr ()
 {
 }
 
-int  msgMgr::  regRpc (msgIdType askId, msgIdType retId, loopHandleType askDefProcSer, loopHandleType retDefProcSer)
+int  msgMgr::  regRpc (msgIdType askId, msgIdType retId, serverIdType	askDefProcSer,
+		serverIdType	 retDefProcSer)
 {
 	int nRet = 0;
 	auto& rMsgInfoS = m_msgInfoS;
@@ -40,7 +41,29 @@ int  msgMgr::  regRpc (msgIdType askId, msgIdType retId, loopHandleType askDefPr
 	return nRet;
 }
 
-int   msgMgr:: regAskOnly (msgIdType askId, loopHandleType askDefProcSer)
+msgIdType  msgMgr::  getRetMsg(msgIdType    askMsg)
+{
+	msgIdType nRet = c_null_msgID;
+	auto& rMgr = m_askMap;
+	auto it = rMgr.find (askMsg);
+	if (it) {
+		nRet = *it;
+	}
+	return nRet;
+}
+
+msgIdType  msgMgr::getAskMsg(msgIdType    retMsg)
+{
+	msgIdType nRet = c_null_msgID;
+	auto& rMgr = m_retMap;
+	auto it = rMgr.find (retMsg);
+	if (it) {
+		nRet = *it;
+	}
+	return nRet;
+}
+
+int   msgMgr:: regAskOnly (msgIdType askId, serverIdType	askDefProcSer)
 {
 	int nRet = 0;
 	auto& rMsgInfoS = m_msgInfoS;
@@ -52,4 +75,11 @@ int   msgMgr:: regAskOnly (msgIdType askId, loopHandleType askDefProcSer)
 	bR = rAskMap.insert (askId, c_null_msgID);
 	myAssert (bR);
 	return nRet;
+}
+
+bool  msgMgr::isRetMsg (msgIdType msgId)
+{
+	auto& rMgr = m_retMap;
+	auto it = rMgr.find (msgId);
+	return nullptr != it;
 }

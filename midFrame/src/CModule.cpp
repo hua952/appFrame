@@ -28,7 +28,7 @@ int CModule::init(const char* szName)
 	return 0;
 }
 
-int CModule::load(const ForLogicFun* pForLogic)
+int CModule::load(ForLogicFun* pForLogic)
 {
 	int nRet = 0;
 	auto pBuff = m_name.get ();

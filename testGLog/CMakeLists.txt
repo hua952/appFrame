@@ -1,8 +1,11 @@
 cmake_minimum_required (VERSION 3.16)
-project (myproj VERSION 1.0)
 
-find_package (glog 0.6.0 REQUIRED)
+SET(prjName showStack)
+#project (myproj VERSION 1.0)
 
-add_executable (myapp src/main.cpp)
-target_link_libraries (myapp glog::glog)
+#find_package (glog 0.6.0 REQUIRED)
+
+add_executable (${prjName} src/main.cpp)
+
+target_link_libraries(${prjName} PUBLIC dbghelp)
 

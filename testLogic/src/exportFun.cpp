@@ -12,19 +12,17 @@
 
 //typedef  int (*regMsgFT)(loopHandleType handle, uword uwMsgId, procPacketFunType pFun); // call by level 2
 
-const int c_SerNum =  logicServerMgr::serverIdS_Num;
-static const char* serNameS[c_SerNum] = {"ThreadServer", "ThreadClient"};
+//const int c_SerNum =  logicServerMgr::serverIdS_Num;
+static const char* serNameS[] = {"ThreadServer", "ThreadClient"};
+static const auto c_SerNum = sizeof (serNameS) / sizeof (serNameS[0]);
 int   getServerS (const char** pBuff, int nBuffNum)
 {
 	int nRet = 0;
-	if (nBuffNum >= c_SerNum)
+	for (auto i = 0; i < c_SerNum && i < nBuffNum; i++)
 	{
-		for (auto i = 0; i < c_SerNum; i++)
-		{
-			pBuff[i] = serNameS[i];
-		}
-		nRet = c_SerNum;
+		pBuff[i] = serNameS[i];
 	}
+	nRet = c_SerNum;
 	return nRet;
 }
 
@@ -47,10 +45,13 @@ void  regMsgS(regMsgFT fnRegMsg)
 	
 }
 
-void  afterLoad(const ForLogicFun* pForLogic)
+void  afterLoad(ForLogicFun* pForLogic)
 {
 	//auto nInit = initLog ("logic", "logicLog", 0, true);
 	//myAssert (0 == nInit);
+	auto& rForMsg = getForMsgModuleFunS();
+	rForMsg = *pForLogic;
+	//std::cout<<"OKOKOKOKOK"<<std::endl;
 	//gTrace ("At then begin of   afterLoad");
 	tSingleton<logicServerMgr>::createSingleton();
 	auto &rMgr = tSingleton<logicServerMgr>::single();
@@ -59,12 +60,13 @@ void  afterLoad(const ForLogicFun* pForLogic)
 
 void  beforeUnload()
 {
-	std::cout<<"In   beforeUnload"<<std::endl;
+	//std::cout<<"In   beforeUnload"<<std::endl;
 }
 
+/*
 ForMsgModuleFunS& getForMsgModuleFunS()
 {
 	static ForMsgModuleFunS s_ForMsgModuleFunS;
 	return  s_ForMsgModuleFunS;
 }
-
+*/

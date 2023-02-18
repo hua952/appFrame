@@ -1,3 +1,4 @@
+#include <memory>
 #include "comFun.h"
 #include "mainLoop.h"
 
@@ -18,3 +19,4 @@ bool            fromHandle (loopHandleType handle, loopHandleType &p, loopHandle
 	p = (loopHandleType)(temp);
 	return true;
 }
+

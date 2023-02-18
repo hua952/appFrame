@@ -26,7 +26,9 @@ int initLog (const char* logName, const char* logfileName, uword minLevel)
 	auto nL = getLogLevel (minLevel);
 	spdlog::flush_every(std::chrono::seconds(2));
 	spdlog::set_level((decltype(spdlog::level::trace))(nL));
-	spdlog::set_pattern("[%Y-%m-%d %H:%M:%S][%l][%p:%t][%s:%#] %v");
+	//spdlog::set_pattern("[%Y-%m-%d %H:%M:%S][%l][%p:%t][%s:%#] %v");
+	spdlog::set_pattern("%Y-%m-%d %H:%M:%S [%l] [%t] - <%s>|<%#>|<%!>,%v");
+
 	return nRet;
 }
 void loggerDrop()

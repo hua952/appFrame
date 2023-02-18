@@ -2,6 +2,7 @@
 #define _com_fum_h__
 #include<string.h>
 #include"typeDef.h"
+#include <memory>
 
 template<class T>
 class LessComp
@@ -84,6 +85,10 @@ loopHandleType  toHandle (loopHandleType  p, loopHandleType l);
 bool            fromHandle (loopHandleType handle, loopHandleType &p, loopHandleType& l);
 bool            isPathExit (const char* szPath);
 int             myMkdir (const char* szPath);
+int             getCurDllPath (std::unique_ptr<char[]>& pathBuf);
+
+void showTraceStack(std::unique_ptr<char[]>& pBuff);
+
 #define SD(p) {delete p;p=nullptr;}
 #define SDA(p) {delete[]p;p=nullptr;}
 

@@ -49,7 +49,7 @@ dword appFileCreator::writeH()
 class logicServerMgr
 {
 public:
-	void  afterLoad(const ForLogicFun* pForLogic);
+	void  afterLoad(ForLogicFun* pForLogic);
 private:
 };
 #endif)";
@@ -79,13 +79,10 @@ static int OnFrameCli(void* pArgS)
 	return procPacketFunRetType_del;
 }
 
-void logicServerMgr::afterLoad(const ForLogicFun* pForLogic)
+void logicServerMgr::afterLoad(ForLogicFun* pForLogic)
 {
 	auto& rFunS = getForMsgModuleFunS();
-	rFunS.fnSendPackToLoop = pForLogic->fnSendPackToLoop;
-	rFunS.fnAllocPack = pForLogic->fnAllocPack;
-	rFunS.fnFreePack = pForLogic->fnFreePack;
-	rFunS.fnLogMsg = pForLogic->fnLogMsg;
+	rFunS = *pForLogic;
 	gDebug ("In logicServerMgr::afterLoad testLogic");
 	auto fnCreateLoop = pForLogic->fnCreateLoop;
 	auto fnRegMsg = pForLogic->fnRegMsg;

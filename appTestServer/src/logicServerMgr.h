@@ -7,7 +7,7 @@ class logicServerMgr
 public:
     logicServerMgr ();
     ~logicServerMgr ();
-	void  afterLoad(const ForLogicFun* pForLogic);
+	void  afterLoad(ForLogicFun* pForLogic);
 private:
 };
 #endif

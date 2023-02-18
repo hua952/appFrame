@@ -38,14 +38,27 @@ int onWriteOncePack(loopHandleType pThis, packetHead* pPack)
 	return pTH->onWriteOncePack (pPack);
 }
 
+
+void onFreePack(loopHandleType pThis, packetHead* pPack)
+{
+	auto& rMgr = tSingleton<loopMgr>::single();
+	auto pTH = rMgr.getLoop (pThis);
+	pTH->onFreePack(pPack);
+}
+
 int impLoop::onWriteOncePack(packetHead* pPack)
 {
+	int nRet = procPacketFunRetType_doNotDel;
 	auto pN = P2NHead (pPack);
-	mTrace (__FUNCTION__<<" msgId = "<<pN->uwMsgID);
-
-	auto freeFun =  tSingleton<PhyInfo>::single().getForLogicFun().fnFreePack;
-	freeFun (pPack);
-	return 0;
+	//mTrace (__FUNCTION__<<" msgId = "<<pN->uwMsgID);
+	auto& rTS = tokenMsgS ();
+	auto it = rTS.find (pN->dwToKen);
+	if (rTS.end () == it) {
+		//auto freeFun =  tSingleton<PhyInfo>::single().getForLogicFun().fnFreePack;
+		//freeFun (pPack);
+		nRet = procPacketFunRetType_del;
+	}
+	return nRet;
 }
 
 impLoop::impLoop()//:m_MsgMap(8)
@@ -61,25 +74,94 @@ impLoop::~impLoop()
 {
 }
 
+void impLoop::onFreePack(packetHead* pPack)
+{
+	auto pN = P2NHead (pPack);
+	mTrace ("  msgId = "<<pN->uwMsgID<<" token = "<<pN->dwToKen);
+	if (! NIsRet (pN)) {
+		mTrace (" erase token = "<<pN->dwToKen<<" handle = "<<id());
+		auto& rMap = tokenMsgS ();
+		rMap.erase (pN->dwToKen);
+	}
+}
+
+impLoop::tokenMsgMap&  impLoop:: tokenMsgS ()
+{
+    return m_tokenMsgS;
+}
+
+//static procMsgRetType on_acceptPeaceAsk(packetHead* pAsk, pPacketHead& pRet)
+
 int impLoop::processOncePack(packetHead* pPack)
 {
 	//mTrace (__FUNCTION__<<" 000");
-	int nRet = 0;
+	int nRet = procPacketFunRetType_del;
+	auto& rPho = tSingleton<PhyInfo>::single();
+	auto& rCS = rPho.getPhyCallback();
+	auto allocFun = rCS.fnAllocPack;
+	auto freeFun = rCS.fnFreePack;
+	auto sendFun = rCS.fnSendPackToLoop;
 	auto pN = P2NHead(pPack);
-	auto pF = findMsg(pN->uwMsgID);
-	/*
-	mTrace (__FUNCTION__<<" 222 msgId = "<<pN->uwMsgID
-						<<"  ubyDesServId ="<<(int)pN->ubyDesServId<<" handle = "<<(int)m_id<<" pF = "<<pF);
-						*/
-	if(pF) {
+	auto getCurServerHandleFun = rCS.fnGetCurServerHandle;
+	auto cHandle = getCurServerHandleFun ();
+	myAssert (cHandle == pN->ubyDesServId);
+	do {
+		auto pF = findMsg(pN->uwMsgID);
+		if(!pF) {
+			mWarn ("can not find proc function token: "<<pN->dwToKen<<" msgId = "<<pN->uwMsgID
+					<<" length = "<<pN->udwLength);
+			break;
+		}
+
+		auto& rMsgInfoMgr = tSingleton<loopMgr>::single ().defMsgInfoMgr ();
+		bool bIsRet = rMsgInfoMgr.isRetMsg (pN->uwMsgID);
 		procPacketArg argP;
 		argP.handle = id ();
-		nRet = pF(pPack, &argP);
-	} else {
-		mWarn (__FUNCTION__<<" not find fun msgId = "<<pN->uwMsgID
+		if (bIsRet) {
+			auto& rMgr = tSingleton<loopMgr>::single ();
+			auto pS = rMgr.getLoop(pN->ubyDesServId);
+			myAssert (pS);
+			auto& rTM = pS->tokenMsgS ();
+			auto it = rTM.find (pN->dwToKen);
+			myAssert (rTM.end () != it);
+			if (rTM.end () == it) {
+				mWarn ("send packet can not find by token: "<<pN->dwToKen<<" msgId = "<<pN->uwMsgID
+						<<" length = "<<pN->udwLength);
+				break;
+			}
+			auto pAsk = it->second;
+			nRet = pF(pAsk, pPack, &argP);
+			rTM.erase (it);
+			freeFun (pAsk);
+		} else {
+			auto pF = findMsg(pN->uwMsgID);
+			if(pF) {
+				packetHead* pRet = nullptr;
+				nRet = pF(pPack, pRet, &argP);
+				auto pRN = P2NHead (pRet);
+				pRN->ubySrcServId = pN->ubyDesServId;
+				pRN->ubyDesServId = pN->ubySrcServId;
+				pRN->dwToKen = pN->dwToKen;
+				if (procPacketFunRetType_del == nRet) {
+					serverIdType	srcP = 0;
+					serverIdType	srcS = 0;
+					serverIdType	desP = 0;
+					serverIdType	desS = 0;
+					fromHandle (pN->ubySrcServId, srcP, desS);
+					fromHandle (pN->ubyDesServId, desP, desS);
+					if (srcP == desP) {
+						nRet = procPacketFunRetType_doNotDel;
+					}
+				}
+				sendFun (pRet);
+			} else {
+				mWarn (__FUNCTION__<<" not find fun msgId = "<<pN->uwMsgID
 						<<"  ubyDesServId ="<<(int)pN->ubyDesServId<<" handle = "<<(int)m_id
 						<<" msgNum = "<<m_MsgMap.size ());
-	}
+			}
+		}
+	} while (0);
+	//mTrace (" 0000000 ");
 	return nRet;
 }
 
@@ -94,6 +176,7 @@ cTimerMgr&  impLoop::getTimerMgr()
 int impLoop::init(const char* szName, ServerIDType id, serverNode* pNode,
 		frameFunType funOnFrame, void* argS)
 {
+	//mTrace ("At the begin");
 	auto nL = strlen(szName);
 	auto pN = std::make_unique<char[]>(nL + 1);
 	strcpy(pN.get(), szName);
@@ -104,6 +187,7 @@ int impLoop::init(const char* szName, ServerIDType id, serverNode* pNode,
 	if (pNode) {
 		m_serverNode = *pNode;
 	}
+	//mTrace ("At the end");
 	return 0;
 }
 
@@ -138,13 +222,13 @@ int impLoop::OnLoopFrame()
 	return nRet;
 }
 
-bool impLoop::regMsg(uword uwMsgId, procPacketFunType pFun)
+bool impLoop::regMsg(uword uwMsgId, procRpcPacketFunType pFun)
 {
 	//bool bRet = m_MsgMap.insert(uwMsgId, pFun);	
 	//myAssert(bRet);
 	bool bRet = true;
 	m_MsgMap [uwMsgId] = pFun;
-	mTrace(__FUNCTION__<<" msgId = "<<uwMsgId<<" pFun = "<<pFun);
+	//mTrace(__FUNCTION__<<" msgId = "<<uwMsgId<<" pFun = "<<pFun);
 	return bRet;
 }
 
@@ -154,9 +238,9 @@ bool impLoop::removeMsg(uword uwMsgId)
 	return bRet;
 }
 
-procPacketFunType impLoop::findMsg(uword uwMsgId)
+procRpcPacketFunType impLoop::findMsg(uword uwMsgId)
 {
-	procPacketFunType pRet = nullptr;
+	procRpcPacketFunType pRet = nullptr;
 	auto it = m_MsgMap.find(uwMsgId);
 	if (m_MsgMap.end () != it) {
 		pRet = it->second;

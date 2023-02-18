@@ -4,7 +4,7 @@
 
 extern "C"
 {
-	void  afterLoad(const ForLogicFun* pForLogic);
+	void  afterLoad(ForLogicFun* pForLogic);
 	void  beforeUnload();
 }
 #endif

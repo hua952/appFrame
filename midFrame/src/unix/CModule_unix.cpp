@@ -5,7 +5,7 @@
 #include "myAssert.h"
 #include "impMainLoop.h"
 
-int CModule::load_os (const char* szName, const ForLogicFun* pForLogic)
+int CModule::load_os (const char* szName, ForLogicFun* pForLogic)
 {
 	int nRet = 0;
 	m_handle = dlopen(szName, RTLD_NOW | RTLD_LOCAL);

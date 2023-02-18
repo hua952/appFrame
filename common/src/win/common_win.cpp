@@ -1,4 +1,5 @@
-#include <Windows.h>
+#include <windows.h>
+//#include <dbghelp.h>
 #include <io.h>
 #include<direct.h>
 #include <imagehlp.h>
@@ -64,3 +65,100 @@ int  myMkdir (const char* szPath)
 	}
 	return 0;
 }
+
+void* loadDll (const char* szFile)
+{
+	void* pRet = nullptr;
+	auto szName = szFile;
+	//HINSTANCE hdll;
+	auto hdll = LoadLibraryA(szName);
+	//myAssert(hdll);
+	do {
+		if(!hdll){
+			break;
+		}
+		pRet = hdll;
+	}while(0);
+	return pRet;
+}
+
+void* getFun (void* handle, const char* szFunName)
+{
+	void* pRet = nullptr;
+	pRet = (GetProcAddress((HINSTANCE)handle, szFunName));
+	return pRet;
+}
+
+int   unloadDll (void* handle)
+{
+	int nRet = 0;
+	FreeLibrary ((HMODULE)handle);
+	return nRet;
+}
+
+void myW2U8(const wchar_t* wcText, std::unique_ptr<char[]>& var)
+{
+	auto tl = wcslen (wcText);
+	auto len= WideCharToMultiByte(CP_UTF8,0, wcText, tl, NULL,0, NULL ,NULL );
+	var = std::make_unique<char[]> (len+1);
+	auto str = var.get();
+	WideCharToMultiByte(CP_UTF8,0, wcText, tl, str, len, NULL ,NULL );
+	str[len]= '\0';
+}
+
+void myA2W(const char* szText, std::unique_ptr<wchar_t[]>& var)
+{
+	auto sl = strlen (szText);
+	auto len = MultiByteToWideChar(CP_ACP, 0, szText, sl, NULL, 0);
+	var = std::make_unique <wchar_t[]> (len + 1);
+	auto pV = var.get();
+	MultiByteToWideChar(CP_ACP, 0, szText, sl, pV, len + 1);
+	pV[len] = 0;
+}
+
+void myU8ToW(const char* szText, std::unique_ptr<wchar_t[]>& var)
+{
+	auto szU8 = szText;
+    int wcsLen = ::MultiByteToWideChar(CP_UTF8, NULL, szU8, strlen(szU8), NULL, 0);
+	var = std::make_unique<wchar_t[]>(wcsLen + 1);
+    wchar_t* wszString = var.get ();
+    ::MultiByteToWideChar(CP_UTF8, NULL, szU8, strlen(szU8), wszString, wcsLen);
+    wszString[wcsLen] = 0;
+}
+/*
+void TraceStack(std::stringstream& oss)
+{
+	static const int MAX_STACK_FRAMES = 20;
+	
+	void *pStack[MAX_STACK_FRAMES];
+ 
+	HANDLE process = GetCurrentProcess();
+	SymInitialize(process, NULL, TRUE);
+	WORD frames = CaptureStackBackTrace(0, MAX_STACK_FRAMES, pStack, NULL);
+ 
+	;
+	oss << "stack traceback: " << std::endl;
+	for (WORD i = 0; i < frames; ++i) {
+		DWORD64 address = (DWORD64)(pStack[i]);
+ 
+		DWORD64 displacementSym = 0;
+		char buffer[sizeof(SYMBOL_INFO) + MAX_SYM_NAME * sizeof(wchar_t)];
+		PSYMBOL_INFO pSymbol = (PSYMBOL_INFO)buffer;
+		pSymbol->SizeOfStruct = sizeof(SYMBOL_INFO);
+		pSymbol->MaxNameLen = MAX_SYM_NAME;
+ 
+		DWORD displacementLine = 0;
+		IMAGEHLP_LINE64 line;
+		//SymSetOptions(SYMOPT_LOAD_LINES);
+		line.SizeOfStruct = sizeof(IMAGEHLP_LINE64);
+ 
+		if (SymFromAddr(process, address, &displacementSym, pSymbol)
+		 && SymGetLineFromAddr64(process, address, &displacementLine, &line)) {
+			oss << "\t" << pSymbol->Name << " at " << line.FileName << ":" << line.LineNumber << "(0x" << std::hex << pSymbol->Address << std::dec << ")" << std::endl;
+		}
+		else {
+			oss << "\terror: " << GetLastError() << std::endl;
+		}
+	}
+}
+*/

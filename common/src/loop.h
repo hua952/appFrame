@@ -19,6 +19,7 @@ typedef struct _procPacketArg
 typedef int (*frameFunType)(void* arg);
 //typedef void* loopHandleType;
 typedef int (*procPacketFunType)(packetHead*, procPacketArg*);
+typedef int (*procRpcPacketFunType)(packetHead*,  pPacketHead&, procPacketArg*);
 typedef loopHandleType  ServerIDType;
 typedef uword MsgIdT;
 #define c_emptyModelId 255
@@ -33,6 +34,7 @@ extern "C"
 	int OnLoopFrame(loopHandleType pThis); // call by level 0
 	int processOncePack(loopHandleType pThis, packetHead* pPack);// call by level 0
 	int onWriteOncePack(loopHandleType pThis, packetHead* pPack);// call by level 0
+	void onFreePack(loopHandleType pThis, packetHead* pPack);// call by level 0
 	//int loadLogicModle(char* szPath);
 	//int unLoadLogicModle(char* szPath);
 }

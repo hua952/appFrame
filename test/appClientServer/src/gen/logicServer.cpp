@@ -11,7 +11,7 @@ static int OnFrameCli(void* pArgS)
 	return procPacketFunRetType_del;
 }
 
-void logicServerMgr::afterLoad(const ForLogicFun* pForLogic)
+void logicServerMgr::afterLoad(ForLogicFun* pForLogic)
 {
 	auto& rFunS = getForMsgModuleFunS();
 	rFunS.fnSendPackToLoop = pForLogic->fnSendPackToLoop;

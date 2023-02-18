@@ -3,8 +3,9 @@
 #include "packet.h"
 #include <memory>
 #include "arrayMap.h"
+#include "iRpcInfoMgr.h"
 
-class msgMgr
+class msgMgr:public iRpcInfoMgr // Thread safety
 {
 public:
 	struct msgInfo
@@ -12,24 +13,16 @@ public:
 		loopHandleType  defProcServer;
 	};
 	typedef msgInfo* pmsgInfo;
-	/*
-	class msgInfoPtrCmp
-	{
-	public:
-		bool operator () (const pmsgInfo& pa, const pmsgInfo& pb) const;
-	}
-	class msgInfoCmp
-	{
-	public:
-		bool operator () (const msgInfo& ra, const msgInfo& rb) const;
-	}
-*/
 	typedef arrayMap<msgIdType, msgInfo>    msgInfoMap;
 	typedef arrayMap<msgIdType, msgIdType>  msgIdMap;
     msgMgr ();
     ~msgMgr ();
-	int    regRpc (msgIdType askId, msgIdType retId, loopHandleType askDefProcSer, loopHandleType retDefProcSer);
-	int    regAskOnly (msgIdType askId, loopHandleType askDefProcSer);
+	int    regRpc (msgIdType askId, msgIdType retId, serverIdType	askDefProcSer,
+			serverIdType	retDefProcSer) override;
+	int    regAskOnly (msgIdType askId, serverIdType	askDefProcSer) override;
+	bool   isRetMsg (msgIdType msgId) override;
+	msgIdType     getRetMsg(msgIdType    askMsg) override;
+	msgIdType     getAskMsg(msgIdType    retMsg) override;
 private:
 	msgInfoMap				  m_msgInfoS;
 	msgIdMap                  m_askMap;

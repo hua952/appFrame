@@ -45,8 +45,10 @@ void  regMsgS(regMsgFT fnRegMsg)
 	
 }
 
-void  afterLoad(const ForLogicFun* pForLogic)
+void  afterLoad(ForLogicFun* pForLogic)
 {
+	auto& rForMsg = getForMsgModuleFunS();
+	rForMsg = *pForLogic;
 	tSingleton<logicServerMgr>::createSingleton();
 	auto &rMgr = tSingleton<logicServerMgr>::single();
 	rMgr.afterLoad(pForLogic);
@@ -57,9 +59,10 @@ void  beforeUnload()
 	std::cout<<"In   beforeUnload"<<std::endl;
 }
 
+/*
 ForMsgModuleFunS& getForMsgModuleFunS()
 {
 	static ForMsgModuleFunS s_ForMsgModuleFunS;
 	return  s_ForMsgModuleFunS;
 }
-
+*/

@@ -8,7 +8,7 @@
 #include "tSingleton.h"
 #include "gLog.h"
 
-void  afterLoad(const ForLogicFun* pForLogic)
+void  afterLoad(ForLogicFun* pForLogic)
 {
 	tSingleton<logicServerMgr>::createSingleton();
 	auto &rMgr = tSingleton<logicServerMgr>::single();
@@ -20,8 +20,10 @@ void  beforeUnload()
 	std::cout<<"In   beforeUnload"<<std::endl;
 }
 
+/*
 ForMsgModuleFunS& getForMsgModuleFunS()
 {
 	static ForMsgModuleFunS s_ForMsgModuleFunS;
 	return  s_ForMsgModuleFunS;
 }
+*/

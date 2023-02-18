@@ -4,7 +4,7 @@
 
 extern "C"
 {
-	void  afterLoad(const ForLogicFun* pForLogic);
+	void  afterLoad(ForLogicFun* pForLogic);
 	//int   getServerS (const char** pBuff, int nBuffNum);
 	void  beforeUnload();
 }

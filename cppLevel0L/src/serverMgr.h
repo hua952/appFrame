@@ -27,7 +27,10 @@ public:
 	server*         getOutServer();
     udword    packSendInfoTime ();
     void  setPackSendInfoTime (udword va);
+    udword    delSendPackTime ();
+    void  setDelSendPackTime (udword va);
 private:
+    udword  m_delSendPackTime;
     udword  m_packSendInfoTime;
     delTcpServerFT  m_delTcpServerFn;
     createTcpServerFT  m_createTcpServerFn;
@@ -40,4 +43,6 @@ private:
 	uword			g_ServerNum;
 	PhyCallback m_PhyCallback;
 };
+
+void  freePackInLevel0(ServerIDType id, packetHead* pack);
 #endif

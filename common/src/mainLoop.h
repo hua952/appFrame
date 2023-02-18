@@ -2,6 +2,7 @@
 #define _mainLoop_h__
 #include "loop.h"
 #include "comFun.h"
+#include "iRpcInfoMgr.h"
 
 #define LoopNumBitLen 4
 #define ProcNumBitLen 3
@@ -15,18 +16,7 @@
 #define GroupMark		((GroupNum-1)<<(LoopNumBitLen+ProcNumBitLen))
 
 #define serverNameSize  32
-/*
-typedef struct _serverLogicInfo
-{
-	int  id;
-	char name[serverNameSize];
-}serverLogicInfo;
-typedef struct _serverProcessMsgS
-{
-	MsgIdT			  msgId;
-	procPacketFunType fun;
-}serverProcessMsg;
-*/
+
 typedef int (*sendPackToLoopFT)(packetHead*);
 typedef void (*stopLoopSFT)();
 typedef packetHead* (*allocPackFT)(udword udwSize);
@@ -36,6 +26,7 @@ typedef int (*logMsgFT) (const char* logName, const char* szMsg, uword wLevel);
 typedef int (*addComTimerFT)(loopHandleType pThis, udword firstSetp, udword udwSetp,
 		ComTimerFun pF, void* pUsrData, udword userDataLen);
 typedef NetTokenType   (*nextTokenFT)(loopHandleType pThis);
+typedef loopHandleType      (*getCurServerHandleFT) ();
 typedef struct _PhyCallback
 {
 	sendPackToLoopFT fnSendPackToLoop;// Thread safety
@@ -45,13 +36,14 @@ typedef struct _PhyCallback
 	logMsgFT		 fnLogMsg;// Thread safety
     //addComTimerFT    fnAddComTimer;// Thread safety
 	nextTokenFT      fnNextToken;
+	getCurServerHandleFT   fnGetCurServerHandle; // Thread safety
 } PhyCallback;
 
 struct  serverNode;
 typedef int (*createLoopFT)(const char* szName, loopHandleType serId, serverNode* pNode, frameFunType funFrame, void* arg);
-typedef  int (*regMsgFT)(loopHandleType serverId, uword uwMsgId, procPacketFunType pFun); // call by level 2
-typedef  int (*regMsgFT)(loopHandleType serverId, uword uwMsgId, procPacketFunType pFun); // call by level 2
+typedef  int (*regMsgFT)(loopHandleType serverId, uword uwMsgId, procRpcPacketFunType pFun); // call by level 2
 typedef  int (*removeMsgFT)(loopHandleType handle, uword uwMsgId); // call by level 2
+typedef  iRpcInfoMgr* (*getIRpcInfoMgrFT)();
 
 typedef struct _ForLogicFun
 {
@@ -63,9 +55,10 @@ typedef struct _ForLogicFun
 	logMsgFT		 fnLogMsg;
     addComTimerFT    fnAddComTimer;// Thread safety
 	nextTokenFT      fnNextToken;
-	//char*			 szServerTxt;
-	//removeMsgFT		 fnRemoveMsg;
+	getIRpcInfoMgrFT fnGetIRpcInfoMgr;
 } ForLogicFun;
+
+typedef void (*afterLoadFunT)(ForLogicFun* pForLogic);
 /*
 typedef struct _ForRegMsg{
 	regMsgFT		 fnRegMsg;

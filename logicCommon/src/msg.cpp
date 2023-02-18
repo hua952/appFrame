@@ -77,3 +77,15 @@ packetHead* allocPacket(udword udwS)
 	return pRet;
 }
 
+static ForMsgModuleFunS* g_ForMsgModuleFunS = nullptr;
+void              setForMsgModuleFunS (ForMsgModuleFunS* pFunS)
+{
+	g_ForMsgModuleFunS = pFunS;
+}
+
+ForMsgModuleFunS& getForMsgModuleFunS()
+{
+	static ForMsgModuleFunS s_ForMsgModuleFunS;
+	return  s_ForMsgModuleFunS;
+	//return *g_ForMsgModuleFunS;
+}
