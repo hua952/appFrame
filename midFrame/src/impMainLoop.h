@@ -18,12 +18,15 @@ public:
 	CModule* getModuleS (int& ModuleNum);
 	PhyCallback& getPhyCallback();  
 	ForLogicFun&  getForLogicFun();
+	const char*   binHome ();
 	static int createServer (const char* szName, loopHandleType serId, serverNode* pNode, frameFunType funFrame, void* arg);
 	static int regMsg(loopHandleType handle, uword uwMsgId, procRpcPacketFunType pFun);
 	static int removeMsg(loopHandleType handle, uword uwMsgId);
 private:		
 	PhyCallback  m_callbackS;
 	ForLogicFun m_forLogic;
+	void* m_handle;
+	std::unique_ptr<char[]>      m_home;
 	std::unique_ptr<CModule[]>	 m_ModuleS;
 	uword			m_ModuleNum;
 };

@@ -44,5 +44,11 @@ private:
 	PhyCallback m_PhyCallback;
 };
 
-void  freePackInLevel0(ServerIDType id, packetHead* pack);
+packetHead* allocPack(udword udwSize);
+void	freePack(packetHead* pack);
+
+void         lv0PushToCallStack (const char* szTxt);
+void         lv0PopFromCallStack ();
+void         lv0LogCallStack (int nL);
+
 #endif

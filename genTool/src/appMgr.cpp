@@ -82,7 +82,6 @@ void app:: getDefFilePath (std::unique_ptr<char[]>& path)
 	auto p = path.get();
 	strNCpy (p, nL + 1, strT.c_str());
 }
-
 int  app::initPath ()
 {
 	int nRet = 0;
@@ -202,19 +201,53 @@ app::vModelT&  app::  modelS ()
 	return m_ModelS;
 }
 */
-realServer::appList& realServer:: getAppList ()
+const char* logicModel::name ()
 {
-	return m_appList;
+	return m_name.get ();
+}
+
+void logicModel::setName (const char* szName)
+{
+	strCpy (szName, m_name);
 }
 
 const char* realServer::name ()
 {
-	return m_name.get();
+	return m_name.get ();
 }
 
-void        realServer::setName (const char* szName)
+void realServer::setName (const char* szName)
 {
 	strCpy (szName, m_name);
+}
+
+realServer::modelMap&  realServer:: getModelMap ()
+{
+	return m_modelMap;
+}
+
+realServer::realServer ():m_logicMgr (*this)
+{
+}
+
+int realServer:: procLogicMgr ()
+{
+	int nRet = 0;
+	std::string strBase;
+	m_logicMgr.getLogicMgrPath (strBase); // pApp->projectDir();
+	strBase += "/src/";
+	myMkdir (strBase.c_str ());
+	return nRet;
+}
+
+logicModelMgrCreateor& realServer:: getLogicModelMgr ()
+{
+	return m_logicMgr;
+}
+
+realServer::appList& realServer:: getAppList ()
+{
+	return m_appList;
 }
 
 appMgr::appMgr()
@@ -278,44 +311,45 @@ int  appMgr::procApp()
 
 	auto& rRealS = realServerList ();
 	for (auto iter = rRealS.begin (); rRealS.end () != iter; ++iter) {
-	auto& rList = iter->get()->getAppList ();
-	auto pHome = rTool.projectHome ();
-	rTrace (__FUNCTION__<<" appList size = "<<rList.size ());
-	for (auto it = rList.begin (); rList.end () != it; ++it) {
-		auto p = it->get();
-		p->initPath ();
-		std::unique_ptr<char[]> pProcMsgPath;
-		p->getProcMsgPath (pProcMsgPath);
-		std::string strProcMsg = pProcMsgPath.get(); // strBase + "procMsg/";
-		std::unique_ptr<char[]> appPath;
-		p->getAppPath (appPath);
-		std::string strCMakeFile = appPath.get();
-		strCMakeFile += "CMakeLists.txt";
-		if (!isPathExit (strCMakeFile.c_str())) {
-			CMakeListsCreator file(strCMakeFile.c_str(), p);
+		auto& rList = iter->get()->getAppList ();
+		auto pHome = rTool.projectHome ();
+		rTrace (__FUNCTION__<<" appList size = "<<rList.size ());
+		for (auto it = rList.begin (); rList.end () != it; ++it) {
+			auto p = it->get();
+			p->initPath ();
+			std::unique_ptr<char[]> pProcMsgPath;
+			p->getProcMsgPath (pProcMsgPath);
+			std::string strProcMsg = pProcMsgPath.get(); // strBase + "procMsg/";
+			std::unique_ptr<char[]> appPath;
+			p->getAppPath (appPath);
+			std::string strCMakeFile = appPath.get();
+			strCMakeFile += "CMakeLists.txt";
+			if (!isPathExit (strCMakeFile.c_str())) {
+				CMakeListsCreator file(strCMakeFile.c_str(), p);
+			}
+			std::unique_ptr<char[]> genPath;
+			p->getGenPath (genPath);
+			appFileCreator appF(genPath.get(), p->name());	
+			appF.writeH();
+			appF.writeCpp();
+
+			std::string exportFunFileH = genPath.get(); // strBase;
+			exportFunFileH += "exportFun.h";
+			writeExportFunH (exportFunFileH.c_str ());
+			std::string exportFunFileCpp = genPath.get(); // strBase;
+			exportFunFileCpp += "exportFun.cpp";
+			writeExportFunCpp (exportFunFileCpp.c_str ());
+
+			std::unique_ptr<char[]> defPath;
+			p->getDefFilePath (defPath);
+			std::string defFunFile = defPath.get(); // strBase;
+			defFunFile += "defFun.def";
+			writeDefFile (defFunFile.c_str ());
+			rTrace(__FUNCTION__<<" 555");
+			int  nR = procOnceApp(p);
+			assert(0 == nR);
 		}
-		std::unique_ptr<char[]> genPath;
-		p->getGenPath (genPath);
-		appFileCreator appF(genPath.get(), p->name());	
-		appF.writeH();
-		appF.writeCpp();
-
-		std::string exportFunFileH = genPath.get(); // strBase;
-		exportFunFileH += "exportFun.h";
-		writeExportFunH (exportFunFileH.c_str ());
-		std::string exportFunFileCpp = genPath.get(); // strBase;
-		exportFunFileCpp += "exportFun.cpp";
-		writeExportFunCpp (exportFunFileCpp.c_str ());
-
-		std::unique_ptr<char[]> defPath;
-		p->getDefFilePath (defPath);
-		std::string defFunFile = defPath.get(); // strBase;
-		defFunFile += "defFun.def";
-		writeDefFile (defFunFile.c_str ());
-		rTrace(__FUNCTION__<<" 555");
-		int  nR = procOnceApp(p);
-		assert(0 == nR);
-	}
+		iter->get()->getLogicModelMgr ().start ();
 	}
 	return 0;
 }

@@ -125,6 +125,31 @@ void myU8ToW(const char* szText, std::unique_ptr<wchar_t[]>& var)
     ::MultiByteToWideChar(CP_UTF8, NULL, szU8, strlen(szU8), wszString, wcsLen);
     wszString[wcsLen] = 0;
 }
+
+int             getCurModelPath (std::unique_ptr<char[]>& pathBuf)
+{
+	const auto c_pathMax = 512;
+	auto tempBuf = std::make_unique<char[]>(c_pathMax + 1);
+	int nRet = 0;
+	auto pBuff = tempBuf.get();
+	if (GetModuleFileNameA(NULL, pBuff, c_pathMax) == 0) {
+		nRet = 1;
+	} else {
+		int len = (int)(strlen(pBuff));
+		auto resLen = len;
+		for (int i = len - 1; i > 0; i--) {
+			if (pBuff[i] == '\\' || pBuff[i] == '/') {
+				pBuff[i + 1] = 0;
+				resLen = i + 1;
+				break;
+			}
+		}
+		pathBuf = std::make_unique<char[]>(resLen + 1);
+		strNCpy (pathBuf.get(), resLen + 1, pBuff);
+	}
+	return nRet;
+}
+
 /*
 void TraceStack(std::stringstream& oss)
 {

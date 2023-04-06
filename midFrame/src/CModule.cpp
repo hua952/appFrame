@@ -1,7 +1,12 @@
 #include"CModule.h"
 #include <stdlib.h>
+#include <memory>
 #include <string.h>
 #include "strFun.h"
+#include "modelLoder.h"
+#include "mLog.h"
+#include "impMainLoop.h"
+#include "tSingleton.h"
 
 CModule::CModule()
 {
@@ -28,7 +33,7 @@ int CModule::init(const char* szName)
 	return 0;
 }
 
-int CModule::load(ForLogicFun* pForLogic)
+int CModule::load(int nArgC, const char* argS[], ForLogicFun* pForLogic)
 {
 	int nRet = 0;
 	auto pBuff = m_name.get ();
@@ -37,7 +42,32 @@ int CModule::load(ForLogicFun* pForLogic)
 	auto nR = strR(pBuff, '+', buff, c_BuffNum);
 	auto szName = buff[0];
 	//pForLogic->szServerTxt = buff[1];
-	nRet = load_os (szName, pForLogic);
+	//nRet = load_os (szName, pForLogic);
+	auto& rPho =  tSingleton<PhyInfo>::single ();
+	std::string strPath = rPho.binHome ();	
+	strPath += szName;
+	auto hdll = loadDll (strPath.c_str());
+	do {
+		if (!hdll) {
+			mWarn ("loadDll error szName = "<<szName);
+			nRet = 1;
+			break;
+		}
+		auto funOnLoad = (afterLoadFunT)(getFun (hdll, "afterLoad"));
+		if(!funOnLoad) {
+			mWarn ("funOnLoad empty error is");
+			nRet = 2;
+			break;
+		}
+		m_onUnloadFun = (beforeUnloadFunT)(getFun(hdll, "beforeUnload"));
+		m_handle = hdll;
+		try {
+			funOnLoad(nArgC, argS, pForLogic);
+		} catch (...) {
+			mTrace ("catch error");
+		}
+	} while (0);
 	return nRet;
+
 }
 

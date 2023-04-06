@@ -13,6 +13,7 @@ void myW2U8(const wchar_t* wcText, std::unique_ptr<char[]>& var);
 void myA2W(const char* szText, std::unique_ptr<wchar_t[]>& var);
 void myU8ToW(const char* szText, std::unique_ptr<wchar_t[]>& var);
 void strCpy (const char* szSrc, std::unique_ptr<char[]>& pDec);
+void strCpy (const wchar_t* szSrc, std::unique_ptr<wchar_t[]>& pDec);
 void wstrCpy (const wchar_t* szSrc, std::unique_ptr<wchar_t[]>& pDec);
 
 //void TraceStack(std::stringstream& oss);

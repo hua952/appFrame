@@ -13,7 +13,18 @@
 #include "appMgr.h"
 #include <string>
 
-using namespace rapidxml;  
+using namespace rapidxml;
+struct msgGroup
+{
+	std::unique_ptr<char[]>  name;
+};
+
+struct msgFileInfo
+{
+	std::unique_ptr<char[]>  name;
+	std::vector<std::shared_ptr<msgGroup>> msgGroupS;
+};
+
 class msgTool//:public tSingleton<msgTool>
 {
 public:
@@ -39,10 +50,12 @@ public:
 	void        getDefMsgPath (std::unique_ptr<char[]>& path);
 	void  setProjectHome (const char* pHome);
 	void  initPath();
+	typedef std::vector<std::shared_ptr<msgFileInfo>>    msgFileNameV;
+	msgFileNameV&     getMsgFileNameS ();
 protected:
 	typedef arraySet<cpchar, cpcharCmp> dataTypeSet;
 	dataTypeSet m_dataTypeSet;
-	int procRpc1(rapidxml::xml_node<char> * pRpc);
+	int procRpc1(rapidxml::xml_node<char> * pRpc, msgFileInfo& rInfo);
 	int procRpc2(rapidxml::xml_node<char> * pRpc);
 	int procStruct(rapidxml::xml_node<char> * pRpc);
 	int procMsg(rapidxml::xml_node<char> * pMsg, rpcMgr::msgInfo& rMsg);
@@ -59,6 +72,7 @@ protected:
 	//rpcMgr::rpcArryInfo* m_pCurRpcArry;
 	std::shared_ptr<rpcMgr::rpcArryInfo>  m_pCurRpcArry;
 	char	  m_defFile[rpcMgr::c_dirSize];
+	msgFileNameV             m_msgFileNameS;
 	std::unique_ptr <char[]> m_projectHome;
 	std::unique_ptr <char[]> m_frameHome;
 	std::unique_ptr <char[]> m_frameBinPath;

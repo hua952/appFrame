@@ -1,1 +1,1 @@
-bin\Debug\cppLevel0.exe level0=C:\work\appFrame\bin\Debug\cppLevel0L.dll addLogic=C:\work\appFrame\bin\Debug\logicModelMgr.dll procId=0 netLib=C:\work\appFrame\bin\Debug\libeventSession.dll
+bin\Debug\cppLevel0.exe level0=cppLevel0L.dll addLogic=logicModelMgr.dll logicModel=testLogic.dll logicModel=testLogicB.dll procId=0 netLib=libeventSession.dll

@@ -14,8 +14,8 @@ public:
 	~CModule();
 	int init(const char* szName);
 	const char* name();
-	int load(ForLogicFun* pForLogic);
-	int load_os (const char* szName, ForLogicFun* pForLogic);
+	int load(int nArgC, const char* argS[],ForLogicFun* pForLogic);
+	// int load_os (const char* szName, ForLogicFun* pForLogic);
 private:
 	int unload();
 	beforeUnloadFunT	m_onUnloadFun;

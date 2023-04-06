@@ -15,12 +15,12 @@ slistMsgQue::slistMsgQue()
 slistMsgQue::~slistMsgQue()
 {
 	auto p = m_Head->pNext;
-	auto& rMgr = tSingleton<serverMgr>::single().getPhyCallback();
+	//auto& rMgr = tSingleton<serverMgr>::single().getPhyCallback();
 	while (p != m_Head)
 	{
 		auto d = p;
 		p = p->pNext;
-		rMgr.fnFreePack(d->pPack);
+		freePack(d->pPack);
 		freeNode(d);
 	}
 	freeNode(m_Head);

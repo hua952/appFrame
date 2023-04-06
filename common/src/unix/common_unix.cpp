@@ -1,4 +1,5 @@
 #include <unistd.h>
+#include <dlfcn.h>
 //#include <dirent.h>
 #include "comFun.h"
 #include "strFun.h"
@@ -42,7 +43,16 @@ int   unloadDll (void* handle)
 	return nRet;
 }
 
-int             getCurDllPath (std::unique_ptr<char[]>& pathBuf)
+void fun1()
 {
+}
+
+int             getCurModelPath (std::unique_ptr<char[]>& pathBuf)
+{
+	Dl_info info;
+	int rc = dladdr((void*)fun1, &info);
+	auto nL = strlen (info.dli_fname);
+	pathBuf = std::make_unique<char[]> (nL + 1);
+	strNCpy(pathBuf.get(), nL + 1, info.dli_fname);
 }
 

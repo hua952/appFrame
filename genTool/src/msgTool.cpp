@@ -3,6 +3,7 @@
 #include<string.h>
 #include<string>
 #include<stdlib.h>
+#include "cLog.h"
 #include"rpcMgr.h"
 #include"appMgr.h"
 #include"constVar.h"
@@ -47,7 +48,7 @@ bool  msgTool::isBaseDataType(const char* szType)
 //	return NULL != pF;
 }
 
-int msgTool::procRpc1(rapidxml::xml_node<char> * pRpc)
+int msgTool::procRpc1(rapidxml::xml_node<char> * pRpc, msgFileInfo& rInfo)
 {
 	//rTrace (__FUNCTION__<<" 000");
 	int nRet = 0;
@@ -55,6 +56,8 @@ int msgTool::procRpc1(rapidxml::xml_node<char> * pRpc)
 	//rTrace (__FUNCTION__<<" 000 aaa");
 	m_pCurRpcArry = std::make_shared<rpcMgr::rpcArryInfo> ();//s_newRpcArry();
 	strNCpy(m_pCurRpcArry->m_name, rpcMgr::c_nameSize, pRpc->name());
+	auto pMsgG = std::make_shared <msgGroup>();
+	strCpy (pRpc->name (), pMsgG->name);
 	//rTrace (__FUNCTION__<<" 000 bbb");
 	rapidxml::xml_attribute<char> * p2JS = pRpc->first_attribute(g_2js);
 	if(p2JS) {
@@ -62,8 +65,8 @@ int msgTool::procRpc1(rapidxml::xml_node<char> * pRpc)
 	}
 	for(rapidxml::xml_node<>* pCall = pRpc->first_node(); NULL != pCall; pCall = pCall->next_sibling()) {
 		nRet =  procStruct(pCall);
-		assert(0 == nRet);
-		if(0 != nRet) {
+		assert(nRet < 2);
+		if(nRet >= 2) {
 			rError ("procStruct != 0");
 			//s_delRpcArry(m_pCurRpcArry);
 			return 1;
@@ -83,9 +86,7 @@ int msgTool::procRpc1(rapidxml::xml_node<char> * pRpc)
   tSingleton<rpcMgr>::single().insert(m_pCurRpcArry);
   //rTrace (__FUNCTION__<<" 222 aaa");
   m_pCurRpcArry.reset ();
-  //rTrace (__FUNCTION__<<" 222 bbb");
-  //m_pCurRpcArry = NULL;
-  rTrace (__FUNCTION__<<" 333");
+  rInfo.msgGroupS.push_back(pMsgG);
   return 0;
 }
 
@@ -94,13 +95,13 @@ int msgTool::procStruct(rapidxml::xml_node<char> * pRpc)
 	//rTrace (__FUNCTION__);
 	rapidxml::xml_node<>* pAsk = pRpc->first_node(g_Ask);
 	if(pAsk) {
-		return 0;//It's msg  Not Struct
+		return 1;//It's msg  Not Struct
 	}
 	rapidxml::xml_node<>* pRet = pRpc->first_node(g_Ret);
 	assert(!pRet);
 	if(pRet) {
 		rError ("is not a msg and not a struct");
-		return 1;// It is not a msg and not a struct
+		return 2;// It is not a msg and not a struct
 	}
 	//rpcMgr::structInfo* pSt = s_newStruct();
 	auto pSt = std::make_shared<rpcMgr::structInfo>();
@@ -114,7 +115,7 @@ int msgTool::procStruct(rapidxml::xml_node<char> * pRpc)
 	int nR = procStructData(pRpc,  *pSt);
 	assert(0 == nR);
 	if(0 != nR) {
-		return 1;
+		return 3;
 	}
 	
 	strNCpy(pSt->m_name, NameSize, pRpc->name());
@@ -269,7 +270,7 @@ int msgTool::procMsg(rapidxml::xml_node<char> * pMsg, rpcMgr::msgInfo& rMsg)
 int msgTool::procData(rapidxml::xml_node<char> * pData, rpcMgr::dataInfo& rData)
 {
 	strNCpy(rData.m_name, rpcMgr::c_nameSize, pData->name());
-	rTrace (__FUNCTION__<<" name = "<<rData.m_name);
+	//rTrace (__FUNCTION__<<" name = "<<rData.m_name);
 	rapidxml::xml_attribute<char> * pDataType = pData->first_attribute(g_dataType);
 	assert(pDataType);
 	if(NULL == pDataType)
@@ -324,23 +325,27 @@ int msgTool::startProcMsg(const char* szFile)
 	doc.parse<0>(fdoc.data());
 	rapidxml::xml_node<> *root = doc.first_node();
 
-    for(rapidxml::xml_node<char> * pRpc = root->first_node();  NULL != pRpc; pRpc = pRpc->next_sibling())
-	{
-		if(0 != strcmp(g_Rpc, pRpc->name()))
-		{
+	auto& rNameS = getMsgFileNameS ();
+	auto pF = std::make_shared<msgFileInfo>();
+	strCpy (szFile, pF->name);
+
+    for(rapidxml::xml_node<char> * pRpc = root->first_node();  NULL != pRpc; pRpc = pRpc->next_sibling()) {
+		if(0 != strcmp(g_Rpc, pRpc->name())) {
 			continue;
 		}
-		for(rapidxml::xml_node<char> * pRpcArry = pRpc->first_node();  NULL != pRpcArry;  pRpcArry = pRpcArry->next_sibling())
-		{
-			nRet =	procRpc1(pRpcArry);
+		for(rapidxml::xml_node<char> * pRpcArry = pRpc->first_node();  NULL != pRpcArry;  pRpcArry = pRpcArry->next_sibling()) {
+			auto pMsgG = std::make_shared<msgGroup>();
+			strCpy (pRpcArry->name (), pMsgG->name);
+			nRet =	procRpc1(pRpcArry, *(pF.get()));
 			assert(0 == nRet);
-			if(0 != nRet)
-			{
+			if(0 != nRet) {
 				rError ("procRpc1 != 0");
 				return 1;
 			}
+			pF->msgGroupS.push_back (pMsgG);
 		}
 	}
+	rNameS.push_back (pF);
 	return 0;
 }
 
@@ -406,6 +411,11 @@ const char* msgTool::outPutPath ()
 	return m_outPutPath.get();
 }
 
+msgTool::msgFileNameV&  msgTool::getMsgFileNameS ()
+{
+	return m_msgFileNameS;
+}
+
 int msgTool::start(const char* szFile)
 {
 	int nRet = 0;
@@ -442,7 +452,6 @@ int msgTool::start(const char* szFile)
 			continue;
 		}
 	}
-
     for(rapidxml::xml_node<char> * pRpc = root->first_node();  NULL != pRpc; pRpc = pRpc->next_sibling()) {
 		if(0 != strcmp(pRpc->name(),"msgFile")) {
 			continue;
@@ -545,6 +554,14 @@ int msgTool::init(int nArgC, char* argS[])
 
 int msgTool::procAppS(rapidxml::xml_node<char> * pRoot)
 {
+	/*
+	auto nInitLog = initLog ("genTool", "genTool.log", 0);
+	if (0 != nInitLog) {
+		std::cout<<"initLog error nInitLog = "<<nInitLog<<std::endl;
+		return 1;
+	}
+	rInfo ("Loger init OK");
+	*/
 	auto& rRealS = tSingleton<appMgr>::single ().realServerList ();
 	for(rapidxml::xml_node<char> * pApp = pRoot->first_node();  NULL != pApp; pApp= pApp->next_sibling()) {
 		if(0 != strcmp(g_app, pApp->name())) {
@@ -590,6 +607,8 @@ static void delApp(app* p)
 int msgTool::procOnceApp(rapidxml::xml_node<char> * pAppNode, realServer* pReal)
 {
 	auto pCurApp = std::make_shared<app>();//m_pCurApp = newApp();	
+	auto pCurModel = std::make_shared<logicModel> ();
+	pCurModel->setName (pAppNode->name ());
 	rapidxml::xml_attribute<char> * pProjectDir = pAppNode->first_attribute(g_projectDir );
 	if(pProjectDir)
 	{
@@ -659,7 +678,8 @@ int msgTool::procOnceApp(rapidxml::xml_node<char> * pAppNode, realServer* pReal)
 	}
 	auto& rAppS = pReal->getAppList ();	
 	rAppS.push_back (pCurApp);
-
+	auto& rMap = pReal->getModelMap ();
+	rMap[pCurModel->name ()] = pCurModel;
 	return 0;
 }
 
@@ -683,7 +703,6 @@ int msgTool::appProcOnceRpcArry(app* pCurApp, rapidxml::xml_node<char> * pArry, 
 		{
 			if(0 == strCaseCmp(pAT->value(), g_Exit))
 			{
-
 				continue;
 			}
 

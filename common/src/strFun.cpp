@@ -16,6 +16,11 @@ void strCpy (const char* szSrc, std::unique_ptr<char[]>& pDec)
 	strNCpy (p, len + 1, szSrc);
 }
 
+void strCpy (const wchar_t* szSrc, std::unique_ptr<wchar_t[]>& pDec)
+{
+	wstrCpy (szSrc, pDec);
+}
+
 void wstrCpy (const wchar_t* szSrc, std::unique_ptr<wchar_t[]>& pDec)
 {
 	auto len = wcslen(szSrc);

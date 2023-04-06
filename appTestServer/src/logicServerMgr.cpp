@@ -27,36 +27,11 @@ static int OnMoveAsk (packetHead* pSP, pPacketHead& pRet, procPacketArg* pArg)
 	ret.toPack();
 	pRet = ret.pop();
 	auto pN = P2NHead(pRet);
-	auto& fun = getForMsgModuleFunS().fnSendPackToLoop;
-	fun(pRet);
 	return procPacketFunRetType_del;
 }
-/*
-ForMsgModuleFunS& getForMsgModuleFunS()
-{
-	static ForMsgModuleFunS s_ForMsgModuleFunS;
-	return  s_ForMsgModuleFunS;
-}
-*/
-/*
-struct serverNode
-{
-	udword                  udwUnuse;
-	ServerIDType			handle;
-	ubyte					connectorNum;
-	ubyte                   listenerNum;
-	ubyte	                ubyUnuse;
-	serverEndPointInfo		listenEndpoint [c_onceServerMaxListenNum];
-	serverEndPointInfo		connectEndpoint [c_onceServerMaxConnectNum];
-};
-*/
 
 void  logicServerMgr::afterLoad(ForLogicFun* pForLogic)
 {
-	gDebug ("At the begin of appTestServer");
-	//setForMsgModuleFunS (pForLogic);
-	auto& rForMsg = getForMsgModuleFunS();
-	rForMsg = *pForLogic;
 	auto fnCreateLoop = pForLogic->fnCreateLoop;
 	auto fnRegMsg = pForLogic->fnRegMsg;
 	serverNode node;
@@ -69,5 +44,5 @@ void  logicServerMgr::afterLoad(ForLogicFun* pForLogic)
 	auto TestClientH = AppTestServerHandle;
 	myAssert (c_emptyLoopHandle	 != TestClientH);
 	fnRegMsg (TestClientH, CChess2FullMsg(CChessMsgID_moveAsk), OnMoveAsk);
-	gInfo (" At then end of afterLoad serverB ");
+	gInfo (" At then end of afterLoad ");
 }

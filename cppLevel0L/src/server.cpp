@@ -19,6 +19,7 @@ server::server()
 	m_pTcpServer = nullptr;
 	m_defSession = nullptr;
 	m_nextToken  = 0;
+	m_curCallNum = 0;
 }
 
 server::~server()
@@ -132,9 +133,14 @@ int server::sendBySession(packetHead* pack)
 		pSession->send (pack);
 	} else {
 		rWarn (__FUNCTION__<<" pSession is empty msgId = "<<pN->uwMsgID<<"  ubyDesServId ="<<(int)pN->ubyDesServId);
-		auto& rMgr = tSingleton<serverMgr>::single().getPhyCallback();
-		auto fnFreePack = rMgr.fnFreePack;
-		fnFreePack (pack);
+		//auto& rMgr = tSingleton<serverMgr>::single().getPhyCallback();
+		// auto fnFreePack = rMgr.fnFreePack;
+		if (NIsRet (pN)) {
+			PUSH_FUN_CALL
+			rTrace ("Befor free pack = "<<pack);
+			freePack (pack); //fnFreePack (pack);
+			POP_FUN_CALL //
+		}
 	}
 	return nRet;
 }
@@ -146,13 +152,8 @@ static int  myProcessNetPackFun(server* pServer, ISession* session, packetHead* 
 	auto pN = P2NHead (packet);
 	if (pN->uwMsgID < framMsgIdBegin) {
 		pServer->pushPack (packet); // logice msg
-		rTrace ("push logic msgId = "<<pN->uwMsgID<<" 	ubySrcServId = "<<
-				(int)pN->ubySrcServId<<" ubyDesServId = "<<(int)pN->ubyDesServId);
+		rTrace ("push logic packet "<<*packet);
 		nRet = procPacketFunRetType_doNotDel;
-		/*
-		auto myHandle = pServer->myHandle ();
-		nRet = processOncePack(myHandle, d);// call by level 0
-											*/
 	} else {
 		auto iter = rMap.find (pN->uwMsgID);
 		if (rMap.end() == iter) {
@@ -167,6 +168,7 @@ static int  myProcessNetPackFun(server* pServer, ISession* session, packetHead* 
 
 static int sProcessNetPackFun(ISession* session, packetHead* pack)
 {
+	rTrace("Net rec pack"<<*pack);
 	int nRet = procPacketFunRetType_del;
 	auto pITcp = session->getServer ();
 	auto pServer = (server*)(pITcp->userData());
@@ -187,7 +189,6 @@ static int sProcessNetPackFun(ISession* session, packetHead* pack)
 			info.oldToken = pN->dwToKen;
 			info.sessionId = session->id ();
 			auto newToken = pServer->nextToken ();
-			rTrace(__FUNCTION__<<" will change will token = "<<newToken);
 			auto& rTM = pServer->tokenS ();
 			rTM [newToken] = info;
 			pN->dwToKen = newToken;
@@ -275,19 +276,26 @@ static void sOnClose(ISession* session)
 
 static void sOnWritePack(ISession* session, packetHead* pack)
 {
+	rTrace ("Net send pack"<<*pack);
 	auto pN = P2NHead (pack);
 	auto& rMgr = tSingleton<serverMgr>::single().getPhyCallback();
-	auto fnFreePack = rMgr.fnFreePack;
+	// auto fnFreePack = rMgr.fnFreePack;
 	if (pN->uwMsgID < framMsgIdBegin) {
 		auto pITcp = session->getServer ();
 		auto pServer = (server*)(pITcp->userData ());
 		auto myHand = pServer->myHandle ();
-		auto nRet = onWriteOncePack (myHand, pack);
-		if (procPacketFunRetType_del == nRet) {
-			fnFreePack (pack);
+		auto& rTM = pServer->tokenS ();
+		if (NIsRet (pN)) {
+			PUSH_FUN_CALL
+			rTrace ("Befor free pack "<<*pack);
+			freePack (pack); // fnFreePack (pack);
+			POP_FUN_CALL
 		}
 	} else {
-		fnFreePack (pack);
+		PUSH_FUN_CALL
+		rTrace ("Befor free pack = "<<pack);
+		freePack (pack); // fnFreePack (pack);
+		POP_FUN_CALL
 	}
 }
 
@@ -446,58 +454,66 @@ bool server::pushPack (packetHead* pack)
 
 bool server::procProx(packetHead* pack)
 {
+	PUSH_FUN_CALL
 	bool bRet = true;
 	auto pN = P2NHead (pack);
-	loopHandleType ubyPId;
-	loopHandleType ubySId;
-	fromHandle (pN->ubyDesServId, ubyPId, ubySId);
+	loopHandleType desPId;
+	loopHandleType desSId;
+	fromHandle (pN->ubyDesServId, desPId, desSId);
+
+	loopHandleType srcPId;
+	loopHandleType srcSId;
+	fromHandle (pN->ubySrcServId, srcPId, srcSId);
+
 	loopHandleType  myPId;
 	loopHandleType  mySId;
 	auto myHand = myHandle ();
 	fromHandle (myHand, myPId, mySId);
-	/*
-	rTrace(__FUNCTION__<<" pack = "<<pack<<"  msgId = "<<pN->uwMsgID<<"  ubySrcServId ="<<(int)pN->ubySrcServId
-			<<"  ubyDesServId ="<<(int)pN->ubyDesServId<<" myHandle = "<<(int)myHand<<" token = "<<pN->dwToKen);
-			*/
-	if (myPId == ubyPId) {
-		if (mySId == ubySId) {
+	//rTrace ("Prox pack:i "<<*pack);
+	if (myPId == desPId) {
+		if (mySId == desSId) {
 			bRet = false;
 		} else {
-			rWarn ("mySId != ubySId msgId = "<<pN->uwMsgID<<" token = "<<pN->dwToKen<<" mySId = "
-					<<(int)mySId<<" ubySId = "<<(int)ubySId);
+			rWarn ("mySId != desSId msgId = "<<pN->uwMsgID<<" token = "<<pN->dwToKen<<" mySId = "
+					<<(int)mySId<<" ubySId = "<<(int)desSId);
 			auto& rMgr = tSingleton<serverMgr>::single().getPhyCallback();
-			auto fnFreePack = rMgr.fnFreePack;
-			fnFreePack (pack);
+			if (NIsRet (pN)) {
+				PUSH_FUN_CALL
+				rTrace ("befor free pack = "<<pack);
+				freePack(pack);
+				POP_FUN_CALL
+			}
 		}
-		//myAssert (mySId == ubySId);
 	} else {
-		//sendBySession (pack);
 		auto& rTM = tokenS ();
-		auto fnFreePack = tSingleton<serverMgr>::single().getPhyCallback().fnFreePack;
-
 		if (NIsRet (pN)) {
-			auto it = rTM.find (pN->dwToKen);
-			if (rTM.end () == it) {
-				rTrace("ret pack can not find token token = "<<pN->dwToKen<<" msgId = "<<pN->uwMsgID);
-			} else {
-				pN->dwToKen = it->second.oldToken;
-				auto pITcp = getTcpServer ();
-				auto pS = pITcp->getSession (it->second.sessionId);
-				if (pS) {
-					pS->send (pack);
+			if (desPId != myPId) {
+				auto it = rTM.find (pN->dwToKen);
+				if (rTM.end () == it) {
+					rTrace("ret pack can not find token token = "<<pN->dwToKen<<" msgId = "<<pN->uwMsgID);
 				} else {
-					rWarn ("ret pack can not find session");
-					fnFreePack (pack);
+					pN->dwToKen = it->second.oldToken;
+					auto pITcp = getTcpServer ();
+					auto pS = pITcp->getSession (it->second.sessionId);
+					if (pS) {
+						pS->send (pack);
+					} else {
+						rWarn ("ret pack can not find session");
+						PUSH_FUN_CALL
+							rTrace ("Befor free pack = "<<pack);
+						freePack(pack);
+						POP_FUN_CALL
+					}
+					rTM.erase (it);
 				}
-				rTM.erase (it);
 			}
 		} else {
 			auto& rSessionS =  serverSessionMap();
 			auto iter = rSessionS.find (pN->ubyDesServId);
 			ISession* pSession = nullptr;
 			if (rSessionS.end () == iter) {
-				auto lowH = toHandle (ubyPId, 0);
-				auto upH = toHandle (ubyPId, LoopMark);
+				auto lowH = toHandle (desPId, 0);
+				auto upH = toHandle (desPId, LoopMark);
 				auto itL = rSessionS.lower_bound (lowH);
 				auto itU = rSessionS.upper_bound (upH);
 				if (itL == itU) {
@@ -513,26 +529,31 @@ bool server::procProx(packetHead* pack)
 			}
 			auto& rMgr = tSingleton<serverMgr>::single();
 			if (pSession) {
-				tokenInfo info;
-				info.oldToken = pN->dwToKen;
-				info.sessionId = pSession->id ();
-				auto newToken = nextToken ();
-				rTM [newToken] = info;
-				pN->dwToKen = newToken;
-				auto& rTimeMgr = getTimerMgr ();
-				std::pair<server*, NetTokenType> argS;
-				argS.first = this;
-				argS.second = newToken;
-				auto timeOut = rMgr.packSendInfoTime ();
-				rTimeMgr.addComTimer (timeOut, sDelTokenInfo, &argS, sizeof (argS));
+				if (myPId != srcPId) {
+					tokenInfo info;
+					info.oldToken = pN->dwToKen;
+					info.sessionId = pSession->id ();
+					auto newToken = nextToken ();
+					rTM [newToken] = info;
+					pN->dwToKen = newToken;
+					auto& rTimeMgr = getTimerMgr ();
+					std::pair<server*, NetTokenType> argS;
+					argS.first = this;
+					argS.second = newToken;
+					auto timeOut = rMgr.packSendInfoTime ();
+					rTrace ("change token oldToken = "<<info.oldToken<<"newToken = "<<newToken
+							<<"msgId = "<<pN->uwMsgID<<" pack = "<<pack);
+					rTimeMgr.addComTimer (timeOut, sDelTokenInfo, &argS, sizeof (argS));
+				}
 				pSession->send (pack);
 			} else {
 				rWarn (__FUNCTION__<<" pSession is empty msgId = "<<pN->uwMsgID<<"  ubyDesServId ="<<(int)pN->ubyDesServId);
 				//auto fnFreePack = tSingleton<serverMgr>::single().getPhyCallback().fnFreePack;
-				freePackInLevel0(pN->ubySrcServId, pack); // fnFreePack (pack);
+				// fnFreePack (pack);   // pack will delete by midFrame's timer
 			}
 		}
 	}
+	POP_FUN_CALL
 	return bRet;
 }
 
@@ -543,6 +564,7 @@ cTimerMgr&  server:: getTimerMgr ()
 
 bool server::onFrame()
 {
+	PUSH_FUN_CALL
 	bool bExit = false;
 	auto pNet = m_pTcpServer;
 	m_timerMgr.onFrame ();
@@ -599,9 +621,15 @@ bool server::onFrame()
 			n = n->pNext;
 			auto pN = P2NHead (d);
 			//rTrace (" 111111111111 dwToKen = "<<pN->dwToKen<<" msgId = "<<pN->uwMsgID);
-			freePackInLevel0 (myHandle, d);  //fnFreePack (d);
+			if (NIsRet (pN)) {  // ask pack will delete by midFrame
+				PUSH_FUN_CALL
+				rTrace ("Befor free pack = "<<d);
+				freePack(d);
+				POP_FUN_CALL
+			}
 		}
 	}
+	POP_FUN_CALL
 	//rTrace (" At then end ");
 	return bExit;
 }
@@ -620,4 +648,23 @@ ITcpServer* server:: getTcpServer ()
 	return m_pTcpServer;
 }
 
+void   server::      popFromCallStack ()
+{
+	if (m_curCallNum) {
+		m_curCallNum--;
+	}
+}
 
+void  server:: pushToCallStack (const char* szTxt)
+{
+	if (m_curCallNum < c_MaxStackSize) {
+		strCpy (szTxt, m_callStack[m_curCallNum++]);
+	}
+}
+
+void   server:: logCallStack (int nL)
+{
+	for (decltype (m_curCallNum) i = 0; i < m_curCallNum; i++) {
+		rTrace (m_callStack[i].get());
+	}
+}

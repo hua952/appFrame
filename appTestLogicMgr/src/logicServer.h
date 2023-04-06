@@ -21,8 +21,7 @@ private:
 class logicServerMgr
 {
 public:
-	void  afterLoad(ForLogicFun* pForLogic);
-	int   getMyPath (std::unique_ptr<char[]>& myPath);
+	void  afterLoad(int nArgC, const char* argS[], ForLogicFun* pForLogic);
 private:
 	ForLogicFun m_ForLogicFun;
 };

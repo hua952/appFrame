@@ -8,41 +8,34 @@
 #include "comFun.h"
 #include "cppLevel0LCom.h"
 
-static packetHead* allocPack(udword udwSize)
+packetHead* allocPack(udword udwSize)
 {
+	PUSH_FUN_CALL
 	auto pRet = (packetHead*)(new char [sizeof(packetHead) + sizeof(netPacketHead) + udwSize]);
 	auto pN = P2NHead(pRet);
 	pN->udwLength = udwSize;
 	pN->uwTag = 0;
+	POP_FUN_CALL
 	//rTrace (" after allocPack pack = "<<pRet);
 	return pRet;
 }
 
-static void	freePack(packetHead* pack)
+void	freePack(packetHead* pack)
 {
-	//rTrace (" begin freePack pack = "<<pack);
+	PUSH_FUN_CALL
+	lv0LogCallStack (27);	
 	auto pN = P2NHead (pack);
-	rTrace (" will delete pack msgID = "<<pN->uwMsgID<<" token = "<<pN->dwToKen
-			<<" srcHandle = "<<(int)(pN->ubySrcServId)<<" desHandle = "<<(int)(pN->ubyDesServId)
-			<<" pack = "<<pack);
-	/*
-	std::stringstream oss;
-	TraceStack(oss);
-	rTrace (oss.str().c_str());
-	*/
-	/*
-	std::unique_ptr<char[]> pStack;
-	showTraceStack(pStack);
-	rTrace (pStack.get());
-	*/
+	rTrace (" will delete pack "<<*pack);
 	delete [] ((char*)(pack));
-	//rTrace (" after freePack pack = "<<pack);
+	POP_FUN_CALL
 }
 
 void  freePackInLevel0(ServerIDType id, packetHead* pack)
 {
+PUSH_FUN_CALL 
 	onFreePack (id, pack);
 	freePack (pack);
+POP_FUN_CALL 
 }
 
 
@@ -59,19 +52,15 @@ static int sendPackToLoop(packetHead* pack)
 
 	auto& rMgr = tSingleton<serverMgr>::single();
 	server* pS = nullptr;
-	/*
-	rTrace (__FUNCTION__<<" msgID = "<<pNH->uwMsgID
-			<<" ubySrcServId = "<<(int)(pNH->ubySrcServId)<<" ubyDesServId= "<<(int)(pNH->ubyDesServId)
-			<<" SP = "<<(int)(ubySp)<<" DP = "<<(int)(ubyDp));
-			*/
+	rTrace (__FUNCTION__<<*pack);
 	if (ubySp == ubyDp) {
 		//auto pServerS = rMgr.getServerS();
 		pS = rMgr.getServer (pNH->ubyDesServId); // pServerS[ubyDl];
-		//rTrace ("send pack did = "<<(int)ubyDl<<" pS = "<<pS);
+		rTrace ("send pack did = "<<(int)ubyDl<<" pS = "<<pS);
 	} else {
 		pS = rMgr.getOutServer ();
-		//auto hs = pS->myHandle ();
-		//rTrace ("will send by up pS = "<<pS<<" handle = "<<(int)hs);
+		auto hs = pS->myHandle ();
+		rTrace ("will send by up pS = "<<pS<<" handle = "<<(int)hs);
 	}
 	if (pS) {
 		//rTrace ("will pushPack");
@@ -213,7 +202,35 @@ static NetTokenType   sNextToken(loopHandleType pThis)
 	return nRet;
 }
 
-server*   serverMgr::      getServer(loopHandleType handle)
+
+static void  sPushToCallStack (loopHandleType pThis, const char* szTxt)
+{
+	auto& rMgr = tSingleton<serverMgr>::single();
+	auto pTH = rMgr.getServer(pThis);
+	if (pTH) {
+		pTH->pushToCallStack (szTxt);
+	}
+}
+
+static void  sPopFromCallStack (loopHandleType pThis)
+{
+	auto& rMgr = tSingleton<serverMgr>::single();
+	auto pTH = rMgr.getServer(pThis);
+	if (pTH) {
+		pTH->popFromCallStack ();
+	}
+}
+
+static void  sLogCallStack (loopHandleType pThis, int nL)
+{
+	auto& rMgr = tSingleton<serverMgr>::single();
+	auto pTH = rMgr.getServer(pThis);
+	if (pTH) {
+		pTH->logCallStack (nL);
+	}
+}
+
+server*   serverMgr:: getServer(loopHandleType handle)
 {
 	server* pRet = nullptr;
 	/*
@@ -249,6 +266,9 @@ int serverMgr::initFun (int cArg, const char* argS[])
 	rMgr.fnLogMsg = logMsg;
 	rMgr.fnNextToken = sNextToken;
 	rMgr.fnGetCurServerHandle = getCurServerHandle; // Thread safety
+	rMgr.fnPushToCallStack = sPushToCallStack;
+	rMgr.fnPopFromCallStack = sPopFromCallStack;
+	rMgr.fnLogCallStack = sLogCallStack;
 	//rMgr.fnAddComTimer = sAddComTimer;// Thread safety
 	do {
 		auto nInitLog = initLog ("appFrame", "appFrameLog.log", 0);
@@ -256,7 +276,10 @@ int serverMgr::initFun (int cArg, const char* argS[])
 			std::cout<<"initLog error nInitLog = "<<nInitLog<<std::endl;
 			break;
 		}
+		rInfo ("Loger init OK");
 		auto nInitMidFrame = InitMidFrame(cArg, argS, &rMgr);
+		// auto nInitMidFrame = InitMidFrame(&rMgr);
+		rTrace ("22222222");
 		if (0 != nInitMidFrame) {
 			nRet = 1;
 			rError ("InitMidFrame error nRet =  "<<nInitMidFrame);
@@ -266,22 +289,16 @@ int serverMgr::initFun (int cArg, const char* argS[])
 		const auto c_maxLoopNum = 10;
 		serverNode loopHandleS[c_maxLoopNum];
 		auto proLoopNum =  getAllLoopAndStart(loopHandleS, c_maxLoopNum);
-		/*
-		for (decltype (proLoopNum) i = 0; i < proLoopNum - 1; i++) {
-			for (decltype (proLoopNum) j = i + 1; i < proLoopNum; j++) {
-				if (loopHandleS[j].handle < loopHandleS[i].handle) {
-					auto pTemp = loopHandleS[i];
-					loopHandleS[i] = loopHandleS[j];
-					loopHandleS[j] = pTemp;
-				}
-			}
-		}
-		*/
 		rInfo ("initFun proLoopNum = "<<proLoopNum);
 		if (proLoopNum > 0) {
 			auto pNetLibName = m_netLibName.get();
 			rTrace ("will int net "<<pNetLibName);
-			auto nNetInit = initNetServer (pNetLibName);
+			std::unique_ptr<char[]> binH;
+			getCurModelPath(binH);
+			std::string strPath = binH.get (); 
+			binH.reset ();
+			strPath += pNetLibName;
+			auto nNetInit = initNetServer (strPath.c_str());
 			if (nNetInit) {
 				rError ("initNetServer error nNetInit = "<<nNetInit);
 				break;
@@ -341,3 +358,19 @@ void serverMgr::setUpNum (ubyte  va)
 {
     m_outNum = va;
 }
+
+void         lv0PushToCallStack (const char* szTxt)
+{
+	sPushToCallStack (server::s_loopHandleLocalTh, szTxt);
+}
+
+void         lv0PopFromCallStack ()
+{
+	sPopFromCallStack(server::s_loopHandleLocalTh);
+}
+
+void         lv0LogCallStack (int nL)
+{
+	sLogCallStack (server::s_loopHandleLocalTh, nL);
+}
+

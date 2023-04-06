@@ -6,6 +6,7 @@
 #include<string>
 #include<vector>
 #include <memory>
+#include "logicModelMgrCreateor.h"
 
 enum class appType:char 
 {
@@ -58,19 +59,35 @@ public:
 	otherPmpMap m_otherPmpMap;
 //private:
 	procRpcInfoList  m_procRpcInfoList;
+private:
 };
 typedef app* pApp;
 
+class logicModel
+{
+public:
+	const char* name ();
+	void  setName (const char* szName);
+private:
+	std::unique_ptr <char[]> m_name;
+};
 class realServer
 {
 public:
 	typedef std::vector<std::shared_ptr<app>> appList;
+	typedef std::map<std::string, std::shared_ptr<logicModel>>  modelMap;
 	appList&  getAppList ();
+	modelMap&   getModelMap ();
+	realServer ();
 	const char* name ();
 	void        setName (const char* szName);
+	logicModelMgrCreateor&  getLogicModelMgr ();
+	int  procLogicMgr ();
 private:
 	appList		m_appList;
 	std::unique_ptr <char[]> m_name;
+	logicModelMgrCreateor  m_logicMgr;
+	modelMap			   m_modelMap;
 };
 
 class appMgr

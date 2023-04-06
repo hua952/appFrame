@@ -11,14 +11,42 @@
 	<app>
 		<appServer>
 			<module>
-				<appServer>
-				</appServer>
+				<server>
+					<appServerTh>
+						<procRpc>
+							<move neetPlayer="1" askType="ask"/>
+						</procRpc>
+					</appServerTh>
+				</server>
 			</module>
 		</appServer>
 		<appClient>
 			<module>
-				<appClientServer>
-				</appClientServer>
+				<appClientM1>
+					<server>
+						<appClientM1Th1>
+							<procRpc>
+								<manualList askType="ret"/>
+								<regret askType="ret"/>
+								<move askType="ret"/>
+							</procRpc>
+						</appClientM1Th1>
+						<appClientM1Th2>
+							<procRpc>
+								<manualList askType="ask"/>
+							</procRpc>
+						</appClientM1Th2>
+					</server>
+				</appClientM1>
+				<appClientM2>
+					<server>
+						<appClientM2Th>
+							<procRpc>
+								<regret askType="ask"/>
+							</procRpc>
+						</appClientM2Th>
+					</server>
+				</appClientM2>
 			</module>
 		</appClient>
 	</app>

@@ -17,18 +17,6 @@ int CModule::load_os (const char* szName, ForLogicFun* pForLogic)
 			nRet = 1;
 			break;
 		}
-		/*
-		auto funGetServerS= (getServerSFunT)(dlsym(m_handle, "getServerS"));
-		if(!funGetServerS)
-		{
-			std::cout<<"funGetServerS empty error is"<<dlerror()<<std::endl;
-			nRet = 2;
-			break;
-		}
-		std::unique_ptr<const char* []>	 nameS;
-		nameS = std::make_unique<const char* []>(LoopNum);
-		auto nSerNum = funGetServerS (nameS.get(), LoopNum);
-		*/
 		auto& rloopMgr = tSingleton<loopMgr>::single();
 		auto funOnLoad = (afterLoadFunT)(dlsym(m_handle, "afterLoad"));
 		myAssert(funOnLoad);

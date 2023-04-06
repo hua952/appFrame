@@ -50,14 +50,13 @@ int impLoop::onWriteOncePack(packetHead* pPack)
 {
 	int nRet = procPacketFunRetType_doNotDel;
 	auto pN = P2NHead (pPack);
-	//mTrace (__FUNCTION__<<" msgId = "<<pN->uwMsgID);
 	auto& rTS = tokenMsgS ();
 	auto it = rTS.find (pN->dwToKen);
 	if (rTS.end () == it) {
-		//auto freeFun =  tSingleton<PhyInfo>::single().getForLogicFun().fnFreePack;
-		//freeFun (pPack);
 		nRet = procPacketFunRetType_del;
 	}
+	mTrace (__FUNCTION__<<" msgId = "<<pN->uwMsgID<<" token = "<<pN->dwToKen<<" pack = "
+			<<pPack<<" nRet = "<<nRet<<" map.size = "<<rTS.size()<<" server handle = "<<id());
 	return nRet;
 }
 
@@ -123,12 +122,12 @@ int impLoop::processOncePack(packetHead* pPack)
 			myAssert (pS);
 			auto& rTM = pS->tokenMsgS ();
 			auto it = rTM.find (pN->dwToKen);
-			myAssert (rTM.end () != it);
 			if (rTM.end () == it) {
 				mWarn ("send packet can not find by token: "<<pN->dwToKen<<" msgId = "<<pN->uwMsgID
 						<<" length = "<<pN->udwLength);
 				break;
 			}
+			myAssert (rTM.end () != it);
 			auto pAsk = it->second;
 			nRet = pF(pAsk, pPack, &argP);
 			rTM.erase (it);

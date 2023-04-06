@@ -46,8 +46,14 @@ public:
     tokenMap&    tokenS ();
 	cTimerMgr&   getTimerMgr ();
 	ITcpServer*  getTcpServer ();
+	void         pushToCallStack (const char* szTxt);
+	void         popFromCallStack ();
+	void         logCallStack (int nL);
 	static thread_local  loopHandleType      s_loopHandleLocalTh;
+	static const auto c_MaxStackSize = 20;
 private:
+	std::unique_ptr<char[]>   m_callStack[c_MaxStackSize];	
+	int       m_curCallNum;
     tokenMap  m_tokenS;
 	cTimerMgr          m_timerMgr;
     NetTokenType	m_nextToken;

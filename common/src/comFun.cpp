@@ -20,3 +20,14 @@ bool            fromHandle (loopHandleType handle, loopHandleType &p, loopHandle
 	return true;
 }
 
+std::ostream& operator << (std::ostream& os, const packetHead& pack)
+{
+	auto pp = &pack;
+	auto& p = *(P2NHead(pp));
+    os << " udwLength = " << p.udwLength<< "  dwToKen = " << p.dwToKen
+		<<" ubySrcServId = "<<(int)(p.ubySrcServId) <<" ubyDesServId = "<<(int)(p.ubyDesServId)
+		<<" uwMsgID = "<<p.uwMsgID<<" uwTag = "<<std::hex<<p.uwTag<<std::dec<<"pack = "<<pp;
+    return os;
+}
+
+

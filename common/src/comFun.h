@@ -3,6 +3,8 @@
 #include<string.h>
 #include"typeDef.h"
 #include <memory>
+#include <sstream>
+#include "packet.h"
 
 template<class T>
 class LessComp
@@ -85,9 +87,11 @@ loopHandleType  toHandle (loopHandleType  p, loopHandleType l);
 bool            fromHandle (loopHandleType handle, loopHandleType &p, loopHandleType& l);
 bool            isPathExit (const char* szPath);
 int             myMkdir (const char* szPath);
-int             getCurDllPath (std::unique_ptr<char[]>& pathBuf);
+int             getCurModelPath (std::unique_ptr<char[]>& pathBuf);
 
 void showTraceStack(std::unique_ptr<char[]>& pBuff);
+
+std::ostream& operator << (std::ostream& os, const packetHead& pack);
 
 #define SD(p) {delete p;p=nullptr;}
 #define SDA(p) {delete[]p;p=nullptr;}

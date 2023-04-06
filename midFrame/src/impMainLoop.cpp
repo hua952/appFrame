@@ -10,12 +10,15 @@
 #include "myAssert.h"
 #include "mLog.h"
 #include "impLoop.h"
+#include <iostream>
 
-int  InitMidFrame(int nArgC, const char* argS[], PhyCallback* pCallbackS)
+int  InitMidFrame(int nArgC, const char* argS[],PhyCallback* pCallbackS)
 {
+	//std::cout<<"At the begin of InitMidFrame"<<std::endl;
 	tSingleton<PhyInfo>::createSingleton();
 	tSingleton<loopMgr>::createSingleton();
 	auto& rMgr = tSingleton<PhyInfo>::single();
+	//auto nRet = rMgr.init(nArgC, argS, *pCallbackS);
 	auto nRet = rMgr.init(nArgC, argS, *pCallbackS);
 	return nRet;
 }
@@ -93,19 +96,21 @@ static int sSendPackToLoopFun(packetHead* pack)
 	auto& rMgr = tSingleton<loopMgr>::single ();
 	auto curHandleFun = tSingleton<PhyInfo>::single ().getPhyCallback().fnGetCurServerHandle;
 	auto curHandle = curHandleFun ();
+	if (curHandle !=  pN->ubySrcServId) {
+		mTrace ("curHandle = "<<curHandle<<"pN->ubySrcServId = "<<pN->ubySrcServId);
+	}
 	myAssert (pN->ubySrcServId == curHandle);
 	auto pS = rMgr.getLoop(pN->ubySrcServId);
 	myAssert (pS);
 	auto& rMsgInfoS = tSingleton<loopMgr>::single ().defMsgInfoMgr ();
 	bool bIsRet = rMsgInfoS.isRetMsg (pN->uwMsgID);
 	if (!bIsRet) {
-		auto retMsg = rMsgInfoS.getRetMsg(pN->uwMsgID);
-		if (c_null_msgID  != retMsg) {
+		//auto retMsg = rMsgInfoS.getRetMsg(pN->uwMsgID);
+		//if (c_null_msgID  != retMsg) {
 			auto& rMap = pS->tokenMsgS ();
-			/*
 			mTrace ("will insert ask pack -----dwToKen = "<<pN->dwToKen<<" msgId = "
-					<<pN->uwMsgID<<" retMsg = "<<retMsg<<" map.size = "<<rMap.size());
-					*/
+					<<pN->uwMsgID<<" map.size = "<<rMap.size()<<" pack = "<<pack
+					<<" server handle = "<<pS->id ());
 			auto bRet = rMap.insert (std::make_pair(pN->dwToKen, pack));
 			myAssert (bRet.second);
 			//mTrace (" save ask pack dwToKen = "<<pN->dwToKen<<" msgId = "<<pN->uwMsgID);
@@ -135,7 +140,7 @@ static int sSendPackToLoopFun(packetHead* pack)
 					return false;
 				},
 				&pa, sizeof (pa));
-		}
+		//}
 	}
 	nRet = g_sendPackToLoopFun (pack); // must in the end
 	
@@ -146,20 +151,44 @@ static iRpcInfoMgr* sGetIRpcInfoMgr()
 	return &tSingleton<loopMgr>::single().defMsgInfoMgr();
 }
 
+static allocPackFT g_allocPackFun = nullptr;
+packetHead* sAllocPack(udword udwSize)
+{
+	return g_allocPackFun (udwSize);
+}
+
+static freePackFT g_freePackFun = nullptr;
+static void sFreePack (packetHead* pack)
+{
+	auto pN = P2NHead (pack);
+	mTrace (" midFrame will delete pack msgID = "<<pN->uwMsgID<<" token = "<<pN->dwToKen
+			<<" srcHandle = "<<(int)(pN->ubySrcServId)<<" desHandle = "<<(int)(pN->ubyDesServId)
+			<<" pack = "<<pack);
+	g_freePackFun (pack);
+}
+
+typedef void		(*freePackFT)(packetHead* pack);
 int PhyInfo::init(int nArgC, const char* argS[], PhyCallback& info)
 {
+	auto nHomeR = getCurModelPath (m_home);
+	myAssert (0 == nHomeR);
 	m_callbackS = info;
 	auto& forLogic = getForLogicFun();
-	forLogic.fnCreateLoop = PhyInfo::createServer;
-	forLogic.fnAllocPack = info.fnAllocPack;
-	forLogic.fnFreePack = info.fnFreePack;
-	forLogic.fnRegMsg = regMsg;
+	g_allocPackFun = info.fnAllocPack;
+	g_freePackFun = info.fnFreePack;
 	g_sendPackToLoopFun = info.fnSendPackToLoop;
+	forLogic.fnCreateLoop = PhyInfo::createServer;
+	forLogic.fnAllocPack = sAllocPack; // info.fnAllocPack;
+	forLogic.fnFreePack = sFreePack; //  info.fnFreePack;
+	forLogic.fnRegMsg = regMsg;
 	forLogic.fnSendPackToLoop = /*info.fnSendPackToLoop; // */ sSendPackToLoopFun;
 	forLogic.fnLogMsg = info.fnLogMsg;
 	forLogic.fnAddComTimer = sAddComTimer;//m_callbackS.fnAddComTimer;
 	forLogic.fnNextToken = info.fnNextToken;
 	forLogic.fnGetIRpcInfoMgr = sGetIRpcInfoMgr;
+	forLogic.fnPushToCallStack = info.fnPushToCallStack;
+	forLogic.fnPopFromCallStack = info.fnPopFromCallStack;
+	forLogic.fnLogCallStack = info.fnLogCallStack;
 	//forLogic.fnRemoveMsg = removeMsg;
 	auto nRet = procArgS(nArgC, argS);
 	do
@@ -174,11 +203,16 @@ int PhyInfo::init(int nArgC, const char* argS[], PhyCallback& info)
 		{
 			auto& rM = m_ModuleS[i];
 			//mTrace(" Before load modle "<<i);
-			rM.load(&forLogic );
+			rM.load(nArgC, argS, &forLogic );
 			//mTrace(" After load modle "<<i);
 		}
 	}while(0);
 	return nRet;
+}
+
+const char*  PhyInfo:: binHome ()
+{
+	return m_home.get();
 }
 
 int PhyInfo::procArgS(int nArgC, const char* argS[])
@@ -187,6 +221,7 @@ int PhyInfo::procArgS(int nArgC, const char* argS[])
 	tempModuleInfo moduleS;
 	for(int i = 1; i < nArgC; i++)
 	{
+		//mTrace ("proc arg : "<<argS[i]);
 		auto pC = argS[i];
 		auto nL = strlen(pC);
 		std::unique_ptr<char[]>	 name = std::make_unique<char[]>(nL + 1);
@@ -199,6 +234,7 @@ int PhyInfo::procArgS(int nArgC, const char* argS[])
 			if(0 == strcmp(buff[0], "addLogic")) {
 				//auto nRR = strR(buff[1], '+', buff, c_BuffNum);
 				auto bI = moduleS.insert(buff[1]);
+				//mTrace (" insert model "<<buff[1]);
 				myAssert (bI.second);
 			} else if(0 == strcmp(buff[0], "gropId")) {
 				int nId = atoi (buff[1]);

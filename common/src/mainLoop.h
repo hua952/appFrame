@@ -27,6 +27,10 @@ typedef int (*addComTimerFT)(loopHandleType pThis, udword firstSetp, udword udwS
 		ComTimerFun pF, void* pUsrData, udword userDataLen);
 typedef NetTokenType   (*nextTokenFT)(loopHandleType pThis);
 typedef loopHandleType      (*getCurServerHandleFT) ();
+typedef void (*pushToCallStackFT)(loopHandleType pThis, const char* szTxt);
+typedef void (*popFromCallStackFT)(loopHandleType pThis);
+typedef void (*logCallStackFT) (loopHandleType pThis, int nL);
+
 typedef struct _PhyCallback
 {
 	sendPackToLoopFT fnSendPackToLoop;// Thread safety
@@ -37,6 +41,9 @@ typedef struct _PhyCallback
     //addComTimerFT    fnAddComTimer;// Thread safety
 	nextTokenFT      fnNextToken;
 	getCurServerHandleFT   fnGetCurServerHandle; // Thread safety
+	pushToCallStackFT      fnPushToCallStack;
+	popFromCallStackFT     fnPopFromCallStack;
+	logCallStackFT         fnLogCallStack;
 } PhyCallback;
 
 struct  serverNode;
@@ -44,6 +51,7 @@ typedef int (*createLoopFT)(const char* szName, loopHandleType serId, serverNode
 typedef  int (*regMsgFT)(loopHandleType serverId, uword uwMsgId, procRpcPacketFunType pFun); // call by level 2
 typedef  int (*removeMsgFT)(loopHandleType handle, uword uwMsgId); // call by level 2
 typedef  iRpcInfoMgr* (*getIRpcInfoMgrFT)();
+typedef  void (*popFromCallStackFT) (loopHandleType handle);
 
 typedef struct _ForLogicFun
 {
@@ -56,9 +64,12 @@ typedef struct _ForLogicFun
     addComTimerFT    fnAddComTimer;// Thread safety
 	nextTokenFT      fnNextToken;
 	getIRpcInfoMgrFT fnGetIRpcInfoMgr;
+	pushToCallStackFT      fnPushToCallStack;
+	popFromCallStackFT     fnPopFromCallStack;
+	logCallStackFT         fnLogCallStack;
 } ForLogicFun;
 
-typedef void (*afterLoadFunT)(ForLogicFun* pForLogic);
+typedef void (*afterLoadFunT)(int nArgC, const char* argS[], ForLogicFun* pForLogic);
 /*
 typedef struct _ForRegMsg{
 	regMsgFT		 fnRegMsg;
