@@ -11,13 +11,15 @@
 	<app>
 		<appServer>
 			<module>
-				<server>
-					<appServerTh>
-						<procRpc>
-							<move neetPlayer="1" askType="ask"/>
-						</procRpc>
-					</appServerTh>
-				</server>
+				<appServerM>
+					<server>
+						<appServerTh>
+							<procRpc>
+								<move neetPlayer="1" askType="ask"/>
+							</procRpc>
+						</appServerTh>
+					</server>
+				</appServerM>
 			</module>
 		</appServer>
 		<appClient>

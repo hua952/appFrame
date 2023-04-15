@@ -1,29 +1,31 @@
 <?xml version='1.0' encoding='utf-8' ?>
 <servers>
+	<struct>
+		<playerInfo>
+			<accID dataType="udword"/>
+			<score dataType="udword"/>
+			<head dataType="udword"/>
+			<lv dataType="uword"/>
+			<side dataType="ubyte"/>
+			<name dataType="char" length="32" zeroEnd="0" commit="昵称"/>
+		</playerInfo>
+		<trackNode>
+			<from dataType="ubyte"/>
+			<to dataType="ubyte"/>
+			<fromManType dataType="ubyte"/>
+			<toManType dataType="ubyte"/>
+		</trackNode>
+		<manualListNode>
+			<id dataType="udword"/>
+			<time dataType="udword" commit="比赛时间"/>
+			<endState dataType="ubyte" commit="比赛结果"/>
+			<winSide dataType="ubyte" commit="胜方"/>
+			<firstPlayer dataType="playerInfo"/>
+			<secondPlayer dataType="playerInfo"/>
+		</manualListNode>
+	</struct>
 	<rpc>
 		<CChess tojs="1" cppDir="../libMsg/src">
-			<playerInfo>
-				<accID dataType="udword"/>
-				<score dataType="udword"/>
-				<head dataType="udword"/>
-				<lv dataType="uword"/>
-				<side dataType="ubyte"/>
-				<name dataType="char" length="32" zeroEnd="0" commit="昵称"/>
-			</playerInfo>
-			<trackNode>
-				<from dataType="ubyte"/>
-				<to dataType="ubyte"/>
-				<fromManType dataType="ubyte"/>
-				<toManType dataType="ubyte"/>
-			</trackNode>
-			<manualListNode>
-				<id dataType="udword"/>
-				<time dataType="udword" commit="比赛时间"/>
-				<endState dataType="ubyte" commit="比赛结果"/>
-				<winSide dataType="ubyte" commit="胜方"/>
-				<firstPlayer dataType="playerInfo"/>
-				<secondPlayer dataType="playerInfo"/>
-			</manualListNode>
 			<manualList>
 				<ask>
 				</ask>
