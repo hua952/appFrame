@@ -1,6 +1,6 @@
 SET(prjName genTool)
 set(srcS)
-file(GLOB srcS src/*.cpp)
+file(GLOB srcS src/*.cpp src/fromFileData/*.cpp)
 
 set(osSrc)
 if (UNIX)

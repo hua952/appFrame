@@ -1,15 +1,14 @@
-#ifndef _newTool_h__
-#define _newTool_h__
-
+#ifndef _globalFile_h__
+#define _globalFile_h__
 #include <memory>
 #include <vector>
 #include <string>
 
-class newTool
+class globalFile
 {
 public:
-    newTool ();
-    ~newTool ();
+    globalFile ();
+    ~globalFile ();
 	using msgFileV = std::vector<std::string>;
 	const char*  frameBinPath ();
 	void  setFrameBinPath (const char* v);
@@ -35,6 +34,7 @@ private:
 	std::unique_ptr <char[]>  m_depIncludeHome;
 	std::unique_ptr <char[]>  m_depLibHome;
 	std::unique_ptr <char[]>  m_frameBinPath;
+
 
 };
 #endif

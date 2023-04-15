@@ -1,4 +1,4 @@
-#include "msgTool.h"
+#include "newTool.h"
 #include "strFun.h"
 
 newTool::newTool ()
@@ -8,34 +8,78 @@ newTool::~newTool ()
 {
 }
 
-char*  frameHome ()
+const char*  newTool::frameBinPath ()
 {
-    return m_frameHome.get ();
+    return m_frameBinPath.get ();
 }
 
-void  setFrameHome (const char* v)
+void  newTool::setFrameBinPath (const char* v)
 {
-    strCpy (v, m_frameHome);
+    strCpy (v, m_frameBinPath);
 }
 
-char*  projectHome ()
+const char* newTool:: depLibHome ()
 {
-    return m_projectHome.get ();
+    return m_depLibHome.get ();
 }
 
-void  setProjectHome (const char* v)
+void  newTool::setDepLibHome (const char* v)
 {
-    strCpy (v, m_projectHome);
+    strCpy (v, m_depLibHome);
 }
 
-char*  depIncludeHome ()
+const char*  newTool::depIncludeHome ()
 {
     return m_depIncludeHome.get ();
 }
 
-void  setDepIncludeHome (const char* v)
+void  newTool::setDepIncludeHome (const char* v)
 {
     strCpy (v, m_depIncludeHome);
 }
 
+const char*  newTool::frameHome ()
+{
+    return m_frameHome.get ();
+}
+
+void  newTool::setFrameHome (const char* v)
+{
+    strCpy (v, m_frameHome);
+}
+
+const char* newTool:: projectHome ()
+{
+    return m_projectHome.get ();
+}
+
+void  newTool::setProjectHome (const char* v)
+{
+    strCpy (v, m_projectHome);
+}
+
+const char*  newTool::frameLibPath ()
+{
+    return m_frameLibPath.get ();
+}
+
+void  newTool::setFrameLibPath (const char* v)
+{
+    strCpy (v, m_frameLibPath);
+}
+
+const char* newTool:: outPutPath ()
+{
+    return m_outPutPath.get ();
+}
+
+void  newTool::setOutPutPath (const char* v)
+{
+    strCpy (v, m_outPutPath);
+}
+
+newTool::msgFileV& newTool:: msgFileS ()
+{
+    return m_msgFileS;
+}
 

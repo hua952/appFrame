@@ -10,10 +10,12 @@ void strNCpy(char* szD, int nSize, const char* szS)
 
 void strCpy (const char* szSrc, std::unique_ptr<char[]>& pDec)
 {
-	auto len = strlen (szSrc);
-	pDec = std::make_unique<char []> (len + 1);
-	auto p = pDec.get();
-	strNCpy (p, len + 1, szSrc);
+	if (szSrc) {
+		auto len = strlen (szSrc);
+		pDec = std::make_unique<char []> (len + 1);
+		auto p = pDec.get();
+		strNCpy (p, len + 1, szSrc);
+	}
 }
 
 void strCpy (const wchar_t* szSrc, std::unique_ptr<wchar_t[]>& pDec)
@@ -23,10 +25,12 @@ void strCpy (const wchar_t* szSrc, std::unique_ptr<wchar_t[]>& pDec)
 
 void wstrCpy (const wchar_t* szSrc, std::unique_ptr<wchar_t[]>& pDec)
 {
-	auto len = wcslen(szSrc);
-	pDec = std::make_unique<wchar_t[]> (len + 1);
-	auto p = pDec.get();
-	wcscpy_s (p, len + 1, szSrc);
+	if (szSrc) {
+		auto len = wcslen(szSrc);
+		pDec = std::make_unique<wchar_t[]> (len + 1);
+		auto p = pDec.get();
+		wcscpy_s (p, len + 1, szSrc);
+	}
 }
 
 int strR(char* szText, char sp, char** pBuf, int BufNum)

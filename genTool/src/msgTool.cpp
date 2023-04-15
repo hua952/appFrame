@@ -529,13 +529,7 @@ int msgTool::procCmd1(char* szText)
 
 int msgTool::init(int nArgC, char* argS[])
 {
-	auto nInitLog = initLog ("genTool", "genTool.log", 0);
-	if (0 != nInitLog) {
-		std::cout<<"initLog error nInitLog = "<<nInitLog<<std::endl;
-		return 3;
-	}
-
-	rDebug (__FUNCTION__<<" nArgC = "<<nArgC);
+		rDebug (__FUNCTION__<<" nArgC = "<<nArgC);
 	for(int i = 1; i < nArgC; i++)
 	{
 		int nR = procCmd1(argS[i]);
