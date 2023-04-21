@@ -31,7 +31,16 @@ int   xmlCommon:: getBoolA(rapidxml::xml_node<char>* pStruct, const char* szName
 			nRet = 1;
 			break;
 		}
-		auto nL = atoi (pZ->value ());
+		auto szValue = pZ->value ();
+		if (!szValue) {
+			nRet = 2;
+			break;
+		}
+		if (0 == strlen (szValue)) {
+			nRet = 3;
+			break;
+		}
+		auto nL = atoi (szValue);
 		bRet = nL;
 	} while (0);
     return nRet;

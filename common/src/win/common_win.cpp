@@ -50,7 +50,7 @@ int  myMkdir (const char* szPath)
 			}
 			auto nR = _mkdir(pp);
 			if (0 != nR) {
-				return -1;
+				return errno;
 			}
 		}
 	}
@@ -58,9 +58,13 @@ int  myMkdir (const char* szPath)
 	if (szPath[nL - 1] != '\\'|| szPath[nL - 1] != '/') {
 		pp[nL] = '\\';
 		pp[nL + 1] = 0;
-		auto nR = _mkdir(pp);
-		if (0 != nR) {
-			return -1;
+
+		auto bE = isPathExit (pp);
+		if (!bE) {
+			auto nR = _mkdir(pp);
+			if (0 != nR) {
+				return errno;
+			}	
 		}
 	}
 	return 0;

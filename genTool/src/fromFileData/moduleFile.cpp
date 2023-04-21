@@ -24,3 +24,13 @@ moduleFile::serverMap&  moduleFile:: serverS ()
     return m_serverS;
 }
 
+const char*  moduleFile:: appName ()
+{
+    return m_appName.get ();
+}
+
+void  moduleFile:: setAppName (const char* v)
+{
+    strCpy (v, m_appName);
+}
+

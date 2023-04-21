@@ -25,7 +25,10 @@ public:
     const char*  outPutPath ();
     void  setOutPutPath (const char* v);
 	msgFileV&  msgFileS ();
+	const char*  projectName ();
+	void  setProjectName (const char* v);
 private:
+	std::unique_ptr <char[]>  m_projectName;
 	msgFileV  m_msgFileS;
     std::unique_ptr <char[]>  m_outPutPath;
     std::unique_ptr <char[]>  m_frameLibPath;

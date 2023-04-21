@@ -6,6 +6,7 @@ if (WIN32)
     MESSAGE(STATUS "windows")
 	add_definitions(-DWIN32_LEAN_AND_MEAN)
 	add_definitions(-w)
+	ADD_DEFINITIONS(/Zi)
 	include_directories(
 							${CMAKE_SOURCE_DIR}/../include
 							)

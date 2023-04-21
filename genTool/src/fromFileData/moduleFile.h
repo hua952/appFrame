@@ -14,8 +14,11 @@ public:
 	const char*  moduleName ();
 	void  setModuleName (const char* v);
 	serverMap&  serverS ();
+	const char*  appName ();
+	void  setAppName (const char* v);
 private:
-	serverMap  m_serverS;
+	std::unique_ptr <char[]>  m_appName;
 	std::unique_ptr <char[]>  m_moduleName;
+	serverMap  m_serverS;
 };
 #endif

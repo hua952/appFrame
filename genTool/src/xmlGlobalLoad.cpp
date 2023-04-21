@@ -17,6 +17,7 @@ xmlGlobalLoad:: ~xmlGlobalLoad ()
 int  xmlGlobalLoad::xmlLoad (const char* szFile)
 {
 	int nRet = 0;
+	rInfo (" process xml : "<<szFile);
     rapidxml::file<> fdoc(szFile);
 	rapidxml::xml_document<> doc;
 	doc.parse<0>(fdoc.data());
@@ -29,6 +30,8 @@ int  xmlGlobalLoad::xmlLoad (const char* szFile)
 		auto szPath = pRpc->value ();
 		if(0 == strcmp(pName, "projectHome")) {
 			rGlobal.setProjectHome (szPath);
+		} else if(0 == strcmp(pName, "projectName")) {
+			rGlobal.setProjectName (szPath);
 		} else if(0 == strcmp(pName, "frameHome")) {
 			rGlobal.setFrameHome(szPath);
 		} else if(0 == strcmp(pName, "depIncludeHome")) {
@@ -80,6 +83,7 @@ int   xmlGlobalLoad:: appSLoad (rapidxml::xml_node<char>* pAppS)
 			break;
 		}
 		rMap[rApp->appName ()] = rApp;
+		rInfo ("after process app: "<<pApp->name ());
 	}
     return nRet;
 }
@@ -88,18 +92,15 @@ int   xmlGlobalLoad:: onceAppLoad (rapidxml::xml_node<char>* pApp, std::shared_p
 {
     int   nRet = 0;
 	do {
-		rapidxml::xml_node<char>* pModuleS = nullptr;
-		for(rapidxml::xml_node<char> * pMs = pApp->first_node();  NULL != pMs; pMs= pMs->next_sibling()) {
-			auto pName = pMs->name ();
-			if(0 == strcmp(pName, "module")) {
-				pModuleS = pMs;
-			}
-		}
+		rInfo ("proc app name = "<<pApp->name ());
+		rapidxml::xml_node<char>* pModuleS = pApp->first_node("module");
 		if (!pModuleS) {
 			nRet = 1;
 			rError ("app : "<<pApp->name ()<<" not find moduleS ");
 			break;
 		}
+
+		auto& rMap = tSingleton<appFileMgr>::single ().appS ();
 		auto pA = std::make_shared<appFile> ();
 		auto pName = pApp->name ();
 		pA->setAppName (pName);
@@ -109,7 +110,7 @@ int   xmlGlobalLoad:: onceAppLoad (rapidxml::xml_node<char>* pApp, std::shared_p
 			nRet = 2;
 			break;
 		}
-		rApp = std::move (pA);
+		rApp = pA;
     } while (0);
     return nRet;
 }
@@ -130,7 +131,7 @@ int   xmlGlobalLoad:: moduleSLoad (rapidxml::xml_node<char>* pModuleS, appFile& 
 				nRet = 1;
 				break;
 			}
-
+			rM->setAppName (rApp.appName ());
 			auto pRet = tmap.insert (std::make_pair(pName, rM));
 			if (!pRet.second) {
 				rError ("module have then same name in once app name = "<<pName);
@@ -160,6 +161,7 @@ int   xmlGlobalLoad:: onceModuleLoad (rapidxml::xml_node<char>* pM, std::shared_
 {
 	int   nRet = 0;
 	do {
+		rInfo (" proc module : "<<pM->name ());
 		auto newModule = std::make_shared <moduleFile> ();
 		newModule->setModuleName (pM->name ());
 		rapidxml::xml_node<char> *pServerS = nullptr;
@@ -174,7 +176,7 @@ int   xmlGlobalLoad:: onceModuleLoad (rapidxml::xml_node<char>* pM, std::shared_
 			rError ("module : "<<pM->name ()<<" not find serverS");
 			break;
 		}
-		int nR = serverSLoad (pServerS, *rM);
+		int nR = serverSLoad (pServerS, *newModule);
 		if (nR) {
 			rError (" serverSLoad  return err nR = "<<nR<<" moduleName = "<<pM->name ());
 			nRet = 2;
@@ -190,7 +192,7 @@ int   xmlGlobalLoad:: serverSLoad (rapidxml::xml_node<char>* pServerS, moduleFil
     int   nRet = 0;
 	do {
 		auto& rMap = rM.serverS ();
-		moduleFile::serverMap tmp;
+		moduleFile::serverMap& tmp = rMap;
 		for(rapidxml::xml_node<char> * pS = pServerS->first_node();  pS; pS = pS->next_sibling()) {
 			std::shared_ptr<serverFile> rS;
 			auto nR = onceServerLoad(pS, rS);
@@ -199,18 +201,19 @@ int   xmlGlobalLoad:: serverSLoad (rapidxml::xml_node<char>* pServerS, moduleFil
 				nRet = 1;
 				break;
 			}
+			rS->setModuleName (rM.moduleName());
 			auto pRet = tmp.insert (std::make_pair(pS->name (), rS));
+			tmp [pS->name ()] = rS;
+			
 			if (!pRet.second) {
 				rError ("server have then same name in once module name = "<<pS->name ());
 				nRet = 2;
 				break;
 			}
+			rInfo ("temp insert server name : "<<pS->name ());
 		}
 		if (nRet) {
 			break;
-		}
-		for (auto it = tmp.begin (); tmp.end () != it; ++it) {
-			rMap.insert (*it);
 		}
 	} while (0);
     return nRet;
@@ -220,8 +223,50 @@ int   xmlGlobalLoad:: onceServerLoad (rapidxml::xml_node<char>* pS, std::shared_
 {
     int   nRet = 0;
     do {
+		rInfo (" proc thServer : "<<pS->name ());
 		auto newServer = std::make_shared <serverFile>();
-		rS = std::move (newServer);
+		auto szServerName = pS->name ();
+		newServer->setServerName (szServerName);
+		auto pXmlRrocRpc = pS->first_node ("procRpc");
+		if (!pXmlRrocRpc) {
+			nRet = 1;
+			break;
+		}
+		auto& rProcS = newServer->procMsgS ();
+		auto& rXmlCommon = tSingleton<xmlCommon>::single ();
+		for (auto pXmlRpc = pXmlRrocRpc->first_node (); pXmlRpc; pXmlRpc = pXmlRpc->next_sibling ()) {
+			procRpcNode node;
+			node.rpcName = pXmlRpc->name ();
+			auto pAskType = pXmlRpc->first_attribute("askType");
+			if (!pAskType) {
+				rError ("rpc have no askType rpcName = "<<node.rpcName.c_str ());
+				nRet = 2;
+				break;
+			}
+			auto szAskType  = pAskType->value ();
+			if (0 == strcmp (szAskType, "ask")) {
+				node.bAsk = true;
+			} else {
+				if (0 == strcmp (szAskType, "ret")) {
+					node.bAsk = false;
+				} else {
+					rError ("rpc have the error asktype rpcName = "<<node.rpcName.c_str ()<<" askType = "<<szAskType);
+					nRet = 3;
+					break;
+				}
+			}
+			auto inRet = rProcS.insert (node);
+			if (!inRet.second) {
+				rError ("have the same rpc rpcName = "<<node.rpcName.c_str ()<<" askType = "<<szAskType);
+				nRet = 4;
+				break;
+			}
+			rInfo ("insert rpc ok rpcname = "<<node.rpcName.c_str ()<<" askType = "<<szAskType);
+		}
+		if (nRet) {
+			break;
+		}
+		rS = newServer;
     } while (0);
     return nRet;
 }

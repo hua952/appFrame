@@ -83,3 +83,14 @@ globalFile::msgFileV& globalFile:: msgFileS ()
 {
     return m_msgFileS;
 }
+
+const char*  globalFile:: projectName ()
+{
+    return m_projectName.get ();
+}
+
+void  globalFile:: setProjectName (const char* v)
+{
+    strCpy (v, m_projectName);
+}
+

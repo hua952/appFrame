@@ -12,6 +12,7 @@ public:
     moduleFileiMgr ();
     ~moduleFileiMgr ();
 	moduleMap&  moduleS ();
+	moduleFile*  findModule (const char* szName);
 private:
 	moduleMap  m_moduleS;
 };

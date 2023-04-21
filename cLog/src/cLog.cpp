@@ -6,6 +6,8 @@
 #include "spdlog/sinks/daily_file_sink.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
 
+#define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_TRACE
+
 static int getLogLevel (uword wI)
 {
 	int nRet = 0;
@@ -26,8 +28,9 @@ int initLog (const char* logName, const char* logfileName, uword minLevel)
 	auto nL = getLogLevel (minLevel);
 	spdlog::flush_every(std::chrono::seconds(2));
 	spdlog::set_level((decltype(spdlog::level::trace))(nL));
-	//spdlog::set_pattern("[%Y-%m-%d %H:%M:%S][%l][%p:%t][%s:%#] %v");
-	spdlog::set_pattern("%Y-%m-%d %H:%M:%S [%l] [%t] - <%s>|<%#>|<%!>,%v");
+	// spdlog::set_pattern("[%Y-%m-%d %H:%M:%S][%l][%p:%t][%s:%#] %v");
+	// spdlog::set_pattern("%Y-%m-%d %H:%M:%S [%l] [%t] - <%s>|<%#>|<%!>,%v");
+	spdlog::set_pattern("%Y-%m-%d %H:%M:%S.%e [%L] [%t] %v");
 
 	return nRet;
 }

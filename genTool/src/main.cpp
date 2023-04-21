@@ -10,6 +10,9 @@
 #include "xmlGlobalLoad.h"
 #include "xmlCommon.h"
 #include "rLog.h"
+#include "configMgr.h"
+#include "myAssert.h"
+#include "procGen/globalGen.h"
 
 int main (int argNum, char* argS[])
 {
@@ -21,10 +24,19 @@ int main (int argNum, char* argS[])
 			nRet = 3;
 			break;
 		}
-
+		/*
 		tSingleton<msgTool>::createSingleton ();
 		tSingleton<appMgr>::createSingleton ();
 		tSingleton<rpcMgr>::createSingleton();
+		*/
+		tSingleton <configMgr>::createSingleton ();
+		auto& rConfig = tSingleton <configMgr>::single ();
+		auto nR = rConfig.procArgS (argNum, argS);
+		if (nR) {
+			rError ("rConfig.procArgS ret error nR = "<<nR);
+			nRet = 4;
+			break;
+		}
 		tSingleton<globalFile>::createSingleton();
 		tSingleton<xmlGlobalLoad>::createSingleton();
 		tSingleton<appFileMgr>::createSingleton ();
@@ -32,7 +44,25 @@ int main (int argNum, char* argS[])
 		tSingleton<msgGroupFileMgr>::createSingleton ();
 		tSingleton<msgFileMgr>::createSingleton ();
 		tSingleton<xmlCommon>::createSingleton ();
-		tSingleton<msgTool>::single ().init (argNum, argS);
+		tSingleton<globalGen>::createSingleton ();
+		
+		auto& rGlobalFile = tSingleton<globalFile>::single ();
+		auto& rXmlGlobal = tSingleton <xmlGlobalLoad>::single ();
+		auto defFile = rConfig.defFile ();
+		nR = rXmlGlobal.xmlLoad (defFile);
+		if (nR) {
+			rError ("xmlLoad return error nR = "<<nR);
+			nRet = 5;
+			break;
+		}
+		auto& rGlobalGen = tSingleton <globalGen>::single ();
+		nR = rGlobalGen.startGen ();
+		if (nR) {
+			nRet = 6;
+			rError ("rGlobalGen.startGen return error nR = "<<nR);
+			break;
+		}
+		// tSingleton<msgTool>::single ().init (argNum, argS);
 	} while (0);
 	return nRet;
 }

@@ -1,12 +1,13 @@
 <?xml version='1.0' encoding='utf-8' ?>
 <servers>
-	<projectHome>D:/pzh/work/appFrame/test/</projectHome>
-	<frameHome>D:/pzh/work/appFrame/</frameHome>
-	<depIncludeHome>D:/pzh/work/include/</depIncludeHome>
-	<depLibHome>D:/pzh/work/lib/</depLibHome>
-	<frameBinPath>D:/pzh/work/appFrame/bin/Debug/</frameBinPath>
-	<frameLibPath>D:/pzh/work/appFrame/bin/Debug/</frameLibPath>
-	<outPutPath>D:/pzh/work/appFrame/bin/</outPutPath>
+	<projectHome>C:/work/testAppFrame/</projectHome>
+	<projectName>testAppFrame</projectName>
+	<frameHome>C:/work/appFrame/</frameHome>
+	<depIncludeHome>C:/work/include/</depIncludeHome>
+	<depLibHome>C:/work/lib/</depLibHome>
+	<frameBinPath>C:/work/appFrame/bin/Debug/</frameBinPath>
+	<frameLibPath>C:/work/appFrame/bin/Debug/</frameLibPath>
+	<outPutPath>C:/work/appFrame/bin/</outPutPath>
 	<msgFile file="cChess.xml"/>
 	<app>
 		<appServer>
