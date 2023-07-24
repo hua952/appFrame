@@ -3,6 +3,7 @@
 
 appFile:: appFile ()
 {
+	m_procId = 0x7fffffff;
 }
 
 appFile:: ~appFile ()
@@ -22,5 +23,15 @@ void  appFile::setAppName (const char* v)
 appFile::moduleFileNameSet&  appFile:: moduleFileNameS ()
 {
     return m_moduleFileNameS;
+}
+
+int  appFile:: procId ()
+{
+    return m_procId;
+}
+
+void  appFile:: setProcId (int v)
+{
+    m_procId = v;
 }
 

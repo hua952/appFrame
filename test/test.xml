@@ -8,6 +8,7 @@
 	<frameBinPath>C:/work/appFrame/bin/Debug/</frameBinPath>
 	<frameLibPath>C:/work/appFrame/bin/Debug/</frameLibPath>
 	<outPutPath>C:/work/appFrame/bin/</outPutPath>
+	<frameInstallPath>C:/work/appFrame/install/</frameInstallPath>
 	<msgFile file="cChess.xml"/>
 	<app>
 		<appServer>
@@ -15,6 +16,7 @@
 				<appServerM>
 					<server>
 						<appServerTh>
+							<listen port="11000"/>
 							<procRpc>
 								<move neetPlayer="1" askType="ask"/>
 							</procRpc>
@@ -25,6 +27,15 @@
 		</appServer>
 		<appClient>
 			<module>
+				<appClientM2>
+					<server>
+						<appClientM2Th>
+							<procRpc>
+								<regret askType="ask"/>
+							</procRpc>
+						</appClientM2Th>
+					</server>
+				</appClientM2>
 				<appClientM1>
 					<server>
 						<appClientM1Th1>
@@ -35,21 +46,13 @@
 							</procRpc>
 						</appClientM1Th1>
 						<appClientM1Th2>
+							<connect ip="127.0.0.1" port="11000" target="appServerTh" defRoute="1"/>
 							<procRpc>
 								<manualList askType="ask"/>
 							</procRpc>
 						</appClientM1Th2>
 					</server>
 				</appClientM1>
-				<appClientM2>
-					<server>
-						<appClientM2Th>
-							<procRpc>
-								<regret askType="ask"/>
-							</procRpc>
-						</appClientM2Th>
-					</server>
-				</appClientM2>
 			</module>
 		</appClient>
 	</app>

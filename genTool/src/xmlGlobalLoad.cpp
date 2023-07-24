@@ -1,9 +1,13 @@
 #include "xmlGlobalLoad.h"
+#include "xmlMsgFileLoad.h"
 #include "strFun.h"
+#include "comFun.h"
 #include "tSingleton.h"
 #include "rLog.h"
 #include "fromFileData/appFileMgr.h"
-#include "fromFileData/moduleFileiMgr.h"
+#include "fromFileData/msgFileMgr.h"
+#include "fromFileData/msgFile.h"
+#include "fromFileData/moduleFileMgr.h"
 #include "xmlCommon.h"
 
 xmlGlobalLoad:: xmlGlobalLoad ()
@@ -14,10 +18,46 @@ xmlGlobalLoad:: ~xmlGlobalLoad ()
 {
 }
 
+static int procConTarge (toolServerEndPointInfo& node)
+{
+	int nRet = 1;
+	auto& rMap = tSingleton<moduleFileMgr>::single ().moduleS ();
+	for (auto it = rMap.begin (); rMap.end () != it; ++it) {
+		auto& rMod = *(it->second.get());
+		auto pS = rMod.findServer (node.szTarget);
+		if (pS) {
+			strNCpy (node.szTarget, sizeof (node.szTarget),
+					pS->strHandle ());
+			nRet = 0;
+			break;
+		}
+	}
+	return nRet;
+}
+
+int   xmlGlobalLoad:: secondProcess ()
+{
+    int   nRet = 0;
+    do {
+		auto& rMap = tSingleton<moduleFileMgr>::single ().moduleS ();
+		for (auto it = rMap.begin (); rMap.end () != it; ++it) {
+			auto& rMod = *(it->second.get());
+			auto& rSS = rMod.orderS ();
+			for (auto ite = rSS.begin (); rSS.end () != ite; ++ite) {
+				auto& rN = ite->get ()->serverInfo ();
+				for (decltype (rN.connectorNum) i = 0; i < rN.connectorNum; i++) {
+					procConTarge (rN.connectEndpoint[i]);
+				}
+			}
+		}
+    } while (0);
+    return nRet;
+}
+
 int  xmlGlobalLoad::xmlLoad (const char* szFile)
 {
 	int nRet = 0;
-	rInfo (" process xml : "<<szFile);
+	// rInfo (" process xml : "<<szFile);
     rapidxml::file<> fdoc(szFile);
 	rapidxml::xml_document<> doc;
 	doc.parse<0>(fdoc.data());
@@ -44,23 +84,50 @@ int  xmlGlobalLoad::xmlLoad (const char* szFile)
 			rGlobal.setFrameLibPath(szPath);
 		} else if(0 == strcmp(pName, "outPutPath")) {
 			rGlobal.setOutPutPath(szPath);
+		} else if(0 == strcmp(pName, "installPath")) {
+			rGlobal.setInstallPath(szPath);
+		} else if(0 == strcmp(pName, "frameInstallPath")) {
+			rGlobal.setFrameInstallPath(szPath);
 		} else if(0 == strcmp(pName, "msgFile")) {
-			rMsgFileS.push_back (szPath);
+		    auto pNP = pRpc->first_attribute("file");
+			std::string pFilePath = pNP->value ();
+			rMsgFileS.push_back (pFilePath);
 		} else if(0 == strcmp(pName, "app")) {
 			pAppS = pRpc;
 		}
 	}
 	do {
+		int nR = 0;
+		
+		std::unique_ptr<char[]>  dirBuf;
+		nR = getDirFromFile (szFile, dirBuf);
+		if (nR) {
+			rError ("getDirFromFile error nR = "<<nR);
+			nRet = 3;
+			break;
+		}
+		for (auto it = rMsgFileS.begin (); rMsgFileS.end () != it; ++it) {
+			xmlMsgFileLoad msgFileLoader;
+			std::string strF = dirBuf.get ();
+			strF += "/";
+			strF += *it;
+			msgFileLoader.xmlLoad (strF.c_str ());
+		}
 		if (!pAppS) {
 			rError ("can not find appS node");
 			nRet = 1;
 			break;
 		}
-		int nR = 0;
 		nR = appSLoad (pAppS);
 		if (nR) {
 			rError ("appSLoad error nR = "<<nR);
 			nRet = 2;
+			break;
+		}
+		nR = secondProcess ();
+		if (nR) {
+			rError ("secondProcess error nR = "<<nR);
+			nRet = 3;
 			break;
 		}
 	} while (0);
@@ -92,7 +159,8 @@ int   xmlGlobalLoad:: onceAppLoad (rapidxml::xml_node<char>* pApp, std::shared_p
 {
     int   nRet = 0;
 	do {
-		rInfo ("proc app name = "<<pApp->name ());
+		auto pName = pApp->name ();
+		rInfo ("proc app name = "<<pName);
 		rapidxml::xml_node<char>* pModuleS = pApp->first_node("module");
 		if (!pModuleS) {
 			nRet = 1;
@@ -102,7 +170,6 @@ int   xmlGlobalLoad:: onceAppLoad (rapidxml::xml_node<char>* pApp, std::shared_p
 
 		auto& rMap = tSingleton<appFileMgr>::single ().appS ();
 		auto pA = std::make_shared<appFile> ();
-		auto pName = pApp->name ();
 		pA->setAppName (pName);
 		auto nR = moduleSLoad (pModuleS, *pA);
 		if (nR) {
@@ -120,8 +187,8 @@ int   xmlGlobalLoad:: moduleSLoad (rapidxml::xml_node<char>* pModuleS, appFile& 
 	int   nRet = 0;
 	do {
 		auto& rSet = rApp.moduleFileNameS ();
-		auto& rMap = tSingleton<moduleFileiMgr>::single ().moduleS ();
-		moduleFileiMgr::moduleMap  tmap;
+		auto& rMap = tSingleton<moduleFileMgr>::single ().moduleS ();
+		moduleFileMgr::moduleMap  tmap;
 		for(rapidxml::xml_node<char> * pM = pModuleS->first_node();  pM; pM = pM->next_sibling()) {
 			auto pName = pM->name ();
 			std::shared_ptr<moduleFile> rM;
@@ -164,6 +231,7 @@ int   xmlGlobalLoad:: onceModuleLoad (rapidxml::xml_node<char>* pM, std::shared_
 		rInfo (" proc module : "<<pM->name ());
 		auto newModule = std::make_shared <moduleFile> ();
 		newModule->setModuleName (pM->name ());
+		
 		rapidxml::xml_node<char> *pServerS = nullptr;
 		for(rapidxml::xml_node<char> * pSs = pM->first_node();  pSs; pSs= pSs->next_sibling()) {
 			auto pName = pSs->name ();
@@ -187,11 +255,56 @@ int   xmlGlobalLoad:: onceModuleLoad (rapidxml::xml_node<char>* pM, std::shared_
 	return nRet;
 }
 
+static bool findDefCon (toolServerNode& node)
+{
+	bool bFind = false;
+	for (decltype (node.connectorNum) i = 0; i < node.connectorNum; i++) {
+		auto& endPoint = node.connectEndpoint [i]; 
+		if (endPoint.bDef) {
+			bFind = true;
+			break;
+		}
+	}
+	return bFind;
+}
+static bool moveFirst (moduleFile::serverOrder& rSS, int nSt)
+{
+	bool bFind = false;
+	for (decltype (rSS.size()) i = nSt + 1; i < rSS.size(); i++) {
+		auto& rIn = rSS[i].get()->serverInfo ();
+		bFind = findDefCon (rIn);
+		if (bFind) {
+			auto t = rSS[i];
+			rSS[i] = rSS[nSt];
+			rSS[nSt] = t;
+			bFind = true;
+			break;
+		}
+	}
+	return bFind;
+}
+static bool moveFirstListen (moduleFile::serverOrder& rSS, int nSt)
+{
+	bool bFind = false;
+	for (decltype (rSS.size()) i = nSt + 1; i < rSS.size(); i++) {
+		auto& rIn = rSS[i].get()->serverInfo ();
+		if (rIn.listenerNum) {
+			auto t = rSS[i];
+			rSS[i] = rSS[nSt];
+			rSS[nSt] = t;
+			bFind = true;
+			break;
+		}
+	}
+	return bFind;
+}
+
 int   xmlGlobalLoad:: serverSLoad (rapidxml::xml_node<char>* pServerS, moduleFile& rM)
 {
     int   nRet = 0;
 	do {
 		auto& rMap = rM.serverS ();
+		auto& rSS = rM.orderS ();
 		moduleFile::serverMap& tmp = rMap;
 		for(rapidxml::xml_node<char> * pS = pServerS->first_node();  pS; pS = pS->next_sibling()) {
 			std::shared_ptr<serverFile> rS;
@@ -202,9 +315,24 @@ int   xmlGlobalLoad:: serverSLoad (rapidxml::xml_node<char>* pServerS, moduleFil
 				break;
 			}
 			rS->setModuleName (rM.moduleName());
+			rS->setServerName (pS->name ());
 			auto pRet = tmp.insert (std::make_pair(pS->name (), rS));
 			tmp [pS->name ()] = rS;
-			
+			rSS.push_back (rS);
+			std::string strH = pS->name ();
+			strH += "Handle";
+			rS->setStrHandle (strH.c_str());
+			std::unique_ptr <char[]> pSerName;
+			strCpy (pS->name (), pSerName);
+			toWord (pSerName.get ());
+			std::string strFun = "reg";
+			strFun += pSerName.get();
+			strFun += R"(ProcPacketFun)";
+			rS->setRegPackFunName (strFun.c_str ());
+			std::string strFunName = R"(int )";
+			strFunName += strFun;
+			strFunName +=R"( (regMsgFT fnRegMsg))";
+			rS->setRegPackFunDec (strFunName.c_str ());
 			if (!pRet.second) {
 				rError ("server have then same name in once module name = "<<pS->name ());
 				nRet = 2;
@@ -215,23 +343,130 @@ int   xmlGlobalLoad:: serverSLoad (rapidxml::xml_node<char>* pServerS, moduleFil
 		if (nRet) {
 			break;
 		}
+		bool bFind = false;
+		myAssert (!rSS.empty ());
+		auto& rInfo = rSS.begin ()->get()->serverInfo ();
+		bFind = findDefCon (rInfo);
+		if (!bFind) {
+			auto nSS = rSS.size ();
+			for (decltype (nSS) i = 0; i < nSS - 1; i++) {
+				auto bF = moveFirst (rSS, i);
+				if (bF) {
+					bFind = true;
+				} else {
+					break;
+				}
+			}
+			if (!bFind) {
+				auto& rInfo = rSS.begin ()->get()->serverInfo ();
+				if (!rInfo.listenerNum) {
+					for (decltype (nSS) i = 0; i < nSS - 1; i++) {
+						auto bF = moveFirstListen (rSS, i);
+						if (bF) {
+							bFind = true;
+						} else {
+							break;
+						}
+					}
+				}
+			}
+		}
 	} while (0);
     return nRet;
+}
+
+static int procEndPoint (rapidxml::xml_node<char>* pXmlListen 
+		, toolServerEndPointInfo& endPoint)
+{
+	int nRet = 0;
+	// auto pIp = pXmlListen->first_attribute("ip");
+	// myAssert (pIp);
+	auto pPort = pXmlListen->first_attribute ("port");
+	myAssert (pPort);
+	/*
+	auto ipL = strlen (pIp->value());
+	const auto c_maxIpLen = sizeof (endPoint.ip);
+	myAssert (ipL + 1 < c_maxIpLen);
+	strNCpy (endPoint.ip, c_maxIpLen, pIp->value());
+	*/
+	endPoint.port = atoi (pPort->value ());
+	return nRet;
 }
 
 int   xmlGlobalLoad:: onceServerLoad (rapidxml::xml_node<char>* pS, std::shared_ptr<serverFile>& rS)
 {
     int   nRet = 0;
     do {
-		rInfo (" proc thServer : "<<pS->name ());
+		// rInfo (" proc thServer : "<<pS->name ());
 		auto newServer = std::make_shared <serverFile>();
 		auto szServerName = pS->name ();
 		newServer->setServerName (szServerName);
+		auto& rInfo = newServer->serverInfo ();
+		for(auto pXmlListen = pS->first_node (); pXmlListen;
+				pXmlListen = pXmlListen->next_sibling ()) {
+			auto pNodeName = pXmlListen->name ();
+			if (strcmp (pNodeName, "listen")) {
+				continue;
+			}
+			const auto c_MaxListen = sizeof(rInfo.listenEndpoint) / 
+				sizeof (rInfo.listenEndpoint[0]);
+			myAssert (rInfo.listenerNum < c_MaxListen );
+			auto& endPoint = rInfo.listenEndpoint[rInfo.listenerNum++];
+			procEndPoint (pXmlListen, endPoint);
+		}
+		for (auto pXmlCon = pS->first_node (); pXmlCon;
+				pXmlCon = pXmlCon->next_sibling ()) {
+			auto pNodeName = pXmlCon->name ();
+			if (strcmp (pNodeName, "connect")) {
+				continue;
+			}
+			const auto c_MaxCon = sizeof(rInfo.connectEndpoint) / 
+				sizeof (rInfo.connectEndpoint[0]);
+			myAssert (rInfo.connectorNum < c_MaxCon);
+			auto& endPoint = rInfo.connectEndpoint[rInfo.connectorNum++];
+			procEndPoint (pXmlCon, endPoint);
+			auto pDefR = pXmlCon->first_attribute("defRoute");
+			if (pDefR) {
+				endPoint.bDef = atoi (pDefR->value ());
+			}
+			auto pXmlTarget = pXmlCon->first_attribute ("target");
+			if (pXmlTarget) {
+				strNCpy (endPoint.szTarget, sizeof (endPoint.szTarget),
+						pXmlTarget->value ());
+			}
+			auto pXmlIp = pXmlCon->first_attribute ("ip");
+			if (pXmlIp) {
+				strNCpy (endPoint.ip, sizeof (endPoint.ip),
+						pXmlIp->value ());
+			}
+			auto pXmlPort = pXmlCon->first_attribute ("port");
+			if (pXmlPort) {
+				endPoint.port = atoi (pXmlPort->value ());
+			}
+		}
+		if (rInfo.connectorNum) {
+			if (1 == rInfo.connectorNum) {
+				auto& rEP = rInfo.connectEndpoint [0];
+				if (!rEP.bDef) {
+					rEP.bDef = true;
+				}
+			} else {
+				decltype (rInfo.connectorNum) nFind = 0;
+				for (decltype (rInfo.connectorNum) i = 0; i < rInfo.connectorNum; i++) {
+					auto& rEP = rInfo.connectEndpoint [i];
+					if (rEP.bDef) {
+						nFind++;
+					}
+				}
+				myAssert (1 == nFind);
+			}
+		}
 		auto pXmlRrocRpc = pS->first_node ("procRpc");
 		if (!pXmlRrocRpc) {
 			nRet = 1;
 			break;
 		}
+		auto& rMsgMgr = tSingleton<msgFileMgr>::single ();
 		auto& rProcS = newServer->procMsgS ();
 		auto& rXmlCommon = tSingleton<xmlCommon>::single ();
 		for (auto pXmlRpc = pXmlRrocRpc->first_node (); pXmlRpc; pXmlRpc = pXmlRpc->next_sibling ()) {
@@ -255,6 +490,7 @@ int   xmlGlobalLoad:: onceServerLoad (rapidxml::xml_node<char>* pS, std::shared_
 					break;
 				}
 			}
+			
 			auto inRet = rProcS.insert (node);
 			if (!inRet.second) {
 				rError ("have the same rpc rpcName = "<<node.rpcName.c_str ()<<" askType = "<<szAskType);
@@ -262,6 +498,20 @@ int   xmlGlobalLoad:: onceServerLoad (rapidxml::xml_node<char>* pS, std::shared_
 				break;
 			}
 			rInfo ("insert rpc ok rpcname = "<<node.rpcName.c_str ()<<" askType = "<<szAskType);
+			std::string strMsg = node.rpcName;
+			if (node.bAsk) {
+				strMsg += "Ask";
+			} else {
+				strMsg += "Ret";
+			}
+			auto pMsg = rMsgMgr.findMsg (strMsg.c_str ());
+			myAssert (pMsg);
+			auto pDefProc = pMsg->defProServerId ();
+			if (!pDefProc) {
+				auto pHandle = newServer->strHandle ();
+				myAssert (pHandle);
+				pMsg->setDefProServerId (pHandle);
+			}
 		}
 		if (nRet) {
 			break;

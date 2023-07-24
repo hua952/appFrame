@@ -30,4 +30,6 @@ target_include_directories(${prjName} PUBLIC
                            )
 target_link_libraries(${prjName} PUBLIC  common logicCommon testLogicMsg)
 #target_link_libraries(${prjName} PUBLIC  testLogicMsg)
+
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
+

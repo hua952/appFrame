@@ -11,6 +11,7 @@ public:
 	using msgGroupMap = std::map <std::string, std::shared_ptr <msgGroupFile>>;
     msgGroupFileMgr ();
     ~msgGroupFileMgr ();
+	msgGroupFile* findGroup (const char* pGName);
 	msgGroupMap&  msgGroupS ();
 private:
 	msgGroupMap  m_msgGroupS;

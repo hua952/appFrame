@@ -10,16 +10,28 @@
 #include "myAssert.h"
 #include "mLog.h"
 #include "impLoop.h"
+#include "mArgMgr.h"
 #include <iostream>
 
 int  InitMidFrame(int nArgC, const char* argS[],PhyCallback* pCallbackS)
 {
 	//std::cout<<"At the begin of InitMidFrame"<<std::endl;
+	int nRet = 0;
+	do {
+	tSingleton <mArgMgr>::createSingleton ();
+	auto& rArgS = tSingleton<mArgMgr>::single ();
+	nRet = rArgS.procArgS (nArgC, argS);
+	myAssert (0 == nRet);
+	if (nRet) {
+		mError ("rArgS.procArgS error nRet = "<<nRet);
+		break;
+	}
 	tSingleton<PhyInfo>::createSingleton();
 	tSingleton<loopMgr>::createSingleton();
 	auto& rMgr = tSingleton<PhyInfo>::single();
 	//auto nRet = rMgr.init(nArgC, argS, *pCallbackS);
-	auto nRet = rMgr.init(nArgC, argS, *pCallbackS);
+	nRet = rMgr.init(nArgC, argS, *pCallbackS);
+	} while (0);
 	return nRet;
 }
 
@@ -89,9 +101,30 @@ static int sAddComTimer(loopHandleType pThis, udword firstSetp, udword udwSetp,
 	return nRet;
 }
 static sendPackToLoopFT g_sendPackToLoopFun = nullptr;
+
+static bool sDelNetPack (void* pUP)
+{
+	auto pArg = (std::pair<NetTokenType, loopHandleType>*) pUP; 
+	auto handle = pArg->second;
+	auto& rMgr = tSingleton<loopMgr>::single ();
+	auto pS = rMgr.getLoop(handle);
+	auto pISavePack = pS->getIPackSave ();
+	auto pack = pISavePack->threadTokenPackFind (pArg->first);
+	if (pack) {
+		auto fnFree = tSingleton<PhyInfo>::single (). getPhyCallback().fnFreePack;
+		// auto dPack = pack;
+		// auto pDN = P2NHead (dPack);
+		// mTrace ("pArg->first = "<<pArg->first<<" handle = "<<handle);
+		// mWarn (" pack delete by timer dwToKen = "<<pDN->dwToKen<<" msgId = "<<pDN->uwMsgID);
+		pISavePack->netTokenPackErase (pArg->first);
+		fnFree (pack);
+	}
+	return false;
+}
 static int sSendPackToLoopFun(packetHead* pack)
 {
-	int nRet = procPacketFunRetType_del;
+	int nRet = 0; // procPacketFunRetType_del;
+	int nR = 0;
 	auto pN = P2NHead (pack);
 	auto& rMgr = tSingleton<loopMgr>::single ();
 	auto curHandleFun = tSingleton<PhyInfo>::single ().getPhyCallback().fnGetCurServerHandle;
@@ -104,21 +137,23 @@ static int sSendPackToLoopFun(packetHead* pack)
 	myAssert (pS);
 	auto& rMsgInfoS = tSingleton<loopMgr>::single ().defMsgInfoMgr ();
 	bool bIsRet = rMsgInfoS.isRetMsg (pN->uwMsgID);
-	if (!bIsRet) {
-		//auto retMsg = rMsgInfoS.getRetMsg(pN->uwMsgID);
-		//if (c_null_msgID  != retMsg) {
-			auto& rMap = pS->tokenMsgS ();
-			mTrace ("will insert ask pack -----dwToKen = "<<pN->dwToKen<<" msgId = "
-					<<pN->uwMsgID<<" map.size = "<<rMap.size()<<" pack = "<<pack
-					<<" server handle = "<<pS->id ());
-			auto bRet = rMap.insert (std::make_pair(pN->dwToKen, pack));
-			myAssert (bRet.second);
-			//mTrace (" save ask pack dwToKen = "<<pN->dwToKen<<" msgId = "<<pN->uwMsgID);
-			auto addTimerFun = tSingleton<PhyInfo>::single().getForLogicFun().fnAddComTimer;
-			auto delTime = rMgr.delSendPackTime ();
-			std::pair<NetTokenType, loopHandleType> pa;
-			pa.first = pN->dwToKen;
-			pa.second = pN->ubySrcServId;
+	auto bInOnceProc =  packInOnceProc(pack);
+	auto pISavePack = pS->getIPackSave ();
+	auto addTimerFun = tSingleton<PhyInfo>::single().getForLogicFun().fnAddComTimer;
+	auto delTime = rMgr.delSendPackTime ();
+	std::pair<NetTokenType, loopHandleType> pa;
+	pa.first = pN->dwToKen;
+	pa.second = pN->ubySrcServId;
+	if (!bInOnceProc && !bIsRet) {
+		// auto& rMap = pS->tokenMsgS ();
+		mTrace ("will insert ask pack -----dwToKen = "<<pN->dwToKen<<" msgId = "
+			<<pN->uwMsgID<<" map.size = "<<0<<" pack = "<<pack
+			<<" server handle = "<<pS->id ());
+			pISavePack->netTokenPackInsert (pack);
+			addTimerFun (pN->ubySrcServId, delTime, delTime, sDelNetPack, &pa, sizeof (pa));
+			// auto bRet = rMap.insert (std::make_pair(pN->dwToKen, pack));
+			// myAssert (bRet.second);
+		/*	
 			addTimerFun (pN->ubySrcServId, delTime, delTime, [] (void* pUP) {
 					auto pArg = (std::pair<NetTokenType, loopHandleType>*) pUP; 
 					auto handle = pArg->second;
@@ -127,7 +162,6 @@ static int sSendPackToLoopFun(packetHead* pack)
 					auto& rMap = pS->tokenMsgS ();
 					auto it = rMap.find (pArg->first);
 					if (rMap.end() != it) {
-						//mTrace (" 44444444444 ");
 						auto fnFree = tSingleton<PhyInfo>::single (). getPhyCallback().fnFreePack;
 						auto dPack = it->second;
 						auto pDN = P2NHead (dPack);
@@ -136,10 +170,10 @@ static int sSendPackToLoopFun(packetHead* pack)
 						fnFree (dPack);
 						rMap.erase (it);
 					}
-					//mTrace ("  33333333333333  ");
 					return false;
 				},
 				&pa, sizeof (pa));
+				*/
 		//}
 	}
 	nRet = g_sendPackToLoopFun (pack); // must in the end
@@ -149,6 +183,13 @@ static int sSendPackToLoopFun(packetHead* pack)
 static iRpcInfoMgr* sGetIRpcInfoMgr()
 {
 	return &tSingleton<loopMgr>::single().defMsgInfoMgr();
+}
+
+int    sRegRpc(msgIdType askId, msgIdType retId, serverIdType	askDefProcSer,
+			serverIdType	retDefProcSer)
+{
+	auto& rMgr = tSingleton<loopMgr>::single().defMsgInfoMgr();
+	return rMgr.regRpc (askId, retId, askDefProcSer, retDefProcSer);
 }
 
 static allocPackFT g_allocPackFun = nullptr;
@@ -161,9 +202,11 @@ static freePackFT g_freePackFun = nullptr;
 static void sFreePack (packetHead* pack)
 {
 	auto pN = P2NHead (pack);
+	/*
 	mTrace (" midFrame will delete pack msgID = "<<pN->uwMsgID<<" token = "<<pN->dwToKen
 			<<" srcHandle = "<<(int)(pN->ubySrcServId)<<" desHandle = "<<(int)(pN->ubyDesServId)
 			<<" pack = "<<pack);
+			*/
 	g_freePackFun (pack);
 }
 
@@ -185,10 +228,11 @@ int PhyInfo::init(int nArgC, const char* argS[], PhyCallback& info)
 	forLogic.fnLogMsg = info.fnLogMsg;
 	forLogic.fnAddComTimer = sAddComTimer;//m_callbackS.fnAddComTimer;
 	forLogic.fnNextToken = info.fnNextToken;
-	forLogic.fnGetIRpcInfoMgr = sGetIRpcInfoMgr;
+	// forLogic.fnGetIRpcInfoMgr = sGetIRpcInfoMgr;
 	forLogic.fnPushToCallStack = info.fnPushToCallStack;
 	forLogic.fnPopFromCallStack = info.fnPopFromCallStack;
 	forLogic.fnLogCallStack = info.fnLogCallStack;
+	forLogic.fnRegRpc = sRegRpc;
 	//forLogic.fnRemoveMsg = removeMsg;
 	auto nRet = procArgS(nArgC, argS);
 	do
@@ -416,26 +460,13 @@ int loopMgr::getAllLoopAndStart(serverNode* pBuff, int nBuffNum)
 		node.handle = sid;//toHandle (pid, id);
 	}
 
-	/*
-	auto& rMap =  getTempLoopNameMap();
-	auto nS = rMap.size();
-	for (auto it = rMap.begin(); rMap.end() != it; ++it)
-	{
-		auto v = it->second;
-		myAssert (v < myAssert);
-		if (v >= nS)
-		{
-			return 1;
-		}
-	}
-	*/
 	//std::cout<<"loopMgr::getAllLoopAndStart i = "<<i<<" m_CurLoopNum = "<<m_CurLoopNum<<std::endl;
 	mTrace ("at the end nRet = "<<nRet);
 	return nRet;
 }
-/*
-loopMgr::tempLoopMap&  loopMgr::getTempLoopNameMap()
+
+PhyCallback&   loopMgr:: getPhyCallback()
 {
-	return m_tempLoopMap;
+	return tSingleton<PhyInfo>::single ().getPhyCallback();
 }
-*/
+

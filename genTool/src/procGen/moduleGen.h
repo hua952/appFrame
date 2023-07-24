@@ -17,7 +17,15 @@ public:
     void  setProcMsgPath (const char* v);
 
 	moduleFile&               moduleData ();
+	const char*  thisRoot ();
+	void  setThisRoot (const char* v);
+	const char*  genSrcDir ();
+	void  setGenSrcDir (const char* v);
+	const char*  frameFunDir ();
+	void  setFrameFunDir (const char* v);
 private:
+	std::unique_ptr <char[]>  m_frameFunDir;
+	std::unique_ptr <char[]>  m_thisRoot;
     std::unique_ptr <char[]>  m_procMsgPath;
     std::unique_ptr <char[]>  m_srcPath;
     std::unique_ptr <char[]>  m_genPath;

@@ -7,11 +7,14 @@ if (WIN32)
 	add_definitions(-DWIN32_LEAN_AND_MEAN)
 	add_definitions(-w)
 	ADD_DEFINITIONS(/Zi)
+	ADD_DEFINITIONS(/W2)
 	include_directories(
 							${CMAKE_SOURCE_DIR}/../include
+							$ENV{depInclude}
 							)
 	link_directories(
 		${CMAKE_SOURCE_DIR}/../lib
+		$ENV{depLib}
 		)
 	file(GLOB defS src/*.def)
 endif ()
@@ -29,3 +32,5 @@ if (WIN32)
 endif ()
 
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
+install(TARGETS ${prjName} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+

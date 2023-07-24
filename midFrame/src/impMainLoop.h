@@ -50,20 +50,16 @@ public:
 	int getAllLoopAndStart(serverNode* pBuff, int nBuffNum);
 	msgMgr&	defMsgInfoMgr (); // Thread safety
 	udword  delSendPackTime ();
-	//static const auto c_MaxLoopNum = LoopNum;
+	PhyCallback& getPhyCallback();
 private:	
     udword  m_delSendPackTime;
 	msgMgr						m_defMsgInfoMgr;
 	int							m_CurLoopNum;
 	loopHandleType	m_procId;
 	loopHandleType	m_gropId;
-	//std::unique_ptr<impLoop[]>	 m_loopS;
 
 	std::unique_ptr<impLoop>	 m_loopS [LoopNum];
 
-	//typedef std::map<std::string, loopHandleType> tempLoopNameMap;
-	//tempLoopNameMap& getTempLoopNameMap();
-	//tempLoopNameMap m_tempLoopMap;
 	typedef std::map<loopHandleType, std::string> tempLoopIdMap;
 	tempLoopIdMap	m_tempLoopIdMap;
 };

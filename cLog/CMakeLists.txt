@@ -7,6 +7,7 @@ if (WIN32)
 	add_definitions(-w)
 	include_directories(
 							${CMAKE_SOURCE_DIR}/../include
+							$ENV{depInclude}
 							)
 	link_directories(
 		${CMAKE_SOURCE_DIR}/../lib

@@ -9,6 +9,8 @@
 #include <unordered_map>
 #include "typeDef.h"
 #include "cTimer.h"
+#include "iTokenSave.h"
+#include "tokenSave_map.h"
 
 class server
 {
@@ -30,12 +32,7 @@ public:
 	//typedef std::map<SessionIDType, ISession*>  allSessionMap;
     serverSessionMapT&    serverSessionMap();
     //allSessionMap&    allSessionS ();
-	struct tokenInfo
-	{
-		NetTokenType   oldToken;
-		SessionIDType  sessionId;
-	};
-	typedef std::unordered_map<NetTokenType, tokenInfo>  tokenMap;
+	
     ISession*    defSession ();
     void  setDefSession (ISession* va);
     NetTokenType	nextToken ();
@@ -43,7 +40,7 @@ public:
 	loopHandleType  myProId ();
 	loopHandleType  myLoopId ();
 	loopHandleType  myHandle ();
-    tokenMap&    tokenS ();
+    // tokenMap&    tokenS ();
 	cTimerMgr&   getTimerMgr ();
 	ITcpServer*  getTcpServer ();
 	void         pushToCallStack (const char* szTxt);
@@ -51,10 +48,13 @@ public:
 	void         logCallStack (int nL);
 	static thread_local  loopHandleType      s_loopHandleLocalTh;
 	static const auto c_MaxStackSize = 20;
+	iTokenSave*  getTokenSave ();
 private:
+	iTokenSave*  m_iTokenSave;
+	std::unique_ptr<tokenSave_map>  m_pTokenSave_map;
 	std::unique_ptr<char[]>   m_callStack[c_MaxStackSize];	
 	int       m_curCallNum;
-    tokenMap  m_tokenS;
+    //tokenMap  m_tokenS;
 	cTimerMgr          m_timerMgr;
     NetTokenType	m_nextToken;
     ISession*  m_defSession;

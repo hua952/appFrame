@@ -8,6 +8,7 @@
 #include "strFun.h"
 #include <memory>
 #include <string>
+#include "depOSFun.h"
 
 bool  isPathExit (const char* szPath)
 {
@@ -21,22 +22,7 @@ int strCaseCmp (const char* str1, const char* str2)
 
 int  myMkdir (const char* szPath)
 {
-	//return _mkdir(szPath);
 	auto nL = strlen (szPath);
-	/*
-	auto p = szPath;
-	if (szPath[nL - 1] != '\\'|| szPath[nL - 1] != '/') {
-		auto pB = std::make_unique<char[]> (nL + 2);
-		auto pp = pB.get();
-		std::strncpy (pp, szPath, nL + 1);
-		pp[nL] = '\\';
-		pp[nL + 1] = 0;
-		p = pp;
-	}
-	auto bR = MakeSureDirectoryPathExists (p);
-	return bR ? 0:-1;
-	*/
-	
 	auto pB = std::make_unique<char[]> (nL + 2);
 	auto pp = pB.get();
 	for (decltype (nL) i = 0; i < nL; i++) {
@@ -154,6 +140,11 @@ int             getCurModelPath (std::unique_ptr<char[]>& pathBuf)
 	return nRet;
 }
 
+
+bool isPathInterval (char c)
+{
+	return c == '\\' || c == '/';
+}
 /*
 void TraceStack(std::stringstream& oss)
 {

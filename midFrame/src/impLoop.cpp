@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "mLog.h"
+#include "mArgMgr.h"
 
 int OnLoopFrame(loopHandleType pThis)
 {
@@ -46,17 +47,18 @@ void onFreePack(loopHandleType pThis, packetHead* pPack)
 	pTH->onFreePack(pPack);
 }
 
-int impLoop::onWriteOncePack(packetHead* pPack)
+int impLoop::onWriteOncePack(packetHead* pPack) // 无用
 {
 	int nRet = procPacketFunRetType_doNotDel;
 	auto pN = P2NHead (pPack);
-	auto& rTS = tokenMsgS ();
-	auto it = rTS.find (pN->dwToKen);
-	if (rTS.end () == it) {
+	iPackSave* pIPackSave = getIPackSave ();
+	auto pF = pIPackSave->netTokenPackFind (pN->dwToKen);
+	
+	if (!pF) {
 		nRet = procPacketFunRetType_del;
 	}
 	mTrace (__FUNCTION__<<" msgId = "<<pN->uwMsgID<<" token = "<<pN->dwToKen<<" pack = "
-			<<pPack<<" nRet = "<<nRet<<" map.size = "<<rTS.size()<<" server handle = "<<id());
+			<<pPack<<" nRet = "<<nRet<<" map.size = "<<0<<" server handle = "<<id());
 	return nRet;
 }
 
@@ -64,6 +66,8 @@ impLoop::impLoop()//:m_MsgMap(8)
 {
 	m_funOnFrame = nullptr;
 	m_pArg = nullptr;
+	m_packSave = nullptr;
+	m_packSave = nullptr;
 	m_id = c_emptyModelId;
 	m_serverNode.listenerNum = 0;
 	m_serverNode.connectorNum = 0;
@@ -79,21 +83,23 @@ void impLoop::onFreePack(packetHead* pPack)
 	mTrace ("  msgId = "<<pN->uwMsgID<<" token = "<<pN->dwToKen);
 	if (! NIsRet (pN)) {
 		mTrace (" erase token = "<<pN->dwToKen<<" handle = "<<id());
-		auto& rMap = tokenMsgS ();
-		rMap.erase (pN->dwToKen);
+		// auto& rMap = tokenMsgS ();
+		// rMap.erase (pN->dwToKen);
+		auto pIPackSave = getIPackSave ();
+		pIPackSave->netTokenPackErase (pN->dwToKen);
 	}
 }
-
+/*
 impLoop::tokenMsgMap&  impLoop:: tokenMsgS ()
 {
     return m_tokenMsgS;
 }
+*/
 
 //static procMsgRetType on_acceptPeaceAsk(packetHead* pAsk, pPacketHead& pRet)
 
 int impLoop::processOncePack(packetHead* pPack)
 {
-	//mTrace (__FUNCTION__<<" 000");
 	int nRet = procPacketFunRetType_del;
 	auto& rPho = tSingleton<PhyInfo>::single();
 	auto& rCS = rPho.getPhyCallback();
@@ -103,12 +109,16 @@ int impLoop::processOncePack(packetHead* pPack)
 	auto pN = P2NHead(pPack);
 	auto getCurServerHandleFun = rCS.fnGetCurServerHandle;
 	auto cHandle = getCurServerHandleFun ();
+	auto myHandle = id ();
+	myAssert (cHandle == myHandle);
 	myAssert (cHandle == pN->ubyDesServId);
 	do {
 		auto pF = findMsg(pN->uwMsgID);
 		if(!pF) {
-			mWarn ("can not find proc function token: "<<pN->dwToKen<<" msgId = "<<pN->uwMsgID
-					<<" length = "<<pN->udwLength);
+			mWarn ("can not find proc function token: "
+					<<pN->dwToKen<<" msgId = "<<pN->uwMsgID
+					<<" length = "<<pN->udwLength
+					<<"myHandle = "<<(int)myHandle);
 			break;
 		}
 
@@ -116,51 +126,63 @@ int impLoop::processOncePack(packetHead* pPack)
 		bool bIsRet = rMsgInfoMgr.isRetMsg (pN->uwMsgID);
 		procPacketArg argP;
 		argP.handle = id ();
-		if (bIsRet) {
-			auto& rMgr = tSingleton<loopMgr>::single ();
-			auto pS = rMgr.getLoop(pN->ubyDesServId);
-			myAssert (pS);
-			auto& rTM = pS->tokenMsgS ();
-			auto it = rTM.find (pN->dwToKen);
-			if (rTM.end () == it) {
-				mWarn ("send packet can not find by token: "<<pN->dwToKen<<" msgId = "<<pN->uwMsgID
-						<<" length = "<<pN->udwLength);
-				break;
+		auto bInOncePro = packInOnceProc(pPack);
+		if (bInOncePro) {
+			if (bIsRet) {
+				nRet = pF(pPack->pAsk, pPack, &argP);
+			} else {
+				packetHead* pRet = nullptr;
+				pF(pPack, pRet, &argP);
+				if (pRet) {
+					pRet->pAsk = pPack;
+					auto pRN = P2NHead (pRet);
+					pRN->ubySrcServId = pN->ubyDesServId;
+					pRN->ubyDesServId = pN->ubySrcServId;
+					pRN->dwToKen = pN->dwToKen;
+					nRet = procPacketFunRetType_doNotDel;
+					sendFun (pRet);
+				}
 			}
-			myAssert (rTM.end () != it);
-			auto pAsk = it->second;
-			nRet = pF(pAsk, pPack, &argP);
-			rTM.erase (it);
-			freeFun (pAsk);
 		} else {
-			auto pF = findMsg(pN->uwMsgID);
-			if(pF) {
+			if (bIsRet) {
+				auto& rMgr = tSingleton<loopMgr>::single ();
+				auto pS = rMgr.getLoop(pN->ubyDesServId);
+				myAssert (pS);
+				auto pIPackSave = pS->getIPackSave ();
+				auto pAskPack = pIPackSave->netTokenPackFind (pN->dwToKen);
+				/*
+				auto& rTM = pS->tokenMsgS ();
+				auto it = rTM.find (pN->dwToKen);
+				if (rTM.end () == it) {
+				*/
+				if (!pAskPack) {
+					mWarn ("send packet can not find by token: "<<pN->dwToKen<<" msgId = "<<pN->uwMsgID
+							<<" length = "<<pN->udwLength);
+					break;
+				}
+				// myAssert (rTM.end () != it);
+				myAssert (pAskPack);
+				// auto pAsk = it->second;
+				// nRet = pF(pAsk, pPack, &argP);
+				pPack->pAsk = pAskPack;
+				nRet = pF(pAskPack, pPack, &argP);
+				pIPackSave->netTokenPackErase (pN->dwToKen);
+				// rTM.erase (it);
+				// freeFun (pAsk);
+			} else {
 				packetHead* pRet = nullptr;
 				nRet = pF(pPack, pRet, &argP);
-				auto pRN = P2NHead (pRet);
-				pRN->ubySrcServId = pN->ubyDesServId;
-				pRN->ubyDesServId = pN->ubySrcServId;
-				pRN->dwToKen = pN->dwToKen;
-				if (procPacketFunRetType_del == nRet) {
-					serverIdType	srcP = 0;
-					serverIdType	srcS = 0;
-					serverIdType	desP = 0;
-					serverIdType	desS = 0;
-					fromHandle (pN->ubySrcServId, srcP, desS);
-					fromHandle (pN->ubyDesServId, desP, desS);
-					if (srcP == desP) {
-						nRet = procPacketFunRetType_doNotDel;
-					}
+				if (pRet) {
+					auto pRN = P2NHead (pRet);
+					pRN->ubySrcServId = pN->ubyDesServId;
+					pRN->ubyDesServId = pN->ubySrcServId;
+					pRN->dwToKen = pN->dwToKen;
+					sendFun (pRet);
 				}
-				sendFun (pRet);
-			} else {
-				mWarn (__FUNCTION__<<" not find fun msgId = "<<pN->uwMsgID
-						<<"  ubyDesServId ="<<(int)pN->ubyDesServId<<" handle = "<<(int)m_id
-						<<" msgNum = "<<m_MsgMap.size ());
 			}
 		}
+		
 	} while (0);
-	//mTrace (" 0000000 ");
 	return nRet;
 }
 
@@ -185,6 +207,12 @@ int impLoop::init(const char* szName, ServerIDType id, serverNode* pNode,
 	m_pArg = argS;
 	if (pNode) {
 		m_serverNode = *pNode;
+	}
+	auto& rArgS = tSingleton<mArgMgr>::single ();
+	auto packSaveTag = rArgS.savePackTag ();
+	if (0 == packSaveTag) {
+		m_pImpPackSave_map = std::make_unique <impPackSave_map> ();
+		m_packSave = m_pImpPackSave_map.get();
 	}
 	//mTrace ("At the end");
 	return 0;
@@ -246,3 +274,9 @@ procRpcPacketFunType impLoop::findMsg(uword uwMsgId)
 	}
 	return pRet;
 }
+
+iPackSave*     impLoop:: getIPackSave ()
+{
+	return m_packSave;
+}
+

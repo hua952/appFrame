@@ -39,3 +39,12 @@ structFile::dataMap&  structFile:: dataS ()
     return m_dataS;
 }
 
+bool    structFile:: hasData ()
+{
+    bool    nRet = false;
+    do {
+		nRet = !m_dataS.empty ();
+    } while (0);
+    return nRet;
+}
+

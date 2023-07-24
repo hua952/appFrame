@@ -3,6 +3,7 @@
 //#include <dirent.h>
 #include "comFun.h"
 #include "strFun.h"
+#include "depOSFun.h"
 #include <sys/stat.h>
 #include <sys/types.h>
 
@@ -56,3 +57,7 @@ int             getCurModelPath (std::unique_ptr<char[]>& pathBuf)
 	strNCpy(pathBuf.get(), nL + 1, info.dli_fname);
 }
 
+bool isPathInterval (char c)
+{
+	return  c == '/';
+}

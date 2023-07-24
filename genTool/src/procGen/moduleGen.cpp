@@ -25,6 +25,8 @@ int   moduleGen:: startGen ()
     int   nRet = 0;
     do {
 		auto& rMod = moduleData ();
+		auto moduleName = rMod.moduleName ();
+		// rInfo ("start "<<moduleName<<" module proc");
 		auto& rGlobalFile = tSingleton<globalFile>::single ();
 		auto  projectHome = rGlobalFile.projectHome ();
 		std::string strDir = projectHome;
@@ -32,8 +34,8 @@ int   moduleGen:: startGen ()
 		strDir += "/";
 		strDir += appName;
 		strDir += "/";
-		auto moduleName = rMod.moduleName ();
 		strDir += moduleName;
+		setThisRoot (strDir.c_str ());
 		auto moduleDir = strDir;
 		int nR = 0;
 		nR = myMkdir (strDir.c_str ());
@@ -53,7 +55,10 @@ int   moduleGen:: startGen ()
 		procMsg += "/procMsg";
 		setProcMsgPath (procMsg.c_str ());
 		nR = myMkdir (procMsg.c_str ());
-
+		auto frameDir = procMsg;
+		frameDir += "/frameFun";
+		setFrameFunDir (frameDir.c_str ());
+		myMkdir (frameDir.c_str());
 		moduleCMakeListsGen cmakeGen;
 		nR = cmakeGen.startGen (rMod);
 		if (nR) {
@@ -75,6 +80,7 @@ int   moduleGen:: startGen ()
 			nRet = 4;
 			break;
 		}
+		// rInfo ("before "<<moduleName<<" moduleLogicServerGen ");
 		moduleLogicServerGen  logicGen;
 		nR = logicGen.startGen (*this);
 		if (nR) {
@@ -82,6 +88,7 @@ int   moduleGen:: startGen ()
 			nRet = 5;
 			break;
 		}
+		// rInfo ("after "<<moduleName<<" moduleLogicServerGen nR = "<<nR);
     } while (0);
     return nRet;
 }
@@ -116,8 +123,28 @@ void  moduleGen:: setProcMsgPath (const char* v)
     strCpy (v, m_procMsgPath);
 }
 
-moduleFile&                moduleGen:: moduleData ()
+moduleFile& moduleGen:: moduleData ()
 {
     return m_moduleData;
+}
+
+const char*  moduleGen:: thisRoot ()
+{
+    return m_thisRoot.get ();
+}
+
+void  moduleGen:: setThisRoot (const char* v)
+{
+    strCpy (v, m_thisRoot);
+}
+
+const char*  moduleGen:: frameFunDir ()
+{
+    return m_frameFunDir.get ();
+}
+
+void  moduleGen:: setFrameFunDir (const char* v)
+{
+    strCpy (v, m_frameFunDir);
 }
 

@@ -3,6 +3,7 @@
 #include <memory>
 #include <set>
 #include <string>
+#include "mainLoop.h"
 
 struct procRpcNode
 {
@@ -19,6 +20,27 @@ public:
 private:
 };
 
+struct toolServerEndPointInfo
+{
+	char			  szTarget [32];
+	char              ip[16];
+	uword             port;
+	ServerIDType	  targetHandle; // use to reg route use on onConnect
+	uword             unUse;  // 
+	bool              bDef;  // def route
+	bool              bRegHandle; // 几乎没用 
+};
+struct toolServerNode
+{
+	udword                  udwUnuse;
+	ServerIDType			handle;
+	ubyte					connectorNum;
+	ubyte                   listenerNum;
+	ubyte	                ubyUnuse;
+    toolServerEndPointInfo  listenEndpoint [c_onceServerMaxListenNum];
+	toolServerEndPointInfo  connectEndpoint [c_onceServerMaxConnectNum];
+};
+
 class serverFile
 {
 public:
@@ -32,7 +54,30 @@ public:
 	rpcMap&  procMsgS ();
 	const char*  moduleName ();
 	void  setModuleName (const char* v);
+	const char*  strHandle ();
+	void  setStrHandle (const char* v);
+	toolServerNode&  serverInfo ();
+	const char*  regPackFunName ();
+	void  setRegPackFunName (const char* v);
+	const char*  regPackFunDec ();
+	void  setRegPackFunDec (const char* v);
+	const char*  initFunDec ();
+	void  setInitFunDec (const char* v);
+	const char*  initFunName ();
+	void  setInitFunName (const char* v);
+	const char*  frameFunName ();
+	void  setFrameFunName (const char* v);
+	const char*  frameFunDec ();
+	void  setFrameFunDec (const char* v);
 private:
+	std::unique_ptr <char[]>  m_frameFunDec;
+	std::unique_ptr <char[]>  m_frameFunName;
+	std::unique_ptr <char[]>  m_initFunName;
+	std::unique_ptr <char[]>  m_initFunDec;
+	std::unique_ptr <char[]>  m_regPackFunDec;
+	std::unique_ptr <char[]>  m_regPackFunName;
+	toolServerNode   m_serverInfo;
+	std::unique_ptr <char[]>  m_strHandle;
 	std::unique_ptr <char[]>  m_moduleName;
 	std::unique_ptr <char[]>  m_serverName;
 	std::unique_ptr <char[]>  m_commit;

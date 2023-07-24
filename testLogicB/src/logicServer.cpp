@@ -106,6 +106,7 @@ void logicServerMgr::afterLoad(ForLogicFun* pForLogic)
 	auto TestClientH = TestServerHandle;
 	myAssert (c_emptyLoopHandle	 != TestClientH);
 	fnRegMsg (TestClientH, CChess2FullMsg(CChessMsgID_regretAsk), OnRegretAsk);
+
 	//fnRegMsg (TestClientH, CChess2FullMsg(CChessMsgID_moveRet), OnMoveRet);
 	//fnRegMsg (TestClientH, CChess2FullMsg(CChessMsgID_giveUpAsk), OnGiveUpCli);
 	gInfo (" At then end of afterLoad serverB ");

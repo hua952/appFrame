@@ -82,9 +82,9 @@ void logicServerMgr::afterLoad(int nArgC, const char* argS[], ForLogicFun* pForL
 	gInfo ("logicModelNum = "<<vModelS.size());
 	do {
 		for (auto it = vModelS.begin (); vModelS.end () != it; ++it) {
-			gInfo ("will load "<<it->c_str ());
 			std::string strDll = strBase;
 			strDll += *it;
+			gInfo ("will load "<<strDll.c_str ());
 			auto hDll = loadDll (strDll.c_str());
 			if (!hDll) {
 				gError ("load dll fail fileName = "<<strDll.c_str());
@@ -95,7 +95,9 @@ void logicServerMgr::afterLoad(int nArgC, const char* argS[], ForLogicFun* pForL
 				gError ("get fun afterLoad fail");
 				break;
 			}
+			gInfo ("befor call onLoad");
 			onLoad (nArgC, argS, pForMsg);
+			gInfo ("after call onLoad");
 		}
 	} while (0);
 }

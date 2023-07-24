@@ -19,6 +19,7 @@ public:
 	void  setCommit (const char* v);
 	dataV&  dataOrder ();
 	dataMap&  dataS ();
+	bool   hasData ();
 private:
 	dataMap  m_dataS;
 	dataV  m_dataOrder;

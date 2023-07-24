@@ -27,7 +27,14 @@ public:
 	msgFileV&  msgFileS ();
 	const char*  projectName ();
 	void  setProjectName (const char* v);
+    const char*  installPath ();
+    void  setInstallPath (const char* v);
+    const char*  frameInstallPath ();
+    void  setFrameInstallPath (const char* v);
+    void  getRealInstallPath (std::string& strPath);
 private:
+    std::unique_ptr <char[]>  m_installPath;
+    std::unique_ptr <char[]>  m_frameInstallPath;
 	std::unique_ptr <char[]>  m_projectName;
 	msgFileV  m_msgFileS;
     std::unique_ptr <char[]>  m_outPutPath;

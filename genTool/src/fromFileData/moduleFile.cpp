@@ -34,3 +34,22 @@ void  moduleFile:: setAppName (const char* v)
     strCpy (v, m_appName);
 }
 
+serverFile*   moduleFile:: findServer (const char* szName)
+{
+    serverFile*   nRet = nullptr;
+    do {
+		auto& rSS = serverS ();
+		auto it = rSS.find (szName);
+		if (rSS.end () != it) {
+			nRet = it->second.get ();
+		}
+    } while (0);
+    return nRet;
+}
+
+moduleFile::serverOrder&  moduleFile:: orderS ()
+{
+    return m_orderS;
+}
+
+

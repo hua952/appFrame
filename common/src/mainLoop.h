@@ -16,6 +16,9 @@
 #define GroupMark		((GroupNum-1)<<(LoopNumBitLen+ProcNumBitLen))
 
 #define serverNameSize  32
+#define getProcFromHandle(h) ((h>>LoopNumBitLen)&ProcMark)
+#define netPackInOnceProc(n) (getProcFromHandle(n->ubySrcServId)==getProcFromHandle(n->ubyDesServId))
+#define packInOnceProc(p) (netPackInOnceProc(P2NHead(p)))
 
 typedef int (*sendPackToLoopFT)(packetHead*);
 typedef void (*stopLoopSFT)();
@@ -52,7 +55,8 @@ typedef  int (*regMsgFT)(loopHandleType serverId, uword uwMsgId, procRpcPacketFu
 typedef  int (*removeMsgFT)(loopHandleType handle, uword uwMsgId); // call by level 2
 typedef  iRpcInfoMgr* (*getIRpcInfoMgrFT)();
 typedef  void (*popFromCallStackFT) (loopHandleType handle);
-
+typedef  int    (*regRpcFT) (msgIdType askId, msgIdType retId, serverIdType	askDefProcSer,
+			serverIdType	retDefProcSer);
 typedef struct _ForLogicFun
 {
 	allocPackFT		 fnAllocPack; // Thread safety
@@ -63,10 +67,11 @@ typedef struct _ForLogicFun
 	logMsgFT		 fnLogMsg;
     addComTimerFT    fnAddComTimer;// Thread safety
 	nextTokenFT      fnNextToken;
-	getIRpcInfoMgrFT fnGetIRpcInfoMgr;
+	// getIRpcInfoMgrFT fnGetIRpcInfoMgr;
 	pushToCallStackFT      fnPushToCallStack;
 	popFromCallStackFT     fnPopFromCallStack;
 	logCallStackFT         fnLogCallStack;
+	regRpcFT               fnRegRpc;
 } ForLogicFun;
 
 typedef void (*afterLoadFunT)(int nArgC, const char* argS[], ForLogicFun* pForLogic);
@@ -81,10 +86,10 @@ struct serverEndPointInfo
 {
 	char              ip[16];
 	uword             port;
-	ServerIDType	  targetHandle;
-	uword             unUse;
-	bool              bDef;
-	bool              bRegHandle;
+	ServerIDType	  targetHandle; // use to reg route use on onConnect
+	uword             unUse;  // 
+	bool              bDef;  // def route
+	bool              bRegHandle; // 几乎没用 
 };
 struct serverNode
 {

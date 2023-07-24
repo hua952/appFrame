@@ -45,7 +45,7 @@ void  regMsgS(regMsgFT fnRegMsg)
 	
 }
 
-void  afterLoad(ForLogicFun* pForLogic)
+void  afterLoad(int nArgC, const char* argS[], ForLogicFun* pForLogic)
 {
 	auto& rForMsg = getForMsgModuleFunS();
 	rForMsg = *pForLogic;

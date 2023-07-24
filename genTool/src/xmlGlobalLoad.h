@@ -23,6 +23,7 @@ public:
 	int  onceModuleLoad (rapidxml::xml_node<char>* pM, std::shared_ptr<moduleFile>& rM);
 	int  serverSLoad (rapidxml::xml_node<char>*  pServerS, moduleFile& rM);
 	int  onceServerLoad (rapidxml::xml_node<char>* pS, std::shared_ptr<serverFile>& rS);
+	int  secondProcess ();
 private:
 };
 #endif

@@ -4,8 +4,10 @@ file(GLOB srcS src/*.cpp)
 set(defS)
 set(osSrc)
 if (WIN32)
-	#add_definitions(-DUNICODE -D_UNICODE)
+	# add_definitions(-DUNICODE -D_UNICODE)
 	ADD_DEFINITIONS(/Zi)
+	ADD_DEFINITIONS(/W2)
+	# ADD_DEFINITIONS(/Od)
 	file(GLOB defS src/*.def)
 	file(GLOB osSrc src/win/*.cpp)
 	#add_definitions(-w)
@@ -26,4 +28,7 @@ target_include_directories(${prjName} PUBLIC
 							src
                            )
 					   target_link_libraries(${prjName} PUBLIC  midFrame cLog)
+
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
+install(TARGETS ${prjName} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+

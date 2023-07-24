@@ -15,3 +15,8 @@ structFileMgr::structMap&  structFileMgr:: structS ()
     return m_structS;
 }
 
+structFileMgr::structVec&  structFileMgr:: structOrder ()
+{
+    return m_structOrder;
+}
+

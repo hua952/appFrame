@@ -45,7 +45,7 @@ void  regMsgS(regMsgFT fnRegMsg)
 	
 }
 
-void  afterLoad(ForLogicFun* pForLogic)
+void  afterLoad(int nArgC, const char* argS[], ForLogicFun* pForLogic)
 {
 	//auto nInit = initLog ("logic", "logicLog", 0, true);
 	//myAssert (0 == nInit);

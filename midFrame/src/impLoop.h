@@ -6,6 +6,7 @@
 #include <memory>
 #include "cTimer.h"
 #include <map>
+#include "impPackSave_map.h"
 
 class impLoop
 {
@@ -30,8 +31,11 @@ public:
 	//typedef arrayMap<uword, procPacketFunType> MsgMap;
 	typedef std::map<uword, procRpcPacketFunType> MsgMap;
 	typedef std::map<NetTokenType, packetHead*>  tokenMsgMap;
-    tokenMsgMap&    tokenMsgS ();
+    // tokenMsgMap&    tokenMsgS ();
+	iPackSave*    getIPackSave ();
 private:
+	std::unique_ptr<impPackSave_map>	 m_pImpPackSave_map;
+	iPackSave*							 m_packSave;
     tokenMsgMap  m_tokenMsgS;
 	cTimerMgr          m_timerMgr;
 	serverNode		   m_serverNode;

@@ -11,5 +11,7 @@ public:
 private:
 	int  genH (moduleGen& rMod);
 	int  genCpp (moduleGen& rMod);
+	int  genOnFrameFun (moduleGen& rMod, const char* szServerName);
+	int  genPackFun (moduleGen& rMod, const char* szServerName);
 };
 #endif

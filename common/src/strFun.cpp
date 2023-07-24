@@ -99,3 +99,9 @@ int strRS(char* szText, char* szP, char** pBuf, int BufNum)
 	return nRet;
 }
 
+void toWord (char* szWord)
+{
+	if ('a' <= *szWord && *szWord <= 'z') {
+		*szWord -= 32;
+	}
+}

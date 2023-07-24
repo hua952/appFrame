@@ -7,11 +7,13 @@
 #include "tSingleton.h"
 #include "comFun.h"
 #include "cppLevel0LCom.h"
+#include "cArgMgr.h"
 
 packetHead* allocPack(udword udwSize)
 {
 	PUSH_FUN_CALL
 	auto pRet = (packetHead*)(new char [sizeof(packetHead) + sizeof(netPacketHead) + udwSize]);
+	pRet->pAsk = nullptr;
 	auto pN = P2NHead(pRet);
 	pN->udwLength = udwSize;
 	pN->uwTag = 0;
@@ -23,7 +25,11 @@ packetHead* allocPack(udword udwSize)
 void	freePack(packetHead* pack)
 {
 	PUSH_FUN_CALL
-	lv0LogCallStack (27);	
+	lv0LogCallStack (27);
+	if (pack->pAsk) {
+		freePack (pack->pAsk);
+		pack->pAsk = nullptr;
+	}
 	auto pN = P2NHead (pack);
 	rTrace (" will delete pack "<<*pack);
 	delete [] ((char*)(pack));
@@ -257,6 +263,9 @@ int serverMgr::initFun (int cArg, const char* argS[])
 {
 	//std::cout<<"start main"<<std::endl;
 	int nRet = 0;
+	tSingleton <cArgMgr>::createSingleton ();
+	auto& rArgS = tSingleton<cArgMgr>::single ();
+	rArgS.procArgS (cArg, argS);
 	procArgS (cArg, argS);
 	auto& rMgr = getPhyCallback();
 	rMgr.fnSendPackToLoop = sendPackToLoop;
@@ -271,7 +280,8 @@ int serverMgr::initFun (int cArg, const char* argS[])
 	rMgr.fnLogCallStack = sLogCallStack;
 	//rMgr.fnAddComTimer = sAddComTimer;// Thread safety
 	do {
-		auto nInitLog = initLog ("appFrame", "appFrameLog.log", 0);
+		auto logLevel = rArgS.logLevel ();
+		auto nInitLog = initLog ("appFrame", "appFrameLog.log", logLevel);
 		if (0 != nInitLog) {
 			std::cout<<"initLog error nInitLog = "<<nInitLog<<std::endl;
 			break;
@@ -279,20 +289,20 @@ int serverMgr::initFun (int cArg, const char* argS[])
 		rInfo ("Loger init OK");
 		auto nInitMidFrame = InitMidFrame(cArg, argS, &rMgr);
 		// auto nInitMidFrame = InitMidFrame(&rMgr);
-		rTrace ("22222222");
+		// rTrace ("22222222");
 		if (0 != nInitMidFrame) {
 			nRet = 1;
 			rError ("InitMidFrame error nRet =  "<<nInitMidFrame);
 			break;
 		}
-		rInfo ("InitMidFrame end");
+		// rInfo ("InitMidFrame end");
 		const auto c_maxLoopNum = 10;
 		serverNode loopHandleS[c_maxLoopNum];
 		auto proLoopNum =  getAllLoopAndStart(loopHandleS, c_maxLoopNum);
 		rInfo ("initFun proLoopNum = "<<proLoopNum);
 		if (proLoopNum > 0) {
 			auto pNetLibName = m_netLibName.get();
-			rTrace ("will int net "<<pNetLibName);
+			// rTrace ("will int net "<<pNetLibName);
 			std::unique_ptr<char[]> binH;
 			getCurModelPath(binH);
 			std::string strPath = binH.get (); 

@@ -22,6 +22,9 @@ msgMgr::~msgMgr ()
 int  msgMgr::  regRpc (msgIdType askId, msgIdType retId, serverIdType	askDefProcSer,
 		serverIdType	 retDefProcSer)
 {
+	if (c_null_msgID == retId) {
+		return regAskOnly (askId, askDefProcSer);
+	}
 	int nRet = 0;
 	auto& rMsgInfoS = m_msgInfoS;
 	auto& rAskMap = m_askMap;

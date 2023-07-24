@@ -116,10 +116,10 @@ int  logicModelMgrCreateor::writeCMakeFile ()
 	auto frameLibPath = rTool.frameLibPath ();
 		os<<"SET(prjName "<<strMgrFullName.c_str ()<<")"<<std::endl
 		<<"SET(depIncludeHome "<<depIncludeHome<<")"<<std::endl
-		<<"SET(depLibHome"<<depLibHome<<")"<<std::endl
-		<<"SET(frameHome"<<frameHome<<")"<<std::endl
-		<<"SET(frameLibPath"<<frameLibPath<<")"<<std::endl
-		<<"SET(outPutPath"<<outPutPath<<")"<<std::endl
+		<<"SET(depLibHome "<<depLibHome<<")"<<std::endl
+		<<"SET(frameHome "<<frameHome<<")"<<std::endl
+		<<"SET(frameLibPath "<<frameLibPath<<")"<<std::endl
+		<<"SET(outPutPath "<<outPutPath<<")"<<std::endl
 		<<R"(
 set(srcS)
 set(genSrcS)

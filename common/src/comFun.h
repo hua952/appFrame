@@ -89,6 +89,7 @@ bool            isPathExit (const char* szPath);
 int             myMkdir (const char* szPath);
 int             getCurModelPath (std::unique_ptr<char[]>& pathBuf);
 
+int             getDirFromFile (const char* szFile, std::unique_ptr<char[]>& pathBuf);
 void showTraceStack(std::unique_ptr<char[]>& pBuff);
 
 std::ostream& operator << (std::ostream& os, const packetHead& pack);

@@ -14,6 +14,7 @@ public:
     ~xmlMsgFileLoad ();
 	int  xmlLoad (const char* szFile);
 private:
+	int  structLoadBody (structFile& rSt, rapidxml::xml_node<char>* pStruct);
 	int  structLoad (rapidxml::xml_node<char>* pStructS);
 	int  onceStructLoad (rapidxml::xml_node<char>* pStruct);
 	int  rpcLoad (rapidxml::xml_node<char>* pRpcS);

@@ -18,6 +18,7 @@ typedef struct _packetHead
 {
 	struct _packetHead*    pNext;
 	struct _packetHead*    pPer;
+	struct _packetHead*    pAsk;
 }packetHead;
 
 typedef packetHead* pPacketHead;

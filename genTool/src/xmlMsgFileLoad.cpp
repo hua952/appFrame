@@ -71,27 +71,17 @@ int   xmlMsgFileLoad:: structLoad (rapidxml::xml_node<char>* pStructS)
     return nRet;
 }
 
-int   xmlMsgFileLoad:: onceStructLoad (rapidxml::xml_node<char>* pStruct)
+int   xmlMsgFileLoad:: structLoadBody (structFile& rSt, rapidxml::xml_node<char>* pStruct)
 {
     int   nRet = 0;
-	do {
-		auto&  rMgr = tSingleton <structFileMgr>::single ().structS ();
+    do {
 		auto pName = pStruct->name ();
-		auto it = rMgr.find (pName);
-		if (rMgr.end () != it) {
-			rError (" two struct have the save name: "<<pName);
-			nRet = 1;
-			break;
-		}
-
-		auto pS = std::make_shared <structFile>();
-		pS->setStructName (pName);
 		auto pCom = pStruct->first_attribute("commit");
 		if(pCom) {
-			pS->setCommit (pCom->value ());
+			rSt.setCommit (pCom->value ());
 		}
-		auto& rV = pS->dataOrder ();
-		auto& rDataS = pS->dataS ();
+		auto& rV = rSt.dataOrder ();
+		auto& rDataS = rSt.dataS ();
 		auto& rCommon = tSingleton<xmlCommon>::single ();
 
 		for(rapidxml::xml_node<char> * pC = pStruct->first_node();  pC; pC = pC->next_sibling()) {
@@ -112,7 +102,7 @@ int   xmlMsgFileLoad:: onceStructLoad (rapidxml::xml_node<char>* pStruct)
 			pD->setDataType (pDN);
 			pD->setCommit (rCommon.getStringA (pC, "commit"));
 			int nR = 0;
-			int nL = 0;
+			int nL = 1;
 			nR = rCommon.getIntA (pC, "length", nL);
 			if(0 == nR) {
 				pD->setDataLength (nL);
@@ -136,7 +126,29 @@ int   xmlMsgFileLoad:: onceStructLoad (rapidxml::xml_node<char>* pStruct)
 		if (nRet) {
 			break;
 		}
+    } while (0);
+    return nRet;
+}
+
+int   xmlMsgFileLoad:: onceStructLoad (rapidxml::xml_node<char>* pStruct)
+{
+    int   nRet = 0;
+	do {
+		auto&  rMgr = tSingleton <structFileMgr>::single ().structS ();
+		auto&  rVec = tSingleton <structFileMgr>::single ().structOrder();
+		auto pName = pStruct->name ();
+		auto it = rMgr.find (pName);
+		if (rMgr.end () != it) {
+			rError (" two struct have the save name: "<<pName);
+			nRet = 1;
+			break;
+		}
+
+		auto pS = std::make_shared <structFile>();
+		pS->setStructName (pName);
+		structLoadBody (*(pS.get ()), pStruct);
 		rMgr [pName] = pS;
+		rVec.push_back (pS);
     } while (0);
     return nRet;
 }
@@ -176,10 +188,20 @@ int   xmlMsgFileLoad:: onceRpcGroupLoad (rapidxml::xml_node<char>* pGroup)
 		auto&  rMsgMgr = tSingleton <msgFileMgr>::single ();
 		auto&  rMsgS = rMsgMgr.msgS ();
 		auto&  rRpcS = rRpcMgr.rpcS ();
+
+		// auto&  rMgr = tSingleton <structFileMgr>::single ().structS ();
+		// auto&  rVec = tSingleton <structFileMgr>::single ().structOrder();
+		// auto&  rRpcOrder = rRpcMgr.rpcOrder ();
 		auto&  rGroupS = rGroupMgr.msgGroupS ();
 		auto pGName = pGroup->name ();
 		auto pG = std::make_shared <msgGroupFile> ();
 		pG->setMsgGroupName (pGName);
+		std::string strFull = pGName;
+		strFull += "2FullMsg";
+		pG->setFullChangName (strFull.c_str ());
+		std::string strRpcSrcFileName = pGName;
+		strRpcSrcFileName += "Rpc";
+		pG->setRpcSrcFileName (strRpcSrcFileName.c_str ());
 		std::string strGroupName = pGName;
 		auto groupRet = rGroupS.insert (std::make_pair(strGroupName, pG));
 		if (!groupRet.second) {
@@ -190,14 +212,9 @@ int   xmlMsgFileLoad:: onceRpcGroupLoad (rapidxml::xml_node<char>* pGroup)
 		auto& rNameS = pG->rpcNameS ();
 		for (auto pRpc = pGroup->first_node();  pRpc; pRpc = pRpc->next_sibling()) {
 			auto pRpcName = pRpc->name ();
-			auto nR = rNameS.insert (pRpcName);
-			if (!nR.second) {
-				rError ("rpc have the save name : "<<pRpcName);
-				nRet = 2;
-				break;
-			}
 			auto pRpcFile = std::make_shared <rpcFile> ();
 			pRpcFile->setRpcName (pRpcName);
+			pRpcFile->setGroupName (pGName);
 			std::string strRpcName = pRpcName;
 			auto rpcRet = rRpcS.insert (std::make_pair(strRpcName, pRpcFile));
 			if (!rpcRet.second) {
@@ -205,6 +222,10 @@ int   xmlMsgFileLoad:: onceRpcGroupLoad (rapidxml::xml_node<char>* pGroup)
 				nRet = 6;
 				break;
 			}
+			rNameS.push_back (pRpcName);
+			// rRpcOrder.push_back ( pRpcFile);
+			std::string strIdSave = pGName;
+			strIdSave += "MsgId_";
 			auto pAsk = pRpc->first_node("ask");
 			if (!pAsk) {
 				rError ("rpc: "<<pRpcName<<" have no ask");
@@ -215,25 +236,110 @@ int   xmlMsgFileLoad:: onceRpcGroupLoad (rapidxml::xml_node<char>* pGroup)
 			std::string strAskName = pRpcName;
 			strAskName += "Ask";
 			pAskMsg->setStructName (strAskName.c_str ());
-			auto askRet = rMsgS.insert (std::make_pair(strAskName, pAskMsg));
-			if (!askRet.second) {
-				rError (" msg have the same name: "<<strAskName);
+			std::string strAskMsgName = strAskName;
+			strAskMsgName += "Msg";
+			pRpcFile->setAskMsgName (strAskName.c_str ());
+			pAskMsg->setMsgName (strAskMsgName.c_str ());
+			std::string strID = strIdSave;
+			strID += strAskName;
+			pAskMsg->setStrMsgId (strID.c_str());
+
+			std::unique_ptr <char[]> pmAskName;
+			strCpy (strAskName.c_str (), pmAskName);
+			toWord (pmAskName.get());
+			std::string strAskPack = "on";
+			strAskPack += pmAskName.get();
+			pAskMsg->setPackFunName (strAskPack.c_str ());
+
+			std::string strMsgProc = "proc";
+			auto pAskStructName = pAskMsg->structName ();
+			strMsgProc += pmAskName.get();
+			pAskMsg->setMsgFunName (strMsgProc.c_str ());
+
+			structFile* pS = (structFile*)(pAskMsg.get ());
+			auto nR = structLoadBody (*(pS), pAsk);
+			if (nR) {
 				nRet = 4;
 				break;
 			}
+			auto askRet = rMsgS.insert (std::make_pair(strAskName, pAskMsg));
+			if (!askRet.second) {
+				rError (" msg have the same name: "<<strAskName);
+				nRet = 5;
+				break;
+			}
+			std::string strAskDec = "void ";
+			strAskDec += strMsgProc;
+			strAskDec += R"( ()";
+			bool askHasData = pAskMsg->hasData ();
+			if (askHasData) {
+				strAskDec += "const ";
+				strAskDec += pAskStructName;
+				strAskDec += "& rAsk ";
+			}	
+			bool haveRetData = false;
 			auto pRet = pRpc->first_node("ret");
 			if (pRet) {
 				std::string strRetName = pRpcName;
 				strRetName += "Ret";
 				auto pRetMsg = std::make_shared <msgFile> ();
 				pRetMsg->setStructName (strRetName.c_str ());
-				auto retRet = rMsgS.insert (std::make_pair (strRetName, pRetMsg));
-				if (!retRet.second	) {
-					rError (" msg have the same name : "<<strRetName.c_str ());
-					nRet = 5;
+				pRpcFile->setRetMsgName (strRetName.c_str ());
+				std::string strMsgName = strRetName;
+				strMsgName += "Msg";
+				pRetMsg->setMsgName (strMsgName.c_str ());
+				std::string strID = strIdSave;
+				strID += strRetName;
+				pRetMsg->setStrMsgId (strID.c_str());
+				structFile* pS = (structFile*)(pRetMsg.get ());
+				auto nR = structLoadBody (*(pS), pRet);
+				if (nR) {
+					nRet = 8;
 					break;
 				}
+			std::string strRetPack = "on";
+
+			std::unique_ptr <char[]> pmRetName;
+			strCpy (strRetName.c_str (), pmRetName);
+			toWord (pmRetName.get());
+			strRetPack += pmRetName.get();
+			pRetMsg->setPackFunName (strRetPack.c_str ());
+			std::string strRetMsgProc = "proc";
+			strRetMsgProc += pmRetName.get ();
+			pRetMsg->setMsgFunName (strRetMsgProc.c_str ());
+			std::string strDec = "void ";
+			strDec += strRetMsgProc;
+			strDec += R"( ()";
+			if (askHasData) {
+				strDec += "const ";
+				strDec += strAskName;
+				strDec += "& rAsk";
 			}
+			auto retHasData = pRetMsg->hasData ();
+			if (retHasData) {
+				if (askHasData) {
+					strAskDec += ", ";
+					strDec += ", ";
+				}
+				strAskDec += strRetName;
+				strAskDec += "& rRet";
+
+				strDec += strRetName;
+				strDec += "& rRet";
+			}
+			strDec += ")";
+			pRetMsg->setMsgFunDec (strDec.c_str ());
+			auto retRet = rMsgS.insert (std::make_pair (strRetName, pRetMsg));
+				if (!retRet.second	) {
+					rError (" msg have the same name : "<<strRetName.c_str ());
+					nRet = 9;
+					break;
+				}
+				// rMgr [strRetName] = pS;
+				// rVec.push_back (pS);
+			}
+			strAskDec += ")";
+			pAskMsg->setMsgFunDec (strAskDec.c_str ());
 		}
 		if (nRet) {
 			break;

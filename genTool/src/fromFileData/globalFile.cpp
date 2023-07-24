@@ -94,3 +94,40 @@ void  globalFile:: setProjectName (const char* v)
     strCpy (v, m_projectName);
 }
 
+const char*  globalFile:: installPath ()
+{
+    return m_installPath.get ();
+}
+
+void  globalFile:: setInstallPath (const char* v)
+{
+    strCpy (v, m_installPath);
+}
+
+const char*  globalFile:: frameInstallPath ()
+{
+    return m_frameInstallPath.get ();
+}
+
+void  globalFile:: setFrameInstallPath (const char* v)
+{
+    strCpy (v, m_frameInstallPath);
+}
+
+void   globalFile:: getRealInstallPath (std::string& strPath)
+{
+    do {
+		auto p = installPath ();
+		if (p) {
+			strPath = p;
+		} else {
+			strPath = projectHome ();
+			strPath += "/../";
+			auto project = projectName ();
+			strPath += project;
+			strPath += "Install";
+		}
+    } while (0);
+}
+
+

@@ -4,7 +4,9 @@
 #include "rpcMgr.h"
 #include "fromFileData/globalFile.h"
 #include "fromFileData/appFileMgr.h"
-#include "fromFileData/moduleFileiMgr.h"
+#include "fromFileData/rpcFileMgr.h"
+#include "fromFileData/structFileMgr.h"
+#include "fromFileData/moduleFileMgr.h"
 #include "fromFileData/msgGroupFileMgr.h"
 #include "fromFileData/msgFileMgr.h"
 #include "xmlGlobalLoad.h"
@@ -40,9 +42,11 @@ int main (int argNum, char* argS[])
 		tSingleton<globalFile>::createSingleton();
 		tSingleton<xmlGlobalLoad>::createSingleton();
 		tSingleton<appFileMgr>::createSingleton ();
-		tSingleton<moduleFileiMgr>::createSingleton ();
+		tSingleton<moduleFileMgr>::createSingleton ();
 		tSingleton<msgGroupFileMgr>::createSingleton ();
 		tSingleton<msgFileMgr>::createSingleton ();
+		tSingleton<structFileMgr>::createSingleton ();
+		tSingleton<rpcFileMgr>::createSingleton ();
 		tSingleton<xmlCommon>::createSingleton ();
 		tSingleton<globalGen>::createSingleton ();
 		

@@ -59,50 +59,13 @@ void server::ThreadFun(server* pS)
 static bool sDelTokenInfo(void* pUserData)
 {
 	auto pArgS = (std::pair<server*, NetTokenType>*) pUserData;
-	auto& rTM = pArgS->first->tokenS ();
-	rTM.erase (pArgS->second);
+	// auto& rTM = pArgS->first->tokenS ();
+	// rTM.erase (pArgS->second);
+	auto pI = pArgS->first->getTokenSave ();
+	pI->netTokenPackErase (pArgS->second);
 	return false;
 }
-/*
-int server::judgeRetSend (ISession* session, packetHead* pack)
-{
-	int nRet = procPacketFunRetType_doNotDel;
-	auto pN = P2NHead (pack);
-	auto& rTM = tokenS ();
-	if (NIsRet (pN)) {
-		auto it = rTM.find (pN->dwToKen);
-		auto fnFreePack = tSingleton<serverMgr>::single().getPhyCallback().fnFreePack;
-		if (rTM.end () == it) {
-			rWarn ("ret pack can not find token");
-			fnFreePack (pack);
-		} else {
-			pN->dwToKen = it->second.oldToken;
-			auto pITcp = getTcpServer ();
-			auto pS = pITcp->getSession (it->second.sessionId);
-			if (pS) {
-				pS->send (pack);
-			} else {
-				rWarn ("ret pack can not find session");
-				fnFreePack (pack);
-			}
-		}
-	} else {
-		tokenInfo info;
-		info.oldToken = pN->dwToKen;
-		info.sessionId = session->id ();
-		auto newToken = nextToken ();
-		rTM [newToken] = info;
-		pN->dwToKen = newToken;
-		auto& rTimeMgr = getTimerMgr ();
-		std::pair<server*, NetTokenType> argS;
-		argS.first = this;
-		argS.second = newToken;
-		rTimeMgr.addComTimer (5000, sDelTokenInfo, &argS, sizeof (argS));
-		nRet = sendBySession (pack);
-	}
-	return nRet;
-}
-*/
+
 int server::sendBySession(packetHead* pack)
 {
 	int nRet = procPacketFunRetType_doNotDel;
@@ -185,13 +148,17 @@ static int sProcessNetPackFun(ISession* session, packetHead* pack)
 	if (myPId == proId) {
 		if (!NIsRet (pN)) {
 			rTrace(__FUNCTION__<<" before change token = "<<pN->dwToKen);
-			server::tokenInfo info;
+			tokenInfo info;
 			info.oldToken = pN->dwToKen;
 			info.sessionId = session->id ();
 			auto newToken = pServer->nextToken ();
-			auto& rTM = pServer->tokenS ();
-			rTM [newToken] = info;
+
+			// auto& rTM = pServer->tokenS ();
+			// rTM [newToken] = info;
 			pN->dwToKen = newToken;
+			auto pI =  pServer->getTokenSave ();
+			auto nR = pI->netTokenPackInsert (newToken, info);
+			myAssert (0 == nR);
 			auto& rTimeMgr = pServer->getTimerMgr ();
 			std::pair<server*, NetTokenType> argS;
 			argS.first = pServer;
@@ -284,7 +251,9 @@ static void sOnWritePack(ISession* session, packetHead* pack)
 		auto pITcp = session->getServer ();
 		auto pServer = (server*)(pITcp->userData ());
 		auto myHand = pServer->myHandle ();
-		auto& rTM = pServer->tokenS ();
+		// auto& rTM = pServer->tokenS ();
+		// auto nR = onWriteOncePack (myHand, pack);
+		// if (procPacketFunRetType_del == nR) {
 		if (NIsRet (pN)) {
 			PUSH_FUN_CALL
 			rTrace ("Befor free pack "<<*pack);
@@ -372,6 +341,8 @@ int server::init(serverNode* pMyNode)
 		}
 		auto handle = pMyNode->handle;
 		m_loopHandle = handle;
+		m_pTokenSave_map = std::make_unique<tokenSave_map> ();
+		m_iTokenSave = m_pTokenSave_map.get ();
 		if (pMyNode->listenerNum || pMyNode->connectorNum) {
 			endPoint listerEP [c_onceServerMaxListenNum];
 			for (decltype (pMyNode->listenerNum)i = 0; i < pMyNode->listenerNum; i++) {
@@ -485,16 +456,19 @@ bool server::procProx(packetHead* pack)
 			}
 		}
 	} else {
-		auto& rTM = tokenS ();
+		// auto& rTM = tokenS ();
+		auto pI =  getTokenSave ();
 		if (NIsRet (pN)) {
 			if (desPId != myPId) {
-				auto it = rTM.find (pN->dwToKen);
-				if (rTM.end () == it) {
+				auto pF = pI->netTokenPackFind (pN->dwToKen);
+				// auto it = rTM.find (pN->dwToKen);
+				//if (rTM.end () == it) {
+				if (!pF) {
 					rTrace("ret pack can not find token token = "<<pN->dwToKen<<" msgId = "<<pN->uwMsgID);
 				} else {
-					pN->dwToKen = it->second.oldToken;
+					pN->dwToKen = pF->oldToken;
 					auto pITcp = getTcpServer ();
-					auto pS = pITcp->getSession (it->second.sessionId);
+					auto pS = pITcp->getSession (pF->sessionId);
 					if (pS) {
 						pS->send (pack);
 					} else {
@@ -504,7 +478,7 @@ bool server::procProx(packetHead* pack)
 						freePack(pack);
 						POP_FUN_CALL
 					}
-					rTM.erase (it);
+					pI->netTokenPackErase (pN->dwToKen);
 				}
 			}
 		} else {
@@ -534,7 +508,7 @@ bool server::procProx(packetHead* pack)
 					info.oldToken = pN->dwToKen;
 					info.sessionId = pSession->id ();
 					auto newToken = nextToken ();
-					rTM [newToken] = info;
+					pI->netTokenPackInsert (newToken, info); // rTM [newToken] = info;
 					pN->dwToKen = newToken;
 					auto& rTimeMgr = getTimerMgr ();
 					std::pair<server*, NetTokenType> argS;
@@ -638,9 +612,16 @@ NetTokenType	 server::nextToken ()
 {
     return m_nextToken++;
 }
+/*
 server::tokenMap& server::tokenS ()
 {
     return m_tokenS;
+}
+*/
+
+iTokenSave*  server::getTokenSave ()
+{
+	return m_iTokenSave;
 }
 
 ITcpServer* server:: getTcpServer ()

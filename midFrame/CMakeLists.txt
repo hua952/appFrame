@@ -11,6 +11,8 @@ elseif (WIN32)
 	MESSAGE(STATUS "windows")
 	add_definitions(-w)
 	ADD_DEFINITIONS(/Zi)
+	ADD_DEFINITIONS(/W1)
+	ADD_DEFINITIONS(/Od)
 	#file(GLOB osSrc /src/win/*.cpp)
 	#aux_source_directory(src/win osSrc)
 	file(GLOB defS src/win/*.def)
@@ -30,4 +32,7 @@ target_include_directories(${prjName} PUBLIC
                            )
 
 					   target_link_libraries(${prjName} PUBLIC  common)
+
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
+install(TARGETS ${prjName} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+

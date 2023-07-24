@@ -8,7 +8,7 @@ int  serverMgr:: initNetServer (const char* szLibname)
 {
 	int nRet = 0;
 	auto szName = szLibname;
-	rTrace ("At Then begin of loadNetServer libName = "<<szName);
+	// rTrace ("At Then begin of loadNetServer libName = "<<szName);
 	//HINSTANCE hdll;
 
 	do {
@@ -27,7 +27,7 @@ int  serverMgr:: initNetServer (const char* szLibname)
 			nRet = 1;
 		}
 		auto hdll = LoadLibraryA(szName);
-		rTrace (" After LoadLibraryA hdll = "<<hdll);
+		// rTrace (" After LoadLibraryA hdll = "<<hdll);
 		if (!hdll) {
 			nRet = 2;
 			break;

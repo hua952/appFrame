@@ -54,7 +54,7 @@ int   moduleExportFunGen:: genH (moduleGen& rMod)
 
 extern "C"
 {
-	void  afterLoad(ForLogicFun* pForLogic);
+	void  afterLoad(int nArgC, const char* argS[], ForLogicFun* pForLogic);
 	void  beforeUnload();
 }
 #endif)";
@@ -86,11 +86,11 @@ int   moduleExportFunGen:: genCpp (moduleGen& rMod)
 #include "tSingleton.h"
 #include "gLog.h"
 
-void  afterLoad(ForLogicFun* pForLogic)
+void  afterLoad(int nArgC, const char* argS[], ForLogicFun* pForLogic)
 {
 	tSingleton<logicServerMgr>::createSingleton();
 	auto &rMgr = tSingleton<logicServerMgr>::single();
-	rMgr.afterLoad(pForLogic);
+	rMgr.afterLoad(nArgC, argS, pForLogic);
 }
 
 void  beforeUnload()
