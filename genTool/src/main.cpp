@@ -1,7 +1,5 @@
 #include "main.h"
-#include "msgTool.h"
-#include "appMgr.h"
-#include "rpcMgr.h"
+#include "tSingleton.h"
 #include "fromFileData/globalFile.h"
 #include "fromFileData/appFileMgr.h"
 #include "fromFileData/rpcFileMgr.h"
@@ -41,12 +39,14 @@ int main (int argNum, char* argS[])
 		}
 		tSingleton<globalFile>::createSingleton();
 		tSingleton<xmlGlobalLoad>::createSingleton();
+		/*
 		tSingleton<appFileMgr>::createSingleton ();
 		tSingleton<moduleFileMgr>::createSingleton ();
 		tSingleton<msgGroupFileMgr>::createSingleton ();
 		tSingleton<msgFileMgr>::createSingleton ();
 		tSingleton<structFileMgr>::createSingleton ();
 		tSingleton<rpcFileMgr>::createSingleton ();
+		*/
 		tSingleton<xmlCommon>::createSingleton ();
 		tSingleton<globalGen>::createSingleton ();
 		
@@ -66,7 +66,6 @@ int main (int argNum, char* argS[])
 			rError ("rGlobalGen.startGen return error nR = "<<nR);
 			break;
 		}
-		// tSingleton<msgTool>::single ().init (argNum, argS);
 	} while (0);
 	return nRet;
 }

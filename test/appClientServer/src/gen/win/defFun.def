@@ -1,4 +1,0 @@
-LIBRARY
-EXPORTS
-	afterLoad	@1
-	beforeUnload	@2
