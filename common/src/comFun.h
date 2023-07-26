@@ -91,7 +91,8 @@ int             getCurModelPath (std::unique_ptr<char[]>& pathBuf);
 
 int             getDirFromFile (const char* szFile, std::unique_ptr<char[]>& pathBuf);
 void showTraceStack(std::unique_ptr<char[]>& pBuff);
-
+void second2Str (uqword uqwCur, std::unique_ptr<char[]>& strTime);
+uqword curNanosecond ();
 std::ostream& operator << (std::ostream& os, const packetHead& pack);
 
 #define SD(p) {delete p;p=nullptr;}

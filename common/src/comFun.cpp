@@ -1,4 +1,5 @@
 #include <memory>
+#include <chrono>
 #include "comFun.h"
 #include "mainLoop.h"
 #include "depOSFun.h"
@@ -59,4 +60,27 @@ int  getDirFromFile (const char* szFile, std::unique_ptr<char[]>& pathBuf)
 		strNCpy (pathBuf.get (), resLen, szFile);
 	} while (0);
 	return nRet;
+}
+
+void second2Str (uqword uqwCur, std::unique_ptr<char[]>& strTime)
+{
+	auto tSub = uqwCur;
+	const auto c_day = 24 * 3600;
+	auto nDay = tSub / c_day;
+	tSub %= c_day;
+	auto nHour = tSub / 3600;
+	tSub %= 3600;
+	auto nMin = tSub / 60;
+	tSub %= 60;
+	std::stringstream ss;
+	ss<<nDay<<"-"<<nHour<<":"<<nMin<<":"<<tSub;
+	strCpy (ss.str().c_str(), strTime);
+}
+uqword curNanosecond ()
+{
+	auto curT = std::chrono::system_clock::now();
+	auto tSub = std::chrono::duration_cast<std::chrono::nanoseconds>(curT.time_since_epoch());
+	// auto dT = double(tSub.count()) * std::chrono::microseconds::period::num / std::chrono::microseconds::period::den;
+	auto uqwRet = (uqword)(tSub.count());
+	return uqwRet;
 }

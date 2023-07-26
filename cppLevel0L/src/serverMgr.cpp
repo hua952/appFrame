@@ -60,7 +60,6 @@ static int sendPackToLoop(packetHead* pack)
 	server* pS = nullptr;
 	rTrace (__FUNCTION__<<*pack);
 	if (ubySp == ubyDp) {
-		//auto pServerS = rMgr.getServerS();
 		pS = rMgr.getServer (pNH->ubyDesServId); // pServerS[ubyDl];
 		rTrace ("send pack did = "<<(int)ubyDl<<" pS = "<<pS);
 	} else {
@@ -69,7 +68,6 @@ static int sendPackToLoop(packetHead* pack)
 		rTrace ("will send by up pS = "<<pS<<" handle = "<<(int)hs);
 	}
 	if (pS) {
-		//rTrace ("will pushPack");
 		pS->pushPack (pack);
 	}
 	return nRet;
@@ -278,7 +276,6 @@ int serverMgr::initFun (int cArg, const char* argS[])
 	rMgr.fnPushToCallStack = sPushToCallStack;
 	rMgr.fnPopFromCallStack = sPopFromCallStack;
 	rMgr.fnLogCallStack = sLogCallStack;
-	//rMgr.fnAddComTimer = sAddComTimer;// Thread safety
 	do {
 		auto logLevel = rArgS.logLevel ();
 		auto nInitLog = initLog ("appFrame", "appFrameLog.log", logLevel);
@@ -288,21 +285,17 @@ int serverMgr::initFun (int cArg, const char* argS[])
 		}
 		rInfo ("Loger init OK");
 		auto nInitMidFrame = InitMidFrame(cArg, argS, &rMgr);
-		// auto nInitMidFrame = InitMidFrame(&rMgr);
-		// rTrace ("22222222");
 		if (0 != nInitMidFrame) {
 			nRet = 1;
 			rError ("InitMidFrame error nRet =  "<<nInitMidFrame);
 			break;
 		}
-		// rInfo ("InitMidFrame end");
 		const auto c_maxLoopNum = 10;
 		serverNode loopHandleS[c_maxLoopNum];
 		auto proLoopNum =  getAllLoopAndStart(loopHandleS, c_maxLoopNum);
 		rInfo ("initFun proLoopNum = "<<proLoopNum);
 		if (proLoopNum > 0) {
 			auto pNetLibName = m_netLibName.get();
-			// rTrace ("will int net "<<pNetLibName);
 			std::unique_ptr<char[]> binH;
 			getCurModelPath(binH);
 			std::string strPath = binH.get (); 
@@ -320,7 +313,6 @@ int serverMgr::initFun (int cArg, const char* argS[])
 			auto pImpS = pServerImpS.get();
 			for (int i = 0; i < proLoopNum; i++ ) {
 				pServerS[i] = &pImpS[i];
-				//auto loopH = loopHandleS [i].handle;
 				auto p = pServerS [i];
 				p->init (&loopHandleS[i]);
 			}

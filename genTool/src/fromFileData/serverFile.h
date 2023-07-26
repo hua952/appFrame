@@ -69,6 +69,11 @@ public:
 	void  setFrameFunName (const char* v);
 	const char*  frameFunDec ();
 	void  setFrameFunDec (const char* v);
+	
+	udword  sleepSetp ();
+	void  setSleepSetp (udword v);
+	udword  fpsSetp ();
+	void  setFpsSetp (udword v);
 private:
 	std::unique_ptr <char[]>  m_frameFunDec;
 	std::unique_ptr <char[]>  m_frameFunName;
@@ -76,11 +81,13 @@ private:
 	std::unique_ptr <char[]>  m_initFunDec;
 	std::unique_ptr <char[]>  m_regPackFunDec;
 	std::unique_ptr <char[]>  m_regPackFunName;
-	toolServerNode   m_serverInfo;
 	std::unique_ptr <char[]>  m_strHandle;
 	std::unique_ptr <char[]>  m_moduleName;
 	std::unique_ptr <char[]>  m_serverName;
 	std::unique_ptr <char[]>  m_commit;
-	rpcMap  m_procMsgS;
+	toolServerNode  m_serverInfo;
+	rpcMap			m_procMsgS;
+	udword			m_fpsSetp;
+	udword			m_sleepSetp;
 };
 #endif

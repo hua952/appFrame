@@ -114,6 +114,10 @@ int  appGen:: batFileGen (appFile& rApp)
 		for (auto it = rModules.begin (); rModules.end () != it; ++it) {
 			os<<" logicModel="<<strBinDir<<*it<<".dll";
 		}
+		auto& rV = rApp.argS ();
+		for (auto it = rV.begin(); rV.end() != it; ++it) {
+			os<<" "<<*it;
+		}
     } while (0);
     return nRet;
 }

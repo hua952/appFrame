@@ -93,11 +93,11 @@ struct serverEndPointInfo
 };
 struct serverNode
 {
-	udword                  udwUnuse;
+	udword                  sleepSetp;
+	udword                  fpsSetp;
 	ServerIDType			handle;
 	ubyte					connectorNum;
 	ubyte                   listenerNum;
-	ubyte	                ubyUnuse;
 	serverEndPointInfo		listenEndpoint [c_onceServerMaxListenNum];
 	serverEndPointInfo		connectEndpoint [c_onceServerMaxConnectNum];
 };

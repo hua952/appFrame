@@ -23,16 +23,12 @@ public:
 	void join();
 	bool pushPack (packetHead* pack); // Thread safety
     int sendBySession(packetHead* pack);
-	//int judgeRetSend (ISession* session, packetHead* pack);
 	bool procProx(packetHead* pack);
 	virtual bool onFrame();
     typedef std::map<loopHandleType, ISession*> serverSessionMapT;
 	typedef int (*onProcNetPackT)(server* pServer, ISession* session, packetHead* packet);
 	typedef std::map<int, onProcNetPackT>  netMsgMap;
-	//typedef std::map<SessionIDType, ISession*>  allSessionMap;
     serverSessionMapT&    serverSessionMap();
-    //allSessionMap&    allSessionS ();
-	
     ISession*    defSession ();
     void  setDefSession (ISession* va);
     NetTokenType	nextToken ();
@@ -40,7 +36,6 @@ public:
 	loopHandleType  myProId ();
 	loopHandleType  myLoopId ();
 	loopHandleType  myHandle ();
-    // tokenMap&    tokenS ();
 	cTimerMgr&   getTimerMgr ();
 	ITcpServer*  getTcpServer ();
 	void         pushToCallStack (const char* szTxt);
@@ -49,16 +44,17 @@ public:
 	static thread_local  loopHandleType      s_loopHandleLocalTh;
 	static const auto c_MaxStackSize = 20;
 	iTokenSave*  getTokenSave ();
+	udword  sleepSetp ();
+	void  setSleepSetp (udword v);
 private:
+	udword  m_sleepSetp;
 	iTokenSave*  m_iTokenSave;
 	std::unique_ptr<tokenSave_map>  m_pTokenSave_map;
 	std::unique_ptr<char[]>   m_callStack[c_MaxStackSize];	
 	int       m_curCallNum;
-    //tokenMap  m_tokenS;
 	cTimerMgr          m_timerMgr;
     NetTokenType	m_nextToken;
     ISession*  m_defSession;
-    //allSessionMap  m_allSessionS;
     serverSessionMapT m_serverSessionS;
 	ITcpServer*			m_pTcpServer;
 	static void ThreadFun(server* pS);

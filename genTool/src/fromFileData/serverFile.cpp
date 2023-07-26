@@ -26,6 +26,8 @@ bool  cmpProcRpcNode::operator () (const procRpcNode& a, const procRpcNode& b) c
 
 serverFile:: serverFile ()
 {
+	m_sleepSetp=10;
+	m_fpsSetp=0;
 	m_serverInfo.listenerNum = 0;
 	m_serverInfo.connectorNum = 0;
 }
@@ -52,7 +54,7 @@ void  serverFile::setServerName (const char* v)
 		setInitFunName (strInit.c_str ());
 		std::string strDec = "int ";
 		strDec += strInit;
-		strDec += "(ForLogicFun* pForLogic)";
+		strDec += "(logicServer& rServer, ForLogicFun* pForLogic)";
 		setInitFunDec (strDec.c_str ());
 
 		std::string strFrame = "app";
@@ -61,7 +63,7 @@ void  serverFile::setServerName (const char* v)
 		setFrameFunName (strFrame.c_str ());
 		std::string strFrameDec = "int ";
 		strFrameDec += strFrame;
-		strFrameDec += R"( (void* pArgS))";
+		strFrameDec += R"( (logicServer& rServer))";
 		setFrameFunDec (strFrameDec.c_str ());
 	}
 }
@@ -164,5 +166,25 @@ const char*  serverFile:: frameFunDec ()
 void  serverFile:: setFrameFunDec (const char* v)
 {
     strCpy (v, m_frameFunDec);
+}
+
+udword  serverFile:: sleepSetp ()
+{
+    return m_sleepSetp;
+}
+
+void  serverFile:: setSleepSetp (udword v)
+{
+    m_sleepSetp = v;
+}
+
+udword  serverFile:: fpsSetp ()
+{
+    return m_fpsSetp;
+}
+
+void  serverFile:: setFpsSetp (udword v)
+{
+    m_fpsSetp = v;
 }
 

@@ -35,3 +35,8 @@ void  appFile:: setProcId (int v)
     m_procId = v;
 }
 
+appFile::argV&  appFile:: argS ()
+{
+    return m_argS;
+}
+

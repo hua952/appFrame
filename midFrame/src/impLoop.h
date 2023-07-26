@@ -7,6 +7,7 @@
 #include "cTimer.h"
 #include <map>
 #include "impPackSave_map.h"
+#include "fpsCount.h"
 
 class impLoop
 {
@@ -27,13 +28,14 @@ public:
 	ServerIDType id();
 	cTimerMgr&    getTimerMgr();
 	serverNode*   getServerNode ();
-	//void			setId(ModelIDType id);
-	//typedef arrayMap<uword, procPacketFunType> MsgMap;
 	typedef std::map<uword, procRpcPacketFunType> MsgMap;
 	typedef std::map<NetTokenType, packetHead*>  tokenMsgMap;
-    // tokenMsgMap&    tokenMsgS ();
 	iPackSave*    getIPackSave ();
+	void  showFps ();
+	fpsCount&  fpsC ();
 private:
+	uqword    m_frameNum;
+	fpsCount  m_fpsC;
 	std::unique_ptr<impPackSave_map>	 m_pImpPackSave_map;
 	iPackSave*							 m_packSave;
     tokenMsgMap  m_tokenMsgS;

@@ -15,7 +15,7 @@ int  tokenSave_map:: netTokenPackInsert (NetTokenType token, const tokenInfo& in
     do {
 		auto& rMap = tokenS ();
 		auto ret = rMap.insert (std::make_pair (token, info));
-		if (ret.second) {
+		if (!ret.second) {
 			nRet = 1;
 		}
     } while (0);
@@ -34,11 +34,13 @@ int  tokenSave_map:: netTokenPackErase (NetTokenType token)
 
 tokenInfo*  tokenSave_map:: netTokenPackFind (NetTokenType token)
 {
-    tokenInfo*  nRet = 0;
+    tokenInfo*  nRet = nullptr;
     do {
 		auto& rMap = tokenS ();
 		auto it = rMap.find (token);
-		nRet = &(it->second);
+		if (rMap.end () != it) {
+			nRet = &(it->second);
+		}
     } while (0);
     return nRet;
 }

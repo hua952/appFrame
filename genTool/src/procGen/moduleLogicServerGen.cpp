@@ -86,6 +86,8 @@ public:
     serverNode&   serverInfo ();
 	const char*   serverName ();
 	void          setServerName (const char* v);
+	int onFrameFun ();
+	int onServerInit(ForLogicFun* pForLogic);
 private:
 	serverNode   m_serverInfo;
 	std::unique_ptr <char[]>  m_serverName;
@@ -126,6 +128,11 @@ const char*  logicServer:: serverName ()
 	return m_serverName.get ();
 }
 
+int logicServer::onFrameFun ()
+{
+	return procPacketFunRetType_del;
+}
+
 void  logicServer::setServerName (const char* v)
 {
 	strCpy (v, m_serverName);
@@ -155,15 +162,26 @@ logicServer*  logicServerMgr:: serverS ()
 
 static int OnFrameCli(void* pArgS)
 {
-	return procPacketFunRetType_del;
+	auto pS = (logicServer*)pArgS;
+	return pS->onFrameFun ();
 }
-
+ 
 int  logicServerMgr:: procArgS (int nArgC, const char* argS[])
 {
 	int nRet;
 	return nRet;
 }
+
+int logicServer::onServerInit(ForLogicFun* pForLogic)
+{
+	int nRet = 0;
+	auto handle = serverInfo().handle;
 )";
+/*
+	return nRet;
+}
+)";
+*/
 int   moduleLogicServerGen:: genCpp (moduleGen& rMod)
 {
     int   nRet = 0;
@@ -177,7 +195,24 @@ int   moduleLogicServerGen:: genCpp (moduleGen& rMod)
 			nRet = 1;
 			break;
 		}
-		os<<g_szCppStaticTxt<<R"(
+		os<<g_szCppStaticTxt;
+
+	auto& rData = rMod.moduleData ();
+	auto& rSS = rData.orderS ();
+	auto serverNum = rSS.size ();
+	for (decltype (serverNum) i = 0; i < serverNum; i++) {
+		auto pName = rSS[i]->serverName ();
+		auto pH = rSS[i]->strHandle();
+		auto pInitFun = rSS[i]->initFunDec ();
+		auto pFunName = rSS[i]->initFunName ();
+		os<<R"(    if (handle == )"<<pH<<R"() {
+		)"<<pInitFun<<R"(;
+		return )"<<pFunName<<R"( (*this, pForLogic);
+	}
+)";
+	}
+	os<<"}";
+		os<<R"(
 struct conEndPointT 
 {
 	std::string first;
@@ -193,9 +228,6 @@ void  logicServerMgr::afterLoad(int nArgC, const char* argS[], ForLogicFun* pFor
 	auto fnRegMsg = pForLogic->fnRegMsg;
 	int  nR = 0;
 	)";
-	auto& rData = rMod.moduleData ();
-	auto& rSS = rData.orderS ();
-	auto serverNum = rSS.size ();
 	os<<R"(
 	ubyte serverNum = )"<<serverNum<<R"(;
 )";
@@ -205,8 +237,12 @@ void  logicServerMgr::afterLoad(int nArgC, const char* argS[], ForLogicFun* pFor
 	std::stringstream  osConNum;
 	std::stringstream  osLN;
 	std::stringstream  osCN;
+	std::stringstream  osFps;
+	std::stringstream  osSleep;
 	osName<<R"(const char* serverNameS[] = {)";
 	osHS<<R"(ServerIDType  serverHS[] = {)";
+	osFps<<R"(udword fpsSetpS[] = {)";
+	osSleep<<R"(udword sleepSetpS[] = {)";
 	osNum<<R"(    ubyte listenNumS []= {)";
 	osConNum<<R"(    ubyte connectNumS []= {)";
 	osCN<<R"(auto pEndPointS = std::make_unique<
@@ -219,6 +255,8 @@ void  logicServerMgr::afterLoad(int nArgC, const char* argS[], ForLogicFun* pFor
 		auto pH = rSS[i]->strHandle();
 		if (i) {
 			osName<<",";
+			osFps<<",";
+			osSleep<<",";
 			osHS<<",";
 			osNum<<",";
 			// osCN<<",";
@@ -227,6 +265,8 @@ void  logicServerMgr::afterLoad(int nArgC, const char* argS[], ForLogicFun* pFor
 		}
 		osName<<R"(")"<<pName<<R"(")";
 		osHS<<pH;
+		osFps<<rSS[i]->fpsSetp ();
+		osSleep<<rSS[i]->sleepSetp();
 		osNum<<(int)(rSS[i]->serverInfo().listenerNum);
 		osConNum<<(int)(rSS[i]->serverInfo().connectorNum);
 		if (rSS[i]->serverInfo().listenerNum) {
@@ -261,9 +301,13 @@ void  logicServerMgr::afterLoad(int nArgC, const char* argS[], ForLogicFun* pFor
 	osName<<"};";
 	osHS<<"};";
 	osNum<<"};";
+	osFps<<"};";
+	osSleep<<"};";
 	osConNum<<"};";
 	os<<"    "<<osName.str()<<std::endl;
 	os<<"    "<<osHS.str()<<std::endl;
+	os<<"    "<<osSleep.str()<<std::endl;
+	os<<"    "<<osFps.str()<<std::endl;
 	os<<osNum.str()<<std::endl;
 	os<<osConNum.str()<<std::endl;
 	os<<osLN.str ();
@@ -277,6 +321,8 @@ void  logicServerMgr::afterLoad(int nArgC, const char* argS[], ForLogicFun* pFor
 		auto& rInfo = rServer.serverInfo ();
 		rServer.setServerName (serverNameS[i]);
 		rInfo.handle = serverHS[i];
+		rInfo.fpsSetp = fpsSetpS[i];
+		rInfo.sleepSetp = sleepSetpS[i];
 		rInfo.listenerNum = listenNumS [i];
 		rInfo.connectorNum = connectNumS [i];
 		for (decltype(rInfo.listenerNum) j = 0; j < rInfo.listenerNum; j++) {
@@ -293,8 +339,12 @@ void  logicServerMgr::afterLoad(int nArgC, const char* argS[], ForLogicFun* pFor
 			ep.bDef = pEndPointS[i][j].bDef;
 			ep.targetHandle = pEndPointS[i][j].targetHandle;
 		}
+		fnCreateLoop (serverNameS[i], serverHS[i], &rInfo, OnFrameCli, &rServer);
+		rServer.onServerInit (pForLogic);
 	}
+}
 )";
+	/*
 int nIndex = 0;
 for (auto it = rSS.begin (); rSS.end () != it; ++it) {
 	auto& rServer = *(it->get());
@@ -306,13 +356,15 @@ for (auto it = rSS.begin (); rSS.end () != it; ++it) {
 	auto frameFunDec = rServer.frameFunDec ();
 		os<<std::endl<<"    "<<frameFunDec<<R"(;
 	fnCreateLoop (")"<<pName<<R"(", )"<<pHd<<R"(, &m_serverS[)"
-		<<nIndex++<<R"(].serverInfo (), )"
-		<<frameFunName<<R"(, nullptr);
+		<<nIndex++<<R"(].serverInfo (), OnFrameCli, &rServer);
 	
     )"<<regPackFunDec<<R"(;
 	)"<<regPackFunName<<R"( (fnRegMsg);
+	rServer.onServerInit (pForLogic);
 )";
-
+}
+*/
+/*
 	auto initFunName = rServer.initFunName ();
 	auto initFunDec = rServer.initFunDec ();
 	os<<R"(
@@ -322,30 +374,7 @@ for (auto it = rSS.begin (); rSS.end () != it; ++it) {
 	os<<R"(
 }
 )";
- /*
-	for (decltype (rInfo.listenerNum) i = 0; i < rInfo.listenerNum; i++) {
-		auto& ep = rInfo.connectEndpoint [i];
-		os<<R"(ep.targetHandle = )"<<ep.szTarget<<R"(;
-		ep.bDef = )"<<ep.bDef ? "true":"false"<<R"(;
-	}
-	)"
-		ep.bDef = true;
-		node.listenerNum = 0;
-		fnCreateLoop (")"<<pName<<", "<<pHandle<<", "nullptr, OnFrameSer, nullptr);
-	}
-	gTrace ("after call fnCreateLoop");
-	auto TestServerH = ThreadServerHandle;
-	myAssert (c_emptyLoopHandle	 != TestServerH);
-	auto fnRegMsg = pForLogic->fnRegMsg;
-	fnRegMsg (TestServerH, CChess2FullMsg(CChessMsgID_manualListAsk), OnManualListAsk);
-	fnCreateLoop ("ThreadClient", ThreadClientHandle, nullptr, OnFrameCli, nullptr);
-    auto TestClientH = ThreadClientHandle;
-	myAssert (c_emptyLoopHandle	 != TestClientH);
-	fnRegMsg (TestClientH, CChess2FullMsg(CChessMsgID_manualListRet), OnManualListRet);
-	fnRegMsg (TestClientH, CChess2FullMsg(CChessMsgID_regretRet), OnRegretRet);
-	fnRegMsg (TestClientH, CChess2FullMsg(CChessMsgID_moveRet), OnMoveRet);
-
- */
+*/
     } while (0);
     return nRet;
 }
@@ -380,14 +409,14 @@ int   moduleLogicServerGen:: genOnFrameFun (moduleGen& rMod, const char* szServe
 #include "mainLoop.h"
 #include "gLog.h"
 #include "msg.h"
+#include "logicServer.h"
 #include "tSingleton.h"
 
 )"<<pFrameDec<<R"(
 {
 	return procPacketFunRetType_del;
 }
-
-)"<<pInitDec <<R"(
+)"<<pInitDec<<R"(
 {
 	int nRet = 0;
 	return nRet;

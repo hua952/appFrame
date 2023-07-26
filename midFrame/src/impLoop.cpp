@@ -20,15 +20,7 @@ int processOncePack(loopHandleType pThis, packetHead* pPack)
 {
 	auto& rMgr = tSingleton<loopMgr>::single();
 	auto pTH = rMgr.getLoop (pThis);
-	/*
-	auto pN = P2NHead (pPack);
-	mTrace (__FUNCTION__<<" handle = "<<(int)pThis<<"  msgId = "<<pN->uwMsgID
-						<<"  ubyDesServId ="<<(int)pN->ubyDesServId<<" pTH = "<<pTH);
-	int hTH = pTH->id ();
-	mTrace (__FUNCTION__<<" hTH = "<<hTH);
-	*/
 	auto nRet = pTH->processOncePack(pPack);
-	//mTrace (__FUNCTION__<<" after call pTH->processOncePack hTH = "<<hTH);
 	return nRet;
 }
 
@@ -71,6 +63,7 @@ impLoop::impLoop()//:m_MsgMap(8)
 	m_id = c_emptyModelId;
 	m_serverNode.listenerNum = 0;
 	m_serverNode.connectorNum = 0;
+	m_frameNum = 0;
 }
 
 impLoop::~impLoop()
@@ -89,14 +82,6 @@ void impLoop::onFreePack(packetHead* pPack)
 		pIPackSave->netTokenPackErase (pN->dwToKen);
 	}
 }
-/*
-impLoop::tokenMsgMap&  impLoop:: tokenMsgS ()
-{
-    return m_tokenMsgS;
-}
-*/
-
-//static procMsgRetType on_acceptPeaceAsk(packetHead* pAsk, pPacketHead& pRet)
 
 int impLoop::processOncePack(packetHead* pPack)
 {
@@ -150,25 +135,16 @@ int impLoop::processOncePack(packetHead* pPack)
 				myAssert (pS);
 				auto pIPackSave = pS->getIPackSave ();
 				auto pAskPack = pIPackSave->netTokenPackFind (pN->dwToKen);
-				/*
-				auto& rTM = pS->tokenMsgS ();
-				auto it = rTM.find (pN->dwToKen);
-				if (rTM.end () == it) {
-				*/
+				
 				if (!pAskPack) {
 					mWarn ("send packet can not find by token: "<<pN->dwToKen<<" msgId = "<<pN->uwMsgID
 							<<" length = "<<pN->udwLength);
 					break;
 				}
-				// myAssert (rTM.end () != it);
 				myAssert (pAskPack);
-				// auto pAsk = it->second;
-				// nRet = pF(pAsk, pPack, &argP);
 				pPack->pAsk = pAskPack;
 				nRet = pF(pAskPack, pPack, &argP);
 				pIPackSave->netTokenPackErase (pN->dwToKen);
-				// rTM.erase (it);
-				// freeFun (pAsk);
 			} else {
 				packetHead* pRet = nullptr;
 				nRet = pF(pPack, pRet, &argP);
@@ -181,7 +157,6 @@ int impLoop::processOncePack(packetHead* pPack)
 				}
 			}
 		}
-		
 	} while (0);
 	return nRet;
 }
@@ -194,10 +169,16 @@ cTimerMgr&  impLoop::getTimerMgr()
 {
 	return m_timerMgr;
 }
+static bool sShowFps (void* pUserData)
+{
+	auto pServer =	(impLoop*)(*(void**)(pUserData));
+	pServer->showFps ();
+	return true;
+}
+
 int impLoop::init(const char* szName, ServerIDType id, serverNode* pNode,
 		frameFunType funOnFrame, void* argS)
 {
-	//mTrace ("At the begin");
 	auto nL = strlen(szName);
 	auto pN = std::make_unique<char[]>(nL + 1);
 	strcpy(pN.get(), szName);
@@ -214,21 +195,35 @@ int impLoop::init(const char* szName, ServerIDType id, serverNode* pNode,
 		m_pImpPackSave_map = std::make_unique <impPackSave_map> ();
 		m_packSave = m_pImpPackSave_map.get();
 	}
-	//mTrace ("At the end");
+
+	if (pNode->fpsSetp) {
+		auto& rTimer = getTimerMgr();
+		auto pSer = this;
+		rTimer.addComTimer (pNode->fpsSetp, sShowFps, &pSer, sizeof(pSer));
+	}
 	return 0;
 }
 
+
+void   impLoop:: showFps ()
+{
+    do {
+		auto& fps = fpsC ();
+		auto dFps = fps.update (m_frameNum);
+		mInfo(" FPS : "<<dFps);
+    } while (0);
+}
+
+fpsCount&  impLoop:: fpsC ()
+{
+    return m_fpsC;
+}
 
 ServerIDType impLoop::id()
 {
 	return m_id;
 }
-/*
-void	impLoop::setId(ModelIDType id)
-{
-	m_id = id;
-}
-*/
+
 const char* impLoop::name()
 {
 	return m_name.get();
@@ -242,20 +237,17 @@ int impLoop::OnLoopFrame()
 {
 	int nRet = 0;
 	m_timerMgr.onFrame ();
-	if (m_funOnFrame)
-	{
+	if (m_funOnFrame) {
 		nRet = m_funOnFrame(m_pArg);
 	}
+	m_frameNum++;
 	return nRet;
 }
 
 bool impLoop::regMsg(uword uwMsgId, procRpcPacketFunType pFun)
 {
-	//bool bRet = m_MsgMap.insert(uwMsgId, pFun);	
-	//myAssert(bRet);
 	bool bRet = true;
 	m_MsgMap [uwMsgId] = pFun;
-	//mTrace(__FUNCTION__<<" msgId = "<<uwMsgId<<" pFun = "<<pFun);
 	return bRet;
 }
 

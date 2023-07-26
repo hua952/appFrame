@@ -145,36 +145,11 @@ static int sSendPackToLoopFun(packetHead* pack)
 	pa.first = pN->dwToKen;
 	pa.second = pN->ubySrcServId;
 	if (!bInOnceProc && !bIsRet) {
-		// auto& rMap = pS->tokenMsgS ();
 		mTrace ("will insert ask pack -----dwToKen = "<<pN->dwToKen<<" msgId = "
 			<<pN->uwMsgID<<" map.size = "<<0<<" pack = "<<pack
 			<<" server handle = "<<pS->id ());
 			pISavePack->netTokenPackInsert (pack);
 			addTimerFun (pN->ubySrcServId, delTime, delTime, sDelNetPack, &pa, sizeof (pa));
-			// auto bRet = rMap.insert (std::make_pair(pN->dwToKen, pack));
-			// myAssert (bRet.second);
-		/*	
-			addTimerFun (pN->ubySrcServId, delTime, delTime, [] (void* pUP) {
-					auto pArg = (std::pair<NetTokenType, loopHandleType>*) pUP; 
-					auto handle = pArg->second;
-					auto& rMgr = tSingleton<loopMgr>::single ();
-					auto pS = rMgr.getLoop(handle);
-					auto& rMap = pS->tokenMsgS ();
-					auto it = rMap.find (pArg->first);
-					if (rMap.end() != it) {
-						auto fnFree = tSingleton<PhyInfo>::single (). getPhyCallback().fnFreePack;
-						auto dPack = it->second;
-						auto pDN = P2NHead (dPack);
-						mTrace ("pArg->first = "<<pArg->first<<" handle = "<<handle);
-						mWarn (" pack delete by timer dwToKen = "<<pDN->dwToKen<<" msgId = "<<pDN->uwMsgID);
-						fnFree (dPack);
-						rMap.erase (it);
-					}
-					return false;
-				},
-				&pa, sizeof (pa));
-				*/
-		//}
 	}
 	nRet = g_sendPackToLoopFun (pack); // must in the end
 	
@@ -362,25 +337,6 @@ static inline loopHandleType toHandle(loopHandleType g, loopHandleType p, loopHa
 int loopMgr::createServer(const char* szName, loopHandleType serId,  serverNode* pNode, frameFunType funFrame, void* arg)
 {
 	loopHandleType pRet = c_emptyLoopHandle;
-
-	/*
-	auto uwId = m_CurLoopNum;
-	myAssert (uwId < c_MaxLoopNum);
-	if (uwId >= c_MaxLoopNum)
-	{
-		return pRet;
-	}
-	myAssert (m_loopS[uwId] == nullptr);
-	if (m_loopS[uwId] != nullptr)
-	{
-		return pRet;
-	}
-	m_loopS[uwId] = std::make_unique<impLoop>;
-	auto& p = m_loopS[uwId];
-	auto gId = gropId();
-	auto pId = procId();
-	pRet = toHandle(pId, uwId);
-	*/
 	loopHandleType pid = 0;
 	loopHandleType sid = 0;
 	fromHandle (serId, pid, sid);

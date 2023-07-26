@@ -161,6 +161,7 @@ int   xmlGlobalLoad:: onceAppLoad (rapidxml::xml_node<char>* pApp, std::shared_p
 	do {
 		auto pName = pApp->name ();
 		rInfo ("proc app name = "<<pName);
+		
 		rapidxml::xml_node<char>* pModuleS = pApp->first_node("module");
 		if (!pModuleS) {
 			nRet = 1;
@@ -178,6 +179,11 @@ int   xmlGlobalLoad:: onceAppLoad (rapidxml::xml_node<char>* pApp, std::shared_p
 			break;
 		}
 		rApp = pA;
+		auto& rV = rApp->argS ();
+		for (auto pArg = pApp->first_node ("appArg");
+			pArg; pArg = pArg->next_sibling()) {
+			rV.push_back (pArg->value ());
+		}
     } while (0);
     return nRet;
 }
@@ -401,6 +407,16 @@ int   xmlGlobalLoad:: onceServerLoad (rapidxml::xml_node<char>* pS, std::shared_
 		auto newServer = std::make_shared <serverFile>();
 		auto szServerName = pS->name ();
 		newServer->setServerName (szServerName);
+		auto pFpsA = pS->first_attribute("fpsSetp");
+		if (pFpsA) {
+			auto dwSetp = atoi (pFpsA->value());
+			newServer->setFpsSetp (dwSetp);
+		}
+		auto pSleepA = pS->first_attribute("sleepSetp");
+		if (pSleepA) {
+			auto dwSetp = atoi (pSleepA->value());
+			newServer->setSleepSetp (dwSetp);
+		}
 		auto& rInfo = newServer->serverInfo ();
 		for(auto pXmlListen = pS->first_node (); pXmlListen;
 				pXmlListen = pXmlListen->next_sibling ()) {
