@@ -7,6 +7,7 @@
 #include <string.h>
 #include "mLog.h"
 #include "mArgMgr.h"
+#include "impMainLoop.h"
 
 int OnLoopFrame(loopHandleType pThis)
 {
@@ -270,5 +271,15 @@ procRpcPacketFunType impLoop::findMsg(uword uwMsgId)
 iPackSave*     impLoop:: getIPackSave ()
 {
 	return m_packSave;
+}
+
+NetTokenType	 impLoop:: nextToken ()
+{
+    NetTokenType	 nRet = 0;
+    do {
+		auto pF = tSingleton<loopMgr>::single().getPhyCallback().fnNextToken;
+		nRet = pF(id());
+    } while (0);
+    return nRet;
 }
 

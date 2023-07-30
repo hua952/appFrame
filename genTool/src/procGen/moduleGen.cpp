@@ -60,7 +60,7 @@ int   moduleGen:: startGen ()
 		setFrameFunDir (frameDir.c_str ());
 		myMkdir (frameDir.c_str());
 		moduleCMakeListsGen cmakeGen;
-		nR = cmakeGen.startGen (rMod);
+		nR = cmakeGen.startGen (*this);
 		if (nR) {
 			rError ("moduleCMakeListsGen error nR = "<<nR);
 			nRet = 2;

@@ -2,6 +2,7 @@
 #define _configMgr_h__
 #include <memory>
 #include "comFun.h"
+
 class configMgr
 {
 public:

@@ -314,6 +314,7 @@ int   xmlGlobalLoad:: serverSLoad (rapidxml::xml_node<char>* pServerS, moduleFil
 		moduleFile::serverMap& tmp = rMap;
 		for(rapidxml::xml_node<char> * pS = pServerS->first_node();  pS; pS = pS->next_sibling()) {
 			std::shared_ptr<serverFile> rS;
+			
 			auto nR = onceServerLoad(pS, rS);
 			if (nR) {
 				rError ("onceServerLoad return error nR = "<<nR<<" server name: "<<pS->name ());
@@ -325,9 +326,7 @@ int   xmlGlobalLoad:: serverSLoad (rapidxml::xml_node<char>* pServerS, moduleFil
 			auto pRet = tmp.insert (std::make_pair(pS->name (), rS));
 			tmp [pS->name ()] = rS;
 			rSS.push_back (rS);
-			std::string strH = pS->name ();
-			strH += "Handle";
-			rS->setStrHandle (strH.c_str());
+			
 			std::unique_ptr <char[]> pSerName;
 			strCpy (pS->name (), pSerName);
 			toWord (pSerName.get ());
@@ -407,6 +406,9 @@ int   xmlGlobalLoad:: onceServerLoad (rapidxml::xml_node<char>* pS, std::shared_
 		auto newServer = std::make_shared <serverFile>();
 		auto szServerName = pS->name ();
 		newServer->setServerName (szServerName);
+		std::string strH = pS->name ();
+		strH += "Handle";
+		newServer->setStrHandle (strH.c_str());
 		auto pFpsA = pS->first_attribute("fpsSetp");
 		if (pFpsA) {
 			auto dwSetp = atoi (pFpsA->value());
@@ -523,7 +525,8 @@ int   xmlGlobalLoad:: onceServerLoad (rapidxml::xml_node<char>* pS, std::shared_
 			auto pMsg = rMsgMgr.findMsg (strMsg.c_str ());
 			myAssert (pMsg);
 			auto pDefProc = pMsg->defProServerId ();
-			if (!pDefProc) {
+			bool bSet = pDefProc ? 0 == strcmp ("c_emptyLoopHandle", pDefProc) : false;
+			if (bSet) {
 				auto pHandle = newServer->strHandle ();
 				myAssert (pHandle);
 				pMsg->setDefProServerId (pHandle);

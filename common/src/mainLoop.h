@@ -57,6 +57,8 @@ typedef  iRpcInfoMgr* (*getIRpcInfoMgrFT)();
 typedef  void (*popFromCallStackFT) (loopHandleType handle);
 typedef  int    (*regRpcFT) (msgIdType askId, msgIdType retId, serverIdType	askDefProcSer,
 			serverIdType	retDefProcSer);
+typedef  serverIdType (*getDefProcServerIdFT) (msgIdType msgId);
+
 typedef struct _ForLogicFun
 {
 	allocPackFT		 fnAllocPack; // Thread safety
@@ -72,6 +74,7 @@ typedef struct _ForLogicFun
 	popFromCallStackFT     fnPopFromCallStack;
 	logCallStackFT         fnLogCallStack;
 	regRpcFT               fnRegRpc;
+    getDefProcServerIdFT   fnGetDefProcServerId;
 } ForLogicFun;
 
 typedef void (*afterLoadFunT)(int nArgC, const char* argS[], ForLogicFun* pForLogic);

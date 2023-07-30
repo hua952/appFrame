@@ -67,6 +67,11 @@ int   moduleExportFunGen:: genCpp (moduleGen& rMod)
 {
 	int   nRet = 0;
 	do {
+		auto& rData = rMod.moduleData ();
+		auto pModName = rData.moduleName ();
+		std::string strMgrClassName = pModName;
+		strMgrClassName += "ServerMgr";
+
 		std::string strFile = rMod.genPath ();
 		strFile += "/exportFun.cpp";
 		std::ofstream os (strFile.c_str ());
@@ -76,7 +81,7 @@ int   moduleExportFunGen:: genCpp (moduleGen& rMod)
 			break;
 		}
 
-		const char* szCon = R"(#include <iostream>
+		os<<R"(#include <iostream>
 #include <cstring>
 #include <string>
 #include "exportFun.h"
@@ -85,11 +90,12 @@ int   moduleExportFunGen:: genCpp (moduleGen& rMod)
 #include "logicServer.h"
 #include "tSingleton.h"
 #include "gLog.h"
+#include ")"<<strMgrClassName<<R"(.h"
 
 void  afterLoad(int nArgC, const char* argS[], ForLogicFun* pForLogic)
 {
-	tSingleton<logicServerMgr>::createSingleton();
-	auto &rMgr = tSingleton<logicServerMgr>::single();
+	tSingleton<)"<<strMgrClassName<<R"(>::createSingleton();
+	auto &rMgr = tSingleton<)"<<strMgrClassName<<R"(>::single();
 	rMgr.afterLoad(nArgC, argS, pForLogic);
 }
 
@@ -98,8 +104,7 @@ void  beforeUnload()
 	std::cout<<"In   beforeUnload"<<std::endl;
 }
 )";
-		os<<szCon;
-		} while (0);
+	} while (0);
 return nRet;
 }
 

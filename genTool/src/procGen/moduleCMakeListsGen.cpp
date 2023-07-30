@@ -6,6 +6,7 @@
 #include "fromFileData/moduleFile.h"
 #include "fromFileData/rpcFile.h"
 #include "fromFileData/rpcFileMgr.h"
+#include "moduleGen.h"
 #include <string>
 #include "rLog.h"
 #include <fstream>
@@ -19,10 +20,11 @@ moduleCMakeListsGen:: ~moduleCMakeListsGen ()
 {
 }
 
-int   moduleCMakeListsGen:: startGen (moduleFile& rMod)
+int   moduleCMakeListsGen:: startGen (moduleGen& rModel)
 {
 	int   nRet = 0;
 	do {
+		auto& rMod = rModel.moduleData ();
 		auto moduleName = rMod.moduleName ();
 		auto& rGlobalFile = tSingleton<globalFile>::single ();
 		auto appName = rMod.appName ();
@@ -89,11 +91,14 @@ if (WIN32)
 	include_directories(
 	src/gen)";
 	auto framePath = rGlobalFile.frameHome ();
+	auto szGenFrame  = rModel.frameFunDir ();
+
 	os<<szC2<<std::endl
 	<<"    ${CMAKE_SOURCE_DIR}/defMsg/src"<<std::endl
 	<<"    "<<framePath<<"common/src"<<std::endl
 	<<"    "<<framePath<<"logicCommon/src"<<std::endl
 	<<"    "<<framePath<<"cLog/src"<<std::endl
+	<<"    "<<szGenFrame<<std::endl
 	<<")"<<std::endl;
 
 	auto libPath = rGlobalFile.frameLibPath ();

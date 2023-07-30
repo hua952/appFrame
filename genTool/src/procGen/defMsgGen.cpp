@@ -188,11 +188,13 @@ int  defMsgGen:: startGen ()
 			nRet = 8;
 			break;
 		}
+		/*
 		nR = rpcInfoCppGen();
 		if (nR) {
 			nRet = 8;
 			break;
 		}
+		*/
     } while (0);
     return nRet;
 }

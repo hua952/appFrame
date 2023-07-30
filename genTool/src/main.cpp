@@ -24,11 +24,7 @@ int main (int argNum, char* argS[])
 			nRet = 3;
 			break;
 		}
-		/*
-		tSingleton<msgTool>::createSingleton ();
-		tSingleton<appMgr>::createSingleton ();
-		tSingleton<rpcMgr>::createSingleton();
-		*/
+		
 		tSingleton <configMgr>::createSingleton ();
 		auto& rConfig = tSingleton <configMgr>::single ();
 		auto nR = rConfig.procArgS (argNum, argS);
@@ -39,14 +35,12 @@ int main (int argNum, char* argS[])
 		}
 		tSingleton<globalFile>::createSingleton();
 		tSingleton<xmlGlobalLoad>::createSingleton();
-		/*
 		tSingleton<appFileMgr>::createSingleton ();
 		tSingleton<moduleFileMgr>::createSingleton ();
 		tSingleton<msgGroupFileMgr>::createSingleton ();
 		tSingleton<msgFileMgr>::createSingleton ();
 		tSingleton<structFileMgr>::createSingleton ();
 		tSingleton<rpcFileMgr>::createSingleton ();
-		*/
 		tSingleton<xmlCommon>::createSingleton ();
 		tSingleton<globalGen>::createSingleton ();
 		
@@ -64,6 +58,12 @@ int main (int argNum, char* argS[])
 		if (nR) {
 			nRet = 6;
 			rError ("rGlobalGen.startGen return error nR = "<<nR);
+			break;
+		}
+		nR = rGlobalGen.secondGen ();
+		if (nR) {
+			nRet = 7;
+			rError ("rGlobalGen.secondGen return error nR = "<<nR);
 			break;
 		}
 	} while (0);

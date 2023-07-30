@@ -16,6 +16,7 @@ public:
 	void  setPackFunName (const char* v);
 	const char*  msgFunName ();
 	void  setMsgFunName (const char* v);
+	void  getClassMsgFunDec (const char* className, std::string& strDec);
 	const char*  msgFunDec ();
 	void  setMsgFunDec (const char* v);
 	const char*  msgName ();

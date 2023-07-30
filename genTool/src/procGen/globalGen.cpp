@@ -52,6 +52,19 @@ int   globalGen:: startGen ()
 		if (nRet) {
 			break;
 		}
+		nR = msgGen.rpcInfoCppGen ();
+		if (nR) {
+			rError ("rpcInfoCppGen gen error nR = "<<nR);
+			break;
+		}
+    } while (0);
+    return nRet;
+}
+
+int   globalGen:: secondGen ()
+{
+    int   nRet = 0;
+    do {
     } while (0);
     return nRet;
 }

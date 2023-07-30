@@ -1,5 +1,8 @@
+#include <string>
+#include <sstream>
 #include "msgFile.h"
 #include "strFun.h"
+#include "myAssert.h"
 
 msgFile:: msgFile ()
 {
@@ -48,6 +51,22 @@ const char*  msgFile:: msgFunName ()
 void  msgFile:: setMsgFunName (const char* v)
 {
     strCpy (v, m_msgFunName);
+}
+
+void   msgFile:: getClassMsgFunDec (const char* className, std::string& strDec)
+{
+    do {
+		auto pDec = msgFunDec ();
+		auto pName = msgFunName ();
+		std::string strDec = pDec;
+		auto isF = strDec.find (pName);
+		myAssert (isF != strDec.npos);
+		auto first = strDec.substr (0, isF);
+		auto second = strDec.substr (isF);
+		std::stringstream ss;
+		ss<<first<<" "<<className<<"::"<<second;
+		strDec = ss.str();
+    } while (0);
 }
 
 const char*  msgFile:: msgFunDec ()

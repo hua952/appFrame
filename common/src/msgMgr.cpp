@@ -1,5 +1,6 @@
 #include "msgMgr.h"
 #include "myAssert.h"
+#include "loop.h"
 /*
 bool msgMgr::msgInfo::operator () (const pmsgInfo& pa, const pmsgInfo& pb) const
 {
@@ -41,6 +42,19 @@ int  msgMgr::  regRpc (msgIdType askId, msgIdType retId, serverIdType	askDefProc
 	myAssert (bR);
 	bR = rRetMap.insert (retId, askId);
 	myAssert (bR);
+	return nRet;
+}
+
+serverIdType   msgMgr:: getDefProcServerId (msgIdType msgId)
+{
+    serverIdType   nRet = c_emptyLoopHandle;
+	do {
+		auto& rMsgInfoS = m_msgInfoS;
+		auto it = rMsgInfoS.find (msgId);
+		if (it) {
+			nRet = it->defProcServer;
+		}
+	} while (0);
 	return nRet;
 }
 

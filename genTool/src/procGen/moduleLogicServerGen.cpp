@@ -63,156 +63,34 @@ int   moduleLogicServerGen:: startGen (moduleGen& rMod)
 	return nRet;
 }
 
-int   moduleLogicServerGen:: genH (moduleGen& rMod)
+int   moduleLogicServerGen:: genMgrCpp (moduleGen& rMod)
 {
 	int   nRet = 0;
 	do {
+		auto& rData = rMod.moduleData();
+		auto& rSS = rData.orderS ();
+		auto serverNum = rSS.size ();
 		auto genPath = rMod.genPath ();
 		std::string strFilename = genPath;
-		strFilename += "/logicServer.h";
-		std::ofstream os(strFilename);
-		if (!os) {
-			rError ("open file for write error fileName = "<<strFilename.c_str ());
-			nRet = 1;
+		auto pModName = rData.moduleName ();
+		std::string strMgrClassName = pModName;
+		strMgrClassName += "ServerMgr";
+		std::string genMgrCpp = genPath;
+		genMgrCpp += "/";
+		genMgrCpp += strMgrClassName;
+		genMgrCpp += ".cpp";
+		std::ofstream osCpp (genMgrCpp.c_str());
+		if (!osCpp) {
+			rError ("open file for write error fileName = "<<genMgrCpp.c_str ());
+			nRet = 2;
 			break;
 		}
-		os<<R"(#ifndef logicServerMgr_h__
-#define logicServerMgr_h__
-
-#include "mainLoop.h"
-class logicServer
-{
-public:
-    serverNode&   serverInfo ();
-	const char*   serverName ();
-	void          setServerName (const char* v);
-	int onFrameFun ();
-	int onServerInit(ForLogicFun* pForLogic);
-private:
-	serverNode   m_serverInfo;
-	std::unique_ptr <char[]>  m_serverName;
-};
-class logicServerMgr
-{
-public:
-    logicServerMgr ();
-    ~logicServerMgr ();
-	void  afterLoad(int nArgC, const char* argS[], ForLogicFun* pForLogic);
-	int   procArgS (int nArgC, const char* argS[]);
-	ubyte  serverNum ();
-	void   setServerNum (ubyte ubyNum);
-	logicServer*   serverS ();
-private:
-	ubyte  m_serverNum;
-	std::unique_ptr <logicServer[]>  m_serverS;
-};
-#endif)";
-	} while (0);
-	return nRet;
-}
-
-static const char* g_szCppStaticTxt = R"(#include "logicServer.h"
-#include "myAssert.h"
-#include "gLog.h"
+		auto& os = osCpp;
+		osCpp<<R"(#include ")"<<strMgrClassName<<R"(.h"
 #include "strFun.h"
 #include "loopHandleS.h"
-#include <map>
+#include "msg.h"
 
-serverNode&  logicServer:: serverInfo ()
-{
-	return m_serverInfo;
-}
-
-const char*  logicServer:: serverName ()
-{
-	return m_serverName.get ();
-}
-
-int logicServer::onFrameFun ()
-{
-	return procPacketFunRetType_del;
-}
-
-void  logicServer::setServerName (const char* v)
-{
-	strCpy (v, m_serverName);
-}
-
-logicServerMgr::logicServerMgr ()
-{
-}
-logicServerMgr::~logicServerMgr ()
-{
-}
-
-ubyte  logicServerMgr::serverNum ()
-{
-	return  m_serverNum;
-}
-
-void   logicServerMgr::setServerNum (ubyte ubyNum)
-{
-	m_serverNum = ubyNum;
-}
-
-logicServer*  logicServerMgr:: serverS ()
-{
-	return m_serverS.get ();
-}
-
-static int OnFrameCli(void* pArgS)
-{
-	auto pS = (logicServer*)pArgS;
-	return pS->onFrameFun ();
-}
- 
-int  logicServerMgr:: procArgS (int nArgC, const char* argS[])
-{
-	int nRet;
-	return nRet;
-}
-
-int logicServer::onServerInit(ForLogicFun* pForLogic)
-{
-	int nRet = 0;
-	auto handle = serverInfo().handle;
-)";
-/*
-	return nRet;
-}
-)";
-*/
-int   moduleLogicServerGen:: genCpp (moduleGen& rMod)
-{
-    int   nRet = 0;
-    do {
-		auto genPath = rMod.genPath ();
-		std::string strFilename = genPath;	
-		strFilename += "/logicServer.cpp";
-		std::ofstream os(strFilename);
-		if (!os) {
-			rError ("open file for write error fileName = "<<strFilename.c_str ());
-			nRet = 1;
-			break;
-		}
-		os<<g_szCppStaticTxt;
-
-	auto& rData = rMod.moduleData ();
-	auto& rSS = rData.orderS ();
-	auto serverNum = rSS.size ();
-	for (decltype (serverNum) i = 0; i < serverNum; i++) {
-		auto pName = rSS[i]->serverName ();
-		auto pH = rSS[i]->strHandle();
-		auto pInitFun = rSS[i]->initFunDec ();
-		auto pFunName = rSS[i]->initFunName ();
-		os<<R"(    if (handle == )"<<pH<<R"() {
-		)"<<pInitFun<<R"(;
-		return )"<<pFunName<<R"( (*this, pForLogic);
-	}
-)";
-	}
-	os<<"}";
-		os<<R"(
 struct conEndPointT 
 {
 	std::string first;
@@ -220,15 +98,23 @@ struct conEndPointT
 	uword       second;
 	bool        bDef;
 };
-void  logicServerMgr::afterLoad(int nArgC, const char* argS[], ForLogicFun* pForLogic)
+
+static int OnFrameCli (void* pArgS)
 {
-	auto& rFunS = getForMsgModuleFunS();
-	rFunS = *pForLogic;
-	auto fnCreateLoop = pForLogic->fnCreateLoop;
-	auto fnRegMsg = pForLogic->fnRegMsg;
-	int  nR = 0;
-	)";
-	os<<R"(
+	auto pS = (logicServer*)pArgS;
+	return pS->onFrameFun ();
+}
+
+void )"<<strMgrClassName<<R"(::afterLoad(int nArgC, const char* argS[], ForLogicFun* pForLogic)
+{
+	do {
+		auto& rFunS = getForMsgModuleFunS();
+		rFunS = *pForLogic;
+		auto fnCreateLoop = pForLogic->fnCreateLoop;
+		auto fnRegMsg = pForLogic->fnRegMsg;
+		int  nR = 0;
+	)"
+	<<R"(
 	ubyte serverNum = )"<<serverNum<<R"(;
 )";
 	std::stringstream  osName;
@@ -239,7 +125,9 @@ void  logicServerMgr::afterLoad(int nArgC, const char* argS[], ForLogicFun* pFor
 	std::stringstream  osCN;
 	std::stringstream  osFps;
 	std::stringstream  osSleep;
+	std::stringstream  osSerPat;
 	osName<<R"(const char* serverNameS[] = {)";
+	osSerPat<<R"(logicServer* osSerPat[] = {)";
 	osHS<<R"(ServerIDType  serverHS[] = {)";
 	osFps<<R"(udword fpsSetpS[] = {)";
 	osSleep<<R"(udword sleepSetpS[] = {)";
@@ -255,6 +143,7 @@ void  logicServerMgr::afterLoad(int nArgC, const char* argS[], ForLogicFun* pFor
 		auto pH = rSS[i]->strHandle();
 		if (i) {
 			osName<<",";
+			osSerPat<<",";
 			osFps<<",";
 			osSleep<<",";
 			osHS<<",";
@@ -264,6 +153,7 @@ void  logicServerMgr::afterLoad(int nArgC, const char* argS[], ForLogicFun* pFor
 			osConNum<<",";
 		}
 		osName<<R"(")"<<pName<<R"(")";
+		osSerPat<<R"(&m_)"<<pName;
 		osHS<<pH;
 		osFps<<rSS[i]->fpsSetp ();
 		osSleep<<rSS[i]->sleepSetp();
@@ -299,12 +189,14 @@ void  logicServerMgr::afterLoad(int nArgC, const char* argS[], ForLogicFun* pFor
 	} // for
 
 	osName<<"};";
+	osSerPat<<"};";
 	osHS<<"};";
 	osNum<<"};";
 	osFps<<"};";
 	osSleep<<"};";
 	osConNum<<"};";
 	os<<"    "<<osName.str()<<std::endl;
+	os<<"    "<<osSerPat.str()<<std::endl;
 	os<<"    "<<osHS.str()<<std::endl;
 	os<<"    "<<osSleep.str()<<std::endl;
 	os<<"    "<<osFps.str()<<std::endl;
@@ -313,11 +205,11 @@ void  logicServerMgr::afterLoad(int nArgC, const char* argS[], ForLogicFun* pFor
 	os<<osLN.str ();
 	os<<osCN.str ();
 	os<<R"(
-	m_serverS = std::make_unique<logicServer[]> (serverNum);
+	m_serverS = std::make_unique<logicServer* []> (serverNum);
 	for (decltype (serverNum) i = 0; i < serverNum; i++) {
+		m_serverS [i] = osSerPat [i];
 		)";
-
-		os<<R"(auto& rServer = m_serverS[i];
+		os<<R"(auto& rServer = *(m_serverS[i]);
 		auto& rInfo = rServer.serverInfo ();
 		rServer.setServerName (serverNameS[i]);
 		rInfo.handle = serverHS[i];
@@ -340,42 +232,141 @@ void  logicServerMgr::afterLoad(int nArgC, const char* argS[], ForLogicFun* pFor
 			ep.targetHandle = pEndPointS[i][j].targetHandle;
 		}
 		fnCreateLoop (serverNameS[i], serverHS[i], &rInfo, OnFrameCli, &rServer);
-		rServer.onServerInit (pForLogic);
+		rServer.onServerInitGen (pForLogic);
 	}
+
+	} while (0);
 }
 )";
-	/*
-int nIndex = 0;
-for (auto it = rSS.begin (); rSS.end () != it; ++it) {
-	auto& rServer = *(it->get());
-	auto pName = rServer.serverName ();
-	auto regPackFunName = rServer.regPackFunName ();
-	auto regPackFunDec = rServer.regPackFunDec ();
-	auto pHd = rServer.strHandle ();
-	auto frameFunName = rServer.frameFunName ();
-	auto frameFunDec = rServer.frameFunDec ();
-		os<<std::endl<<"    "<<frameFunDec<<R"(;
-	fnCreateLoop (")"<<pName<<R"(", )"<<pHd<<R"(, &m_serverS[)"
-		<<nIndex++<<R"(].serverInfo (), OnFrameCli, &rServer);
-	
-    )"<<regPackFunDec<<R"(;
-	)"<<regPackFunName<<R"( (fnRegMsg);
-	rServer.onServerInit (pForLogic);
+	} while (0);
+	return nRet;
+}
+
+int   moduleLogicServerGen:: genH (moduleGen& rMod)
+{
+	int   nRet = 0;
+	do {
+		auto genPath = rMod.genPath ();
+		auto& rData = rMod.moduleData ();
+		auto pModName = rData.moduleName ();
+		std::string frameFunDir = rMod.frameFunDir ();
+		std::string genMgrH = genPath;
+		std::string strMgrClassName = pModName;
+		strMgrClassName += "ServerMgr";
+		genMgrH += "/";
+		genMgrH += strMgrClassName;
+		genMgrH += ".h";
+		std::ofstream osMgrH(genMgrH.c_str());
+		if (!osMgrH) {
+			rError ("open file for write error fileName = "<<genMgrH.c_str ());
+			nRet = 2;
+			break;
+		}
+		std::stringstream serInc;
+		std::stringstream serVar;
+		auto& rSS = rData.orderS ();
+		auto serverNum = rSS.size ();
+		for (decltype (serverNum) i = 0; i < serverNum; i++) {
+			auto& rServer = *rSS[i];
+			auto pName = rServer.serverName ();
+			serInc<<R"(#include ")"<<pName<<R"(.h"
 )";
+			serVar<<"    "<<pName<<R"(    m_)"<<pName<<R"(;
+)";
+		}
+		osMgrH<<R"(#ifndef )"<<pModName<<R"(ServerMgr_h__
+#define )"<<pModName<<R"(ServerMgr_h__
+#include "logicServer.h"
+)"<<serInc.str()<<R"(
+class )"<<strMgrClassName<<R"( : public logicServerMgr
+{
+public:
+	virtual void  afterLoad(int nArgC, const char* argS[], ForLogicFun* pForLogic);
+private:
+)"<<serVar.str()<<R"(
+};
+#endif
+		)";
+	for (decltype (serverNum) i = 0; i < serverNum; i++) {
+		auto& rServer = *rSS[i];
+		auto pName = rServer.serverName ();
+		std::string serverHFile = frameFunDir;
+		serverHFile += "/";
+		serverHFile += pName;
+		serverHFile += ".h";
+		auto bE = isPathExit  (serverHFile.c_str());
+		if (bE) {
+			continue;
+		}
+		std::ofstream osH(serverHFile.c_str ());
+		if (!osH) {
+			rError ("open file: "<<serverHFile.c_str ()<<" error");
+			nRet = 4;
+			break;
+		}
+		osH<<R"(#ifndef )"<<pName<<R"(_h__
+#define )"<<pName<<R"(_h__
+#include "logicServer.h"
+class )"<<pName<<R"( : public  logicServer
+{
+public:
+	int onFrameFun () override;
+	int onServerInitGen(ForLogicFun* pForLogic) override;
+	int onServerInit(ForLogicFun* pForLogic);
+};
+#endif
+)";
+		auto serverCppFile = frameFunDir;
+		serverCppFile += "/";
+		serverCppFile += pName;
+		serverCppFile += ".cpp";
+		auto bEC = isPathExit  (serverCppFile.c_str());
+		if (bEC) {
+			continue;
+		}
+		std::ofstream osCpp (serverCppFile.c_str ()) ;
+		if (!osCpp) {
+			nRet = 5;
+			rError ("open file: "<<serverCppFile.c_str ()<<" error");
+			break;
+		}
+		osCpp<<R"(#include ")"<<pName<<R"(.h"
+int )"<<pName<<R"(::onFrameFun ()
+{
+	return procPacketFunRetType_del;
 }
-*/
-/*
-	auto initFunName = rServer.initFunName ();
-	auto initFunDec = rServer.initFunDec ();
-	os<<R"(
-	)"<<initFunDec <<R"(;
-	)"<<initFunName <<R"( (pForLogic);)";
-}
-	os<<R"(
+int )"<<pName<<R"( :: onServerInit(ForLogicFun* pForLogic)
+{
+	int nRet = 0;
+	return nRet;
 }
 )";
-*/
-    } while (0);
+		auto pH = rServer.strHandle();
+	}
+	if (nRet) {
+		break;
+	}
+	} while (0);
+	return nRet;
+}
+
+int   moduleLogicServerGen:: genCpp (moduleGen& rMod)
+{
+    int   nRet = 0;
+    do {
+		auto genPath = rMod.genPath ();
+		int nR = 0;
+		nR = genMgrCpp (rMod);
+		if (nR) {
+			rError ("genMgrCpp  error nR = "<<nR);
+			break;
+		}
+		nR = genServerReadOnlyCpp (rMod);
+		if (nR) {
+			rError ("genServerReadOnlyCpp error nR = "<<nR);
+			break;
+		}
+	} while (0);
     return nRet;
 }
 
@@ -426,7 +417,8 @@ int   moduleLogicServerGen:: genOnFrameFun (moduleGen& rMod, const char* szServe
     return nRet;
 }
 
-static int sProcMsgReg (msgGroupFile* pGroup, rpcFile* pRpc,
+static int sProcMsgReg (const char* serverName,
+		msgGroupFile* pGroup, rpcFile* pRpc,
 		bool bAsk, const char* strHandle, const char* szMsgDir,
 		std::ostream& os, std::ostream& ss)
 {
@@ -447,7 +439,7 @@ static int sProcMsgReg (msgGroupFile* pGroup, rpcFile* pRpc,
 		auto askMsgStructName = pRpc->askMsgName ();
 		auto retMsgStructName = pRpc->retMsgName ();
 
-		auto msgFunDec = pMsg->msgFunDec ();
+		// auto msgFunDec = pMsg->msgFunDec ();
 		auto msgProcFun = pMsg->msgFunName ();
 		auto& rMsgMgr = tSingleton <msgFileMgr>::single ();
 		auto pAskMsg = rMsgMgr.findMsg (askMsgStructName);
@@ -477,7 +469,8 @@ static int sProcMsgReg (msgGroupFile* pGroup, rpcFile* pRpc,
 	ret.fromPack(pRet);
 	)";
 	}
-	os<<msgFunDec<<R"(;
+	// os<<msgFunDec<<R"(;
+	auto pServer = 
     )"<<msgProcFun <<R"(()";
 	auto askHasData = pAskMsg->hasData ();
 	if (askHasData) {
@@ -531,12 +524,13 @@ static int sProcMsgReg (msgGroupFile* pGroup, rpcFile* pRpc,
 			break;
 		}
 		auto pGSrcName = pGroup->rpcSrcFileName ();
-		auto pMsgFunDec = pMsg->msgFunDec ();
+		std::string strDec;
+		pMsg->getClassMsgFunDec (serverName, strDec);
 		ps<<R"(#include "tSingleton.h"
 #include "msg.h"
 #include "logicServer.h"
 #include ")"<<pGSrcName<<R"(.h")"<<std::endl<<std::endl
-		<<pMsgFunDec<<R"(
+		<<strDec<<R"(
 {
 }
 )";
@@ -609,7 +603,7 @@ int   moduleLogicServerGen:: genPackFun (moduleGen& rMod, const char* szServerNa
 			std::string strMsgFile = strMsgGen;
 			strMsgFile += "/";
 			strMsgFile += pGName;
-			sProcMsgReg (pGroup, pRpc, rProcRpc.bAsk,
+			sProcMsgReg (szServerName, pGroup, pRpc, rProcRpc.bAsk,
 					strHandle, strMsgFile.c_str (), os, ss);
 		} // for
 		ss<<R"(    return nRet;
@@ -620,4 +614,38 @@ int   moduleLogicServerGen:: genPackFun (moduleGen& rMod, const char* szServerNa
     return nRet;
 }
 
+
+int   moduleLogicServerGen:: genServerReadOnlyCpp (moduleGen& rMod)
+{
+    int   nRet = 0;
+    do {
+		auto& rData = rMod.moduleData ();
+		auto genPath = rMod.genPath ();
+		auto& rSS = rData.orderS ();
+		auto serverNum = rSS.size ();
+		for (decltype (serverNum) i = 0; i < serverNum; i++) {
+			auto& rServer = *rSS[i];
+			auto pName = rServer.serverName ();
+			std::string strFile = genPath;
+			strFile += "/";
+			strFile += pName;
+			strFile += "Gen.cpp";
+			auto regPackFunName = rServer.regPackFunName ();
+			auto regPackFunDec = rServer.regPackFunDec ();
+			std::ofstream os (strFile.c_str ());
+			os<<R"(#include ")"<<pName<<R"(.h"
+int )"<<pName<<R"( :: onServerInitGen(ForLogicFun* pForLogic)
+{
+	int nRet = 0;
+	do {
+		)"<<regPackFunDec <<R"(;
+		)"<<regPackFunName<<R"( (pForLogic->fnRegMsg);
+		nRet = onServerInit(pForLogic);
+	} while (0);
+	return nRet;
+})";
+		} // for
+    } while (0);
+    return nRet;
+}
 

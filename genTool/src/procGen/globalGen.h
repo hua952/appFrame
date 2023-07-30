@@ -8,6 +8,7 @@ public:
     globalGen ();
     ~globalGen ();
 	int  startGen ();
+	int  secondGen ();
 private:
 	int  makePath ();
 };

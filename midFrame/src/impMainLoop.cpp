@@ -135,8 +135,11 @@ static int sSendPackToLoopFun(packetHead* pack)
 	myAssert (pN->ubySrcServId == curHandle);
 	auto pS = rMgr.getLoop(pN->ubySrcServId);
 	myAssert (pS);
-	auto& rMsgInfoS = tSingleton<loopMgr>::single ().defMsgInfoMgr ();
-	bool bIsRet = rMsgInfoS.isRetMsg (pN->uwMsgID);
+	// auto& rMsgInfoS = tSingleton<loopMgr>::single ().defMsgInfoMgr ();
+	bool bIsRet = NIsRet(pN); // NrMsgInfoS.isRetMsg (pN->uwMsgID);
+	if (!bIsRet) {
+		pN->dwToKen = pS->nextToken ();
+	}
 	auto bInOnceProc =  packInOnceProc(pack);
 	auto pISavePack = pS->getIPackSave ();
 	auto addTimerFun = tSingleton<PhyInfo>::single().getForLogicFun().fnAddComTimer;
@@ -165,6 +168,12 @@ int    sRegRpc(msgIdType askId, msgIdType retId, serverIdType	askDefProcSer,
 {
 	auto& rMgr = tSingleton<loopMgr>::single().defMsgInfoMgr();
 	return rMgr.regRpc (askId, retId, askDefProcSer, retDefProcSer);
+}
+
+serverIdType sGetDefProcServerId (msgIdType msgId)
+{
+	auto& rMgr = tSingleton<loopMgr>::single().defMsgInfoMgr();
+	return rMgr.getDefProcServerId (msgId);
 }
 
 static allocPackFT g_allocPackFun = nullptr;
@@ -208,6 +217,7 @@ int PhyInfo::init(int nArgC, const char* argS[], PhyCallback& info)
 	forLogic.fnPopFromCallStack = info.fnPopFromCallStack;
 	forLogic.fnLogCallStack = info.fnLogCallStack;
 	forLogic.fnRegRpc = sRegRpc;
+	forLogic.fnGetDefProcServerId = sGetDefProcServerId;
 	//forLogic.fnRemoveMsg = removeMsg;
 	auto nRet = procArgS(nArgC, argS);
 	do

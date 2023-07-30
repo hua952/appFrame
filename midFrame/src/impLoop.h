@@ -25,6 +25,7 @@ public:
 	int processOncePack(packetHead* pPack);
 	int onWriteOncePack(packetHead* pPack);
 	void onFreePack(packetHead* pPack);
+    NetTokenType	nextToken ();
 	ServerIDType id();
 	cTimerMgr&    getTimerMgr();
 	serverNode*   getServerNode ();

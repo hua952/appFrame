@@ -23,6 +23,7 @@ public:
 	bool   isRetMsg (msgIdType msgId) override;
 	msgIdType     getRetMsg(msgIdType    askMsg) override;
 	msgIdType     getAskMsg(msgIdType    retMsg) override;
+	serverIdType  getDefProcServerId (msgIdType msgId);
 private:
 	msgInfoMap				  m_msgInfoS;
 	msgIdMap                  m_askMap;
