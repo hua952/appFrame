@@ -16,6 +16,18 @@
 #include <string>
 #include <map>
 #include <set>
+#include "configMgr.h"
+
+static bool sIsPathExit  (const char* szFile)
+{
+	bool bRet = tSingleton<configMgr>::single().reProc ();
+	if (bRet) {
+		bRet = false;
+	} else {
+		bRet = isPathExit (szFile);
+	}
+	return bRet;
+}
 
 moduleLogicServerGen:: moduleLogicServerGen ()
 {
@@ -89,6 +101,7 @@ int   moduleLogicServerGen:: genMgrCpp (moduleGen& rMod)
 		osCpp<<R"(#include ")"<<strMgrClassName<<R"(.h"
 #include "strFun.h"
 #include "loopHandleS.h"
+#include "tSingleton.h"
 #include "msg.h"
 
 struct conEndPointT 
@@ -249,6 +262,8 @@ int   moduleLogicServerGen:: genH (moduleGen& rMod)
 		auto genPath = rMod.genPath ();
 		auto& rData = rMod.moduleData ();
 		auto pModName = rData.moduleName ();
+		auto& rRpcFileMgr = tSingleton <rpcFileMgr>::single ();
+		auto& rMsgMgr = tSingleton <msgFileMgr>::single ();
 		std::string frameFunDir = rMod.frameFunDir ();
 		std::string genMgrH = genPath;
 		std::string strMgrClassName = pModName;
@@ -282,7 +297,6 @@ class )"<<strMgrClassName<<R"( : public logicServerMgr
 {
 public:
 	virtual void  afterLoad(int nArgC, const char* argS[], ForLogicFun* pForLogic);
-private:
 )"<<serVar.str()<<R"(
 };
 #endif
@@ -294,7 +308,7 @@ private:
 		serverHFile += "/";
 		serverHFile += pName;
 		serverHFile += ".h";
-		auto bE = isPathExit  (serverHFile.c_str());
+		auto bE = sIsPathExit (serverHFile.c_str());
 		if (bE) {
 			continue;
 		}
@@ -304,15 +318,45 @@ private:
 			nRet = 4;
 			break;
 		}
+		std::set<std::string> procMsgSet;
+		auto& rPMap = rServer.procMsgS ();
+		for (auto ite = rPMap.begin(); rPMap.end() != ite; ++ite) {
+			auto& rProcRpc = *(ite);
+			auto rpcFileName = rProcRpc.rpcName;
+			auto pRpc = rRpcFileMgr.findRpc (rpcFileName.c_str ());
+			myAssert (pRpc);
+			auto pG = pRpc->groupName ();
+			procMsgSet.insert (pG);
+		}
+
 		osH<<R"(#ifndef )"<<pName<<R"(_h__
 #define )"<<pName<<R"(_h__
 #include "logicServer.h"
+)";
+		for (auto iter = procMsgSet.begin(); procMsgSet.end() != iter; ++iter) {
+			osH<<R"(#include ")"<<iter->c_str()<<R"(Rpc.h")"<<std::endl;
+		}
+osH<<R"(
 class )"<<pName<<R"( : public  logicServer
 {
 public:
 	int onFrameFun () override;
 	int onServerInitGen(ForLogicFun* pForLogic) override;
 	int onServerInit(ForLogicFun* pForLogic);
+)";
+		for (auto ite = rPMap.begin(); rPMap.end() != ite; ++ite) {
+			auto& rProcRpc = *(ite);
+			auto rpcFileName = rProcRpc.rpcName;
+			auto pRpc = rRpcFileMgr.findRpc (rpcFileName.c_str ());
+			myAssert (pRpc);
+			auto& rRpc = *pRpc;
+			auto szMsgStructName = rProcRpc.bAsk ? 
+				pRpc->askMsgName () : pRpc->retMsgName ();
+			auto pMsg = rMsgMgr.findMsg (szMsgStructName);
+			auto pDec = pMsg->msgFunDec ();
+			osH<<"    "<<pDec<<";"<<std::endl;
+		}
+osH<<R"(
 };
 #endif
 )";
@@ -320,7 +364,7 @@ public:
 		serverCppFile += "/";
 		serverCppFile += pName;
 		serverCppFile += ".cpp";
-		auto bEC = isPathExit  (serverCppFile.c_str());
+		auto bEC = sIsPathExit (serverCppFile.c_str());
 		if (bEC) {
 			continue;
 		}
@@ -417,7 +461,7 @@ int   moduleLogicServerGen:: genOnFrameFun (moduleGen& rMod, const char* szServe
     return nRet;
 }
 
-static int sProcMsgReg (const char* serverName,
+static int sProcMsgReg (const char* pModName, const char* serverName,
 		msgGroupFile* pGroup, rpcFile* pRpc,
 		bool bAsk, const char* strHandle, const char* szMsgDir,
 		std::ostream& os, std::ostream& ss)
@@ -445,7 +489,11 @@ static int sProcMsgReg (const char* serverName,
 		auto pAskMsg = rMsgMgr.findMsg (askMsgStructName);
 		myAssert (pAskMsg);
 		auto pRetMsg = rMsgMgr.findMsg (retMsgStructName);
-		os<<R"(static int )"<<pPackFun<<
+
+		std::string strMgrClassName = pModName;
+		strMgrClassName += "ServerMgr";
+		os<<R"(
+static int )"<<pPackFun<<
 				R"((packetHead* pAsk, pPacketHead& pRet, procPacketArg* pArg)
 {
 	int nRet = procPacketFunRetType_del;
@@ -469,9 +517,8 @@ static int sProcMsgReg (const char* serverName,
 	ret.fromPack(pRet);
 	)";
 	}
-	// os<<msgFunDec<<R"(;
-	auto pServer = 
-    )"<<msgProcFun <<R"(()";
+	os<<R"(tSingleton<)"<<strMgrClassName<<R"(>::single().m_)"
+		<<serverName<<R"(.)"<<msgProcFun <<R"(()";
 	auto askHasData = pAskMsg->hasData ();
 	if (askHasData) {
 		os<<R"(*ask.pack())";
@@ -511,12 +558,10 @@ static int sProcMsgReg (const char* serverName,
 		auto msgFunName = pMsg->msgFunName ();
 		strFile += msgFunName;
 		strFile += ".cpp";
-		// std::ifstream is (strFile.c_str ());
-		bool is = isPathExit (strFile.c_str ());
+		bool is = sIsPathExit (strFile.c_str ());
 		if (is) {
 			break;
 		}
-		// is.close ();
 		std::ofstream ps (strFile.c_str ());
 		if (!ps) {
 			rError ("open file : "<<strFile.c_str ()<<" error");
@@ -525,10 +570,12 @@ static int sProcMsgReg (const char* serverName,
 		}
 		auto pGSrcName = pGroup->rpcSrcFileName ();
 		std::string strDec;
+
 		pMsg->getClassMsgFunDec (serverName, strDec);
 		ps<<R"(#include "tSingleton.h"
 #include "msg.h"
 #include "logicServer.h"
+#include ")"<<strMgrClassName<<R"(.h")"<<std::endl<<R"(
 #include ")"<<pGSrcName<<R"(.h")"<<std::endl<<std::endl
 		<<strDec<<R"(
 {
@@ -556,9 +603,16 @@ int   moduleLogicServerGen:: genPackFun (moduleGen& rMod, const char* szServerNa
 		os<<R"(#include "msgGroupId.h")"<<std::endl;
 		os<<R"(#include "msgStruct.h")"<<std::endl;
 		os<<R"(#include "loopHandleS.h")"<<std::endl;
+		os<<R"(#include "tSingleton.h")"<<std::endl;
 		os<<R"(#include "mainLoop.h")"<<std::endl;
 		auto pServerF = rMod.moduleData ().findServer (szServerName);
+		auto pModuleName = rMod.moduleData ().moduleName ();
 		myAssert (pServerF);
+
+		std::string strMgrClassName = pModuleName;
+		strMgrClassName += "ServerMgr";
+		os<<R"(#include ")"<<strMgrClassName<<R"(.h")"<<std::endl;
+		
 		std::string strMsgGen = procMsgPath;
 		strMsgGen += "/";
 		strMsgGen += szServerName;
@@ -603,7 +657,7 @@ int   moduleLogicServerGen:: genPackFun (moduleGen& rMod, const char* szServerNa
 			std::string strMsgFile = strMsgGen;
 			strMsgFile += "/";
 			strMsgFile += pGName;
-			sProcMsgReg (szServerName, pGroup, pRpc, rProcRpc.bAsk,
+			sProcMsgReg (pModuleName, szServerName, pGroup, pRpc, rProcRpc.bAsk,
 					strHandle, strMsgFile.c_str (), os, ss);
 		} // for
 		ss<<R"(    return nRet;

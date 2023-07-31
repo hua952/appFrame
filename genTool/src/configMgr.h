@@ -12,7 +12,10 @@ public:
 	void  setDefFile (const char* v);
 	int procArgS(int cArg, char* argS[]);
 
+	bool  reProc ();
+	void  setReProc (bool v);
 private:
+	bool  m_reProc;
 	bool    procStrA(const char* cKey, char* argv[], std::unique_ptr<char[]>& var);
 	void    procBoolA(const char* cKey, char* argv[], bool& var);
 	void    procUdwordA(const char* cKey, char* argv[], udword& var);

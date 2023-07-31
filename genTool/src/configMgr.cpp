@@ -3,6 +3,7 @@
 
 configMgr:: configMgr ()
 {
+	m_reProc = false;
 }
 
 configMgr:: ~configMgr ()
@@ -31,6 +32,7 @@ int  configMgr:: procArgS(int cArg, char* argS[])
 			auto nRet = strR(p, '=', tempP, sizeof(tempP)/sizeof(tempP[0]));
 			if (2 == nRet) {
 				procStrA ("defFile", tempP, m_defFile);
+				procBoolA ("reProc", tempP,   m_reProc);
 			}
 		}
     } while (0);
@@ -72,5 +74,14 @@ void   configMgr::procUwordA(const char* cKey, char* argv[], uword& var)
 	}
 }
 
+bool  configMgr:: reProc ()
+{
+    return m_reProc;
+}
+
+void  configMgr:: setReProc (bool v)
+{
+    m_reProc = v;
+}
 
 

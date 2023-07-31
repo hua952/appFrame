@@ -58,11 +58,11 @@ void   msgFile:: getClassMsgFunDec (const char* className, std::string& strDec)
     do {
 		auto pDec = msgFunDec ();
 		auto pName = msgFunName ();
-		std::string strDec = pDec;
-		auto isF = strDec.find (pName);
-		myAssert (isF != strDec.npos);
-		auto first = strDec.substr (0, isF);
-		auto second = strDec.substr (isF);
+		std::string strOldDec = pDec;
+		auto isF = strOldDec.find (pName);
+		myAssert (isF != strOldDec.npos);
+		auto first = strOldDec.substr (0, isF);
+		auto second = strOldDec.substr (isF);
 		std::stringstream ss;
 		ss<<first<<" "<<className<<"::"<<second;
 		strDec = ss.str();
