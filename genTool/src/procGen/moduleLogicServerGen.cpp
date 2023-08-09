@@ -9,6 +9,8 @@
 #include "fromFileData/rpcFileMgr.h"
 #include "fromFileData/msgFile.h"
 #include "fromFileData/msgFileMgr.h"
+#include "fromFileData/msgPmpFile.h"
+#include "fromFileData/globalFile.h"
 #include "tSingleton.h"
 #include "rLog.h"
 #include "tSingleton.h"
@@ -233,6 +235,7 @@ void )"<<strMgrClassName<<R"(::afterLoad(int nArgC, const char* argS[], ForLogic
 		for (decltype(rInfo.listenerNum) j = 0; j < rInfo.listenerNum; j++) {
 			auto& ep = rInfo.listenEndpoint [j];
 			strNCpy (ep.ip, sizeof(ep.ip), "0.0.0.0");
+			ep.bDef = pEndPointS[i][j].bDef;
 			ep.bRegHandle = false;
 			ep.port = pPortS [i][j];
 		}
@@ -469,7 +472,10 @@ static int sProcMsgReg (const char* pModName, const char* serverName,
 	int nRet = 0;
 	auto pFullMsg = pGroup->fullChangName ();
 	auto szMsgStructName = bAsk ? pRpc->askMsgName () : pRpc->retMsgName ();
-	auto& rMsgMgr = tSingleton <msgFileMgr>::single ();
+	auto& rGlobalFile = tSingleton<globalFile>::single ();
+	auto pPmp = rGlobalFile.findMsgPmp ("defMsg");
+	myAssert (pPmp);
+	auto& rMsgMgr = pPmp->msgFileS ();
 	auto pMsg = rMsgMgr.findMsg (szMsgStructName);
 	do {	
 		myAssert (pMsg);
@@ -485,7 +491,7 @@ static int sProcMsgReg (const char* pModName, const char* serverName,
 
 		// auto msgFunDec = pMsg->msgFunDec ();
 		auto msgProcFun = pMsg->msgFunName ();
-		auto& rMsgMgr = tSingleton <msgFileMgr>::single ();
+		// auto& rMsgMgr = tSingleton <msgFileMgr>::single ();
 		auto pAskMsg = rMsgMgr.findMsg (askMsgStructName);
 		myAssert (pAskMsg);
 		auto pRetMsg = rMsgMgr.findMsg (retMsgStructName);
@@ -620,8 +626,10 @@ int   moduleLogicServerGen:: genPackFun (moduleGen& rMod, const char* szServerNa
 		auto& rMap = pServerF->procMsgS ();
 		using groupSet = std::set<std::string>;
 		groupSet  groupS;
+		auto& rGlobalFile = tSingleton<globalFile>::single ();
+		auto pPmp = rGlobalFile.findMsgPmp ("defMsg");
         for (auto it = rMap.begin(); rMap.end() != it; ++it) {
-			auto& rMgr = tSingleton <rpcFileMgr>::single ();
+			auto& rMgr = pPmp->rpcFileS ();
 			auto pRpc = rMgr.findRpc (it->rpcName.c_str ());
 			myAssert (pRpc);
 			auto pGName = pRpc->groupName ();
@@ -643,8 +651,8 @@ int   moduleLogicServerGen:: genPackFun (moduleGen& rMod, const char* szServerNa
 {
 	int nRet = 0;
 )";
-		auto& rGMgr = tSingleton <msgGroupFileMgr>::single ();
-		auto& rRpcFileMgr = tSingleton <rpcFileMgr>::single ();
+		auto& rGMgr = pPmp->msgGroupFileS ();
+		auto& rRpcFileMgr = pPmp->rpcFileS ();
 		for (auto it = rMap.begin(); rMap.end() != it; ++it) {
 			auto& rProcRpc = *(it);
 			auto& rpcFileName = rProcRpc.rpcName;

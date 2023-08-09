@@ -29,6 +29,6 @@ private:
     std::unique_ptr <char[]>  m_procMsgPath;
     std::unique_ptr <char[]>  m_srcPath;
     std::unique_ptr <char[]>  m_genPath;
-	moduleFile&                m_moduleData;
+	moduleFile&               m_moduleData;
 };
 #endif

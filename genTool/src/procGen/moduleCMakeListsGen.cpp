@@ -6,6 +6,7 @@
 #include "fromFileData/moduleFile.h"
 #include "fromFileData/rpcFile.h"
 #include "fromFileData/rpcFileMgr.h"
+#include "fromFileData/msgPmpFile.h"
 #include "moduleGen.h"
 #include <string>
 #include "rLog.h"
@@ -57,8 +58,10 @@ int   moduleCMakeListsGen:: startGen (moduleGen& rModel)
 			auto pServerF = rData.findServer (pName);
 			myAssert (pServerF);
 			auto& rMap = pServerF->procMsgS ();
+			auto pPmp = rGlobalFile.findMsgPmp ("defMsg");
+			myAssert (pPmp);
 			for (auto ite = rMap.begin(); rMap.end() != ite; ++ite) {
-				auto& rMgr = tSingleton <rpcFileMgr>::single ();
+				auto& rMgr = pPmp->rpcFileS ();
 				auto pRpc = rMgr.findRpc (ite->rpcName.c_str ());
 				myAssert (pRpc);
 				auto pGName = pRpc->groupName ();

@@ -9,7 +9,7 @@
 	<frameLibPath>C:/work/appFrame/bin/Debug/</frameLibPath>
 	<outPutPath>C:/work/appFrame/bin/</outPutPath>
 	<frameInstallPath>C:/work/appFrame/install/</frameInstallPath>
-	<msgFile file="cChess.xml"/>
+	<defMsg file="cChess.xml" file="comMsg.xml"/>
 	<app>
 		<appServer>
 			<appArg>logLevel=2</appArg>

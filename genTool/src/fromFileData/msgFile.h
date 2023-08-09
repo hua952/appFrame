@@ -1,6 +1,7 @@
 #ifndef _msgFile_h__
 #define _msgFile_h__
 #include <memory>
+#include "packet.h"
 #include "structFile.h"
 
 class msgFile: public structFile
@@ -21,7 +22,13 @@ public:
 	void  setMsgFunDec (const char* v);
 	const char*  msgName ();
 	void  setMsgName (const char* v);
+	bool  extPH ();
+	void  setExtPH (bool v);
+	packAddrType addrType ();
+	void  setAddrType (packAddrType v);
 private:
+	packAddrType m_addrType;
+	bool  m_extPH;
 	std::unique_ptr <char[]>  m_msgName;
 	std::unique_ptr <char[]>  m_msgFunDec;
 	std::unique_ptr <char[]>  m_msgFunName;

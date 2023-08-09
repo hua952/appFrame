@@ -3,7 +3,7 @@
 
 dataFile:: dataFile ()
 {
-	m_dataLength = 1;
+	m_dataLength = 0;
 	m_haveSize = false;
 	m_wordSize = false;
 	m_zeroEnd = false;

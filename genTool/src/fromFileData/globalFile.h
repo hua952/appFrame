@@ -3,13 +3,16 @@
 #include <memory>
 #include <vector>
 #include <string>
+#include <map>
 
+class msgPmpFile;
 class globalFile
 {
 public:
     globalFile ();
     ~globalFile ();
-	using msgFileV = std::vector<std::string>;
+	// using msgFileV = std::vector<std::string>;
+	using msgFileV = std::map<std::string, std::shared_ptr<msgPmpFile>>;
 	const char*  frameBinPath ();
 	void  setFrameBinPath (const char* v);
 	const char*  depLibHome ();
@@ -32,7 +35,10 @@ public:
     const char*  frameInstallPath ();
     void  setFrameInstallPath (const char* v);
     void  getRealInstallPath (std::string& strPath);
+	msgPmpFile* findMsgPmp (const char* szPmpName);
+	std::vector<std::string>&  rootServerS ();
 private:
+	std::vector<std::string>  m_rootServerS;
     std::unique_ptr <char[]>  m_installPath;
     std::unique_ptr <char[]>  m_frameInstallPath;
 	std::unique_ptr <char[]>  m_projectName;

@@ -6,9 +6,11 @@
 #include "fromFileData/appFileMgr.h"
 #include "tSingleton.h"
 #include "appGen.h"
+#include "msgGen.h"
 #include "defMsgGen.h"
 #include "projectCMakeListGen.h"
 #include "rLog.h"
+#include <vector>
 
 globalGen:: globalGen ()
 {
@@ -28,12 +30,32 @@ int   globalGen:: startGen ()
 		nR = projectGen.startGen ();
 		if (nR) {
 			rError ("projectGen.startGen error nR = "<<nR);
+			nRet = 1;
 			break;
 		}
-		defMsgGen msgGen;
-		nR = msgGen.startGen ();
+		nR = 0;
+		auto &rPmpS = tSingleton<globalFile>::single().msgFileS ();
+		std::vector <std::shared_ptr<msgGen>> gv;
+		for (auto it = rPmpS.begin(); rPmpS.end() != it; ++it) {
+			auto& rPmp = *(it->second.get());
+			auto pP = std::make_shared <msgGen> (rPmp);
+			msgGen  &gen = *pP;
+			nR = gen.startGen ();
+			gv.push_back (pP);
+			if (nR) {
+				break;
+			}
+		}
+		if (nR) {
+			nRet = 2;
+			rError ("msg gen error nRet = "<<nR);
+			break;
+		}
+		defMsgGen msgGenD;
+		nR = msgGenD.startGen ();
 		if (nR) {
 			rError ("defMsg gen error nR = "<<nR);
+			nRet = 3;
 			break;
 		}
 		auto& rAppS = tSingleton<appFileMgr>::single ().appS ();
@@ -52,7 +74,14 @@ int   globalGen:: startGen ()
 		if (nRet) {
 			break;
 		}
-		nR = msgGen.rpcInfoCppGen ();
+		nR = 0;
+		for (auto it = gv.begin(); gv.end() != it; ++it) {
+			msgGen&  gen = *(it->get());
+			nR = gen.rpcInfoCppGen ();
+			if (nR) {
+				break;
+			}
+		}
 		if (nR) {
 			rError ("rpcInfoCppGen gen error nR = "<<nR);
 			break;

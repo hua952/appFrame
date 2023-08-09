@@ -1,4 +1,5 @@
 #include <windows.h>
+#include "ObjBase.h"
 //#include <dbghelp.h>
 #include <io.h>
 #include<direct.h>
@@ -140,6 +141,17 @@ int             getCurModelPath (std::unique_ptr<char[]>& pathBuf)
 	return nRet;
 }
 
+
+int  createUuid (char outPut[16])
+{
+	int nRet = 0;
+	do
+	{
+		GUID& guid = *((GUID*)(&outPut[0]));
+		CoCreateGuid(&guid);
+	} while (0);
+	return nRet;
+}
 
 bool isPathInterval (char c)
 {

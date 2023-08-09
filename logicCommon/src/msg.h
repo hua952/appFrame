@@ -56,6 +56,7 @@ ForMsgModuleFunS& getForMsgModuleFunS();
 extern "C"
 {
 	packetHead* allocPacket(udword udwS);
+	packetHead* allocPacketExt(udword udwS, udword ExtNum);
 	void releasePack(packetHead* p);
 }
 

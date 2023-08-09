@@ -6,6 +6,8 @@
 
 msgFile:: msgFile ()
 {
+	m_extPH = false;
+	m_addrType = addrType_ser;
 	strCpy ("c_emptyLoopHandle", m_defProServerId);
 }
 
@@ -87,5 +89,25 @@ const char*  msgFile:: msgName ()
 void  msgFile:: setMsgName (const char* v)
 {
     strCpy (v, m_msgName);
+}
+
+bool  msgFile:: extPH ()
+{
+    return m_extPH;
+}
+
+void  msgFile:: setExtPH (bool v)
+{
+    m_extPH = v;
+}
+
+packAddrType msgFile:: addrType ()
+{
+    return m_addrType;
+}
+
+void  msgFile:: setAddrType (packAddrType v)
+{
+    m_addrType = v;
 }
 

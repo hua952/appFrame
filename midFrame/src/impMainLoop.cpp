@@ -121,41 +121,55 @@ static bool sDelNetPack (void* pUP)
 	}
 	return false;
 }
-static int sSendPackToLoopFun(packetHead* pack)
+static int sSendChMsg (packetHead* pack)
+{
+	int nRet = 0;
+	do {
+	} while (0);
+	return nRet;
+}
+
+static int sSendPackToLoopFun(packetHead* pack) /* 返回值貌似没用 */
 {
 	int nRet = 0; // procPacketFunRetType_del;
 	int nR = 0;
 	auto pN = P2NHead (pack);
-	auto& rMgr = tSingleton<loopMgr>::single ();
-	auto curHandleFun = tSingleton<PhyInfo>::single ().getPhyCallback().fnGetCurServerHandle;
-	auto curHandle = curHandleFun ();
-	if (curHandle !=  pN->ubySrcServId) {
-		mTrace ("curHandle = "<<curHandle<<"pN->ubySrcServId = "<<pN->ubySrcServId);
-	}
-	myAssert (pN->ubySrcServId == curHandle);
-	auto pS = rMgr.getLoop(pN->ubySrcServId);
-	myAssert (pS);
-	// auto& rMsgInfoS = tSingleton<loopMgr>::single ().defMsgInfoMgr ();
-	bool bIsRet = NIsRet(pN); // NrMsgInfoS.isRetMsg (pN->uwMsgID);
-	if (!bIsRet) {
-		pN->dwToKen = pS->nextToken ();
-	}
-	auto bInOnceProc =  packInOnceProc(pack);
-	auto pISavePack = pS->getIPackSave ();
-	auto addTimerFun = tSingleton<PhyInfo>::single().getForLogicFun().fnAddComTimer;
-	auto delTime = rMgr.delSendPackTime ();
-	std::pair<NetTokenType, loopHandleType> pa;
-	pa.first = pN->dwToKen;
-	pa.second = pN->ubySrcServId;
-	if (!bInOnceProc && !bIsRet) {
-		mTrace ("will insert ask pack -----dwToKen = "<<pN->dwToKen<<" msgId = "
-			<<pN->uwMsgID<<" map.size = "<<0<<" pack = "<<pack
-			<<" server handle = "<<pS->id ());
+	/*
+	auto chMsg = NIsChAddType (pN);
+	if (chMsg) {
+		nRet = sSendChMsg (pack);
+	} else {
+	*/
+		auto& rMgr = tSingleton<loopMgr>::single ();
+		auto curHandleFun = tSingleton<PhyInfo>::single ().getPhyCallback().fnGetCurServerHandle;
+		auto curHandle = curHandleFun ();
+		if (curHandle !=  pN->ubySrcServId) {
+			mTrace ("curHandle = "<<curHandle<<"pN->ubySrcServId = "<<pN->ubySrcServId);
+		}
+		myAssert (pN->ubySrcServId == curHandle);
+		auto pS = rMgr.getLoop(pN->ubySrcServId);
+		myAssert (pS);
+		// auto& rMsgInfoS = tSingleton<loopMgr>::single ().defMsgInfoMgr ();
+		bool bIsRet = NIsRet(pN); // NrMsgInfoS.isRetMsg (pN->uwMsgID);
+		if (!bIsRet) {
+			pN->dwToKen = pS->nextToken ();
+		}
+		auto bInOnceProc =  packInOnceProc(pack);
+		auto pISavePack = pS->getIPackSave ();
+		auto addTimerFun = tSingleton<PhyInfo>::single().getForLogicFun().fnAddComTimer;
+		auto delTime = rMgr.delSendPackTime ();
+		std::pair<NetTokenType, loopHandleType> pa;
+		pa.first = pN->dwToKen;
+		pa.second = pN->ubySrcServId;
+		if (!bInOnceProc && !bIsRet) {
+			mTrace ("will insert ask pack -----dwToKen = "<<pN->dwToKen<<" msgId = "
+					<<pN->uwMsgID<<" map.size = "<<0<<" pack = "<<pack
+					<<" server handle = "<<pS->id ());
 			pISavePack->netTokenPackInsert (pack);
 			addTimerFun (pN->ubySrcServId, delTime, delTime, sDelNetPack, &pa, sizeof (pa));
-	}
-	nRet = g_sendPackToLoopFun (pack); // must in the end
-	
+		}
+		nRet = g_sendPackToLoopFun (pack); // must in the end
+	// }
 	return nRet;
 }
 static iRpcInfoMgr* sGetIRpcInfoMgr()
@@ -208,7 +222,7 @@ int PhyInfo::init(int nArgC, const char* argS[], PhyCallback& info)
 	forLogic.fnAllocPack = sAllocPack; // info.fnAllocPack;
 	forLogic.fnFreePack = sFreePack; //  info.fnFreePack;
 	forLogic.fnRegMsg = regMsg;
-	forLogic.fnSendPackToLoop = /*info.fnSendPackToLoop; // */ sSendPackToLoopFun;
+	forLogic.fnSendPackToLoop =  sSendPackToLoopFun;
 	forLogic.fnLogMsg = info.fnLogMsg;
 	forLogic.fnAddComTimer = sAddComTimer;//m_callbackS.fnAddComTimer;
 	forLogic.fnNextToken = info.fnNextToken;

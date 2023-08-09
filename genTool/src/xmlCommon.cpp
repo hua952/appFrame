@@ -53,6 +53,8 @@ int   xmlCommon:: getIntA(rapidxml::xml_node<char>* pStruct, const char* szName,
 		auto pS = getStringA (pStruct, szName);
 		if (pS) {
 			bRet = atoi (pS);
+		} else {
+			nRet = 1;
 		}
     } while (0);
     return nRet;

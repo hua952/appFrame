@@ -74,6 +74,17 @@ packetHead* allocPacket(udword udwS)
 	pNetPacketHead pN = P2NHead(pRet);
 	memset(pN, 0, NetHeadSize);
 	pN->udwLength = udwS;
+	pRet->pAsk = 0;
+	return pRet;
+}
+
+packetHead* allocPacketExt(udword udwS, udword ExtNum)
+{
+	auto pRet =  allocPacket (udwS + 16 * ExtNum);
+	if (ExtNum) {
+		pNetPacketHead pN = P2NHead(pRet);
+		NSetExtPH(pN);
+	}
 	return pRet;
 }
 

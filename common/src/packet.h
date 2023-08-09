@@ -18,7 +18,8 @@ typedef struct _packetHead
 {
 	struct _packetHead*    pNext;
 	struct _packetHead*    pPer;
-	struct _packetHead*    pAsk;
+	// struct _packetHead*    pAsk;
+	uqword    pAsk;
 }packetHead;
 
 typedef packetHead* pPacketHead;
@@ -36,22 +37,35 @@ typedef struct  _netPacketHead
 	serverIdType	ubySrcServId;
 	serverIdType	ubyDesServId;
 	msgIdType		uwMsgID;
-	uword                   uwTag;
+	ubyte			uwTag;
+	ubyte           unUse;
  }netPacketHead ,*pNetPacketHead;
 
 #define     P2NHead(p)  ((pNetPacketHead)(p+1))
 #define     N2PHead(p)  ((pPacketHead)(p-1))
 
-#define     N2User(p)   ((p)+1)
+#define     NIsExtPH(p) ((p->uwTag&0x40))
+#define     NSetExtPH(p) ((p->uwTag|=0x40))
+#define     NIsRet(p) ((p->uwTag&0x80))
+#define     NSetRet(p) ((p->uwTag|=0x80))
+
+#define     N2User(p)   ((p)+((NIsExtPH(p))?2:1))
 #define     P2User(p)   (N2User(P2NHead(p)))
 
 #define     T2NHead(p)  ((PNetPacketHead)(p+1))
 #define     N2THead(p)  ((PThreadPacketHead)(p-1))
 
-#define     NIsRet(p) ((p->uwTag&1))
-#define     NSetRet(p) ((p->uwTag|=1))
+enum packAddrType
+{
+	addrType_ser,
+	addrType_ch,
+};
 
-//#define     ThreadHeadSize (sizeof(ThreadPacketHead))
+#define     NAddType(p) ((p->uwTag&0x03))
+#define     NSetAddSer(p) ((p->uwTag&=(~0x03)))
+#define     NSetAddCh(p) (p->uwTag&=(~0x03));(p->uwTag|=0x01)
+#define     NIsChAddType(p) (NAddType(p)==addrType_ch)
+
 #define		PacketHeadSize    (sizeof(packetHead))
 #define     NetMsgLenSize  (sizeof(netPacketHead))
 #define     NetHeadSize   (NetMsgLenSize)

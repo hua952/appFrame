@@ -1,0 +1,17 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<servers>
+	<struct>
+	</struct>
+	<rpc>
+		<comMsg addrType="1" cppDir="../libMsg/src" order="610" extPH="1">
+			<addChannel>
+				<ask>
+					<channel dataType="udword" />
+				</ask>
+				<ret>
+					<result dataType="udword" />
+				</ret>
+			</addChannel>
+		</comMsg >
+	</rpc>
+</servers>

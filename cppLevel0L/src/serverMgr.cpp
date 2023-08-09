@@ -13,7 +13,7 @@ packetHead* allocPack(udword udwSize)
 {
 	PUSH_FUN_CALL
 	auto pRet = (packetHead*)(new char [sizeof(packetHead) + sizeof(netPacketHead) + udwSize]);
-	pRet->pAsk = nullptr;
+	pRet->pAsk = 0;
 	auto pN = P2NHead(pRet);
 	pN->udwLength = udwSize;
 	pN->uwTag = 0;
@@ -27,8 +27,8 @@ void	freePack(packetHead* pack)
 	PUSH_FUN_CALL
 	lv0LogCallStack (27);
 	if (pack->pAsk) {
-		freePack (pack->pAsk);
-		pack->pAsk = nullptr;
+		freePack ((packetHead*)(pack->pAsk));
+		pack->pAsk = 0;
 	}
 	auto pN = P2NHead (pack);
 	rTrace (" will delete pack "<<*pack);

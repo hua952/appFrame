@@ -23,6 +23,7 @@
 #include "myAssert.h"
 #include "rLog.h"
 #include "mainLoop.h"
+#include "msgGen.h"
 
 defMsgGen:: defMsgGen ()
 {
@@ -72,6 +73,8 @@ int defMsgGen::loopHandleSGen ()
 				}
 			}
 		}
+		// auto& rGlobal = tSingleton<globalFile>::single ();
+		// auto& rRootV = rGlobal.rootServerS ();
 		os<<R"(#endif)";
     } while (0);
     return nRet;
@@ -142,17 +145,20 @@ int  defMsgGen:: startGen ()
 {
     int  nRet = 0;
     do {
+		int nR = 0;
 		auto& rGlobal = tSingleton <globalFile>::single ();
+		auto pDefPmp = rGlobal.findMsgPmp ("defMsg");
+		myAssert (pDefPmp);
 		auto projectHome = rGlobal.projectHome ();
 		std::string strFilename = projectHome;
 		strFilename += "/defMsg/src";
 		myMkdir (strFilename.c_str ());
-		int nR = 0;
 		nR = mkDir ();
 		if (nR) {
 			nRet = 1;
 			break;
 		}
+		/*	
 		nR = CMakeListGen ();
 		if (nR) {
 			nRet = 2;
@@ -188,13 +194,12 @@ int  defMsgGen:: startGen ()
 			nRet = 8;
 			break;
 		}
-		/*
-		nR = rpcInfoCppGen();
+		*/
+		nR = loopHandleSGen ();
 		if (nR) {
-			nRet = 8;
+			nRet = 7;
 			break;
 		}
-		*/
     } while (0);
     return nRet;
 }
@@ -377,7 +382,8 @@ int   defMsgGen:: genOnceData (dataFile& rData, std::string& strOut)
 		auto pDT = rData.dataType ();
 		ss <<"    "<<pDT<<"    m_"<<pDN;
 		auto len = rData.dataLength ();
-		if (len > 1) {
+		// if (len > 1) {
+		if (len) {
 			ss<<" ["<<len<<"]";
 		}
 		ss<<";";
@@ -451,7 +457,8 @@ public:
 			if (!rDv.empty ()) {
 				auto& rData = *(rDv.rbegin ()->get ());
 				auto len = rData.dataLength ();
-				if (len > 1) {
+				// if (len > 1) {
+				if (len) {
 					auto haveSize = rData.haveSize ();
 					if (haveSize) {
 						ss<<R"(packetHead*   toPack() override;)";
@@ -595,6 +602,22 @@ int   defMsgGen:: genOnceMsgClassCpp (msgGroupFile& rG, msgFile& rMsg, bool bRet
 		ss<<R"(NSetRet(pN);
 	)";
 	}
+
+	auto &rDv = rMsg.dataOrder ();
+
+	if (!rDv.empty ()) {
+		auto& rData = *(rDv.rbegin ()->get ());
+		auto len = rData.dataLength ();
+		if (len) {
+			auto haveSize = rData.haveSize ();
+			if (haveSize) {
+				auto rDN = rData.dataName ();
+				ss<<R"(auto p = (()"<<strN<<R"(*)(N2User(pN)));
+	p->m_)"<<rDN<<R"(Num = 0;
+)";
+			}
+		}
+	}
 	ss<<R"(
 }
 )"<<strFunWon<<strClass<<R"( (packetHead* p):CMsgBase(p)
@@ -602,7 +625,6 @@ int   defMsgGen:: genOnceMsgClassCpp (msgGroupFile& rG, msgFile& rMsg, bool bRet
 }
 )";
 
-	auto &rDv = rMsg.dataOrder ();
 	if (!rDv.empty ()) {
 		ss<<strN<<R"(* )"<<strFunWon<<R"(pack()
 {
@@ -611,7 +633,8 @@ int   defMsgGen:: genOnceMsgClassCpp (msgGroupFile& rG, msgFile& rMsg, bool bRet
 )";
 	auto& rData = *(rDv.rbegin ()->get ());
 	auto len = rData.dataLength ();
-	if (len > 1) {
+	// if (len > 1) {
+	if (len) {
 		auto haveSize = rData.haveSize ();
 		if (haveSize) {
 			auto rDN = rData.dataName ();
@@ -620,7 +643,7 @@ int   defMsgGen:: genOnceMsgClassCpp (msgGroupFile& rG, msgFile& rMsg, bool bRet
 {
 	netPacketHead* pN = P2NHead(m_pPacket);
     )"<<strN<<R"(* p = (()"<<strN<<R"++(*)(N2User(pN)));
-	myAssert (p->m_)++"<<rDN<<R"(Num < )"<<len<<R"();
+	myAssert (p->m_)++"<<rDN<<R"(Num <= )"<<len<<R"();
 	pN->udwLength = sizeof()"<<strN<<R"() - sizeof(p->m_)"
 	<<rDN<<R"([0]) * ()"<<len<<R"( - p->m_)"<<rDN<<R"(Num);
 	return m_pPacket;

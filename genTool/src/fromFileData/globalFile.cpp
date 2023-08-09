@@ -130,4 +130,21 @@ void   globalFile:: getRealInstallPath (std::string& strPath)
     } while (0);
 }
 
+msgPmpFile*  globalFile:: findMsgPmp (const char* szPmpName)
+{
+    msgPmpFile*  nRet = nullptr;
+    do {
+		auto& rMap =  msgFileS ();
+		auto it = rMap.find (szPmpName);
+		if (rMap.end () != it) {
+			nRet = it->second.get();
+		}
+    } while (0);
+    return nRet;
+}
+
+std::vector<std::string>&  globalFile:: rootServerS ()
+{
+    return m_rootServerS;
+}
 

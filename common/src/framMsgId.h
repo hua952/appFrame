@@ -6,7 +6,7 @@ enum enFramMsgId
 	enFramMsgId_regMyHandleRet
 };
 
-#define framMsgIdBegin 60000
+#define framMsgIdBegin 65000
 #define toFramMsgId(x) (framMsgIdBegin+x)
 
 struct regMyHandleAskPack

@@ -8,6 +8,8 @@
 #include "fromFileData/msgFileMgr.h"
 #include "fromFileData/msgFile.h"
 #include "fromFileData/moduleFileMgr.h"
+#include "fromFileData/msgPmpFile.h"
+
 #include "xmlCommon.h"
 
 xmlGlobalLoad:: xmlGlobalLoad ()
@@ -39,6 +41,9 @@ int   xmlGlobalLoad:: secondProcess ()
 {
     int   nRet = 0;
     do {
+		auto& rGrobal = tSingleton<globalFile>::single ();
+		auto& rRootV = rGrobal.rootServerS ();
+
 		auto& rMap = tSingleton<moduleFileMgr>::single ().moduleS ();
 		for (auto it = rMap.begin (); rMap.end () != it; ++it) {
 			auto& rMod = *(it->second.get());
@@ -48,11 +53,45 @@ int   xmlGlobalLoad:: secondProcess ()
 				for (decltype (rN.connectorNum) i = 0; i < rN.connectorNum; i++) {
 					procConTarge (rN.connectEndpoint[i]);
 				}
+				bool bFindDefLis = false;
+				bool bFindDefCon = false;
+				for (decltype (rN.listenerNum) i = 0; i < rN.listenerNum; i++) {
+					if (rN.listenEndpoint[i].bDef) {
+						bFindDefLis = true;
+						break;
+					}
+				}
+				for (decltype (rN.connectorNum) i = 0; i < rN.connectorNum; i++) {
+					if (rN.connectEndpoint[i].bDef) {
+						bFindDefCon = true;
+						break;
+					}
+				}
+				if (bFindDefLis && !bFindDefCon	) {
+					rRootV.push_back (ite->get ()->strHandle());
+				}
 			}
 		}
     } while (0);
     return nRet;
 }
+static const char* s_comMsg = R"(<?xml version='1.0' encoding='utf-8' ?>
+<servers>
+	<struct>
+	</struct>
+	<rpc>
+		<comMgr tojs="1" cppDir="../libMsg/src" order="610">
+			<addChannel>
+				<ask>
+					<channel dataType="udword" />
+				</ask>
+				<ret>
+					<result dataType="udword" />
+				</ret>
+			</addChannel>
+		</comMgr>
+	</rpc>
+</servers>)";
 
 int  xmlGlobalLoad::xmlLoad (const char* szFile)
 {
@@ -88,10 +127,25 @@ int  xmlGlobalLoad::xmlLoad (const char* szFile)
 			rGlobal.setInstallPath(szPath);
 		} else if(0 == strcmp(pName, "frameInstallPath")) {
 			rGlobal.setFrameInstallPath(szPath);
-		} else if(0 == strcmp(pName, "msgFile")) {
-		    auto pNP = pRpc->first_attribute("file");
-			std::string pFilePath = pNP->value ();
-			rMsgFileS.push_back (pFilePath);
+		} else if(0 == strcmp(pName, "defMsg")) {
+			auto pPmp = std::make_shared <msgPmpFile> ();
+			std::string pmpName = "defMsg";
+			auto pPmpName = pRpc->first_attribute("pmpName");
+			if (pPmpName) {
+				pmpName = pPmpName->value ();
+			}
+			pPmp->setPmpName (pmpName.c_str());
+			auto inR = rMsgFileS.insert(std::make_pair(pmpName, pPmp));
+			myAssert (inR.second);
+			auto& rFileV = pPmp->msgDefFileS ();
+			rFileV.clear ();
+			for (auto pNP = pRpc->first_attribute("file");
+					pNP; pNP = pNP->next_attribute("file")) {
+				// myAssert (pNP);
+				// std::string pFilePath = pNP->value ();
+				// pPmp->setDefFile (pNP->value ());
+				rFileV.push_back (pNP->value ());
+			}
 		} else if(0 == strcmp(pName, "app")) {
 			pAppS = pRpc;
 		}
@@ -110,8 +164,22 @@ int  xmlGlobalLoad::xmlLoad (const char* szFile)
 			xmlMsgFileLoad msgFileLoader;
 			std::string strF = dirBuf.get ();
 			strF += "/";
-			strF += *it;
-			msgFileLoader.xmlLoad (strF.c_str ());
+			auto pPmp = it->second;
+			auto& rFileV = pPmp->msgDefFileS ();
+			for (auto ite = rFileV.begin(); rFileV.end() != ite; ++ite) {
+				auto strFile = strF;
+				strFile += *ite;
+				nR = msgFileLoader.xmlLoad (it->first.c_str(), strFile.c_str (), *pPmp);
+				myAssert (0 == nR);
+				/*
+				if (0 == strcmp (it->first.c_str(), "defMsg")) {
+					std::unique_ptr<char[]> comMsgBuf;
+					strCpy (s_comMsg, comMsgBuf);
+					nR = msgFileLoader.xmlLoadFromStr (it->first.c_str(), comMsgBuf.get(), *pPmp);
+					myAssert (0 == nR);
+				}
+				*/
+			}
 		}
 		if (!pAppS) {
 			rError ("can not find appS node");
@@ -395,6 +463,7 @@ static int procEndPoint (rapidxml::xml_node<char>* pXmlListen
 	strNCpy (endPoint.ip, c_maxIpLen, pIp->value());
 	*/
 	endPoint.port = atoi (pPort->value ());
+	endPoint.bDef = true;
 	return nRet;
 }
 
@@ -431,6 +500,10 @@ int   xmlGlobalLoad:: onceServerLoad (rapidxml::xml_node<char>* pS, std::shared_
 			myAssert (rInfo.listenerNum < c_MaxListen );
 			auto& endPoint = rInfo.listenEndpoint[rInfo.listenerNum++];
 			procEndPoint (pXmlListen, endPoint);
+			auto pDefR = pXmlListen->first_attribute("defRoute");
+			if (pDefR) {
+				endPoint.bDef = atoi (pDefR->value ());
+			}
 		}
 		for (auto pXmlCon = pS->first_node (); pXmlCon;
 				pXmlCon = pXmlCon->next_sibling ()) {
@@ -465,9 +538,12 @@ int   xmlGlobalLoad:: onceServerLoad (rapidxml::xml_node<char>* pS, std::shared_
 		if (rInfo.connectorNum) {
 			if (1 == rInfo.connectorNum) {
 				auto& rEP = rInfo.connectEndpoint [0];
+				myAssert (rEP.bDef);
+				/*
 				if (!rEP.bDef) {
 					rEP.bDef = true;
 				}
+				*/
 			} else {
 				decltype (rInfo.connectorNum) nFind = 0;
 				for (decltype (rInfo.connectorNum) i = 0; i < rInfo.connectorNum; i++) {
@@ -484,7 +560,10 @@ int   xmlGlobalLoad:: onceServerLoad (rapidxml::xml_node<char>* pS, std::shared_
 			nRet = 1;
 			break;
 		}
-		auto& rMsgMgr = tSingleton<msgFileMgr>::single ();
+		auto& rGlobalGen = tSingleton <globalFile>::single ();
+		auto pPmp = rGlobalGen.findMsgPmp ("defMsg");
+		auto& rMsgMgr = pPmp->msgFileS();
+		// auto& rMsgMgr = tSingleton<msgFileMgr>::single ();
 		auto& rProcS = newServer->procMsgS ();
 		auto& rXmlCommon = tSingleton<xmlCommon>::single ();
 		for (auto pXmlRpc = pXmlRrocRpc->first_node (); pXmlRpc; pXmlRpc = pXmlRpc->next_sibling ()) {
@@ -534,6 +613,13 @@ int   xmlGlobalLoad:: onceServerLoad (rapidxml::xml_node<char>* pS, std::shared_
 		}
 		if (nRet) {
 			break;
+		}
+		if (rInfo.listenerNum) {
+			procRpcNode node;
+			node.rpcName = "addChannel";
+			node.bAsk = true;
+			// auto inRet = rProcS.insert (node);
+			// myAssert (inRet.second);
 		}
 		rS = newServer;
     } while (0);

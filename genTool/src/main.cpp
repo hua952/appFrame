@@ -37,10 +37,12 @@ int main (int argNum, char* argS[])
 		tSingleton<xmlGlobalLoad>::createSingleton();
 		tSingleton<appFileMgr>::createSingleton ();
 		tSingleton<moduleFileMgr>::createSingleton ();
+		/*
 		tSingleton<msgGroupFileMgr>::createSingleton ();
 		tSingleton<msgFileMgr>::createSingleton ();
 		tSingleton<structFileMgr>::createSingleton ();
 		tSingleton<rpcFileMgr>::createSingleton ();
+		*/
 		tSingleton<xmlCommon>::createSingleton ();
 		tSingleton<globalGen>::createSingleton ();
 		

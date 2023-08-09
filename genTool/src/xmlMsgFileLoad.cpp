@@ -12,6 +12,7 @@
 #include "fromFileData/rpcFileMgr.h"
 #include "fromFileData/msgGroupFile.h"
 #include "fromFileData/msgGroupFileMgr.h"
+#include "fromFileData/msgPmpFile.h"
 
 xmlMsgFileLoad:: xmlMsgFileLoad ()
 {
@@ -21,25 +22,24 @@ xmlMsgFileLoad:: ~xmlMsgFileLoad ()
 {
 }
 
-int   xmlMsgFileLoad:: xmlLoad (const char* szFile)
+int  xmlMsgFileLoad::xmlLoadFromStr (const char* szPmpName, char* szCon, msgPmpFile& rPmp)
 {
     int   nRet = 0;
 	do {
-		rapidxml::file<> fdoc(szFile);
 		rapidxml::xml_document<> doc;
-		doc.parse<0>(fdoc.data());
+		doc.parse<0>(szCon);
 
 		rapidxml::xml_node<> *root = doc.first_node();
 		rapidxml::xml_node<>* pStructS = root->first_node ("struct");
 		rapidxml::xml_node<>* pRpcS = root->first_node ("rpc");
 
-		auto nR = structLoad (pStructS);
+		auto nR = structLoad (pStructS, rPmp);
 		if (nR) {
 			rError (" structLoad  error nR = "<<nR);
 			nRet = 1;
 			break;
 		}
-		nR = rpcLoad (pRpcS);
+		nR = rpcLoad (pRpcS, rPmp);
 		if (nR) {
 			rError (" rpcLoad error nR = "<<nR);
 			nRet = 2;
@@ -49,7 +49,17 @@ int   xmlMsgFileLoad:: xmlLoad (const char* szFile)
 	return nRet;
 }
 
-int   xmlMsgFileLoad:: structLoad (rapidxml::xml_node<char>* pStructS)
+int xmlMsgFileLoad:: xmlLoad (const char* szPmpName, const char* szFile, msgPmpFile& rPmp)
+{
+    int   nRet = 0;
+	do {
+		rapidxml::file<> fdoc(szFile);
+		nRet = xmlLoadFromStr (szPmpName,fdoc.data (), rPmp);
+	} while (0);
+	return nRet;
+}
+
+int   xmlMsgFileLoad:: structLoad (rapidxml::xml_node<char>* pStructS, msgPmpFile& rPmp)
 {
     int   nRet = 0;
     do {
@@ -58,7 +68,7 @@ int   xmlMsgFileLoad:: structLoad (rapidxml::xml_node<char>* pStructS)
 		}
 		for(rapidxml::xml_node<char> * pC = pStructS->first_node();  pC; pC = pC->next_sibling()) {
 			auto pName = pC->name ();
-			auto nR = onceStructLoad (pC);
+			auto nR = onceStructLoad (pC, rPmp);
 			if (nR) {
 				nRet = 1;
 				break;
@@ -130,12 +140,14 @@ int   xmlMsgFileLoad:: structLoadBody (structFile& rSt, rapidxml::xml_node<char>
     return nRet;
 }
 
-int   xmlMsgFileLoad:: onceStructLoad (rapidxml::xml_node<char>* pStruct)
+int   xmlMsgFileLoad:: onceStructLoad (rapidxml::xml_node<char>* pStruct, msgPmpFile& rPmp)
 {
     int   nRet = 0;
 	do {
-		auto&  rMgr = tSingleton <structFileMgr>::single ().structS ();
-		auto&  rVec = tSingleton <structFileMgr>::single ().structOrder();
+		// auto&  rMgr = tSingleton <structFileMgr>::single ().structS ();
+		// auto&  rVec = tSingleton <structFileMgr>::single ().structOrder();
+		auto&  rMgr = rPmp.structFileS().structS ();
+		auto&  rVec = rPmp.structFileS().structOrder();
 		auto pName = pStruct->name ();
 		auto it = rMgr.find (pName);
 		if (rMgr.end () != it) {
@@ -153,7 +165,7 @@ int   xmlMsgFileLoad:: onceStructLoad (rapidxml::xml_node<char>* pStruct)
     return nRet;
 }
 
-int   xmlMsgFileLoad:: rpcLoad (rapidxml::xml_node<char>* pRpcS)
+int   xmlMsgFileLoad:: rpcLoad (rapidxml::xml_node<char>* pRpcS, msgPmpFile& rPmp)
 {
     int   nRet = 0;
     do {
@@ -161,7 +173,7 @@ int   xmlMsgFileLoad:: rpcLoad (rapidxml::xml_node<char>* pRpcS)
 			break;
 		}
 		for(rapidxml::xml_node<char> * pG = pRpcS->first_node();  pG; pG = pG->next_sibling()) {
-			auto nR = onceRpcGroupLoad (pG);
+			auto nR = onceRpcGroupLoad (pG, rPmp);
 			if (nR) {
 				rError (" onceRpcGroupLoad ret error nR = "<<nR);
 				nRet = 1;
@@ -175,7 +187,7 @@ int   xmlMsgFileLoad:: rpcLoad (rapidxml::xml_node<char>* pRpcS)
     return nRet;
 }
 
-int   xmlMsgFileLoad:: onceRpcGroupLoad (rapidxml::xml_node<char>* pGroup)
+int   xmlMsgFileLoad:: onceRpcGroupLoad (rapidxml::xml_node<char>* pGroup, msgPmpFile& rPmp)
 {
     int   nRet = 0;
     do {
@@ -183,9 +195,14 @@ int   xmlMsgFileLoad:: onceRpcGroupLoad (rapidxml::xml_node<char>* pGroup)
 			nRet = 1;
 			break;
 		}
-		auto&  rGroupMgr = tSingleton <msgGroupFileMgr>::single ();
-		auto&  rRpcMgr = tSingleton <rpcFileMgr>::single ();
-		auto&  rMsgMgr = tSingleton <msgFileMgr>::single ();
+		// auto&  rGroupMgr = tSingleton <msgGroupFileMgr>::single ();
+		// auto&  rRpcMgr = tSingleton <rpcFileMgr>::single ();
+		// auto&  rMsgMgr = tSingleton <msgFileMgr>::single ();
+
+		auto&  rGroupMgr = rPmp.msgGroupFileS ();
+		auto&  rRpcMgr = rPmp.rpcFileS();
+		auto&  rMsgMgr = rPmp.msgFileS();
+
 		auto&  rMsgS = rMsgMgr.msgS ();
 		auto&  rRpcS = rRpcMgr.rpcS ();
 
@@ -196,6 +213,24 @@ int   xmlMsgFileLoad:: onceRpcGroupLoad (rapidxml::xml_node<char>* pGroup)
 		auto pGName = pGroup->name ();
 		auto pG = std::make_shared <msgGroupFile> ();
 		pG->setMsgGroupName (pGName);
+		auto& rXmlCommon = tSingleton<xmlCommon>::single ();
+
+		auto pA = pGroup->first_attribute("order");
+		if (pA) {
+			pG->setHasOrder (true);
+			pG->setGroupOrder (atoi (pA->value ()));
+		}
+		bool bExtPH = false;
+		int nR = rXmlCommon.getBoolA (pGroup, "extPH", bExtPH);
+		if (0 == nR) {
+			pG->setExtPH(bExtPH);
+		}
+		int nInt = 0;
+		nR = rXmlCommon.getIntA(pGroup, "addrType", nInt);
+		if (0 == nR) {
+			pG->setAddrType((packAddrType)nInt);
+		}
+
 		std::string strFull = pGName;
 		strFull += "2FullMsg";
 		pG->setFullChangName (strFull.c_str ());
@@ -215,6 +250,7 @@ int   xmlMsgFileLoad:: onceRpcGroupLoad (rapidxml::xml_node<char>* pGroup)
 			auto pRpcFile = std::make_shared <rpcFile> ();
 			pRpcFile->setRpcName (pRpcName);
 			pRpcFile->setGroupName (pGName);
+			
 			std::string strRpcName = pRpcName;
 			auto rpcRet = rRpcS.insert (std::make_pair(strRpcName, pRpcFile));
 			if (!rpcRet.second) {
@@ -244,6 +280,20 @@ int   xmlMsgFileLoad:: onceRpcGroupLoad (rapidxml::xml_node<char>* pGroup)
 			strID += strAskName;
 			pAskMsg->setStrMsgId (strID.c_str());
 
+			bool bCExtPH = false;
+			nR = rXmlCommon.getBoolA (pAsk, "extPH", bCExtPH);
+			if (0 == nR) {
+				pAskMsg->setExtPH(bCExtPH);
+			} else {
+				pAskMsg->setExtPH(pG->extPH());
+			}
+			int nCInt = 0;
+			nR = rXmlCommon.getIntA(pAsk, "addrType", nCInt);
+			if (0 == nR) {
+				pAskMsg->setAddrType((packAddrType)nCInt);
+			} else {
+				pAskMsg->setAddrType(pG->addrType ());
+			}
 			std::unique_ptr <char[]> pmAskName;
 			strCpy (strAskName.c_str (), pmAskName);
 			toWord (pmAskName.get());
@@ -291,8 +341,23 @@ int   xmlMsgFileLoad:: onceRpcGroupLoad (rapidxml::xml_node<char>* pGroup)
 				std::string strID = strIdSave;
 				strID += strRetName;
 				pRetMsg->setStrMsgId (strID.c_str());
+
+				bool bCExtPH = false;
+				int nR = rXmlCommon.getBoolA (pRet, "extPH", bCExtPH);
+				if (0 == nR) {
+					pRetMsg->setExtPH(bCExtPH);
+				} else {
+					pRetMsg->setExtPH(pG->extPH());
+				}
+				int nCInt = 0;
+				nR = rXmlCommon.getIntA(pRet, "addrType", nCInt);
+				if (0 == nR) {
+					pRetMsg->setAddrType((packAddrType)nCInt);
+				} else {
+					pRetMsg->setAddrType(pG->addrType ());
+				}
 				structFile* pS = (structFile*)(pRetMsg.get ());
-				auto nR = structLoadBody (*(pS), pRet);
+				nR = structLoadBody (*(pS), pRet);
 				if (nR) {
 					nRet = 8;
 					break;

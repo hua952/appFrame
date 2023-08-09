@@ -115,12 +115,12 @@ int impLoop::processOncePack(packetHead* pPack)
 		auto bInOncePro = packInOnceProc(pPack);
 		if (bInOncePro) {
 			if (bIsRet) {
-				nRet = pF(pPack->pAsk, pPack, &argP);
+				nRet = pF((pPacketHead)(pPack->pAsk), pPack, &argP);
 			} else {
 				packetHead* pRet = nullptr;
 				pF(pPack, pRet, &argP);
 				if (pRet) {
-					pRet->pAsk = pPack;
+					pRet->pAsk = (uqword)pPack;
 					auto pRN = P2NHead (pRet);
 					pRN->ubySrcServId = pN->ubyDesServId;
 					pRN->ubyDesServId = pN->ubySrcServId;
@@ -143,7 +143,7 @@ int impLoop::processOncePack(packetHead* pPack)
 					break;
 				}
 				myAssert (pAskPack);
-				pPack->pAsk = pAskPack;
+				pPack->pAsk = (uqword)pAskPack;
 				nRet = pF(pAskPack, pPack, &argP);
 				pIPackSave->netTokenPackErase (pN->dwToKen);
 			} else {
