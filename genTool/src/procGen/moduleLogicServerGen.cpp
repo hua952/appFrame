@@ -148,10 +148,15 @@ void )"<<strMgrClassName<<R"(::afterLoad(int nArgC, const char* argS[], ForLogic
 	osSleep<<R"(udword sleepSetpS[] = {)";
 	osNum<<R"(    ubyte listenNumS []= {)";
 	osConNum<<R"(    ubyte connectNumS []= {)";
-	osCN<<R"(auto pEndPointS = std::make_unique<
+	osCN<<R"(auto pConEndPointS = std::make_unique<
 		std::unique_ptr<conEndPointT []>[]>(serverNum);
 	)";
+	/*
 	osLN<<R"(    auto pPortS = std::make_unique<std::unique_ptr<uword[]>[]> (serverNum);
+	)";
+	*/
+	osLN<<R"(auto pLenEndPointS = std::make_unique<
+		std::unique_ptr<conEndPointT []>[]>(serverNum);
 	)";
 	for (decltype (serverNum) i = 0; i < serverNum; i++) {
 		auto pName = rSS[i]->serverName ();
@@ -174,6 +179,7 @@ void )"<<strMgrClassName<<R"(::afterLoad(int nArgC, const char* argS[], ForLogic
 		osSleep<<rSS[i]->sleepSetp();
 		osNum<<(int)(rSS[i]->serverInfo().listenerNum);
 		osConNum<<(int)(rSS[i]->serverInfo().connectorNum);
+		/*
 		if (rSS[i]->serverInfo().listenerNum) {
 			osLN<<"pPortS ["<<(int)i<<"] = std::make_unique<uword[]>("<<
 				(int)rSS[i]->serverInfo().listenerNum<<R"();
@@ -184,12 +190,27 @@ void )"<<strMgrClassName<<R"(::afterLoad(int nArgC, const char* argS[], ForLogic
 	)";
 			} // for
 		} // if
+		*/
+		if (rSS[i]->serverInfo().listenerNum) {
+			osCN<<"pLenEndPointS ["<<(int)i<<"] = std::make_unique<conEndPointT []>("<<
+				(int)rSS[i]->serverInfo().listenerNum<<R"();
+	)";
+			for (decltype (rSS[i]->serverInfo().listenerNum) k = 0; k < rSS[i]->serverInfo().listenerNum; k++) {
+				osCN<<"auto& rEndP = pLenEndPointS["<<(int)i<<"]["<<(int)k<<R"(];
+	rEndP.second = )"<<
+			rSS[i]->serverInfo().listenEndpoint[k].port<<R"(;
+	rEndP.bDef = )"<<
+			rSS[i]->serverInfo().listenEndpoint[k].bDef<<R"(;
+		)";
+			} // for
+		} // if
+
 		if (rSS[i]->serverInfo().connectorNum) {
-			osCN<<"pEndPointS ["<<(int)i<<"] = std::make_unique<conEndPointT []>("<<
+			osCN<<"pConEndPointS ["<<(int)i<<"] = std::make_unique<conEndPointT []>("<<
 				(int)rSS[i]->serverInfo().connectorNum<<R"();
 	)";
 			for (decltype (rSS[i]->serverInfo().connectorNum) k = 0; k < rSS[i]->serverInfo().connectorNum; k++) {
-				osCN<<"auto& rEndP = pEndPointS["<<(int)i<<"]["<<(int)k<<R"(];
+				osCN<<"auto& rEndP = pConEndPointS["<<(int)i<<"]["<<(int)k<<R"(];
 	rEndP.first = ")"<<rSS[i]->serverInfo().connectEndpoint[k].ip<<
 				R"(";
 	rEndP.second = )"<<
@@ -235,17 +256,17 @@ void )"<<strMgrClassName<<R"(::afterLoad(int nArgC, const char* argS[], ForLogic
 		for (decltype(rInfo.listenerNum) j = 0; j < rInfo.listenerNum; j++) {
 			auto& ep = rInfo.listenEndpoint [j];
 			strNCpy (ep.ip, sizeof(ep.ip), "0.0.0.0");
-			ep.bDef = pEndPointS[i][j].bDef;
+			ep.bDef = pLenEndPointS[i][j].bDef;
 			ep.bRegHandle = false;
-			ep.port = pPortS [i][j];
+			ep.port = pLenEndPointS[i][j].second;
 		}
 		for (decltype(rInfo.connectorNum) j = 0; j < rInfo.connectorNum; j++) {
 			auto& ep = rInfo.connectEndpoint [j];
-			strNCpy (ep.ip, sizeof(ep.ip), pEndPointS [i][j].first.c_str());
+			strNCpy (ep.ip, sizeof(ep.ip), pConEndPointS [i][j].first.c_str());
 			ep.bRegHandle = false;
-			ep.port = pEndPointS[i][j].second;
-			ep.bDef = pEndPointS[i][j].bDef;
-			ep.targetHandle = pEndPointS[i][j].targetHandle;
+			ep.port = pConEndPointS[i][j].second;
+			ep.bDef = pConEndPointS[i][j].bDef;
+			ep.targetHandle = pConEndPointS[i][j].targetHandle;
 		}
 		fnCreateLoop (serverNameS[i], serverHS[i], &rInfo, OnFrameCli, &rServer);
 		rServer.onServerInitGen (pForLogic);

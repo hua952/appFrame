@@ -1,5 +1,8 @@
 #include "impPackSave_map.h"
 #include "strFun.h"
+#include "impMainLoop.h"
+#include "myAssert.h"
+#include "tSingleton.h"
 
 impPackSave_map:: impPackSave_map ()
 {
@@ -9,71 +12,111 @@ impPackSave_map:: ~impPackSave_map ()
 {
 }
 
-impPackSave_map::tokenPackMap&  impPackSave_map:: tokenPackS ()
+impPackSave_map::tokenPackMap&  impPackSave_map:: netAskPackS ()
 {
-    return m_tokenPackS;
-}
-
-
-int impPackSave_map::threadTokenPackInsert (packetHead* pack)
-{
-    return tokenPackInsert (pack, m_tokenPackS);
-}
-
-int impPackSave_map::threadTokenPackErase (NetTokenType token)
-{
-    return tokenPackErase (token, m_tokenPackS);
-}
-
-packetHead* impPackSave_map::threadTokenPackFind (NetTokenType token)
-{
-    return tokenPackFind (token, m_tokenPackS);
+    return m_netAskPackS;
 }
 
 int  impPackSave_map:: netTokenPackInsert (packetHead* pack)
 {
-    return tokenPackInsert (pack, m_netAskPackS);
+	auto& rAskS = netAskPackS ();
+	auto pN = P2NHead (pack);
+	auto inRet = rAskS.insert (std::make_pair(pN->dwToKen, pack));
+	myAssert (inRet.second);
+	int nRet = 0;
+	do {
+		if (!inRet.second) {
+			nRet = 1;
+			break;
+		}
+	} while (0);
+	return nRet;
 }
 
 int  impPackSave_map:: netTokenPackErase (NetTokenType token)
 {
-    return tokenPackErase (token, m_netAskPackS);
+	int nRet = 0;
+	auto& rAskS = netAskPackS ();
+	do {
+		auto it = rAskS.find (token);
+		if (rAskS.end () == it) {
+			nRet = 1;
+			break;
+		}
+		rAskS.erase (it);
+	} while (0);
+	return nRet;
 }
 
 packetHead*  impPackSave_map:: netTokenPackFind (NetTokenType token)
 {
-    return tokenPackFind (token, m_netAskPackS);
+	auto& rAskS = netAskPackS ();
+	packetHead* pRet = nullptr;
+	do {
+		auto it = rAskS.find (token);
+		if (it == rAskS.end ()) {
+			break;
+		}
+		pRet = it->second;
+	} while (0);
+	return pRet;
 }
 
-int  impPackSave_map:: tokenPackInsert (packetHead* pack, tokenPackMap& rMap)
+void impPackSave_map::clean ()
 {
-	int  nRet = 0;
-    do {
-		auto pN = P2NHead(pack);
-		auto paRet = rMap.insert (std::make_pair(pN->dwToKen, pack));
-    } while (0);
-    return nRet;
+	auto fnFreePack = tSingleton<loopMgr>::single().getPhyCallback().fnFreePack;
+	auto& rAskS = netAskPackS ();
+	for (auto it = rAskS.begin(); rAskS.end() != it; ++it) {
+		fnFreePack (it->second);
+	}
+	rAskS.clear();
 }
-
-int  impPackSave_map:: tokenPackErase (NetTokenType token, tokenPackMap& rMap)
+	
+int  impPackSave_map:: oldTokenInsert (NetTokenType newToken, tokenInfo& rInfo)
 {
-	int  nRet = 0;
+    int  nRet = 0;
     do {
-		rMap.erase (token);
-    } while (0);
-    return nRet;
-}
-
-packetHead*  impPackSave_map:: tokenPackFind (NetTokenType token, tokenPackMap& rMap)
-{
-	packetHead*  nRet = nullptr;
-    do {
-		auto it = rMap.find (token);
-		if (rMap.end () != it) {
-			nRet = it->second;
+		auto& rMap = oldTokenS ();
+		auto inRet = rMap.insert (std::make_pair(newToken, rInfo));
+		myAssert (inRet.second);
+		if (!inRet.second) {
+			nRet = 1;
+			break;
 		}
     } while (0);
     return nRet;
 }
 
+int  impPackSave_map:: oldTokenErase (NetTokenType newToken)
+{
+    int  nRet = 0;
+    do {
+		auto& rMap = oldTokenS ();
+		auto it = rMap.find (newToken);
+		if (rMap.end () == it) {
+			nRet = 1;
+			break;
+		}
+		rMap.erase (it);
+    } while (0);
+    return nRet;
+}
+
+tokenInfo* impPackSave_map:: oldTokenFind (NetTokenType newToken)
+{
+	tokenInfo* nRet = nullptr;
+    do {
+		auto& rMap = oldTokenS ();
+		auto it = rMap.find (newToken);
+		if (rMap.end () != it) {
+			nRet = &it->second;
+		}
+    } while (0);
+    return nRet;
+}
+
+impPackSave_map::oldTokenMap&  impPackSave_map:: oldTokenS ()
+{
+    return m_oldTokenS;
+}
 

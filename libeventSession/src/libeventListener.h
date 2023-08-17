@@ -21,8 +21,8 @@ public:
 private:
     uqword  m_userData;
 	libeventServerCom*  m_pServer;
-	char ip[16];
+	char m_ip[16];
 	int      m_shocket;
-	uword    port;
+	uword    m_port;
 };
 #endif

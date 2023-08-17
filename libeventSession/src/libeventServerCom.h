@@ -32,7 +32,7 @@ public:
 	typedef std::map<SessionIDType, std::shared_ptr<libeventConnector>>  connectMap;
 	int onLoopFrame () override;
 	void*     userData() override;
-	void      setUserData (void* pData) override;
+	void      setUserData (void* pData, udword dataSize) override;
 	sessonMap&  getSessonMap();
 	serverSessonMap&  getServerSessonMap ();
 	struct event_base* getBase();
@@ -54,7 +54,13 @@ public:
 	static const  int c_waitConTime = 1000; // ms
     onWritePackT    onWritePackFun ();
     void  setOnWritePackFun (onWritePackT va);
+	allocPackFT  allocPackFun ();
+	freePackFT  freePackFun ();
 private:
+	/*
+	freePackFT  m_freePackFun;
+	allocPackFT  m_allocPackFun;
+	*/
     onWritePackT  m_onWritePackFun;
 	cTimerMgr   m_timerMgr;
     connectMap  m_connectMap;
@@ -66,7 +72,8 @@ private:
 	sessonMap m_sessonMap;
 	serverSessonMap     m_serverSessonMap;
 	struct event_base* m_base;
-	void*				m_userData;
+	std::unique_ptr <char[]> m_userData;
+	// void*				m_userData;
 	//netMsgFunMap   m_netMsgFunMap;
 	std::unique_ptr<libeventListener[]> m_listerS;
 	//std::unique_ptr<libeventConnector[]> m_connectorS;

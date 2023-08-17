@@ -101,7 +101,7 @@ static void server_msg_cb(struct bufferevent* bev, void* arg)
 					*/
 				auto nRet = fun (pNode, pack);
 				if (procPacketFunRetType_doNotDel != nRet ) {
-					auto freeF = freePackFun ();
+					auto freeF = pConnector->serverCom()->freePackFun ();
 					freeF (pack);
 				}
 			}
@@ -163,7 +163,8 @@ int   libeventConnector:: init(libeventServerCom* pServer, const char* ip, uword
 	//m_server = pServer;
 	setServerCom (pServer);
 	auto baseL = pServer->getBase ();
-	strcpy_s (m_ip, sizeof (m_ip) / sizeof (m_ip[0]), ip);
+	// strcpy_s (m_ip, sizeof (m_ip) / sizeof (m_ip[0]), ip);
+	strNCpy (m_ip, sizeof (m_ip) / sizeof (m_ip[0]), ip);
 	m_port = port;
 	return nRet;
 }

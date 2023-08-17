@@ -33,8 +33,8 @@ extern "C"
 
 	int OnLoopFrame(loopHandleType pThis); // call by level 0
 	int processOncePack(loopHandleType pThis, packetHead* pPack);// call by level 0
-	int onWriteOncePack(loopHandleType pThis, packetHead* pPack);// call by level 0
-	void onFreePack(loopHandleType pThis, packetHead* pPack);// call by level 0
+	// int onWriteOncePack(loopHandleType pThis, packetHead* pPack);// call by level 0
+	// void onFreePack(loopHandleType pThis, packetHead* pPack);// call by level 0
 	//int loadLogicModle(char* szPath);
 	//int unLoadLogicModle(char* szPath);
 }

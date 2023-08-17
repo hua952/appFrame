@@ -29,7 +29,7 @@ std::ostream& operator << (std::ostream& os, const packetHead& pack)
 	auto& p = *(P2NHead(pp));
     os << " udwLength = " << p.udwLength<< "  dwToKen = " << p.dwToKen
 		<<" ubySrcServId = "<<(int)(p.ubySrcServId) <<" ubyDesServId = "<<(int)(p.ubyDesServId)
-		<<" uwMsgID = "<<p.uwMsgID<<" uwTag = "<<std::hex<<p.uwTag<<std::dec<<"pack = "<<pp;
+		<<" uwMsgID = "<<p.uwMsgID<<" uwTag = "<<std::hex<<(int)(p.uwTag)<<std::dec<<"pack = "<<pp;
     return os;
 }
 

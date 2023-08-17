@@ -3,6 +3,7 @@ set(srcS)
 file(GLOB srcS src/*.cpp)
 set(defS)
 set(osSrc)
+set(libS midFrame cLog)
 if (WIN32)
 	# add_definitions(-DUNICODE -D_UNICODE)
 	ADD_DEFINITIONS(/Zi)
@@ -19,6 +20,7 @@ if (WIN32)
 	link_directories(
 		${CMAKE_SOURCE_DIR}/../lib
 		)
+	#list(APPEND libS ws2_32)
 endif ()
 
 add_library(${prjName} SHARED ${srcS} ${defS} ${osSrc})
@@ -27,7 +29,7 @@ target_include_directories(${prjName} PUBLIC
 							${CMAKE_SOURCE_DIR}/cLog/src
 							src
                            )
-					   target_link_libraries(${prjName} PUBLIC  midFrame cLog)
+target_link_libraries(${prjName} PUBLIC  ${libS})
 
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 install(TARGETS ${prjName} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})

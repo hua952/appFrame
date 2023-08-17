@@ -61,3 +61,4 @@ bool isPathInterval (char c)
 {
 	return  c == '/';
 }
+

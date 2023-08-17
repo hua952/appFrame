@@ -41,6 +41,16 @@ int initGlobal (allocPackFT  allocPackFun, freePackFT  freePackFun, logMsgFT log
 	return nRet;
 }
 
+allocPackFT   libeventServerCom:: allocPackFun ()
+{
+	return g_allocPackFun;
+}
+
+freePackFT  libeventServerCom:: freePackFun ()
+{
+    return g_freePackFun;
+}
+
 libeventServerCom::libeventServerCom ()
 {
 	m_base = nullptr;
@@ -52,6 +62,10 @@ libeventServerCom::libeventServerCom ()
 	m_closeFun = nullptr;
 	m_connectFun = nullptr;
 	m_userData = nullptr;
+	/*
+	m_allocPackFun = nullptr;
+	m_freePackFun = nullptr;
+	*/
 }
 
 libeventServerCom::~libeventServerCom ()
@@ -71,7 +85,7 @@ int libeventServerCom::onLoopFrame ()
 {
 	int nRet = procPacketFunRetType_del;
 
-	cTimerMgr&  rTMgr =   getTimerMgr ();
+	cTimerMgr&  rTMgr = getTimerMgr ();
 	rTMgr.onFrame ();
 	auto base = m_base;
 	if (base) {
@@ -151,12 +165,15 @@ static bool sConnectComTimerFun(void* p)
 
 void* libeventServerCom::    userData()
 {
-	return m_userData;
+	// return m_userData;
+	return m_userData.get();
 }
 
-void  libeventServerCom::   setUserData (void* pData)
+void  libeventServerCom::   setUserData (void* pData, udword dataSize)
 {
-	m_userData = pData;
+	// m_userData = pData;
+	m_userData = std::make_unique<char[]>(dataSize);
+	memcpy(m_userData.get(), pData, dataSize);
 }
 
 int libeventServerCom::init (callbackS* pCallbackS, endPoint* pLister, udword listerNum,
@@ -170,6 +187,9 @@ int libeventServerCom::init (callbackS* pCallbackS, endPoint* pLister, udword li
 	setCloseFun (pCallbackS->closeFun);
 	setConnectFun (pCallbackS->connectFun);
 	setOnWritePackFun (pCallbackS->onWritePackFun);
+
+	// m_freePackFun = pCallbackS->freePackFun ;
+	// m_allocPackFun = pCallbackS->allocPackFun;
 	//setAllocPackFun (pCallbackS->allocPackFun);
 	//setFreePackFun (pCallbackS->freePackFun);
 	m_procPackfun = pCallbackS->procPackfun;

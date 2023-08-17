@@ -1,3 +1,4 @@
+// #include <Winsock2.h>
 #include <windows.h>
 #include "ObjBase.h"
 //#include <dbghelp.h>
@@ -157,6 +158,9 @@ bool isPathInterval (char c)
 {
 	return c == '\\' || c == '/';
 }
+
+
+
 /*
 void TraceStack(std::stringstream& oss)
 {

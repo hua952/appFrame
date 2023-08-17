@@ -8,7 +8,9 @@ struct endPoint
 {
 	char ip[16];
 	uqword   userData;	
+	// udword   userDataLen;
 	uword    port;
+	// uword    unUse;
 };
 
 typedef void (*onAcceptSessionT)(ISession* session, uqword userData);
@@ -24,6 +26,10 @@ struct callbackS
 	onConnectT			connectFun;
 	onCloseT			closeFun;
 	onWritePackT        onWritePackFun;
+	/*
+	freePackFT			freePackFun;
+	allocPackFT			allocPackFun;
+	*/
 };
 
 typedef void (*event_callback_fn)(intptr_t, short, void *);
@@ -42,7 +48,7 @@ public:
 	virtual int onLoopFrame () = 0;
 	virtual ISession* getSession (SessionIDType id) = 0;
 	virtual void*     userData() = 0;
-	virtual void      setUserData (void* pData) = 0;
+	virtual void      setUserData (void* pData, udword dataSize) = 0;
 };
 
 typedef ITcpServer* (*createTcpServerFT) (callbackS* pCallbackS, endPoint* pLister, udword listerNum,

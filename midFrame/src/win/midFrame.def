@@ -4,5 +4,3 @@ EXPORTS
 	getAllLoopAndStart   @2
 	OnLoopFrame    @3
 	processOncePack  @4
-	onWriteOncePack  @5
-	onFreePack       @6

@@ -37,7 +37,7 @@ void libeventSessionCom::cleanWritePack ()
 	auto pH = &m_writeH;
 	auto pCur = pH->pNext;
 
-	auto freeFun = freePackFun ();
+	auto freeFun = serverCom()->freePackFun ();
 	while (pCur != pH) {
 		auto pD = pCur;
 		pCur= pCur->pNext;
@@ -124,7 +124,7 @@ packetHead*  libeventSessionCom:: afterReadBuff(udword nS)
 	if (nullptr == pack) {
 		myAssert (curIndexRead <= sizeof (netPacketHead));	
 		if (curIndexRead == sizeof (netPacketHead)) {
-			auto allFun = allocPackFun ();
+			auto allFun = serverCom()->allocPackFun ();
 			pack = allFun(netHead.udwLength);
 			auto pN = P2NHead(pack);
 			*pN = netHead;
@@ -166,7 +166,7 @@ void libeventSessionCom::trySend ()
 	auto bevL = getBev ();
 	nTrace (__FUNCTION__<<" state = "<<stateS);
 	if (SessionState_Online == stateS && bevL) {
-		auto freeFun = freePackFun ();
+		auto freeFun = serverCom()->freePackFun ();
 		auto pH = &m_writeH;
 		auto pCur = pH->pNext;
 		while (pCur != pH) {

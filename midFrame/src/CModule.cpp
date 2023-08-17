@@ -41,10 +41,8 @@ int CModule::load(int nArgC, const char* argS[], ForLogicFun* pForLogic)
 	char* buff[c_BuffNum];
 	auto nR = strR(pBuff, '+', buff, c_BuffNum);
 	auto szName = buff[0];
-	//pForLogic->szServerTxt = buff[1];
-	//nRet = load_os (szName, pForLogic);
-	auto& rPho =  tSingleton<PhyInfo>::single ();
-	std::string strPath; // = rPho.binHome ();	
+	auto& rPho =  tSingleton<loopMgr>::single ();
+	std::string strPath;
 	strPath = szName;
 	auto hdll = loadDll (strPath.c_str());
 	do {

@@ -11,7 +11,16 @@ public:
     ~mArgMgr ();
 	void onCmpKey (char* argv[])override;
 	uword  savePackTag ();
+	const char*  midNetLibName ();
+	void  setMidNetLibName (const char* v);
+	loopHandleType  procId ();
+	void  setProcId (loopHandleType v);
+	udword  packTokenTime ();
+	void  setPackTokenTime (udword v);
 private:
+	udword  m_packTokenTime;
+	loopHandleType  m_procId;
+	std::unique_ptr<char[]>  m_midNetLibName;
 	uword  m_savePackTag;
 };
 #endif

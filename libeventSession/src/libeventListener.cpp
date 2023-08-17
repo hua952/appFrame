@@ -13,6 +13,7 @@
 #include "event2/listener.h"
 #include "loop.h"
 #include "nLog.h"
+#include "strFun.h"
 
 libeventListener::libeventListener ()
 {
@@ -64,29 +65,20 @@ static int tcp_server_init(int port, int listen_num)
 static void socket_read_cb(bufferevent* bev, void* arg)
 {
 	auto pNode = (libeventServerSession*)arg;
-	//auto pL = pNode->listener ();
 	size_t len = 0;
 	do {
 		auto pBuff = pNode->getBuff();
-		//nTrace (__FUNCTION__<<" 0000 pBuff = "<<pBuff);
 		auto neet = pNode->getNeet();
 		len = bufferevent_read(bev, pBuff, neet);
-		//nTrace (__FUNCTION__<<" 1111 neet = "<<neet<<" len = "<<len);
 		auto pack = pNode->afterReadBuff(len);
 		if (pack) {
 			auto id = pNode->id ();
-			//auto pL = pNode->listener ();
-			//auto pServer = pL->getServer ();
 			auto pServer = pNode->serverCom ();
 			auto fun = pServer->procPackfun ();
 			auto pN = P2NHead (pack);
-			/*
-			nTrace (__FUNCTION__<<" rec Pack for app pack = "<<pack<<" msgId = "<<pN->uwMsgID
-					<<" length = "<<pN->udwLength);
-					*/
 			auto nRet = fun (pNode, pack);
 			if (procPacketFunRetType_doNotDel != nRet) {
-				auto freeF = freePackFun ();
+				auto freeF = pNode->serverCom()->freePackFun ();
 				freeF (pack);
 			}
 		}
@@ -99,16 +91,10 @@ static void event_cb(struct bufferevent *bev, short event, void *arg)
         nInfo("connection closed");
 	}
     else if (event & BEV_EVENT_ERROR) {
-        nError("some other error re = {}", EVUTIL_SOCKET_ERROR());
+        nError("some other error re = {}"<<EVUTIL_SOCKET_ERROR());
 	}
 	auto pSS = (libeventServerSession*) arg;
 	pSS->setState (SessionState_Offline);
-	/*
-	auto pL = pSS->listener ();
-	auto pServer = pL->getServer ();
-	auto id = pSS->id();
-	pServer->closeSession (id);
-	*/
 }
 
 static void accept_cb(intptr_t fd, short events, void* arg)
@@ -119,7 +105,7 @@ static void accept_cb(intptr_t fd, short events, void* arg)
     socklen_t len = sizeof(client);
     sockfd = ::accept(fd, (struct sockaddr*)&client, &len );
     evutil_make_socket_nonblocking(sockfd);
-    nInfo ("accept a client {} ", sockfd);
+    nInfo ("accept a client {} "<<sockfd);
     struct event_base* base = pL->getBase ();
     bufferevent* bev = bufferevent_socket_new(base, sockfd, BEV_OPT_CLOSE_ON_FREE);
 	auto pSSS = std::make_shared<libeventServerSession>();
@@ -173,6 +159,8 @@ int  libeventListener::init(libeventServerCom* pServer, const char* ip, uword po
 		struct event* ev_listen = event_new(Lbase, listener, EV_READ | EV_PERSIST,
 				accept_cb, this);
 		event_add(ev_listen, NULL);
+		strNCpy (m_ip, sizeof (m_ip) / sizeof (m_ip[0]), ip);
+		m_port = port;
 		//myAssert (0 == nR);
 	} while (0);
 	return nRet;

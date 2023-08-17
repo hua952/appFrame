@@ -4,5 +4,5 @@
 
 logMsgFT getLogMsgFun ()
 {
-	return tSingleton<PhyInfo>::single ().getPhyCallback().fnLogMsg;
+	return tSingleton<loopMgr>::single ().getPhyCallback().fnLogMsg;
 }

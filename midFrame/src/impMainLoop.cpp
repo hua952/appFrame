@@ -12,25 +12,28 @@
 #include "impLoop.h"
 #include "mArgMgr.h"
 #include <iostream>
+#include <cmath>
+#include "modelLoder.h"
 
 int  InitMidFrame(int nArgC, const char* argS[],PhyCallback* pCallbackS)
 {
-	//std::cout<<"At the begin of InitMidFrame"<<std::endl;
 	int nRet = 0;
 	do {
-	tSingleton <mArgMgr>::createSingleton ();
-	auto& rArgS = tSingleton<mArgMgr>::single ();
-	nRet = rArgS.procArgS (nArgC, argS);
-	myAssert (0 == nRet);
-	if (nRet) {
-		mError ("rArgS.procArgS error nRet = "<<nRet);
-		break;
-	}
-	tSingleton<PhyInfo>::createSingleton();
-	tSingleton<loopMgr>::createSingleton();
-	auto& rMgr = tSingleton<PhyInfo>::single();
-	//auto nRet = rMgr.init(nArgC, argS, *pCallbackS);
-	nRet = rMgr.init(nArgC, argS, *pCallbackS);
+		tSingleton <mArgMgr>::createSingleton ();
+		auto& rArgS = tSingleton<mArgMgr>::single ();
+		nRet = rArgS.procArgS (nArgC, argS);
+		myAssert (0 == nRet);
+		if (nRet) {
+			mError ("rArgS.procArgS error nRet = "<<nRet);
+			break;
+		}
+		tSingleton<loopMgr>::createSingleton();
+		auto& rMgr = tSingleton<loopMgr>::single();
+		nRet = rMgr.init(nArgC, argS, *pCallbackS);
+		if (nRet) {
+			mError("loopMgr init error nRet = "<<nRet);
+			break;
+		}
 	} while (0);
 	return nRet;
 }
@@ -42,20 +45,7 @@ int getAllLoopAndStart(serverNode* pBuff, int nBuffNum)
 	return rMgr.getAllLoopAndStart(pBuff, nBuffNum);
 }
 
-PhyInfo::PhyInfo()
-{
-}
-
-int PhyInfo::createServer (const char* szName, loopHandleType serId, serverNode* pNode, frameFunType funFrame, void* arg)
-{
-	//mTrace ("At the begin");
-	auto& rMgr = tSingleton<loopMgr>::single();
-	auto pRet = rMgr.createServer(szName, serId, pNode, funFrame, arg);
-	//mTrace ("At the end");
-	return pRet ;
-}
-
-int PhyInfo::regMsg(loopHandleType handle, uword uwMsgId, procRpcPacketFunType pFun)
+static int sRegMsg(loopHandleType handle, uword uwMsgId, procRpcPacketFunType pFun)
 {
 	int nRet = 0;
 	auto& rMgr = tSingleton<loopMgr>::single();
@@ -71,7 +61,7 @@ int PhyInfo::regMsg(loopHandleType handle, uword uwMsgId, procRpcPacketFunType p
 	return nRet;
 }
 
-int PhyInfo::removeMsg(loopHandleType handle, uword uwMsgId)
+static int sRemoveMsg(loopHandleType handle, uword uwMsgId)
 {
 	int nRet = 0;
 	auto& rMgr = tSingleton<loopMgr>::single();
@@ -102,25 +92,6 @@ static int sAddComTimer(loopHandleType pThis, udword firstSetp, udword udwSetp,
 }
 static sendPackToLoopFT g_sendPackToLoopFun = nullptr;
 
-static bool sDelNetPack (void* pUP)
-{
-	auto pArg = (std::pair<NetTokenType, loopHandleType>*) pUP; 
-	auto handle = pArg->second;
-	auto& rMgr = tSingleton<loopMgr>::single ();
-	auto pS = rMgr.getLoop(handle);
-	auto pISavePack = pS->getIPackSave ();
-	auto pack = pISavePack->threadTokenPackFind (pArg->first);
-	if (pack) {
-		auto fnFree = tSingleton<PhyInfo>::single (). getPhyCallback().fnFreePack;
-		// auto dPack = pack;
-		// auto pDN = P2NHead (dPack);
-		// mTrace ("pArg->first = "<<pArg->first<<" handle = "<<handle);
-		// mWarn (" pack delete by timer dwToKen = "<<pDN->dwToKen<<" msgId = "<<pDN->uwMsgID);
-		pISavePack->netTokenPackErase (pArg->first);
-		fnFree (pack);
-	}
-	return false;
-}
 static int sSendChMsg (packetHead* pack)
 {
 	int nRet = 0;
@@ -131,45 +102,35 @@ static int sSendChMsg (packetHead* pack)
 
 static int sSendPackToLoopFun(packetHead* pack) /* 返回值貌似没用 */
 {
+	/* 发消息得起点函数 */
 	int nRet = 0; // procPacketFunRetType_del;
 	int nR = 0;
 	auto pN = P2NHead (pack);
-	/*
-	auto chMsg = NIsChAddType (pN);
-	if (chMsg) {
-		nRet = sSendChMsg (pack);
-	} else {
-	*/
-		auto& rMgr = tSingleton<loopMgr>::single ();
-		auto curHandleFun = tSingleton<PhyInfo>::single ().getPhyCallback().fnGetCurServerHandle;
-		auto curHandle = curHandleFun ();
-		if (curHandle !=  pN->ubySrcServId) {
-			mTrace ("curHandle = "<<curHandle<<"pN->ubySrcServId = "<<pN->ubySrcServId);
+	auto& rMgr = tSingleton<loopMgr>::single ();
+	auto curHandleFun = tSingleton<loopMgr>::single ().getPhyCallback().fnGetCurServerHandle;
+	auto curHandle = curHandleFun ();
+	if (curHandle !=  pN->ubySrcServId) {
+		mTrace ("curHandle = "<<curHandle<<"pN->ubySrcServId = "<<pN->ubySrcServId);
+	}
+	myAssert (pN->ubySrcServId == curHandle);
+	auto pS = rMgr.getLoop(pN->ubySrcServId);
+	myAssert (pS);
+	bool bIsRet = NIsRet(pN);
+	if (!bIsRet) {
+		pN->dwToKen = pS->nextToken ();
+	}
+	auto bInOnceProc =  packInOnceProc(pack);
+	do {
+		auto objSer = pN->ubyDesServId;
+		if (!bInOnceProc) {
+			auto upN = rMgr.upNum ();
+			auto s = rand () % upN;
+			objSer = rMgr.getLoopByIndex (s)->id();
 		}
-		myAssert (pN->ubySrcServId == curHandle);
-		auto pS = rMgr.getLoop(pN->ubySrcServId);
-		myAssert (pS);
-		// auto& rMsgInfoS = tSingleton<loopMgr>::single ().defMsgInfoMgr ();
-		bool bIsRet = NIsRet(pN); // NrMsgInfoS.isRetMsg (pN->uwMsgID);
-		if (!bIsRet) {
-			pN->dwToKen = pS->nextToken ();
-		}
-		auto bInOnceProc =  packInOnceProc(pack);
-		auto pISavePack = pS->getIPackSave ();
-		auto addTimerFun = tSingleton<PhyInfo>::single().getForLogicFun().fnAddComTimer;
-		auto delTime = rMgr.delSendPackTime ();
-		std::pair<NetTokenType, loopHandleType> pa;
-		pa.first = pN->dwToKen;
-		pa.second = pN->ubySrcServId;
-		if (!bInOnceProc && !bIsRet) {
-			mTrace ("will insert ask pack -----dwToKen = "<<pN->dwToKen<<" msgId = "
-					<<pN->uwMsgID<<" map.size = "<<0<<" pack = "<<pack
-					<<" server handle = "<<pS->id ());
-			pISavePack->netTokenPackInsert (pack);
-			addTimerFun (pN->ubySrcServId, delTime, delTime, sDelNetPack, &pa, sizeof (pa));
-		}
-		nRet = g_sendPackToLoopFun (pack); // must in the end
-	// }
+		// fnPushPackToLoop
+		auto fnPushPackToLoop = tSingleton<loopMgr>::single().getPhyCallback().fnPushPackToLoop;
+		fnPushPackToLoop (objSer, pack);
+	} while (0);
 	return nRet;
 }
 static iRpcInfoMgr* sGetIRpcInfoMgr()
@@ -208,20 +169,24 @@ static void sFreePack (packetHead* pack)
 	g_freePackFun (pack);
 }
 
-typedef void		(*freePackFT)(packetHead* pack);
-int PhyInfo::init(int nArgC, const char* argS[], PhyCallback& info)
+static int sCreateServer (const char* szName, loopHandleType serId, 
+		serverNode* pNode, frameFunType funFrame, void* arg)
 {
-	auto nHomeR = getCurModelPath (m_home);
-	myAssert (0 == nHomeR);
+	return tSingleton<loopMgr>::single().createServer(szName, serId,
+			pNode, funFrame, arg);
+}
+typedef void		(*freePackFT)(packetHead* pack);
+int loopMgr::init(int nArgC, const char* argS[], PhyCallback& info)
+{
 	m_callbackS = info;
 	auto& forLogic = getForLogicFun();
 	g_allocPackFun = info.fnAllocPack;
 	g_freePackFun = info.fnFreePack;
 	g_sendPackToLoopFun = info.fnSendPackToLoop;
-	forLogic.fnCreateLoop = PhyInfo::createServer;
+	forLogic.fnCreateLoop = sCreateServer;
 	forLogic.fnAllocPack = sAllocPack; // info.fnAllocPack;
 	forLogic.fnFreePack = sFreePack; //  info.fnFreePack;
-	forLogic.fnRegMsg = regMsg;
+	forLogic.fnRegMsg = sRegMsg;
 	forLogic.fnSendPackToLoop =  sSendPackToLoopFun;
 	forLogic.fnLogMsg = info.fnLogMsg;
 	forLogic.fnAddComTimer = sAddComTimer;//m_callbackS.fnAddComTimer;
@@ -233,38 +198,38 @@ int PhyInfo::init(int nArgC, const char* argS[], PhyCallback& info)
 	forLogic.fnRegRpc = sRegRpc;
 	forLogic.fnGetDefProcServerId = sGetDefProcServerId;
 	//forLogic.fnRemoveMsg = removeMsg;
-	auto nRet = procArgS(nArgC, argS);
+	int nR = 0;
+	int nRet = 0;
+	nR= procArgS(nArgC, argS);
 	do
 	{
-		if(0 != nRet)
-		{
+		if(0 != nRet) {
+			mError(" procArgS error nR = "<<nR);
+			nRet = 1;
 			break;
 		}
-		//mInfo ("before load moduleS moduleNum = "<<m_ModuleNum);
+		nR = initNetServer ();
+		if (nR) {
+			mError("initNetServer  return error nR = "<<nR);
+			nRet = 2;
+			break;
+		}
 		auto& rModuleS = m_ModuleS;
 		for(auto i = 0; i < m_ModuleNum; i++)
 		{
 			auto& rM = m_ModuleS[i];
-			//mTrace(" Before load modle "<<i);
 			rM.load(nArgC, argS, &forLogic );
-			//mTrace(" After load modle "<<i);
 		}
 	}while(0);
 	return nRet;
 }
 
-const char*  PhyInfo:: binHome ()
-{
-	return m_home.get();
-}
-
-int PhyInfo::procArgS(int nArgC, const char* argS[])
+int loopMgr::procArgS(int nArgC, const char* argS[])
 {
 	using tempModuleInfo = std::set<std::string>;
 	tempModuleInfo moduleS;
 	for(int i = 1; i < nArgC; i++)
 	{
-		//mTrace ("proc arg : "<<argS[i]);
 		auto pC = argS[i];
 		auto nL = strlen(pC);
 		std::unique_ptr<char[]>	 name = std::make_unique<char[]>(nL + 1);
@@ -275,16 +240,8 @@ int PhyInfo::procArgS(int nArgC, const char* argS[])
 		if(2 == nR)
 		{
 			if(0 == strcmp(buff[0], "addLogic")) {
-				//auto nRR = strR(buff[1], '+', buff, c_BuffNum);
 				auto bI = moduleS.insert(buff[1]);
-				//mTrace (" insert model "<<buff[1]);
 				myAssert (bI.second);
-			} else if(0 == strcmp(buff[0], "gropId")) {
-				int nId = atoi (buff[1]);
-				tSingleton<loopMgr>::single().setGropId (nId);
-			} else if(0 == strcmp(buff[0], "procId")) {
-				int nId = atoi (buff[1]);
-				tSingleton<loopMgr>::single().setProcId(nId);
 			}
 		}
 	}
@@ -300,28 +257,12 @@ int PhyInfo::procArgS(int nArgC, const char* argS[])
 	}
 	return 0;
 }
-
-CModule* PhyInfo::getModuleS (int& ModuleNum)
-{
-	ModuleNum = m_ModuleNum;
-	return m_ModuleS.get();
-}
-
-PhyCallback& PhyInfo::getPhyCallback()
-{
-	return   m_callbackS;
-}
-
-ForLogicFun&  PhyInfo::getForLogicFun()
-{
-	return m_forLogic;
-}
  
-loopMgr::loopMgr():m_CurLoopNum(0), m_procId(0), m_gropId(0)
+loopMgr::loopMgr():m_CurLoopNum(0), m_gropId(0)
 {
-	 //m_loopS = std::make_unique<impLoop[]> (c_MaxLoopNum);
-
+	// m_netLibHandle = nullptr;
     m_delSendPackTime = 5000;
+	m_upNum = 1;
 }
 
 loopMgr::~loopMgr()
@@ -336,28 +277,10 @@ udword  loopMgr::delSendPackTime ()
 int loopMgr::createServerS()
 {
 	int nRet = 0;
-	/*
-	auto& rPhyInfo = tSingleton<PhyInfo>::single();
-	int ModuleNum = 0;
-	CModuleS* pMs =  getModuleS (ModuleNum);
-	for (
-	*/
+	
 	return nRet;
 }
-/*
-static inline loopHandleType toHandle(loopHandleType g, loopHandleType p, loopHandleType l)
-{
-	loopHandleType nRet = g;
-	nRet &= GroupMark;
-	nRet <<= ProcNumBitLen;
-	p &= ProcMark;
-	nRet |= p;
-	nRet <<= LoopNumBitLen;
-	l &= LoopMark;
-	nRet |= l;
-	return nRet;
-}
-*/
+
 int loopMgr::createServer(const char* szName, loopHandleType serId,  serverNode* pNode, frameFunType funFrame, void* arg)
 {
 	loopHandleType pRet = c_emptyLoopHandle;
@@ -381,7 +304,8 @@ msgMgr&	loopMgr::defMsgInfoMgr ()
 
 loopHandleType	loopMgr::procId()
 {
-	return m_procId;
+	// return m_procId;
+	return tSingleton<mArgMgr>::single().procId();
 }
 
 loopHandleType	loopMgr::gropId()
@@ -389,21 +313,9 @@ loopHandleType	loopMgr::gropId()
 	return m_gropId;
 }
 
-void		loopMgr::	setProcId(loopHandleType proc)
-{
-	m_procId = proc;
-}
-
-void			loopMgr::setGropId(loopHandleType grop)
+void	loopMgr::setGropId(loopHandleType grop)
 {
 	m_gropId = grop;
-}
-
-int		loopMgr::init(loopHandleType	procId, loopHandleType	gropId)
-{
-	m_procId = procId;
-	m_gropId = gropId;
-	return 0;
 }
 
 impLoop*  loopMgr::getLoop(loopHandleType id)
@@ -411,15 +323,21 @@ impLoop*  loopMgr::getLoop(loopHandleType id)
 	loopHandleType pid = 0;
 	loopHandleType lid = 0;
 	fromHandle (id, pid, lid);
-	//mTrace ("getLoop m_CurLoopNum = "<<m_CurLoopNum);
-	//return lid < m_CurLoopNum ? &m_loopS[id] : nullptr;
 	return m_loopS[lid].get();
+}
+
+impLoop*   loopMgr :: getLoopByIndex(uword index)
+{
+    impLoop*    nRet = nullptr;
+    do {
+		nRet = m_loopS[index].get();
+    } while (0);
+    return nRet;
 }
 
 int loopMgr::getAllLoopAndStart(serverNode* pBuff, int nBuffNum)
 {
 	auto pid = procId ();
-	//mTrace ("will start all loop m_CurLoopNum = "<<m_CurLoopNum);
 	int nRet = 0;
 	for (auto i = 0; i < LoopNum && nRet < nBuffNum; i++)
 	{
@@ -429,7 +347,6 @@ int loopMgr::getAllLoopAndStart(serverNode* pBuff, int nBuffNum)
 		}
 		auto &node = pBuff[nRet++];
 		auto pNode = p->getServerNode ();
-		//mTrace ("get server i = "<<i<<" pNode = "<<pNode);
 		if (pNode) {
 			node = *pNode;
 		} else {
@@ -440,13 +357,48 @@ int loopMgr::getAllLoopAndStart(serverNode* pBuff, int nBuffNum)
 		node.handle = sid;//toHandle (pid, id);
 	}
 
-	//std::cout<<"loopMgr::getAllLoopAndStart i = "<<i<<" m_CurLoopNum = "<<m_CurLoopNum<<std::endl;
 	mTrace ("at the end nRet = "<<nRet);
 	return nRet;
 }
 
 PhyCallback&   loopMgr:: getPhyCallback()
 {
-	return tSingleton<PhyInfo>::single ().getPhyCallback();
+	return m_callbackS;
+}
+
+ForLogicFun&  loopMgr::getForLogicFun()
+{
+	return  m_forLogic;
+}
+
+int    loopMgr:: initNetServer ()
+{
+    int    nRet = 0;
+    do {
+		auto& rArgS = tSingleton<mArgMgr>::single ();
+		auto midNetLibName = rArgS.midNetLibName ();
+		std::unique_ptr<char[]> binH;
+		getCurModelPath(binH);
+		std::string strPath = binH.get (); 
+		strPath += midNetLibName;
+		auto& rC = getPhyCallback();
+		nRet = initComTcpNet (strPath.c_str(), rC.fnAllocPack, rC.fnFreePack, rC.fnLogMsg);
+		if (nRet) {
+			mError ("initComTcpNet error nRet = "<<nRet<<" strPath = "
+					<<strPath.c_str());
+			break;
+		}
+    } while (0);
+    return nRet;
+}
+
+uword loopMgr :: upNum ()
+{
+    return m_upNum;
+}
+
+void  loopMgr :: setUpNum (uword v)
+{
+    m_upNum = v;
 }
 

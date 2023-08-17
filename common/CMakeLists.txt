@@ -3,6 +3,7 @@ set(srcS)
 file(GLOB srcS src/*.cpp)
 set(osSrc)
 
+set(libS)
 MESSAGE(STATUS "to make common")
 if (UNIX)
     MESSAGE(STATUS "unix")
@@ -12,7 +13,8 @@ elseif (WIN32)
 	file(GLOB osSrc src/win/*.cpp)
 	ADD_DEFINITIONS(/Zi)
 	ADD_DEFINITIONS(/W2)
-	#add_definitions(-DWIN32_LEAN_AND_MEAN)
+	# list(APPEND libS ws2_32)
+	# add_definitions(-DWIN32_LEAN_AND_MEAN)
 	MESSAGE(STATUS "windows osSrc = ${osSrc}")
 endif ()
 
@@ -24,7 +26,8 @@ target_include_directories(${prjName} PUBLIC
                            )
 
 if (WIN32)
-	target_link_libraries(${prjName} PUBLIC Dbghelp)
+	list(APPEND libS Dbghelp)
+	target_link_libraries(${prjName} PUBLIC ${libS})
 endif ()
 
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)

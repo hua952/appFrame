@@ -36,15 +36,6 @@ void	freePack(packetHead* pack)
 	POP_FUN_CALL
 }
 
-void  freePackInLevel0(ServerIDType id, packetHead* pack)
-{
-PUSH_FUN_CALL 
-	onFreePack (id, pack);
-	freePack (pack);
-POP_FUN_CALL 
-}
-
-
 static int sendPackToLoop(packetHead* pack)
 {
 	int nRet = 0;
@@ -69,6 +60,20 @@ static int sendPackToLoop(packetHead* pack)
 	}
 	if (pS) {
 		pS->pushPack (pack);
+	}
+	return nRet;
+}
+static int sPushPackToLoop (loopHandleType pThis, packetHead* pack)
+{
+	int nRet = 0;
+	auto& rMgr = tSingleton<serverMgr>::single();
+	server* pS = nullptr;
+	pS = rMgr.getServer (pThis); // pServerS[ubyDl];
+	if (pS) {
+		pS->pushPack (pack);
+	} else {
+		nRet = 1;
+		rError ("can not find server handle = "<<pThis);
 	}
 	return nRet;
 }
@@ -267,6 +272,7 @@ int serverMgr::initFun (int cArg, const char* argS[])
 	procArgS (cArg, argS);
 	auto& rMgr = getPhyCallback();
 	rMgr.fnSendPackToLoop = sendPackToLoop;
+	rMgr.fnPushPackToLoop = sPushPackToLoop;
 	rMgr.fnStopLoopS = stopLoopS;
 	rMgr.fnAllocPack = allocPack;
 	rMgr.fnFreePack = freePack;

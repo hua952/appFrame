@@ -2,7 +2,7 @@
 #include "tSingleton.h"
 #include "cppLevel0LCom.h"
 #include "serverMgr.h"
-#pragma comment(lib, "ws2_32.lib")
+// #pragma comment(lib, "ws2_32.lib")
 
 int  serverMgr:: initNetServer (const char* szLibname)
 {
@@ -12,20 +12,19 @@ int  serverMgr:: initNetServer (const char* szLibname)
 	//HINSTANCE hdll;
 
 	do {
+		/*
 		WORD wVersionRequested;
 		WSADATA wsaData;
 		int err;
 
-		/* Use the MAKEWORD(lowbyte, highbyte) macro declared in Windef.h */
 		wVersionRequested = MAKEWORD(2, 2);
 
 		err = WSAStartup(wVersionRequested, &wsaData);
 		if (err != 0) {
-			/* Tell the user that we could not find a usable */
-			/* Winsock DLL.                                  */
 			rError ("WSAStartup failed with error: "<< err);
 			nRet = 1;
 		}
+		*/
 		auto hdll = LoadLibraryA(szName);
 		// rTrace (" After LoadLibraryA hdll = "<<hdll);
 		if (!hdll) {
@@ -54,6 +53,7 @@ int  serverMgr:: initNetServer (const char* szLibname)
 
 		auto& rC = getPhyCallback();
 		auto nInit = initFn (rC.fnAllocPack , rC.fnFreePack, rC.fnLogMsg);
+
 		if (0 != nInit) {
 			rWarn ("call initFn Error");
 			nRet = 6;

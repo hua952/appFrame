@@ -21,6 +21,7 @@
 #define packInOnceProc(p) (netPackInOnceProc(P2NHead(p)))
 
 typedef int (*sendPackToLoopFT)(packetHead*);
+typedef int (*pushPackToLoopFT)(loopHandleType pThis, packetHead*);
 typedef void (*stopLoopSFT)();
 typedef packetHead* (*allocPackFT)(udword udwSize);
 typedef void		(*freePackFT)(packetHead* pack);
@@ -36,7 +37,8 @@ typedef void (*logCallStackFT) (loopHandleType pThis, int nL);
 
 typedef struct _PhyCallback
 {
-	sendPackToLoopFT fnSendPackToLoop;// Thread safety
+	sendPackToLoopFT fnSendPackToLoop; // Thread safety
+	pushPackToLoopFT fnPushPackToLoop; // Thread safety
 	stopLoopSFT      fnStopLoopS;
 	allocPackFT		 fnAllocPack; // Thread safety
 	freePackFT		 fnFreePack; // Thread safety
