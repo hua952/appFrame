@@ -2,6 +2,7 @@
 #include "strFun.h"
 #include "modelLoder.h"
 #include "loop.h"
+#include "myAssert.h"
 
 static	void*  s_hDll = nullptr;
 static delTcpServerFT  s_delTcpServerFun = nullptr;
@@ -31,18 +32,20 @@ static int sProcessNetPackFun(ISession* session, packetHead* pack)
 	return nRet;
 }
 
-static void sOnAcceptSession(ISession* session, uqword userData)
+static void sOnAcceptSession(ISession* session, void* userData)
 {
-	auto pKV = (comTcpNet::usrDataType*)userData;
+	// auto pKV = (comTcpNet::usrDataType*)(*((void**)userData));
+	auto pKV = (comTcpNet::usrDataType*)(userData);
 	auto pNet = pKV->first;
-	pNet->onAcceptSession (session, pKV->second);
+	pNet->onAcceptSession (session, &pKV->second);
 }
 
-static void sOnConnect(ISession* session, uqword userData)
+static void sOnConnect(ISession* session, void* userData)
 {
-	auto pKV = (comTcpNet::usrDataType*)userData;
+	// auto pKV = (comTcpNet::usrDataType*)(*((void**)userData));
+	auto pKV = (comTcpNet::usrDataType*)(userData);
 	auto pNet = pKV->first;
-	pNet->onConnect (session, pKV->second);
+	pNet->onConnect (session, &pKV->second);
 }
 
 static void sOnClose(ISession* session)
@@ -89,18 +92,22 @@ int   comTcpNet:: initNet (endPoint* pLister,
 		for (decltype (listerNum) i = 0; i < listerNum; i++) {
 			auto&re = m_usrDataS[i];
 			auto&le = pLister[i];
-			re.second = le.userData;
+			myAssert (le.userDataLen <= sizeof (re.second));
+			// re.second = *((uqword*)(le.userData));
+			memcpy(re.second, le.userData, le.userDataLen);
 			endPS[i] = le;
 		}
 		for (decltype (conNum) i = 0; i < conNum; i++) {
 			auto&re = m_usrDataS[i + listerNum];
 			auto&co = pConnector[i];
-			re.second = co.userData;
+			myAssert (co.userDataLen <= sizeof (re.second));
+			// re.second = *((uqword*)(co.userData));
+			memcpy(re.second, co.userData, co.userDataLen);
 			endPS[i + listerNum] = co;
 		}
 		for (decltype (endPointNum) i = 0; i < endPointNum; i++) {
 			m_usrDataS[i].first = this;
-			endPS[i].userData = (uqword)(&m_usrDataS[i]);
+			endPS[i].userData = (&m_usrDataS[i]);
 		}
 
 		auto pNet = creF(&cb, pEDS, listerNum, pEDS + listerNum,
@@ -125,10 +132,10 @@ int comTcpNet::processNetPackFun(ISession* session, packetHead* pack)
 	return nRet;
 }
 
-void comTcpNet::onAcceptSession(ISession* session, uqword userData)
+void comTcpNet::onAcceptSession(ISession* session, void* userData)
 {
 }
-void comTcpNet::onConnect(ISession* session, uqword userData)
+void comTcpNet::onConnect(ISession* session, void* userData)
 {
 }
 void comTcpNet::onClose(ISession* session)

@@ -80,16 +80,51 @@ static const char* s_comMsg = R"(<?xml version='1.0' encoding='utf-8' ?>
 	<struct>
 	</struct>
 	<rpc>
-		<comMgr tojs="1" cppDir="../libMsg/src" order="610">
+		<comMsg addrType="1" cppDir="../libMsg/src" order="610">
 			<addChannel>
+				<ask neetSession="1">
+					<chKey dataType="ubyte" length="16" haveSize="0"/>
+					<token dataType="udword" />
+				</ask>
+				<ret neetSession="1">
+					<result dataType="udword" />
+				</ret>
+			</addChannel>
+			<delChannel>
 				<ask>
-					<channel dataType="udword" />
+					<chKey dataType="ubyte" length="16" haveSize="0"/>
 				</ask>
 				<ret>
 					<result dataType="udword" />
 				</ret>
-			</addChannel>
-		</comMgr>
+			</delChannel>
+			<listenChannel>
+				<ask neetSession="1">
+					<chKey dataType="ubyte" length="16" haveSize="0"/>
+				</ask>
+				<ret>
+					<result dataType="udword" />
+				</ret>
+			</listenChannel>
+			<quitChannel>
+				<ask neetSession="1">
+					<chKey dataType="ubyte" length="16" haveSize="0"/>
+				</ask>
+				<ret>
+					<result dataType="udword" />
+				</ret>
+			</quitChannel>
+			<sendToChannel>
+				<ask neetSession="1">
+					<chKey dataType="ubyte" length="16" haveSize="0"/>
+					<excSender dataType="udword" commit="do not send ntf to me"/>
+					<pack dataType="ubyte" length="1100000" haveSize="1" commit=""> </pack>
+				</ask>
+				<ret>
+					<result dataType="udword" />
+				</ret>
+			</sendToChannel>
+		</comMsg >
 	</rpc>
 </servers>)";
 
@@ -171,14 +206,12 @@ int  xmlGlobalLoad::xmlLoad (const char* szFile)
 				strFile += *ite;
 				nR = msgFileLoader.xmlLoad (it->first.c_str(), strFile.c_str (), *pPmp);
 				myAssert (0 == nR);
-				/*
 				if (0 == strcmp (it->first.c_str(), "defMsg")) {
 					std::unique_ptr<char[]> comMsgBuf;
 					strCpy (s_comMsg, comMsgBuf);
 					nR = msgFileLoader.xmlLoadFromStr (it->first.c_str(), comMsgBuf.get(), *pPmp);
 					myAssert (0 == nR);
 				}
-				*/
 			}
 		}
 		if (!pAppS) {
@@ -373,6 +406,23 @@ static bool moveFirstListen (moduleFile::serverOrder& rSS, int nSt)
 	return bFind;
 }
 
+serverFile*     xmlGlobalLoad:: getServerByHandle(const char* szHandle)
+{
+    serverFile*     nRet = nullptr;
+    do {
+		auto& ssMap = allServer();
+		for (auto it = ssMap.begin(); ssMap.end() != it; ++it) {
+			auto pS = it->second.get();
+			auto pSN = pS->strHandle ();
+			if (strcmp (pSN, szHandle) == 0) {
+				nRet = pS;
+				break;
+			}
+		}
+    } while (0);
+    return nRet;
+}
+
 int   xmlGlobalLoad:: serverSLoad (rapidxml::xml_node<char>* pServerS, moduleFile& rM)
 {
     int   nRet = 0;
@@ -380,6 +430,7 @@ int   xmlGlobalLoad:: serverSLoad (rapidxml::xml_node<char>* pServerS, moduleFil
 		auto& rMap = rM.serverS ();
 		auto& rSS = rM.orderS ();
 		moduleFile::serverMap& tmp = rMap;
+		auto& ssMap = allServer();
 		for(rapidxml::xml_node<char> * pS = pServerS->first_node();  pS; pS = pS->next_sibling()) {
 			std::shared_ptr<serverFile> rS;
 			
@@ -391,6 +442,9 @@ int   xmlGlobalLoad:: serverSLoad (rapidxml::xml_node<char>* pServerS, moduleFil
 			}
 			rS->setModuleName (rM.moduleName());
 			rS->setServerName (pS->name ());
+			std::string strServerName = pS->name();
+			auto inRet = ssMap.insert (std::make_pair(strServerName, rS)); 
+			myAssert(inRet.second);
 			auto pRet = tmp.insert (std::make_pair(pS->name (), rS));
 			tmp [pS->name ()] = rS;
 			rSS.push_back (rS);
@@ -466,6 +520,18 @@ static int procEndPoint (rapidxml::xml_node<char>* pXmlListen
 	endPoint.bDef = true;
 	return nRet;
 }
+const char* szRootRpc[] = {"addChannel", "delChannel", "listenChannel"
+			,"quitChannel", "sendToChannel"};
+const char** getRpptRpc (int &num)
+{
+	num = sizeof (szRootRpc) / sizeof (szRootRpc[0]);
+	return szRootRpc;
+}
+
+xmlGlobalLoad::allServerMap&  xmlGlobalLoad:: allServer ()
+{
+    return m_allServer;
+}
 
 int   xmlGlobalLoad:: onceServerLoad (rapidxml::xml_node<char>* pS, std::shared_ptr<serverFile>& rS)
 {
@@ -504,6 +570,12 @@ int   xmlGlobalLoad:: onceServerLoad (rapidxml::xml_node<char>* pS, std::shared_
 			if (pDefR) {
 				endPoint.bDef = atoi (pDefR->value ());
 			}
+			auto pTeag = pXmlListen->first_attribute("teag");
+			if (pTeag) {
+				endPoint.userData = atoi (pTeag->value ());
+			} else {
+				endPoint.userData = 0;
+			}
 		}
 		for (auto pXmlCon = pS->first_node (); pXmlCon;
 				pXmlCon = pXmlCon->next_sibling ()) {
@@ -533,6 +605,12 @@ int   xmlGlobalLoad:: onceServerLoad (rapidxml::xml_node<char>* pS, std::shared_
 			auto pXmlPort = pXmlCon->first_attribute ("port");
 			if (pXmlPort) {
 				endPoint.port = atoi (pXmlPort->value ());
+			}
+			auto pTeag = pXmlCon->first_attribute("teag");
+			if (pTeag) {
+				endPoint.userData = atoi (pTeag->value ());
+			} else {
+				endPoint.userData = 0;
 			}
 		}
 		if (rInfo.connectorNum) {
@@ -611,16 +689,20 @@ int   xmlGlobalLoad:: onceServerLoad (rapidxml::xml_node<char>* pS, std::shared_
 				pMsg->setDefProServerId (pHandle);
 			}
 		}
+		bool bIsRoot = newServer->isRoot ();
+		
+		auto rootRpcNum = sizeof (szRootRpc)/ sizeof (szRootRpc[0]);
+		for (decltype (rootRpcNum) i = 0; i < rootRpcNum; i++) {
+			procRpcNode node;
+			node.bAsk = bIsRoot;
+			node.rpcName = szRootRpc[i];
+			auto inRet = rProcS.insert (node);
+			myAssert (inRet.second);
+		}
 		if (nRet) {
 			break;
 		}
-		if (rInfo.listenerNum) {
-			procRpcNode node;
-			node.rpcName = "addChannel";
-			node.bAsk = true;
-			// auto inRet = rProcS.insert (node);
-			// myAssert (inRet.second);
-		}
+		
 		rS = newServer;
     } while (0);
     return nRet;

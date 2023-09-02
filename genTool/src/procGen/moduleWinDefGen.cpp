@@ -32,7 +32,11 @@ int   moduleWinDefGen:: startGen (moduleGen&  rMod)
 		const char* szCon = R"(LIBRARY
 EXPORTS
 	afterLoad	@1
-	beforeUnload	@2)";
+	logicOnAccept	@2
+	logicOnConnect  @3
+	onLoopBegin		@4
+	onLoopEnd		@5
+	beforeUnload	@6)";
 		os<<szCon;
     } while (0);
     return nRet;

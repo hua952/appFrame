@@ -221,14 +221,23 @@ int   msgGen:: genOnceMsgClassCpp (msgGroupFile& rG, msgFile& rMsg, bool bRet, s
 
 	if (!rDv.empty ()) {
 		auto& rData = *(rDv.rbegin ()->get ());
+		auto rDN = rData.dataName ();
 		auto len = rData.dataLength ();
 		if (len) {
 			auto haveSize = rData.haveSize ();
 			if (haveSize) {
-				auto rDN = rData.dataName ();
 				ss<<R"(auto p = (()"<<strN<<R"(*)(N2User(pN)));
 	p->m_)"<<rDN<<R"(Num = 0;
-)";
+	)";
+			}
+
+			auto zeroEnd = rData.zeroEnd ();
+			if (zeroEnd) {
+
+				ss<<strN<<R"(* p2 = (()"<<strN<<R"++(*)(N2User(pN)));
+	)++";
+				ss<<R"(p2->m_)"<<rDN<<R"([0] = 0;
+	)";
 			}
 		}
 	}
@@ -249,18 +258,45 @@ int   msgGen:: genOnceMsgClassCpp (msgGroupFile& rG, msgFile& rMsg, bool bRet, s
 	auto len = rData.dataLength ();
 	// if (len > 1) {
 	if (len) {
+		auto rDN = rData.dataName ();
+		auto zeroEnd = rData.zeroEnd ();
 		auto haveSize = rData.haveSize ();
 		if (haveSize) {
-			auto rDN = rData.dataName ();
 			auto len = rData.dataLength ();
 			ss<<R"(packetHead* )"<<strFunWon<<R"(toPack()
 {
 	netPacketHead* pN = P2NHead(m_pPacket);
-    )"<<strN<<R"(* p = (()"<<strN<<R"++(*)(N2User(pN)));
-	myAssert (p->m_)++"<<rDN<<R"(Num <= )"<<len<<R"();
+    )";
+	
+	ss<<strN<<R"(* p = (()"<<strN<<R"++(*)(N2User(pN)));
+	)++";
+	ss<<R"(myAssert (p->m_)"<<rDN<<R"(Num <= )"<<len<<R"();
+	bool bWZ = false;
+	)";
+	if (zeroEnd	) {
+		ss<<R"(if(p->m_)"<<rDN<<R"(Num) {
+	)"
+		<<R"(bWZ = )"<<R"(p->m_)"<<rDN<<R"([)"
+			<<R"(p->m_)"<<rDN<<R"(Num - 1] != 0;
+	} else {
+		bWZ = true;
+	}
+	if(bWZ) {
+		p->m_)"<<rDN<<R"(Num++;
+	}
+	)";
+	}
+	ss<<R"(myAssert (p->m_)"<<rDN<<R"(Num <= )"<<len<<R"();
 	pN->udwLength = sizeof()"<<strN<<R"() - sizeof(p->m_)"
 	<<rDN<<R"([0]) * ()"<<len<<R"( - p->m_)"<<rDN<<R"(Num);
-	return m_pPacket;
+	)";
+	if (zeroEnd) {
+		ss<<R"(if(bWZ) { 
+			p->m_)"<<rDN<<R"([p->m_)"<<rDN<<R"(Num - 1] = 0;
+		}
+	)";
+	}
+	ss<<R"(return m_pPacket;
 }
 )";
 		}

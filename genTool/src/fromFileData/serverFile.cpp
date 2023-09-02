@@ -41,6 +41,31 @@ const char*  serverFile::serverName ()
     return m_serverName.get ();
 }
 
+bool   serverFile:: isRoot ()
+{
+    bool   nRet = 0;
+    do {
+		auto& rN = m_serverInfo;
+		
+		bool bFindDefLis = false;
+		bool bFindDefCon = false;
+		for (decltype (rN.listenerNum) i = 0; i < rN.listenerNum; i++) {
+			if (rN.listenEndpoint[i].bDef) {
+				bFindDefLis = true;
+				break;
+			}
+		}
+		for (decltype (rN.connectorNum) i = 0; i < rN.connectorNum; i++) {
+			if (rN.connectEndpoint[i].bDef) {
+				bFindDefCon = true;
+				break;
+			}
+		}
+		nRet =bFindDefLis && !bFindDefCon;
+    } while (0);
+    return nRet;
+}
+
 void  serverFile::setServerName (const char* v)
 {
     strCpy (v, m_serverName);

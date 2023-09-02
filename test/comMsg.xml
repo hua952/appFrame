@@ -5,13 +5,43 @@
 	<rpc>
 		<comMsg addrType="1" cppDir="../libMsg/src" order="610" extPH="1">
 			<addChannel>
+				<ask neetSession="1">
+					<token dataType="udword" />
+				</ask>
+				<ret neetSession="1">
+					<result dataType="udword" />
+				</ret>
+			</addChannel>
+			<delChannel>
 				<ask>
-					<channel dataType="udword" />
 				</ask>
 				<ret>
 					<result dataType="udword" />
 				</ret>
-			</addChannel>
+			</delChannel>
+			<listenChannel>
+				<ask>
+				</ask>
+				<ret>
+					<result dataType="udword" />
+				</ret>
+			</listenChannel>
+			<quitChannel>
+				<ask>
+				</ask>
+				<ret>
+					<result dataType="udword" />
+				</ret>
+			</quitChannel>
+			<sendToChannel>
+				<ask>
+					<excSender dataType="udword" commit="do not send ntf to me"/>
+					<pack dataType="ubyte" length="1100000" haveSize="1" commit="数据包"> </pack>
+				</ask>
+				<ret>
+					<result dataType="udword" />
+				</ret>
+			</sendToChannel>
 		</comMsg >
 	</rpc>
 </servers>

@@ -55,6 +55,10 @@ int   moduleExportFunGen:: genH (moduleGen& rMod)
 extern "C"
 {
 	void  afterLoad(int nArgC, const char* argS[], ForLogicFun* pForLogic);
+	void onLoopBegin	(serverIdType	fId);
+	void onLoopEnd	(serverIdType	fId);
+	void logicOnAccept(serverIdType	fId, SessionIDType sessionId, uqword userData);
+	void logicOnConnect(serverIdType fId, SessionIDType sessionId, uqword userData);
 	void  beforeUnload();
 }
 #endif)";
@@ -97,6 +101,42 @@ void  afterLoad(int nArgC, const char* argS[], ForLogicFun* pForLogic)
 	tSingleton<)"<<strMgrClassName<<R"(>::createSingleton();
 	auto &rMgr = tSingleton<)"<<strMgrClassName<<R"(>::single();
 	rMgr.afterLoad(nArgC, argS, pForLogic);
+}
+
+void logicOnAccept(serverIdType	fId, SessionIDType sessionId, uqword userData)
+{
+	auto &rMgr = tSingleton<)"<<strMgrClassName<<R"(>::single();
+	auto pS = rMgr.findServer(fId);
+	if (pS) {
+		pS->logicOnAcceptSession(sessionId, userData);
+	}
+}
+
+void onLoopBegin	(serverIdType	fId)
+{
+	auto &rMgr = tSingleton<)"<<strMgrClassName<<R"(>::single();
+	auto pS = rMgr.findServer(fId);
+	if (pS) {
+		pS->onLoopBegin	();
+	}
+}
+
+void onLoopEnd	(serverIdType	fId)
+{
+	auto &rMgr = tSingleton<)"<<strMgrClassName<<R"(>::single();
+	auto pS = rMgr.findServer(fId);
+	if (pS) {
+		pS->onLoopEnd();
+	}
+}
+
+void logicOnConnect(serverIdType fId, SessionIDType sessionId, uqword userData)
+{
+	auto &rMgr = tSingleton<)"<<strMgrClassName<<R"(>::single();
+	auto pS = rMgr.findServer(fId);
+	if (pS) {
+		pS->logicOnConnect(sessionId, userData);
+	}
 }
 
 void  beforeUnload()

@@ -160,7 +160,11 @@ int   moduleMgrGen:: writeDefFile ()
 		os<<R"(LIBRARY
 EXPORTS
 	afterLoad	@1
-	beforeUnload	@2)";
+	logicOnAccept	@2
+	logicOnConnect  @3
+	onLoopBegin		@4
+	onLoopEnd		@5
+	beforeUnload	@6)";
     } while (0);
     return nRet;
 }
@@ -180,11 +184,16 @@ int   moduleMgrGen:: writeExportFunH ()
 		os<<R"(#ifndef _exportFun_h__
 #define _exportFun_h__
 #include "mainLoop.h"
-
+class logicServer;
 extern "C"
 {
 	void  afterLoad(int nArgC, const char* argS[], ForLogicFun* pForLogic);
 	void  beforeUnload();
+
+	void onLoopBegin	(serverIdType	fId);
+	void onLoopEnd	(serverIdType	fId);
+	void logicOnAccept(serverIdType	fId, SessionIDType sessionId, uqword userData);
+	void logicOnConnect(serverIdType fId, SessionIDType sessionId, uqword userData);
 }
 #endif)";
     } while (0);
@@ -206,15 +215,38 @@ int   moduleMgrGen:: writeExportFunCpp ()
 		os<<R"(#include <iostream>
 #include "exportFun.h"
 #include "myAssert.h"
-#include "logicServer.h"
+#include "allLogicServerMgr.h"
 #include "tSingleton.h"
 #include "cLog.h"
 
 void  afterLoad(int nArgC, const char* argS[], ForLogicFun* pForLogic)
 {
-	tSingleton<logicServerMgr>::createSingleton();
-	auto &rMgr = tSingleton<logicServerMgr>::single();
+	tSingleton<allLogicServerMgr>::createSingleton();
+	auto &rMgr = tSingleton<allLogicServerMgr>::single();
 	rMgr.afterLoad(nArgC, argS, pForLogic);
+}
+void logicOnAccept(serverIdType	fId, SessionIDType sessionId, uqword userData)
+{
+	auto &rMgr = tSingleton<allLogicServerMgr>::single();
+	return rMgr.logicOnAccept(fId, sessionId, userData);
+}
+
+void logicOnConnect(serverIdType fId, SessionIDType sessionId, uqword userData)
+{
+	auto &rMgr = tSingleton<allLogicServerMgr>::single();
+	return rMgr.logicOnConnect(fId, sessionId, userData);
+}
+
+void onLoopBegin	(serverIdType	fId)
+{
+	auto &rMgr = tSingleton<allLogicServerMgr>::single();
+	return rMgr.onLoopBegin	(fId);
+}
+
+void onLoopEnd	(serverIdType	fId)
+{
+	auto &rMgr = tSingleton<allLogicServerMgr>::single();
+	return rMgr.onLoopEnd(fId);
 }
 
 void  beforeUnload()
@@ -239,38 +271,47 @@ int   moduleMgrGen:: writeLogicServerH ()
     int   nRet = 0;
 	do {
 		std::string fileName = genSrcDir ();
-		fileName += "/logicServer.h";
+		fileName += "/allLogicServerMgr.h";
 		std::ofstream os(fileName.c_str ());
 		if (!os) {
 			nRet = 1;
 			rError ("create file error file name is : "<<fileName.c_str ());
 			break;
 		}
-		os<<R"(#ifndef _logicServer_h_
-#define _logicServer_h_
+		os<<R"(#ifndef _allLogicServerMgr_h_
+#define  _allLogicServerMgr_h_
 #include <memory>
 #include "mainLoop.h"
+#include <string>
+#include <map>
 
-class logicServer
+class logicServer;
+class allLogicServerMgr
 {
 public:
-	logicServer();
-	~logicServer();
-	int init(const char* name, ServerIDType id);
-	ServerIDType id();
-	const char*  name();
-	int OnServerFrame();
-private:
-	std::unique_ptr<char[]>	 m_name;
-	ServerIDType  m_id;
-};
-
-
-class logicServerMgr
-{
-public:
+	// typedef logicServer* (*findServerFT)(serverIdType);
+	struct moduleInfo
+	{
+		void* handle;
+		afterLoadFunT fnAfterLoadFun;
+		logicOnAcceptFT  fnLogicOnAccept;
+		logicOnConnectFT  fnLogicOnConnect;
+		beforeUnloadFT fnBeforeUnload;
+		onLoopBeginFT  fnOnLoopBegin;
+		onLoopEndFT  fnOnLoopEnd;
+		// findServerFT   fnFindServer;
+	};
+	using moduleMap = std::map<std::string, moduleInfo>;
 	void  afterLoad(int nArgC, const char* argS[], ForLogicFun* pForLogic);
+	// logicServer*  findServer (serverIdType	sId);
+	moduleMap&  moduleS ();
+	void logicOnAccept(serverIdType	fId, SessionIDType sessionId, uqword userData);
+	void logicOnConnect(serverIdType fId, SessionIDType sessionId, uqword userData);
+
+	void onLoopBegin	(serverIdType	fId);
+	void onLoopEnd	(serverIdType	fId);
 private:
+	moduleMap  m_moduleS;
 	ForLogicFun m_ForLogicFun;
 };
 #endif)";
@@ -283,7 +324,7 @@ int   moduleMgrGen:: writeLogicServerCpp ()
     int   nRet = 0;
     do {
 		std::string fileName = genSrcDir ();
-		fileName += "/logicServer.cpp";
+		fileName += "/allLogicServerMgr.cpp";
 		std::ofstream os(fileName.c_str ());
 		if (!os) {
 			nRet = 1;
@@ -292,7 +333,7 @@ int   moduleMgrGen:: writeLogicServerCpp ()
 		}
 		os<<R"(#include <iostream>
 #include <string>
-#include "logicServer.h"
+#include "allLogicServerMgr.h"
 #include <cstring>
 #include "msg.h"
 #include "gLog.h"
@@ -303,38 +344,6 @@ int   moduleMgrGen:: writeLogicServerCpp ()
 #include "rpcInfo.h"
 #include "modelLoder.h"
 #include <vector>
-
-logicServer::logicServer()
-{
-}
-
-logicServer::~logicServer()
-{
-}
-
-int logicServer::init(const char* name, ServerIDType id)
-{
-	auto nameL = strlen(name);
-	m_name = std::make_unique<char[]>(nameL + 1);
-	strcpy(m_name.get(), name);
-	m_id = id;
-	return 0;
-}
-
-ServerIDType logicServer::id()
-{
-	return m_id;
-}
-
-const char*  logicServer::name()
-{
-	return m_name.get();
-}
-
-int logicServer::OnServerFrame()
-{
-	return 0;
-}
 
 void getModelS (int nArgC, const char* argS[], std::vector<std::string>& vModelS)
 {
@@ -356,7 +365,57 @@ void getModelS (int nArgC, const char* argS[], std::vector<std::string>& vModelS
 	}
 }
 
-void logicServerMgr::afterLoad(int nArgC, const char* argS[], ForLogicFun* pForLogic)
+allLogicServerMgr::moduleMap& allLogicServerMgr:: moduleS ()
+{
+	return m_moduleS;
+}
+/*
+logicServer*  allLogicServerMgr::findServer (serverIdType	sId)
+{
+	logicServer* pRet = nullptr;
+	auto& modS = moduleS ();
+	for (auto it = modS.begin(); modS.end() != it; ++it) {
+		pRet = it->second.fnFindServer (sId);
+		if(pRet) {
+			break;
+		}
+	}
+	return pRet;
+}
+*/
+void allLogicServerMgr::logicOnAccept(serverIdType	fId, SessionIDType sessionId, uqword userData)
+{
+	auto& modS = moduleS ();
+	for (auto it = modS.begin(); modS.end() != it; ++it) {
+		it->second.fnLogicOnAccept(fId, sessionId, userData);
+	}
+}
+
+void allLogicServerMgr::logicOnConnect(serverIdType fId, SessionIDType sessionId, uqword userData)
+{
+	auto& modS = moduleS ();
+	for (auto it = modS.begin(); modS.end() != it; ++it) {
+		it->second.fnLogicOnConnect(fId, sessionId, userData);
+	}
+}
+
+void allLogicServerMgr::onLoopBegin	(serverIdType	fId)
+{
+	auto& modS = moduleS ();
+	for (auto it = modS.begin(); modS.end() != it; ++it) {
+		it->second.fnOnLoopBegin(fId);
+	}
+}
+
+void allLogicServerMgr::onLoopEnd(serverIdType	fId)
+{
+	auto& modS = moduleS ();
+	for (auto it = modS.begin(); modS.end() != it; ++it) {
+		it->second.fnOnLoopEnd(fId);
+	}
+}
+
+void allLogicServerMgr::afterLoad(int nArgC, const char* argS[], ForLogicFun* pForLogic)
 {
 	m_ForLogicFun = *pForLogic;
 	auto pForMsg = &m_ForLogicFun;
@@ -368,22 +427,51 @@ void logicServerMgr::afterLoad(int nArgC, const char* argS[], ForLogicFun* pForL
 	getModelS (nArgC, argS, vModelS);
 	gInfo ("logicModelNum = "<<vModelS.size());
 	do {
+		auto& modS = moduleS ();
 		for (auto it = vModelS.begin (); vModelS.end () != it; ++it) {
 			std::string strDll = *it;
 			gInfo ("will load "<<strDll.c_str ());
-			auto hDll = loadDll (strDll.c_str());
-			if (!hDll) {
+			moduleInfo info;
+			info.handle = loadDll (strDll.c_str());
+			if (!info.handle) {
 				gError ("load dll fail fileName = "<<strDll.c_str());
 				break;
 			}
-			auto onLoad = (afterLoadFunT)(getFun(hDll, "afterLoad"));
-			if (!onLoad) {
+			info.fnAfterLoadFun = (afterLoadFunT)(getFun(info.handle, "afterLoad"));
+			if (!info.fnAfterLoadFun) {
 				gError ("get fun afterLoad fail");
 				break;
 			}
+			info.fnLogicOnAccept= (logicOnAcceptFT)(getFun(info.handle, "logicOnAccept"));
+			if (!info.fnLogicOnAccept) {
+				gError ("get fun fnLogicOnAccept fail");
+				break;
+			}
+			info.fnLogicOnConnect = (logicOnConnectFT)(getFun(info.handle, "logicOnConnect"));
+			if (!info.fnLogicOnConnect) {
+				gError ("get fun fnLogicOnConnect fail");
+				break;
+			}
+			info.fnBeforeUnload = (beforeUnloadFT)(getFun(info.handle, "beforeUnload"));
+			if (!info.fnBeforeUnload) {
+				gError ("get fun fnFindServer fail");
+				break;
+			}
+			info.fnOnLoopBegin = (onLoopBeginFT)(getFun(info.handle, "onLoopBegin"));
+			if (!info.fnOnLoopBegin) {
+				gWarn ("fun onLoopBegin empty error is");
+				break;
+			}
+			info.fnOnLoopEnd = (onLoopEndFT)(getFun(info.handle, "onLoopEnd"));
+			if (!info.fnOnLoopEnd) {
+				gWarn ("fun onLoopEnd empty error is");
+				break;
+			}
 			gInfo ("befor call onLoad");
-			onLoad (nArgC, argS, pForMsg);
+			info.fnAfterLoadFun(nArgC, argS, pForMsg);
 			gInfo ("after call onLoad");
+			auto inRet = modS.insert(std::make_pair(strDll, info));
+			myAssert(inRet.second);
 		}
 	} while (0);
 })";

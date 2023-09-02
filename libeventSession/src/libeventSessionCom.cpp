@@ -176,12 +176,7 @@ void libeventSessionCom::trySend ()
 			auto nRet = bufferevent_write(bevL, pN, nS);
 			if (0 == nRet) {
 				nTrace (__FUNCTION__<<" msgId = "<<pN->uwMsgID<<" length = "<<pN->udwLength<<" nS = "<<nS);
-				/*
-				if (pN->uwMsgID == toFramMsgId (enFramMsgId_regMyHandleRet)) {
-					auto pU = (regMyHandleRetPack*)(N2User(pN));
-					nTrace ("send result = "<<pU->result<<"  myHandle = "<<(int)pU->myHandle);
-				}
-				*/
+				
 				pCur = pCur->pNext;
 				d->pPer->pNext = pCur;
 				pCur->pPer = d->pPer;

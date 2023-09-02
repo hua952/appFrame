@@ -51,9 +51,7 @@ int   moduleCMakeListsGen:: startGen (moduleGen& rModel)
 		auto& rSS = rData.orderS ();
 		using groupSet = std::set<std::string>;
 		for (auto it = rSS.begin (); rSS.end () != it; ++it) {
-			procPack<<strPer;
 			auto pName = it->get()->serverName ();
-			procPack<<pName<<"/";
 			groupSet  groupS;
 			auto pServerF = rData.findServer (pName);
 			myAssert (pServerF);
@@ -68,6 +66,8 @@ int   moduleCMakeListsGen:: startGen (moduleGen& rModel)
 				groupS.insert (pGName);
 			}
 			for (auto ite = groupS.begin(); groupS.end() != ite; ++ite) {
+				procPack<<strPer;
+				procPack<<pName<<"/";
 				procPack<<*ite<<"/*.cpp ";
 			}
 		}

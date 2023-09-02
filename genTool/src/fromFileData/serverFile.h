@@ -26,7 +26,7 @@ struct toolServerEndPointInfo
 	char              ip[16];
 	uword             port;
 	ServerIDType	  targetHandle; // use to reg route use on onConnect
-	uword             unUse;  // 
+	uword             userData;  // 
 	bool              bDef;  // def route
 	bool              bRegHandle; // 几乎没用 
 };
@@ -74,6 +74,7 @@ public:
 	void  setSleepSetp (udword v);
 	udword  fpsSetp ();
 	void  setFpsSetp (udword v);
+	bool  isRoot ();
 private:
 	std::unique_ptr <char[]>  m_frameFunDec;
 	std::unique_ptr <char[]>  m_frameFunName;

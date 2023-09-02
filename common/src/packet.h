@@ -20,8 +20,8 @@ typedef struct _packetHead
 	struct _packetHead*    pPer;
 	// struct _packetHead*    pAsk;
 	uqword    pAsk;
-	udword    sessionId;
-	udword    oldToken;
+	udword    sessionID;
+	udword    unUse;
 }packetHead;
 
 typedef packetHead* pPacketHead;
@@ -73,6 +73,7 @@ enum packAddrType
 #define		PacketHeadSize    (sizeof(packetHead))
 #define     NetMsgLenSize  (sizeof(netPacketHead))
 #define     NetHeadSize   (NetMsgLenSize)
+#define     AllNetHeadSize(p)   (((NIsExtPH(p))?2:1)*NetMsgLenSize)
 #define     AllPacketHeadSize  (PacketHeadSize+NetHeadSize)
 //#define     NetPacketHeadSize (sizeof(NetPacketHead))
 //#define     FullPacketHeadSize   (sizeof(PacketHead)+NetPacketHeadSize)

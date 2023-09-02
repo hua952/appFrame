@@ -26,7 +26,10 @@ public:
 	void  setExtPH (bool v);
 	packAddrType addrType ();
 	void  setAddrType (packAddrType v);
+	bool  neetSession ();
+	void  setNeetSession (bool v);
 private:
+	bool  m_neetSession;
 	packAddrType m_addrType;
 	bool  m_extPH;
 	std::unique_ptr <char[]>  m_msgName;

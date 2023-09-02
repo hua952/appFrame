@@ -14,6 +14,7 @@
 class xmlGlobalLoad
 {
 public:
+	using allServerMap = std::map <std::string, std::shared_ptr <serverFile>>;
     xmlGlobalLoad ();
     ~xmlGlobalLoad ();
 	int  xmlLoad (const char* szFile);
@@ -24,6 +25,9 @@ public:
 	int  serverSLoad (rapidxml::xml_node<char>*  pServerS, moduleFile& rM);
 	int  onceServerLoad (rapidxml::xml_node<char>* pS, std::shared_ptr<serverFile>& rS);
 	int  secondProcess ();
+	serverFile*    getServerByHandle(const char* szHandle);
+	allServerMap&  allServer ();
 private:
+	allServerMap  m_allServer;
 };
 #endif

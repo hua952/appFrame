@@ -62,3 +62,11 @@ bool isPathInterval (char c)
 	return  c == '/';
 }
 
+int   createUuid (char* outPut)
+{
+    int   nRet = 0;
+    do {
+    } while (0);
+    return nRet;
+}
+

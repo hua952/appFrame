@@ -10,6 +10,7 @@
 #include "fpsCount.h"
 #include "ITcpServer.h"
 #include "comTcpNet.h"
+#include <set>
 
 class impLoop:public comTcpNet
 {
@@ -23,10 +24,11 @@ public:
 	bool	removeMsg(uword uwMsgId);
 	procRpcPacketFunType findMsg(uword uwMsgId);
 	const char* name();
-	int OnLoopFrame();
+
+	int onLoopBegin();
+	int onLoopEnd();
+	int onLoopFrame();
 	int processOncePack(packetHead* pPack);
-	// int onWriteOncePack(packetHead* pPack);
-	// void onFreePack(packetHead* pPack);
 
 	int processLocalServerPack(packetHead* pPack);
 	int processOtherAppPack(packetHead* pPack);
@@ -40,13 +42,10 @@ public:
 	iPackSave*    getIPackSave ();
 	void  showFps ();
 	fpsCount&  fpsC ();
-	/*
-	ITcpServer*  midTcpServer ();
-	void  setMidTcpServer (ITcpServer* v);
-	*/
+	
 	int processNetPackFun(ISession* session, packetHead* pack)override;
-	void onAcceptSession(ISession* session, uqword userData)override;
-	void onConnect(ISession* session, uqword userData)override;
+	void onAcceptSession(ISession* session, void* userData)override;
+	void onConnect(ISession* session, void* userData)override;
 	void onClose(ISession* session)override;
 	void onWritePack(ISession* session, packetHead* pack)override;
 	using serverSessionMap = std::map<ServerIDType, SessionIDType>;

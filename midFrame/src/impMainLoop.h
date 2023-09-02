@@ -34,11 +34,15 @@ public:
 	ForLogicFun&  getForLogicFun();
 	uword  upNum ();
 	void  setUpNum (uword v);
+	void onLoopBegin(ServerIDType fId);
+	void onLoopEnd(ServerIDType fId);
+	void logicOnConnect(serverIdType fId, SessionIDType sessionId, uqword userData);
+	void logicOnAccept(serverIdType	fId, SessionIDType sessionId, uqword userData);
 private:	
 	uword  m_upNum;
     udword  m_delSendPackTime;
-	msgMgr						m_defMsgInfoMgr;
-	int							m_CurLoopNum;
+	msgMgr		m_defMsgInfoMgr;
+	int			m_CurLoopNum;
 	loopHandleType	m_gropId;
 	std::unique_ptr<impLoop>	 m_loopS [LoopNum];
 	typedef std::map<loopHandleType, std::string> tempLoopIdMap;

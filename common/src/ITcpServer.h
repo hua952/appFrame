@@ -7,14 +7,14 @@
 struct endPoint
 {
 	char ip[16];
-	uqword   userData;	
-	// udword   userDataLen;
+	void* userData;	
+	udword   userDataLen;
 	uword    port;
-	// uword    unUse;
+	uword    unUse;
 };
 
-typedef void (*onAcceptSessionT)(ISession* session, uqword userData);
-typedef void (*onConnectT)(ISession* session, uqword userData);
+typedef void (*onAcceptSessionT)(ISession* session, void* userData);
+typedef void (*onConnectT)(ISession* session, void* userData);
 typedef void (*onCloseT)(ISession* session);
 typedef int (*onProcPackT)(ISession* session, packetHead* packet);
 typedef void (*onWritePackT)(ISession* session, packetHead* packet);

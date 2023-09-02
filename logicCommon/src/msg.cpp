@@ -31,7 +31,7 @@ bool CMsgBase::fromPack(packetHead* p)
 	return true;
 }
 
-packetHead*  CMsgBase::getPack()
+packetHead*  CMsgBase::getPack()const
 {
 	return m_pPacket;
 }

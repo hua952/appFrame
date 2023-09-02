@@ -143,7 +143,7 @@ int             getCurModelPath (std::unique_ptr<char[]>& pathBuf)
 }
 
 
-int  createUuid (char outPut[16])
+int  createUuid (char* outPut)
 {
 	int nRet = 0;
 	do

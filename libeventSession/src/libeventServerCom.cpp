@@ -151,7 +151,7 @@ static bool sConnectComTimerFun(void* p)
 				auto sid = pL->id();
 				pL->setState (SessionState_Online);
 				//nTrace ("will call onConnect sid = "<<sid<<" token = "<<*token);
-				conFun (pL, *token);
+				conFun (pL, token);
 			} else {
 				nRet = true;
 			}
@@ -200,7 +200,8 @@ int libeventServerCom::init (callbackS* pCallbackS, endPoint* pLister, udword li
 			auto& ep = pLister[i];
 			auto& rRL = m_listerS [i];
 			rRL.init (this, ep.ip, ep.port);
-			rRL.setUserData (ep.userData);
+			// rRL.setUserData (ep.userData);
+			rRL.setUserData (ep.userData, ep.userDataLen);
 		}
 	}
 	if (conNum > 0) {
@@ -215,7 +216,7 @@ int libeventServerCom::init (callbackS* pCallbackS, endPoint* pLister, udword li
 			pCon->init (this, ep.ip, ep.port);
 			pCon->setId(id);
 			pCon->setState(SessionState_waitCon);
-			pCon->setUserData (&ep.userData, sizeof (ep.userData));
+			pCon->setUserData (ep.userData, ep.userDataLen);
 			//auto nR = pCon->init (this, ep.ip, ep.port);
 			//if (0 == nR) {
 			//pCon->setIp (ep.ip);

@@ -129,13 +129,28 @@ static void accept_cb(intptr_t fd, short events, void* arg)
 	fun (pSS, token);
 }
 
-uqword  libeventListener::  userData ()
+udword  libeventListener:: userDataLen ()
 {
-    return m_userData;
+    return m_userDataLen;
 }
-void  libeventListener::setUserData (uqword  va)
+
+void  libeventListener:: setUserDataLen (udword v)
 {
-    m_userData = va;
+    m_userDataLen = v;
+}
+
+void* libeventListener::  userData ()
+{
+    return m_pUserData.get();
+}
+
+void  libeventListener::setUserData (void* userData, udword userDataLen)
+// void  libeventListener::setUserData (void* va)
+{
+	m_pUserData = std::make_unique<char[]>(userDataLen);
+	memcpy (m_pUserData.get(), userData, userDataLen);
+	setUserDataLen (userDataLen);
+    // m_userData = va;
 }
 
 libeventServerCom*  libeventListener::getServer ()

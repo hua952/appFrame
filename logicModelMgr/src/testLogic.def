@@ -1,4 +1,6 @@
 LIBRARY
 EXPORTS
 	afterLoad	@1
-	beforeUnload	@2
+	logicOnAccept	@2
+	logicOnConnect  @3
+	beforeUnload	@4

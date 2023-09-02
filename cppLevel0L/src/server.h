@@ -9,8 +9,6 @@
 #include <unordered_map>
 #include "typeDef.h"
 #include "cTimer.h"
-#include "iTokenSave.h"
-#include "tokenSave_map.h"
 
 class server
 {

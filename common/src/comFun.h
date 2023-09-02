@@ -93,7 +93,7 @@ int             getDirFromFile (const char* szFile, std::unique_ptr<char[]>& pat
 void showTraceStack(std::unique_ptr<char[]>& pBuff);
 void second2Str (uqword uqwCur, std::unique_ptr<char[]>& strTime);
 uqword curNanosecond ();
-int  createUuid (char outPut[16]);
+int  createUuid (char* outPut);
 std::ostream& operator << (std::ostream& os, const packetHead& pack);
 
 #define SD(p) {delete p;p=nullptr;}

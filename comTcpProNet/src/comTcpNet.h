@@ -20,20 +20,17 @@ public:
 			sigInfo* pInfo, udword sigNum);
 	void cleanNet ();
 	virtual	int processNetPackFun(ISession* session, packetHead* pack);
-	virtual	void onAcceptSession(ISession* session, uqword userData);
-	virtual	void onConnect(ISession* session, uqword userData);
+	virtual	void onAcceptSession(ISession* session, void* userData);
+	virtual	void onConnect(ISession* session, void* userData);
 	virtual	void onClose(ISession* session);
 	virtual	void onWritePack(ISession* session, packetHead* pack);
-/*
-	virtual packetHead* allocPackFun (udword udwSize) = 0;
-	virtual void		freePackFun (packetHead* pack) = 0;
-	virtual int logMsgFun (const char* logName, const char* szMsg, uword wLevel);
-*/
+
 	ITcpServer*  tcpServer ();
 	void  setTcpServer (ITcpServer* v);
 	ISession* getSession (SessionIDType id);
 	// delTcpServerFT  delTcpServerFun ();
-	using usrDataType = std::pair<comTcpNet*, uqword>;
+	typedef ubyte usrDataValue[16];
+	using usrDataType = std::pair<comTcpNet*, usrDataValue>;
 private:
 	std::unique_ptr<usrDataType[]>   m_usrDataS;
 	ITcpServer*  m_tcpServer;

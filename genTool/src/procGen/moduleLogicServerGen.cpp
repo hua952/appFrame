@@ -11,6 +11,7 @@
 #include "fromFileData/msgFileMgr.h"
 #include "fromFileData/msgPmpFile.h"
 #include "fromFileData/globalFile.h"
+#include "xmlGlobalLoad.h"
 #include "tSingleton.h"
 #include "rLog.h"
 #include "tSingleton.h"
@@ -62,11 +63,13 @@ int   moduleLogicServerGen:: startGen (moduleGen& rMod)
 		auto& rSS = rData.orderS ();
 		for (auto it = rSS.begin (); rSS.end () != it; ++it) {
 			auto pName = it->get()->serverName ();
+			/*
 			nR = genOnFrameFun (rMod, pName);
 			if (nR) {
 				nRet = 3;
 				break;
 			}
+			*/
 			nR = genPackFun (rMod, pName);
 			if (nR) {
 				nRet = 4;
@@ -83,6 +86,7 @@ int   moduleLogicServerGen:: genMgrCpp (moduleGen& rMod)
 	do {
 		auto& rData = rMod.moduleData();
 		auto& rSS = rData.orderS ();
+		auto& rGloble = tSingleton<xmlGlobalLoad>::single ();
 		auto serverNum = rSS.size ();
 		auto genPath = rMod.genPath ();
 		std::string strFilename = genPath;
@@ -111,6 +115,7 @@ struct conEndPointT
 	std::string first;
 	ServerIDType	targetHandle;
 	uword       second;
+	uword       userData;
 	bool        bDef;
 };
 
@@ -151,10 +156,7 @@ void )"<<strMgrClassName<<R"(::afterLoad(int nArgC, const char* argS[], ForLogic
 	osCN<<R"(auto pConEndPointS = std::make_unique<
 		std::unique_ptr<conEndPointT []>[]>(serverNum);
 	)";
-	/*
-	osLN<<R"(    auto pPortS = std::make_unique<std::unique_ptr<uword[]>[]> (serverNum);
-	)";
-	*/
+	
 	osLN<<R"(auto pLenEndPointS = std::make_unique<
 		std::unique_ptr<conEndPointT []>[]>(serverNum);
 	)";
@@ -168,8 +170,6 @@ void )"<<strMgrClassName<<R"(::afterLoad(int nArgC, const char* argS[], ForLogic
 			osSleep<<",";
 			osHS<<",";
 			osNum<<",";
-			// osCN<<",";
-			// osLN<<",";
 			osConNum<<",";
 		}
 		osName<<R"(")"<<pName<<R"(")";
@@ -179,18 +179,7 @@ void )"<<strMgrClassName<<R"(::afterLoad(int nArgC, const char* argS[], ForLogic
 		osSleep<<rSS[i]->sleepSetp();
 		osNum<<(int)(rSS[i]->serverInfo().listenerNum);
 		osConNum<<(int)(rSS[i]->serverInfo().connectorNum);
-		/*
-		if (rSS[i]->serverInfo().listenerNum) {
-			osLN<<"pPortS ["<<(int)i<<"] = std::make_unique<uword[]>("<<
-				(int)rSS[i]->serverInfo().listenerNum<<R"();
-	)";
-			for (decltype (rSS[i]->serverInfo().listenerNum) k = 0; k < rSS[i]->serverInfo().listenerNum; k++) {
-				osLN<<"pPortS["<<(int)i<<"]["<<(int)k<<R"(] = )"<<
-					rSS[i]->serverInfo().listenEndpoint[k].port<<R"(;
-	)";
-			} // for
-		} // if
-		*/
+		
 		if (rSS[i]->serverInfo().listenerNum) {
 			osCN<<"pLenEndPointS ["<<(int)i<<"] = std::make_unique<conEndPointT []>("<<
 				(int)rSS[i]->serverInfo().listenerNum<<R"();
@@ -199,6 +188,8 @@ void )"<<strMgrClassName<<R"(::afterLoad(int nArgC, const char* argS[], ForLogic
 				osCN<<"auto& rEndP = pLenEndPointS["<<(int)i<<"]["<<(int)k<<R"(];
 	rEndP.second = )"<<
 			rSS[i]->serverInfo().listenEndpoint[k].port<<R"(;
+	rEndP.userData = )"<<
+			rSS[i]->serverInfo().listenEndpoint[k].userData<<R"(;
 	rEndP.bDef = )"<<
 			rSS[i]->serverInfo().listenEndpoint[k].bDef<<R"(;
 		)";
@@ -210,6 +201,13 @@ void )"<<strMgrClassName<<R"(::afterLoad(int nArgC, const char* argS[], ForLogic
 				(int)rSS[i]->serverInfo().connectorNum<<R"();
 	)";
 			for (decltype (rSS[i]->serverInfo().connectorNum) k = 0; k < rSS[i]->serverInfo().connectorNum; k++) {
+				auto pFS = rGloble.getServerByHandle (rSS[i]->serverInfo().connectEndpoint[k].szTarget);
+				myAssert (pFS);
+				if (!pFS) {
+					rError (" handle name error : "<<rSS[i]->serverInfo().connectEndpoint[k].szTarget);
+					nRet = 3;
+					break;
+				}
 				osCN<<"auto& rEndP = pConEndPointS["<<(int)i<<"]["<<(int)k<<R"(];
 	rEndP.first = ")"<<rSS[i]->serverInfo().connectEndpoint[k].ip<<
 				R"(";
@@ -217,12 +215,25 @@ void )"<<strMgrClassName<<R"(::afterLoad(int nArgC, const char* argS[], ForLogic
 			rSS[i]->serverInfo().connectEndpoint[k].port<<R"(;
 	rEndP.bDef = )"<<
 			rSS[i]->serverInfo().connectEndpoint[k].bDef<<R"(;
+	rEndP.userData = )"<<
+			rSS[i]->serverInfo().connectEndpoint[k].userData<<R"(;
 	rEndP.targetHandle = )"<<
 			rSS[i]->serverInfo().connectEndpoint[k].szTarget<<R"(;
 		)";
 			} // for
+			if (nRet) {
+				break;
+			}
 		} // if
+
+		if (nRet) {
+			break;
+		}
 	} // for
+
+	if (nRet) {
+		break;
+	}
 
 	osName<<"};";
 	osSerPat<<"};";
@@ -242,6 +253,7 @@ void )"<<strMgrClassName<<R"(::afterLoad(int nArgC, const char* argS[], ForLogic
 	os<<osCN.str ();
 	os<<R"(
 	m_serverS = std::make_unique<logicServer* []> (serverNum);
+	setServerNum (serverNum);
 	for (decltype (serverNum) i = 0; i < serverNum; i++) {
 		m_serverS [i] = osSerPat [i];
 		)";
@@ -253,18 +265,21 @@ void )"<<strMgrClassName<<R"(::afterLoad(int nArgC, const char* argS[], ForLogic
 		rInfo.sleepSetp = sleepSetpS[i];
 		rInfo.listenerNum = listenNumS [i];
 		rInfo.connectorNum = connectNumS [i];
+		// rInfo.fnOnAccept = rServer.sLogicOnAcceptSession;
+		// rInfo.fnOnConnect = rServer.sLogicOnConnect;
+		auto pThis = &rServer;
 		for (decltype(rInfo.listenerNum) j = 0; j < rInfo.listenerNum; j++) {
 			auto& ep = rInfo.listenEndpoint [j];
 			strNCpy (ep.ip, sizeof(ep.ip), "0.0.0.0");
 			ep.bDef = pLenEndPointS[i][j].bDef;
-			ep.bRegHandle = false;
+			ep.userData = pLenEndPointS[i][j].userData;
 			ep.port = pLenEndPointS[i][j].second;
 		}
 		for (decltype(rInfo.connectorNum) j = 0; j < rInfo.connectorNum; j++) {
 			auto& ep = rInfo.connectEndpoint [j];
 			strNCpy (ep.ip, sizeof(ep.ip), pConEndPointS [i][j].first.c_str());
-			ep.bRegHandle = false;
 			ep.port = pConEndPointS[i][j].second;
+			ep.userData = pConEndPointS[i][j].userData;
 			ep.bDef = pConEndPointS[i][j].bDef;
 			ep.targetHandle = pConEndPointS[i][j].targetHandle;
 		}
@@ -286,8 +301,11 @@ int   moduleLogicServerGen:: genH (moduleGen& rMod)
 		auto genPath = rMod.genPath ();
 		auto& rData = rMod.moduleData ();
 		auto pModName = rData.moduleName ();
-		auto& rRpcFileMgr = tSingleton <rpcFileMgr>::single ();
-		auto& rMsgMgr = tSingleton <msgFileMgr>::single ();
+
+		auto& rGlobalFile = tSingleton<globalFile>::single ();
+		auto pPmp = rGlobalFile.findMsgPmp ("defMsg");
+		auto& rRpcFileMgr = pPmp->rpcFileS(); // tSingleton <rpcFileMgr>::single ();
+		auto& rMsgMgr = pPmp->msgFileS();// tSingleton <msgFileMgr>::single ();
 		std::string frameFunDir = rMod.frameFunDir ();
 		std::string genMgrH = genPath;
 		std::string strMgrClassName = pModName;
@@ -328,14 +346,18 @@ public:
 	for (decltype (serverNum) i = 0; i < serverNum; i++) {
 		auto& rServer = *rSS[i];
 		auto pName = rServer.serverName ();
-		std::string serverHFile = frameFunDir;
+
+		std::string serverHFile = rMod.genPath ();
+		// std::string serverHFile = frameFunDir;
 		serverHFile += "/";
 		serverHFile += pName;
 		serverHFile += ".h";
+		/*
 		auto bE = sIsPathExit (serverHFile.c_str());
 		if (bE) {
 			continue;
 		}
+		*/
 		std::ofstream osH(serverHFile.c_str ());
 		if (!osH) {
 			rError ("open file: "<<serverHFile.c_str ()<<" error");
@@ -364,9 +386,26 @@ osH<<R"(
 class )"<<pName<<R"( : public  logicServer
 {
 public:
+	)"<<pName<<R"( ();
 	int onFrameFun () override;
 	int onServerInitGen(ForLogicFun* pForLogic) override;
 	int onServerInit(ForLogicFun* pForLogic);
+	int sendAddChannel (udword& token);
+	int onAddChannelResult (udword token, udword result, channelKey& rKey);
+	int sendDelChannel (channelKey & chK);
+	int sendListenChannel (channelKey & chK);
+	int sendQuitChannel (channelKey & chK);
+	int sendPackToChannel(packetHead* pack, channelKey& chK, bool ntfMe = false);
+	int sendMsgToChannel(CMsgBase& rMsg, channelKey& chK, bool ntfMe = false);
+	void logicOnAcceptSession(SessionIDType sessionId, uqword userData)override;
+	void logicOnConnect(SessionIDType sessionId, uqword userData)override;
+	void*  userData ();
+	void  setUserData (void* v);
+	void onLoopBegin() override;
+	void onLoopEnd() override;
+private:
+	void*  m_userData;
+public:
 )";
 		for (auto ite = rPMap.begin(); rPMap.end() != ite; ++ite) {
 			auto& rProcRpc = *(ite);
@@ -383,6 +422,31 @@ public:
 osH<<R"(
 };
 #endif
+)";
+		auto serverLoopBeginCppFile = frameFunDir;
+		serverLoopBeginCppFile += "/";
+		serverLoopBeginCppFile += pName;
+		serverLoopBeginCppFile += "LoopBegin.cpp";
+		auto bECLoopBegin = sIsPathExit (serverLoopBeginCppFile.c_str());
+		if (bECLoopBegin) {
+			continue;
+		}
+		std::ofstream osLoopBeginCpp (serverLoopBeginCppFile.c_str ()) ;
+		if (!osLoopBeginCpp) {
+			nRet = 5;
+			rError ("open file: "<<serverLoopBeginCppFile.c_str ()<<" error");
+			break;
+		}
+	osLoopBeginCpp<<R"(#include ")"<<pName<<R"(.h"
+#include "gLog.h"
+
+void )"<<pName<<R"(::onLoopBegin()
+{
+}
+
+void )"<<pName<<R"(::onLoopEnd()
+{
+}
 )";
 		auto serverCppFile = frameFunDir;
 		serverCppFile += "/";
@@ -403,6 +467,23 @@ int )"<<pName<<R"(::onFrameFun ()
 {
 	return procPacketFunRetType_del;
 }
+
+void )"<<pName<<R"(::logicOnAcceptSession(SessionIDType sessionId, uqword userData)
+{
+}
+
+void )"<<pName<<R"(::logicOnConnect(SessionIDType sessionId, uqword userData)
+{
+}
+
+int )"<<pName<<R"(::onAddChannelResult (udword token, udword result, channelKey& rKey)
+{
+	int nRet = 0;
+	do {
+	} while (0);
+	return nRet;
+}
+
 int )"<<pName<<R"( :: onServerInit(ForLogicFun* pForLogic)
 {
 	int nRet = 0;
@@ -509,10 +590,8 @@ static int sProcMsgReg (const char* pModName, const char* serverName,
 
 		auto askMsgStructName = pRpc->askMsgName ();
 		auto retMsgStructName = pRpc->retMsgName ();
-
-		// auto msgFunDec = pMsg->msgFunDec ();
+		auto isChannel = pRpc->isChannel ();
 		auto msgProcFun = pMsg->msgFunName ();
-		// auto& rMsgMgr = tSingleton <msgFileMgr>::single ();
 		auto pAskMsg = rMsgMgr.findMsg (askMsgStructName);
 		myAssert (pAskMsg);
 		auto pRetMsg = rMsgMgr.findMsg (retMsgStructName);
@@ -544,6 +623,18 @@ static int )"<<pPackFun<<
 	ret.fromPack(pRet);
 	)";
 	}
+	auto neetSe = pMsg->neetSession();
+	if (neetSe) {
+		if (bAsk) {
+			os<<R"(	auto pPack = pAsk;
+	)";
+		} else {
+			os<<R"(auto pPack = pRet;
+	)";
+		}
+		os<<R"(auto pN = P2NHead(pPack);
+	)";
+	}
 	os<<R"(tSingleton<)"<<strMgrClassName<<R"(>::single().m_)"
 		<<serverName<<R"(.)"<<msgProcFun <<R"(()";
 	auto askHasData = pAskMsg->hasData ();
@@ -559,15 +650,17 @@ static int )"<<pPackFun<<
 			os<<R"(*ret.pack())";
 		}
 	}
+	
+	if (neetSe) {
+		os<<", pN->ubySrcServId, pPack->sessionID";
+	}
 	os<<R"();
 	)";
 	if (bAsk ) {
-		os<<R"(pRet = ret.pop();
-	bool bInOnceProc = packInOnceProc(pAsk);
-	if (bInOnceProc) {
-		nRet =  procPacketFunRetType_doNotDel;
-	}
+		if (bHaveRet) {
+			os<<R"(pRet = ret.pop();
 		)";
+		}
 	} else {
 		os<<R"(ret.pop ();
 )";
@@ -597,15 +690,165 @@ static int )"<<pPackFun<<
 		}
 		auto pGSrcName = pGroup->rpcSrcFileName ();
 		std::string strDec;
-
+		
 		pMsg->getClassMsgFunDec (serverName, strDec);
 		ps<<R"(#include "tSingleton.h"
 #include "msg.h"
+#include "gLog.h"
+#include "loopHandleS.h"
 #include "logicServer.h"
 #include ")"<<strMgrClassName<<R"(.h")"<<std::endl<<R"(
 #include ")"<<pGSrcName<<R"(.h")"<<std::endl<<std::endl
 		<<strDec<<R"(
 {
+	)";
+	auto rpcName = pRpc->rpcName ();
+		
+	if (strcmp (rpcName, "addChannel") == 0) {
+		if (bAsk) {
+			ps<<R"(auto& rChS = channelS ();
+	channelValue sidS;
+	uqword uqwSe = srcSer;
+	uqwSe <<= 32;
+	uqwSe |= seId;
+	sidS.insert(uqwSe);
+	auto& rCh = *((channelKey*)rAsk.m_chKey);
+	auto inRet = rChS.insert(std::make_pair(rCh, sidS));
+	myAssert (inRet.second);
+	if (inRet.second) {
+		rRet.m_result = 0;
+	} else {
+		rRet.m_result = 1;
+	}
+)";	
+		} else {
+			ps<<R"(auto rSendS = channelSendS ();
+	do {
+		auto& rCh = *((channelKey*)rAsk.m_chKey);
+	if (rRet.m_result) {
+		onAddChannelResult (rAsk.m_token, rRet.m_result, rCh);
+		rSendS.erase (rAsk.m_token);
+		gError(" and channel error result = "<<rRet.m_result);
+		break;
+	}
+	auto it = rSendS.find (rAsk.m_token);
+	myAssert (rSendS.end () != it);
+	if (rSendS.end () == it) {
+		gError ("can not find sendS token = "<<rAsk.m_token);
+		break;
+	}
+	uqword uqwSe = srcSer;
+	uqwSe <<= 32;
+	uqwSe |= seId;
+	auto& rSidS = it->second;
+	auto inRet = rSidS.insert(uqwSe);
+	myAssert (inRet.second);
+	if (!inRet.second) {
+		gError ("addChennel ret have the save sessionId key = "<<uqwSe);
+		onAddChannelResult (rAsk.m_token, 2, rCh);
+		rSendS.erase (it);
+		break;
+	}
+	auto rootNum = sizeof(s_RootSer) / sizeof(s_RootSer[0]);
+	if (rSidS.size() == rootNum) {
+		onAddChannelResult (rAsk.m_token, 0, rCh);
+		rSendS.erase (it);
+	}
+	}while (0);
+	)";
+		}
+	} else if (strcmp (rpcName, "delChannel") == 0) {
+		if (bAsk) {
+			ps<<R"(auto rSendS = channelS ();
+	auto& rCh = *((channelKey*)(&rAsk.m_chKey[0]));
+	rSendS.erase(rCh);
+	rRet.m_result = 0;
+	)";
+		}
+	}  else if (strcmp (rpcName, "listenChannel") == 0) {
+		if (bAsk) {
+			ps<<R"(auto rChS = channelS ();
+	auto& rCh = *((channelKey*)(&rAsk.m_chKey[0]));
+	auto it = rChS.find(rCh);
+	rRet.m_result = 0;
+	do {
+		if (rChS.end() == it) {
+			gError("can not find channel chId = "<<std::hex<<rCh.key
+			<<" "<<rCh.value);
+			rRet.m_result = 1;
+			break;
+		}
+		auto& rSidS = it->second;
+		uqword uqwSe = srcSer;
+		uqwSe <<= 32;
+		uqwSe |= seId;
+		auto inRet = rSidS.insert(uqwSe);
+		if (!inRet.second) {
+			gWarn("alder in channel chId = "<<std::hex<<rCh.key
+			<<" "<<rCh.value);
+		}
+	} while (0);
+	)";
+		}
+	} else if (strcmp (rpcName, "sendToChannel") == 0) {
+		if (bAsk) {
+			ps<<R"(auto rChS = channelS ();
+	auto& rCh = *((channelKey*)(&rAsk.m_chKey[0]));
+	auto it = rChS.find(rCh);
+	rRet.m_result = 0;
+	do {
+		if (rChS.end() == it) {
+			gError("can not find channel chId = "<<std::hex<<rCh.key
+			<<" "<<rCh.value);
+			rRet.m_result = 1;
+			break;
+		}
+		auto& rSidS = it->second;
+		auto bodySize = rAsk.m_packNum - NetMsgLenSize;
+		myAssert (bodySize >= 0);
+		auto  fnSendPackToLoop =  getForMsgModuleFunS ().fnSendPackToLoop;
+		for (auto it = rSidS.begin(); rSidS.end() != it; ++it) {
+			uqword uqwK = *it;
+			auto sessionId = (SessionIDType)(uqwK);
+			uqwK>>=32;
+			auto toSid = (serverIdType)uqwK;
+			if (rAsk.m_excSender && toSid == srcSer && sessionId == seId ) {
+				continue;
+			}
+			auto p = allocPacket (bodySize);
+			auto pNN = P2NHead (p);
+			memcpy(pNN, rAsk.m_pack, rAsk.m_packNum);
+			pNN->ubySrcServId = srcSer;
+			pNN->ubyDesServId = toSid;
+			p->sessionID = sessionId;
+			fnSendPackToLoop (p);
+		}
+	} while (0);
+	)";
+		}
+	} else if (strcmp (rpcName, "quitChannel") == 0) {
+		if (bAsk) {
+			ps<<R"(auto rChS = channelS ();
+	auto& rCh = *((channelKey*)(&rAsk.m_chKey[0]));
+	auto it = rChS.find(rCh);
+	rRet.m_result = 0;
+	do {
+		if (rChS.end() == it) {
+			gError("can not find channel chId = "<<std::hex<<rCh.key
+			<<" "<<rCh.value);
+			rRet.m_result = 1;
+			break;
+		}
+		auto& rSidS = it->second;
+		uqword uqwSe = srcSer;
+		uqwSe <<= 32;
+		uqwSe |= seId;
+		rSidS.erase(uqwSe);
+	} while (0);
+	)";
+		}
+	}
+ps<<R"(
 }
 )";
 	} while (0);
@@ -717,6 +960,15 @@ int   moduleLogicServerGen:: genServerReadOnlyCpp (moduleGen& rMod)
 			auto regPackFunDec = rServer.regPackFunDec ();
 			std::ofstream os (strFile.c_str ());
 			os<<R"(#include ")"<<pName<<R"(.h"
+#include "comMsgRpc.h"
+#include "tSingleton.h"
+#include "loopHandleS.h"
+#include "msg.h"
+#include "gLog.h"
+#include "comMsgMsgId.h"
+#include "msgGroupId.h"
+
+
 int )"<<pName<<R"( :: onServerInitGen(ForLogicFun* pForLogic)
 {
 	int nRet = 0;
@@ -726,7 +978,155 @@ int )"<<pName<<R"( :: onServerInitGen(ForLogicFun* pForLogic)
 		nRet = onServerInit(pForLogic);
 	} while (0);
 	return nRet;
-})";
+}
+
+void* )"<<pName<<R"( ::userData ()
+{
+    return m_userData;
+}
+
+void )"<<pName<<R"(::setUserData (void* v)
+{
+    m_userData = v;
+}
+
+)"<<pName<<R"(::)"<<pName<<R"(()
+{
+	m_userData = nullptr;
+}
+
+int )"<<pName<<R"( :: sendDelChannel (channelKey & chK)
+{
+	int nRet = 0;
+	do {
+		delChannelAskMsg  askMsg;
+		auto pU = askMsg.pack ();
+		auto pK = (channelKey*)(&pU->m_chKey[0]);
+		*pK = chK;
+		auto rootServerNum = sizeof (s_RootSer) / sizeof (s_RootSer[0]);
+		auto nR = sendMsgToSomeServer (askMsg, s_RootSer, rootServerNum);
+		if (nR) {
+			nRet = 2;
+			gError("sendMsgToSomeServer error nR = "<<nR);
+			break;
+		}
+	} while (0);
+	return nRet;
+}
+
+int )"<<pName<<R"( :: sendListenChannel (channelKey & chK)
+{
+	int nRet = 0;
+	do {
+		listenChannelAskMsg askMsg;
+		auto pU = askMsg.pack ();
+		auto pK = (channelKey*)(&pU->m_chKey[0]);
+		*pK = chK;
+		auto rootServerNum = sizeof (s_RootSer) / sizeof (s_RootSer[0]);
+		auto nR = sendMsgToSomeServer (askMsg, s_RootSer, rootServerNum);
+		if (nR) {
+			nRet = 2;
+			gError("sendMsgToSomeServer error nR = "<<nR);
+			break;
+		}
+	} while (0);
+	return nRet;
+}
+
+int )"<<pName<<R"( :: sendQuitChannel (channelKey & chK)
+{
+	int nRet = 0;
+	do {
+		quitChannelAskMsg askMsg;
+		auto pU = askMsg.pack ();
+		auto pK = (channelKey*)(&pU->m_chKey[0]);
+		*pK = chK;
+		auto rootServerNum = sizeof (s_RootSer) / sizeof (s_RootSer[0]);
+		auto nR = sendMsgToSomeServer (askMsg, s_RootSer, rootServerNum);
+		if (nR) {
+			nRet = 2;
+			gError("sendMsgToSomeServer error nR = "<<nR);
+			break;
+		}
+	} while (0);
+	return nRet;
+}
+int )"<<pName<<R"( :: sendMsgToChannel(CMsgBase& rMsg, channelKey& chK, bool ntfMe)
+{
+	int  nRet = 0;
+    do {
+		auto pack = rMsg.toPack ();
+		rMsg.pop ();
+		nRet = sendPackToChannel (pack, chK, ntfMe);
+    } while (0);
+    return nRet;
+}
+
+int )"<<pName<<R"( :: sendPackToChannel(packetHead* pack, channelKey& chK, bool ntfMe)
+{
+	int nRet = 0;
+	do {
+		auto pSN = P2NHead(pack);
+		pSN->ubySrcServId = serverId ();
+		auto sendSize = AllNetHeadSize(pSN) + pSN->udwLength;
+		auto pT = (sendToChannelAsk*)(0);
+		auto uqwS = (uqword)&(pT->m_pack[0]);
+		uqwS += sendSize;
+		auto p = allocPacket ((udword)uqwS);
+		auto pNN = P2NHead (p);
+		pNN->ubySrcServId = serverId ();
+		pNN->uwMsgID = comMsg2FullMsg(comMsgMsgId_sendToChannelAsk);
+		auto pU = (sendToChannelAsk*)(N2User(pNN));
+		memcpy (pU->m_pack, pSN, sendSize);
+		pU->m_packNum = (udword)sendSize;
+		pU->m_excSender = ntfMe ? 0 : 1;
+		auto pK = (channelKey*)(&pU->m_chKey[0]);
+		*pK = chK;
+		auto fnFreePack = getForMsgModuleFunS ().fnFreePack;
+		fnFreePack (pack);
+		auto rootServerNum = sizeof (s_RootSer) / sizeof (s_RootSer[0]);
+		auto nR = sendPackToSomeServer (p, s_RootSer, rootServerNum);
+		if (nR) {
+			nRet = 2;
+			gError("sendMsgToSomeServer error nR = "<<nR);
+			break;
+		}
+	} while (0);
+	return nRet;
+}
+
+int )"<<pName<<R"( :: sendAddChannel (udword& token)
+{
+	int nRet = 0;
+	addChannelAskMsg ask;
+	auto pU = ask.pack();
+	auto pK = (channelKey*)(&(pU->m_chKey[0]));
+	auto nR = createUuid ((char*)pK);
+	auto fnNextToken = getForMsgModuleFunS().fnNextToken;
+	auto newToken = fnNextToken (serverId());
+	auto& rSendS = channelSendS ();
+	channelSendValue v;
+	auto inRet = rSendS.insert(std::make_pair(newToken, v));
+	myAssert (inRet.second);
+	do {
+		if (!inRet.second) {
+			gError("insert channel token err: token = "<<newToken);
+			nRet = 1;
+			break;
+		}
+		pU->m_token = newToken;
+		auto rootServerNum = sizeof (s_RootSer) / sizeof (s_RootSer[0]);
+		auto nR = sendMsgToSomeServer (ask, s_RootSer, rootServerNum);
+		if (nR) {
+			nRet = 2;
+			gError("sendMsgToSomeServer error nR = "<<nR);
+			break;
+		}
+		token = newToken;
+	} while (0);
+	return nRet;
+}
+)";
 		} // for
     } while (0);
     return nRet;

@@ -7,6 +7,7 @@
 msgFile:: msgFile ()
 {
 	m_extPH = false;
+	m_neetSession = false;
 	m_addrType = addrType_ser;
 	strCpy ("c_emptyLoopHandle", m_defProServerId);
 }
@@ -53,6 +54,16 @@ const char*  msgFile:: msgFunName ()
 void  msgFile:: setMsgFunName (const char* v)
 {
     strCpy (v, m_msgFunName);
+}
+
+bool  msgFile:: neetSession ()
+{
+    return m_neetSession;
+}
+
+void  msgFile:: setNeetSession (bool v)
+{
+    m_neetSession = v;
 }
 
 void   msgFile:: getClassMsgFunDec (const char* className, std::string& strDec)

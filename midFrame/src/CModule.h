@@ -16,9 +16,19 @@ public:
 	const char* name();
 	int load(int nArgC, const char* argS[],ForLogicFun* pForLogic);
 	// int load_os (const char* szName, ForLogicFun* pForLogic);
+	logicOnAcceptFT  fnLogicOnAccept ();
+	logicOnConnectFT  fnLogicOnConnect ();
+	afterLoadFunT  fnAfterLoad ();
+	onLoopBeginFT  fnOnLoopBegin ();
+	onLoopEndFT    fnOnLoopEnd ();
 private:
-	int unload();
+	onLoopEndFT  m_fnOnLoopEnd;
+	onLoopBeginFT  m_fnOnLoopBegin;
+	afterLoadFunT  m_fnAfterLoad;
+	logicOnConnectFT  m_fnLogicOnConnect;
+	logicOnAcceptFT  m_fnLogicOnAccept;
 	beforeUnloadFunT	m_onUnloadFun;
+	int unload();
 	std::unique_ptr<char[]>	 m_name;
 	void* m_handle;
 };

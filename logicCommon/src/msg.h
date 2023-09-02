@@ -32,7 +32,7 @@ public:
 	virtual bool fromPack(packetHead* p);
     virtual packetHead*   toPack();
     packetHead*  pop();
-	packetHead*  getPack();
+	packetHead*  getPack()const;
 protected:
     packetHead*  m_pPacket;
 };

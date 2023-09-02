@@ -14,6 +14,7 @@
 #include <iostream>
 #include <cmath>
 #include "modelLoder.h"
+#include "comMsgMsgId.h"
 
 int  InitMidFrame(int nArgC, const char* argS[],PhyCallback* pCallbackS)
 {
@@ -100,19 +101,21 @@ static int sSendChMsg (packetHead* pack)
 	return nRet;
 }
 
-static int sSendPackToLoopFun(packetHead* pack) /* 返回值貌似没用 */
+int midSendPackToLoopFun(packetHead* pack) /* 返回值貌似没用 */
 {
 	/* 发消息得起点函数 */
 	int nRet = 0; // procPacketFunRetType_del;
 	int nR = 0;
 	auto pN = P2NHead (pack);
 	auto& rMgr = tSingleton<loopMgr>::single ();
+	/*
 	auto curHandleFun = tSingleton<loopMgr>::single ().getPhyCallback().fnGetCurServerHandle;
 	auto curHandle = curHandleFun ();
 	if (curHandle !=  pN->ubySrcServId) {
 		mTrace ("curHandle = "<<curHandle<<"pN->ubySrcServId = "<<pN->ubySrcServId);
 	}
 	myAssert (pN->ubySrcServId == curHandle);
+	*/
 	auto pS = rMgr.getLoop(pN->ubySrcServId);
 	myAssert (pS);
 	bool bIsRet = NIsRet(pN);
@@ -154,18 +157,15 @@ serverIdType sGetDefProcServerId (msgIdType msgId)
 static allocPackFT g_allocPackFun = nullptr;
 packetHead* sAllocPack(udword udwSize)
 {
-	return g_allocPackFun (udwSize);
+	auto pPack = g_allocPackFun (udwSize);
+	pPack->sessionID = EmptySessionID;
+	return pPack;
 }
 
 static freePackFT g_freePackFun = nullptr;
 static void sFreePack (packetHead* pack)
 {
 	auto pN = P2NHead (pack);
-	/*
-	mTrace (" midFrame will delete pack msgID = "<<pN->uwMsgID<<" token = "<<pN->dwToKen
-			<<" srcHandle = "<<(int)(pN->ubySrcServId)<<" desHandle = "<<(int)(pN->ubyDesServId)
-			<<" pack = "<<pack);
-			*/
 	g_freePackFun (pack);
 }
 
@@ -176,6 +176,19 @@ static int sCreateServer (const char* szName, loopHandleType serId,
 			pNode, funFrame, arg);
 }
 typedef void		(*freePackFT)(packetHead* pack);
+
+static void regSysRpcS (const ForLogicFun* pForLogic)
+{
+	/*
+	auto regRpc = pForLogic->fnRegRpc;
+	regRpc (comMsg2FullMsg(comMsgMsgId_addChannelAsk), comMsg2FullMsg(comMsgMsgId_addChannelRet), c_emptyLoopHandle, c_emptyLoopHandle);
+    regRpc (comMsg2FullMsg(comMsgMsgId_delChannelAsk), comMsg2FullMsg(comMsgMsgId_delChannelRet), c_emptyLoopHandle, c_emptyLoopHandle);
+    regRpc (comMsg2FullMsg(comMsgMsgId_listenChannelAsk), comMsg2FullMsg(comMsgMsgId_listenChannelRet), c_emptyLoopHandle, c_emptyLoopHandle);
+    regRpc (comMsg2FullMsg(comMsgMsgId_quitChannelAsk), comMsg2FullMsg(comMsgMsgId_quitChannelRet), c_emptyLoopHandle, c_emptyLoopHandle);
+    regRpc (comMsg2FullMsg(comMsgMsgId_sendToChannelAsk), comMsg2FullMsg(comMsgMsgId_sendToChannelRet), c_emptyLoopHandle, c_emptyLoopHandle);
+	*/
+}
+
 int loopMgr::init(int nArgC, const char* argS[], PhyCallback& info)
 {
 	m_callbackS = info;
@@ -187,7 +200,7 @@ int loopMgr::init(int nArgC, const char* argS[], PhyCallback& info)
 	forLogic.fnAllocPack = sAllocPack; // info.fnAllocPack;
 	forLogic.fnFreePack = sFreePack; //  info.fnFreePack;
 	forLogic.fnRegMsg = sRegMsg;
-	forLogic.fnSendPackToLoop =  sSendPackToLoopFun;
+	forLogic.fnSendPackToLoop =  midSendPackToLoopFun;
 	forLogic.fnLogMsg = info.fnLogMsg;
 	forLogic.fnAddComTimer = sAddComTimer;//m_callbackS.fnAddComTimer;
 	forLogic.fnNextToken = info.fnNextToken;
@@ -215,6 +228,7 @@ int loopMgr::init(int nArgC, const char* argS[], PhyCallback& info)
 			break;
 		}
 		auto& rModuleS = m_ModuleS;
+		regSysRpcS (&forLogic);
 		for(auto i = 0; i < m_ModuleNum; i++)
 		{
 			auto& rM = m_ModuleS[i];
@@ -304,7 +318,6 @@ msgMgr&	loopMgr::defMsgInfoMgr ()
 
 loopHandleType	loopMgr::procId()
 {
-	// return m_procId;
 	return tSingleton<mArgMgr>::single().procId();
 }
 
@@ -335,6 +348,7 @@ impLoop*   loopMgr :: getLoopByIndex(uword index)
     return nRet;
 }
 
+int regSysProcPacketFun (regMsgFT fnRegMsg, serverIdType handle);
 int loopMgr::getAllLoopAndStart(serverNode* pBuff, int nBuffNum)
 {
 	auto pid = procId ();
@@ -355,6 +369,7 @@ int loopMgr::getAllLoopAndStart(serverNode* pBuff, int nBuffNum)
 		}
 		auto sid = p->id ();
 		node.handle = sid;//toHandle (pid, id);
+		regSysProcPacketFun (getForLogicFun().fnRegMsg, sid);
 	}
 
 	mTrace ("at the end nRet = "<<nRet);
@@ -400,5 +415,49 @@ uword loopMgr :: upNum ()
 void  loopMgr :: setUpNum (uword v)
 {
     m_upNum = v;
+}
+
+void loopMgr :: logicOnConnect(serverIdType fId, SessionIDType sessionId, uqword userData)
+{
+    do {
+		for (decltype (m_ModuleNum) i = 0; i < m_ModuleNum; i++) {
+			auto& rM = m_ModuleS[i];
+			auto fu = rM.fnLogicOnConnect ();
+			fu (fId, sessionId, userData);
+		}
+    } while (0);
+}
+
+void  loopMgr:: logicOnAccept(serverIdType	fId, SessionIDType sessionId, uqword userData)
+{
+	do {
+		for (decltype (m_ModuleNum) i = 0; i < m_ModuleNum; i++) {
+			auto& rM = m_ModuleS[i];
+			auto fu = rM.fnLogicOnAccept ();
+			fu (fId, sessionId, userData);
+		}
+    } while (0);
+}
+
+void  loopMgr:: onLoopBegin(ServerIDType fId)
+{
+    do {
+		for (decltype (m_ModuleNum) i = 0; i < m_ModuleNum; i++) {
+			auto& rM = m_ModuleS[i];
+			auto fu = rM.fnOnLoopBegin ();
+			fu (fId);
+		}
+    } while (0);
+}
+
+void  loopMgr:: onLoopEnd(ServerIDType fId)
+{
+    do {
+		for (decltype (m_ModuleNum) i = 0; i < m_ModuleNum; i++) {
+			auto& rM = m_ModuleS[i];
+			auto fu = rM.fnOnLoopEnd ();
+			fu (fId);
+		}
+    } while (0);
 }
 

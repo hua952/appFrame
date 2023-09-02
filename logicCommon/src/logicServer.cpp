@@ -125,6 +125,45 @@ int logicServer:: sendPackToServer (packetHead* pack, loopHandleType handle)
     return nRet;
 }
 
+int   logicServer:: sendMsgToSomeServer(CMsgBase& rMsg, serverIdType* pSerS, udword serverNum)
+{
+    int  nRet = 0;
+    do {
+		auto pack = rMsg.toPack ();
+		auto nR = sendPackToSomeServer(pack, pSerS, serverNum);
+		if (!nR) {
+			rMsg.pop ();
+		}
+    } while (0);
+    return nRet;
+}
+
+int   logicServer:: sendPackToSomeServer(packetHead* pack, serverIdType* pSerS, udword serverNum)
+{
+    int  nRet = 0;
+    do {
+		auto pN = P2NHead (pack);
+
+		pN->ubySrcServId = serverId ();
+		auto  fnSendPackToLoop =  getForMsgModuleFunS ().fnSendPackToLoop;
+		for (decltype (serverNum) i = 0; i < serverNum; i++) {
+			auto p = allocPacket (pN->udwLength);
+			auto pNN = P2NHead (p);
+			memcpy (pNN, pN, pN->udwLength + NetHeadSize);
+			pNN->ubyDesServId = pSerS[i];
+			nRet = fnSendPackToLoop (p);
+		}
+		auto fnFreePack = getForMsgModuleFunS ().fnFreePack;
+		fnFreePack (pack);
+    } while (0);
+    return nRet;
+}
+
+logicServer::channelMap& logicServer:: channelS ()
+{
+    return m_channelS;
+}
+
 void  logicServer:: addTimer(udword udwSetp, ComTimerFun pF, void* pUsrData)
 {
     do {
@@ -164,6 +203,73 @@ void logicServer::addTimer(udword udwSetp, ComTimerFun pF, void* pUserData, udwo
 	addTimer (udwSetp, udwSetp, pF, pUserData, udwLength);
 }
 
+logicServer::channelSendMap&  logicServer:: channelSendS ()
+{
+    return m_channelSendS;
+}
+
+bool logicServer::cmpChannelKey::operator ()(const channelKey& k1,const channelKey& k2)const
+{
+	return k1.key<k2.key?true:k2.key<k1.key?false:k1.value<k2.value;
+}
+
 void  logicServerMgr::afterLoad(int nArgC, const char* argS[], ForLogicFun* pForLogic)
 {
 }
+
+logicServer*   logicServerMgr:: findServer(serverIdType	fId)
+{
+    logicServer*   nRet = nullptr;
+    do {
+		for (decltype (m_serverNum) i = 0; i < m_serverNum; i++) {
+			auto sid = m_serverS[i]->serverId();
+			if (sid == fId) {
+				nRet = m_serverS[i];
+				break;
+			}
+		}
+    } while (0);
+    return nRet;
+}
+
+void  logicServer:: logicOnAcceptSession(SessionIDType sessionId, uqword userData)
+{
+    do {
+    } while (0);
+}
+
+void  logicServer:: logicOnConnect(SessionIDType sessionId, uqword userData)
+{
+    do {
+
+    } while (0);
+}
+
+void logicServer:: sLogicOnAcceptSession(serverIdType	fId, SessionIDType sessionId, uqword userData)
+{
+    do {
+		/*
+		auto pThis = logicServer::findServer(fId);
+		pThis->logicOnAcceptSession(sessionId, userData);
+		*/
+    } while (0);
+}
+
+void logicServer:: onLoopBegin()
+{
+}
+
+void logicServer:: onLoopEnd()
+{
+}
+
+void logicServer:: sLogicOnConnect(serverIdType	fId, SessionIDType sessionId, uqword userData)
+{
+    do {
+		/*
+		auto pThis = logicServer::findServer(fId);
+		pThis->logicOnConnect(sessionId, userData);
+		*/
+    } while (0);
+}
+

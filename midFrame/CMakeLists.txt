@@ -28,11 +28,12 @@ add_library(${prjName} SHARED ${srcS} ${osSrc} ${defS})
 target_include_directories(${prjName} PUBLIC 
 							src
 							${CMAKE_SOURCE_DIR}/common/src
+							${CMAKE_SOURCE_DIR}/logicCommon/src
 							${CMAKE_SOURCE_DIR}/comTcpProNet/src
 							${CMAKE_SOURCE_DIR}/cLog/src
                            )
 
-target_link_libraries(${prjName} PUBLIC comTcpProNet common)
+target_link_libraries(${prjName} PUBLIC comTcpProNet logicCommon common)
 
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 install(TARGETS ${prjName} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})

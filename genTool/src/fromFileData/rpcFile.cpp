@@ -59,3 +59,20 @@ void  rpcFile:: setRetMsgName (const char* v)
     strCpy (v, m_retMsgName);
 }
 
+bool          rpcFile:: isChannel ()
+{
+    bool          nRet = false;
+    do {
+		const char** getRpptRpc (int &num);
+		int szRootRpcNum = 0;
+		auto szRootRpc = getRpptRpc (szRootRpcNum);
+		for (decltype (szRootRpcNum) i = 0; i < szRootRpcNum; i++) {
+			if (strcmp (rpcName (), szRootRpc[i]) == 0) {
+				nRet = true;
+				break;
+			}
+		}
+    } while (0);
+    return nRet;
+}
+

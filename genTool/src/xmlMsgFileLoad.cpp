@@ -244,6 +244,11 @@ int   xmlMsgFileLoad:: onceRpcGroupLoad (rapidxml::xml_node<char>* pGroup, msgPm
 			nRet = 7;
 			break;
 		}
+		// extern const char* szRootRpc[];
+		// auto szRootRpcNum = sizeof (szRootRpc) / sizeof (szRootRpc[0]);
+		int szRootRpcNum = 0;
+		const char** getRpptRpc (int &num);
+		auto szRootRpc = getRpptRpc (szRootRpcNum);
 		auto& rNameS = pG->rpcNameS ();
 		for (auto pRpc = pGroup->first_node();  pRpc; pRpc = pRpc->next_sibling()) {
 			auto pRpcName = pRpc->name ();
@@ -286,6 +291,11 @@ int   xmlMsgFileLoad:: onceRpcGroupLoad (rapidxml::xml_node<char>* pGroup, msgPm
 				pAskMsg->setExtPH(bCExtPH);
 			} else {
 				pAskMsg->setExtPH(pG->extPH());
+			}
+			bool neetSe = false;
+			nR = rXmlCommon.getBoolA (pAsk, "neetSession", neetSe);
+			if (0 == nR) {
+				pAskMsg->setNeetSession(neetSe);
 			}
 			int nCInt = 0;
 			nR = rXmlCommon.getIntA(pAsk, "addrType", nCInt);
@@ -349,6 +359,11 @@ int   xmlMsgFileLoad:: onceRpcGroupLoad (rapidxml::xml_node<char>* pGroup, msgPm
 				} else {
 					pRetMsg->setExtPH(pG->extPH());
 				}
+				bool neetSe = false;
+				nR = rXmlCommon.getBoolA (pRet, "neetSession", neetSe);
+				if (0 == nR) {
+					pRetMsg->setNeetSession(neetSe);
+				}
 				int nCInt = 0;
 				nR = rXmlCommon.getIntA(pRet, "addrType", nCInt);
 				if (0 == nR) {
@@ -363,7 +378,13 @@ int   xmlMsgFileLoad:: onceRpcGroupLoad (rapidxml::xml_node<char>* pGroup, msgPm
 					break;
 				}
 			std::string strRetPack = "on";
-
+			bool isRootRpc = false;
+			for (decltype (szRootRpcNum) i = 0; i < szRootRpcNum; i++) {
+				if (strcmp (pRpcName, szRootRpc[i]) == 0) {
+					isRootRpc = true;
+					break;
+				}
+			}
 			std::unique_ptr <char[]> pmRetName;
 			strCpy (strRetName.c_str (), pmRetName);
 			toWord (pmRetName.get());
@@ -391,6 +412,16 @@ int   xmlMsgFileLoad:: onceRpcGroupLoad (rapidxml::xml_node<char>* pGroup, msgPm
 
 				strDec += strRetName;
 				strDec += "& rRet";
+				/*
+				if (isRootRpc ) {
+					strAskDec += ", channelKey& rCh";
+					strDec += ", channelKey& rCh";
+				}
+				*/
+			}
+			auto retNeetSe = pRetMsg->neetSession ();
+			if (retNeetSe) {
+				strDec += ", serverIdType srcSer, SessionIDType seId";
 			}
 			strDec += ")";
 			pRetMsg->setMsgFunDec (strDec.c_str ());
@@ -402,6 +433,10 @@ int   xmlMsgFileLoad:: onceRpcGroupLoad (rapidxml::xml_node<char>* pGroup, msgPm
 				}
 				// rMgr [strRetName] = pS;
 				// rVec.push_back (pS);
+			}
+			auto askNeetSe = pAskMsg->neetSession ();
+			if (askNeetSe) {
+				strAskDec += ", serverIdType srcSer, SessionIDType seId";
 			}
 			strAskDec += ")";
 			pAskMsg->setMsgFunDec (strAskDec.c_str ());

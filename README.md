@@ -10,4 +10,5 @@ cppLevel0.exe level0=D:\pzh\work\appFrame\bin\Debug\cppLevel0L.dll addLogic=D:\p
 gcc -E server.cpp -ID:\pzh\work\include -ID:\pzh\work\appFrame\common\src -ID:\pzh\work\appFrame\cLog\src> out.txr
 genTool.exe defFile=..\..\fileS\msgdef\game.xml
 genTool.exe defFile=C:\work\appFrame\test\test.xml
+genTool.exe defFile=C:\work\appFrame\test\testSysMsg.xml
 

@@ -109,54 +109,6 @@ int server::init(serverNode* pMyNode)
 		auto handle = pMyNode->handle;
 		m_loopHandle = handle;
 		setSleepSetp (pMyNode->sleepSetp);
-		/*
-		auto pThis = this;
-		if (pMyNode->listenerNum || pMyNode->connectorNum) {
-			endPoint listerEP [c_onceServerMaxListenNum];
-			for (decltype (pMyNode->listenerNum)i = 0; i < pMyNode->listenerNum; i++) {
-				auto& ep = listerEP[i];
-				auto& info = pMyNode->listenEndpoint[i];
-				strNCpy (ep.ip, sizeof (ep.ip), info.ip);
-				ep.port = info.port;
-				ep.userData = (uqword)this; // (uqword)(&pThis);
-				// ep.userDataLen = sizeof (pThis);
-			}
-			endPoint  connectEP [c_onceServerMaxConnectNum];
-			for (decltype (pMyNode->connectorNum)i = 0; i < pMyNode->connectorNum; i++) {
-				auto& ep = connectEP [i];
-				auto& info = pMyNode->connectEndpoint[i];
-				strNCpy (ep.ip, sizeof (ep.ip), info.ip);
-				uword uwDef = info.bDef ? 1 : 0;
-				ep.port = info.port;
-				auto pBuff = (loopHandleType*)(&ep.userData);
-				pBuff[0] = uwDef;
-				pBuff[1] = handle;
-				pBuff[2] = info.targetHandle;
-				pBuff[3] = info.bRegHandle ? 1:0;
-				// ep.userData = pBuff;
-				rTrace ("connect endpoint ip = "<<ep.ip<<" port = "<<ep.port<<" userData = "<<ep.userData);
-			}
-			auto crFun = tSingleton<serverMgr>::single().createTcpServerFn();
-			auto& rC = tSingleton<serverMgr>::single().getPhyCallback();
-			callbackS cb;
-			cb.procPackfun = sProcessNetPackFun;
-			cb.acceptFun = sOnAcceptSession;
-			cb.connectFun = sOnConnect;
-			cb.closeFun = sOnClose;
-			cb.onWritePackFun = sOnWritePack;
-			m_pTcpServer = crFun (&cb, listerEP, pMyNode->listenerNum,
-					connectEP, pMyNode->connectorNum, nullptr, 0);
-			if (!m_pTcpServer) {
-				nRet = 2;
-				break;
-			}
-			auto pt = this;
-			m_pTcpServer->setUserData (&pt, sizeof(pt));
-			auto& rMsgMap = netMsgProcMap();
-			rMsgMap [toFramMsgId (enFramMsgId_regMyHandleAsk)] = sOnRegMyHandleAsk;
-			rMsgMap [toFramMsgId (enFramMsgId_regMyHandleRet)] = sOnRegMyHandleRet;
-		}
-		*/
 	} while (0);
 	return nRet;
 }
@@ -177,6 +129,7 @@ void server::join()
 void server::run()
 {
 	s_loopHandleLocalTh = m_loopHandle;
+	onMidLoopBegin(m_loopHandle);
 	while(true)
 	{
 		auto bExit = onFrame();
@@ -188,6 +141,7 @@ void server::run()
 			std::this_thread::sleep_for(std::chrono::microseconds (m_sleepSetp));
 		}
 	}
+	onMidLoopEnd(m_loopHandle);
 	auto& os = std::cout;
 	os<<"Loop "<<(int)(m_loopHandle)<<" exit"<<std::endl;
 }
@@ -209,7 +163,7 @@ bool server::onFrame()
 	m_timerMgr.onFrame ();
 	
 	auto myHandle = m_loopHandle;
-	auto nQuit = OnLoopFrame(myHandle); // call by level 0
+	auto nQuit = onLoopFrame(myHandle); // call by level 0
 	if (procPacketFunRetType_exitNow == nQuit) {
 		bExit = true;
 	} else {

@@ -3,6 +3,7 @@
 #include "loop.h"
 #include "comFun.h"
 #include "iRpcInfoMgr.h"
+#include "ISession.h"
 
 #define LoopNumBitLen 4
 #define ProcNumBitLen 3
@@ -80,6 +81,11 @@ typedef struct _ForLogicFun
 } ForLogicFun;
 
 typedef void (*afterLoadFunT)(int nArgC, const char* argS[], ForLogicFun* pForLogic);
+typedef void (*beforeUnloadFT)();
+typedef void (*logicOnAcceptFT)(serverIdType	fId, SessionIDType sessionId, uqword userData);
+typedef void (*logicOnConnectFT)(serverIdType fId, SessionIDType sessionId, uqword userData);
+typedef void (*onLoopBeginFT)(serverIdType	fId);
+typedef void (*onLoopEndFT)(serverIdType	fId);
 /*
 typedef struct _ForRegMsg{
 	regMsgFT		 fnRegMsg;
@@ -90,12 +96,20 @@ typedef struct _ForRegMsg{
 struct serverEndPointInfo
 {
 	char              ip[16];
+	// void*             userData;
+	// udword            userDataLen;
+	uqword            userData;
 	uword             port;
 	ServerIDType	  targetHandle; // use to reg route use on onConnect
+	udword            udwUnUse;
 	uword             unUse;  // 
 	bool              bDef;  // def route
 	bool              bRegHandle; // 几乎没用 
 };
+/*
+typedef void (*logicOnAcceptSessionFT)(serverIdType fId, SessionIDType, uqword);
+typedef void (*logicOnConnectFT)(serverIdType fId, SessionIDType, uqword);
+*/
 struct serverNode
 {
 	udword                  sleepSetp;
@@ -103,6 +117,8 @@ struct serverNode
 	ServerIDType			handle;
 	ubyte					connectorNum;
 	ubyte                   listenerNum;
+	// logicOnAcceptSessionFT  fnOnAccept;
+	// logicOnConnectFT        fnOnConnect;
 	serverEndPointInfo		listenEndpoint [c_onceServerMaxListenNum];
 	serverEndPointInfo		connectEndpoint [c_onceServerMaxConnectNum];
 };

@@ -31,7 +31,9 @@ extern "C"
 	//int removeMsg(loopHandleType handle, uword uwMsgId); // call by level 2
 	//procPacketFunType findMsg(loopHandleType handle, uword uwMsgId);
 
-	int OnLoopFrame(loopHandleType pThis); // call by level 0
+	int onMidLoopBegin(loopHandleType pThis); // call by level 0
+	int onMidLoopEnd(loopHandleType pThis); // call by level 0
+	int onLoopFrame(loopHandleType pThis); // call by level 0
 	int processOncePack(loopHandleType pThis, packetHead* pPack);// call by level 0
 	// int onWriteOncePack(loopHandleType pThis, packetHead* pPack);// call by level 0
 	// void onFreePack(loopHandleType pThis, packetHead* pPack);// call by level 0

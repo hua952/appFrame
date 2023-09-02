@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8' ?>
 <servers>
-	<projectHome>C:/work/testAppFrame/</projectHome>
-	<projectName>testAppFrame</projectName>
+	<projectHome>C:/work/testSysMsg/</projectHome>
+	<projectName>testSysMsg</projectName>
 	<frameHome>C:/work/appFrame/</frameHome>
 	<depIncludeHome>C:/work/include/</depIncludeHome>
 	<depLibHome>C:/work/lib/</depLibHome>
@@ -16,12 +16,18 @@
 			<module>
 				<appServerM>
 					<server>
-						<appServerTh sleepSetp="1" showFps="1" fpsSetp="20000">
-							<listen port="11000"/>
+						<appServerTh1 sleepSetp="1" showFps="1" fpsSetp="40000">
+							<listen port="11000" teag="1" defRoute="1"/>
 							<procRpc>
 								<move askType="ask"/>
 							</procRpc>
-						</appServerTh>
+						</appServerTh1>
+						<appServerTh2 sleepSetp="1" showFps="1" fpsSetp="40000">
+							<procRpc>
+								<roomChannel askType="ask"/>
+								<roomChatTxt askType="ask"/>
+							</procRpc>
+						</appServerTh2>
 					</server>
 				</appServerM>
 			</module>
@@ -31,7 +37,7 @@
 			<module>
 				<appClientM2>
 					<server>
-						<appClientM2Th sleepSetp="1" showFps="1" fpsSetp="20000">
+						<appClientM2Th sleepSetp="1" showFps="1" fpsSetp="40000">
 							<procRpc>
 								<regret askType="ask"/>
 							</procRpc>
@@ -40,15 +46,17 @@
 				</appClientM2>
 				<appClientM1>
 					<server>
-						<appClientM1Th1 sleepSetp="1" showFps="1" fpsSetp="20000">
+						<appClientM1Th1 sleepSetp="1" showFps="1" fpsSetp="40000">
 							<procRpc>
 								<manualList askType="ret"/>
 								<regret askType="ret"/>
 								<move askType="ret"/>
+								<roomChannel askType="ret"/>
+								<roomChatTxt askType="ask"/>
 							</procRpc>
 						</appClientM1Th1>
-						<appClientM1Th2 sleepSetp="1" showFps="1" fpsSetp="20000">
-							<connect ip="127.0.0.1" port="11000" target="appServerTh" defRoute="1"/>
+						<appClientM1Th2 sleepSetp="1" showFps="1" fpsSetp="40000">
+							<connect ip="127.0.0.1" port="11000" target="appServerTh1" defRoute="1" teag="1"/>
 							<procRpc>
 								<manualList askType="ask"/>
 							</procRpc>
