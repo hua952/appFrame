@@ -1,5 +1,6 @@
 #include "rpcFile.h"
 #include "strFun.h"
+#include <cstring>
 
 rpcFile:: rpcFile ()
 {
