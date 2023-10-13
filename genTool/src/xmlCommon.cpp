@@ -1,5 +1,6 @@
 #include "xmlCommon.h"
 #include "strFun.h"
+#include <cstring>
 
 xmlCommon:: xmlCommon ()
 {
