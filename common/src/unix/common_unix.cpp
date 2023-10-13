@@ -55,6 +55,7 @@ int             getCurModelPath (std::unique_ptr<char[]>& pathBuf)
 	auto nL = strlen (info.dli_fname);
 	pathBuf = std::make_unique<char[]> (nL + 1);
 	strNCpy(pathBuf.get(), nL + 1, info.dli_fname);
+	return 0;
 }
 
 bool isPathInterval (char c)
