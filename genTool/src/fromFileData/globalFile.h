@@ -50,7 +50,5 @@ private:
 	std::unique_ptr <char[]>  m_depIncludeHome;
 	std::unique_ptr <char[]>  m_depLibHome;
 	std::unique_ptr <char[]>  m_frameBinPath;
-
-
 };
 #endif

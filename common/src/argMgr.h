@@ -8,7 +8,7 @@ class argMgr
 public:
     argMgr ();
     ~argMgr ();
-	int procArgS(int nArgC, const char* argS[]);
+	int procArgS(int nArgC, char** argS);
 	virtual void onCmpKey (char* argv[]);
 protected:
 	bool    procStrA(const char* cKey, char* argv[], std::unique_ptr<char[]>& var);

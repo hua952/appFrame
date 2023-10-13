@@ -1,5 +1,8 @@
 #include "argMgr.h"
 #include "strFun.h"
+#include <cstring>
+#include <string>
+#include <sstream>
 
 argMgr:: argMgr ()
 {
@@ -8,7 +11,7 @@ argMgr:: argMgr ()
 argMgr:: ~argMgr ()
 {
 }
-int  argMgr:: procArgS(int nArgC, const char* argS[])
+int  argMgr:: procArgS(int nArgC, char** argS)
 {
     int  nRet = 0;
     do {
@@ -20,6 +23,10 @@ int  argMgr:: procArgS(int nArgC, const char* argS[])
 			auto pBuf = buf.get();
 			auto nRet = strR(pBuf, '=', tempP, sizeof(tempP)/sizeof(tempP[0]));
 			if (2 == nRet) {
+				std::stringstream ss(tempP[0]);
+				std::string strL;
+				ss>>strL;
+				strNCpy(tempP[0], strL.length() + 1, strL.c_str());
 				onCmpKey (tempP);
 			}
 		}
@@ -36,7 +43,7 @@ bool argMgr:: procStrA(const char* cKey, char* argv[], std::unique_ptr<char[]>& 
 	if (strcmp(cKey, argv[0]) == 0) {
 		auto nL = strlen (argv[1]);
 		var = std::make_unique<char[]> (nL + 1);
-		strcpy_s (var.get(), nL + 1, argv[1]);
+		strNCpy(var.get(), nL + 1, argv[1]);
 		return true;
 	}
 	return false;

@@ -19,6 +19,7 @@ public:
 	bool start();
 	void run();
 	void join();
+	void detach ();
 	bool pushPack (packetHead* pack); // Thread safety
 	virtual bool onFrame();
     typedef std::map<loopHandleType, ISession*> serverSessionMapT;
@@ -38,8 +39,11 @@ public:
 	static const auto c_MaxStackSize = 20;
 	udword  sleepSetp ();
 	void  setSleepSetp (udword v);
+	bool  autoRun ();
+	void  setAutoRun (bool v);
 private:
 	udword  m_sleepSetp;
+	bool  m_autoRun;
 	std::unique_ptr<char[]>   m_callStack[c_MaxStackSize];	
 	int       m_curCallNum;
 	cTimerMgr          m_timerMgr;

@@ -5,6 +5,7 @@
 #include "strFun.h"
 #include "modelLoder.h"
 #include "mLog.h"
+#include "mArgMgr.h"
 #include "impMainLoop.h"
 #include "tSingleton.h"
 
@@ -38,8 +39,9 @@ int CModule::init(const char* szName)
 	return 0;
 }
 
-int CModule::load(int nArgC, const char* argS[], ForLogicFun* pForLogic)
+int CModule::load(int nArgC, char** argS, ForLogicFun* pForLogic)
 {
+	auto& mArgS = tSingleton<mArgMgr>::single();
 	int nRet = 0;
 	auto pBuff = m_name.get ();
 	const int c_BuffNum = 3;
@@ -48,7 +50,17 @@ int CModule::load(int nArgC, const char* argS[], ForLogicFun* pForLogic)
 	auto szName = buff[0];
 	auto& rPho =  tSingleton<loopMgr>::single ();
 	std::string strPath;
-	strPath = szName;
+	auto workDir = mArgS.workDir();
+	if (workDir) {
+		strPath = workDir;
+	} else {
+		std::unique_ptr<char[]> t;
+		getCurModelPath (t);
+		strPath = t.get();
+	}
+	strPath += "/";
+	strPath += szName;
+	strPath += dllExtName();
 	auto hdll = loadDll (strPath.c_str());
 	do {
 		if (!hdll) {

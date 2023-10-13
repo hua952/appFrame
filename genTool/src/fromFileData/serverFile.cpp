@@ -1,5 +1,10 @@
 #include "serverFile.h"
 #include "strFun.h"
+#include "moduleFileMgr.h"
+#include "moduleFile.h"
+#include "appFileMgr.h"
+#include "tSingleton.h"
+
 
 cmpProcRpcNode::cmpProcRpcNode ()
 {
@@ -28,6 +33,7 @@ serverFile:: serverFile ()
 {
 	m_sleepSetp=10;
 	m_fpsSetp=0;
+	m_autoRun = true;
 	m_serverInfo.listenerNum = 0;
 	m_serverInfo.connectorNum = 0;
 }
@@ -39,6 +45,25 @@ serverFile:: ~serverFile ()
 const char*  serverFile::serverName ()
 {
     return m_serverName.get ();
+}
+
+appFile*  serverFile:: getApp ()
+{
+    appFile*  nRet = nullptr;
+    do {
+		auto mN = moduleName ();
+		auto pM = tSingleton<moduleFileMgr>::single().findModule (mN);
+		if (pM) {
+			auto aN = pM->appName ();
+			auto& rAppMgr = tSingleton<appFileMgr>::single ();
+			auto& rMap = rAppMgr.appS ();
+			auto it = rMap.find (aN);
+			if (rMap.end() != it) {
+				nRet = it->second.get();
+			}
+		}
+    } while (0);
+    return nRet;
 }
 
 bool   serverFile:: isRoot ()
@@ -211,5 +236,15 @@ udword  serverFile:: fpsSetp ()
 void  serverFile:: setFpsSetp (udword v)
 {
     m_fpsSetp = v;
+}
+
+bool  serverFile:: autoRun ()
+{
+    return m_autoRun;
+}
+
+void  serverFile:: setAutoRun (bool v)
+{
+    m_autoRun = v;
 }
 

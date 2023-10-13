@@ -64,7 +64,7 @@ void getModelS (int nArgC, const char* argS[], std::vector<std::string>& vModelS
 	}
 }
 
-void logicServerMgr::afterLoad(int nArgC, const char* argS[], ForLogicFun* pForLogic)
+void logicServerMgr::afterLoad(int nArgC, char** argS, ForLogicFun* pForLogic)
 {
 	m_ForLogicFun = *pForLogic;
 	auto pForMsg = &m_ForLogicFun;
@@ -84,6 +84,7 @@ void logicServerMgr::afterLoad(int nArgC, const char* argS[], ForLogicFun* pForL
 		for (auto it = vModelS.begin (); vModelS.end () != it; ++it) {
 			std::string strDll = strBase;
 			strDll += *it;
+			strDll += dllExtName();
 			gInfo ("will load "<<strDll.c_str ());
 			auto hDll = loadDll (strDll.c_str());
 			if (!hDll) {

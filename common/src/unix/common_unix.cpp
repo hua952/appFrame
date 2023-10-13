@@ -69,4 +69,18 @@ int   createUuid (char* outPut)
     } while (0);
     return nRet;
 }
+const char*  dllExtName ()
+{
+	return ".so";
+}
 
+const char*  exeExtName ()
+{
+	return "";
+}
+
+void wcsNCpy(wchar_t* szD, int nSize, const wchar_t* szS)
+{
+	wcsncpy (szD, szS, nSize);
+	szD[nSize - 1] = 0;
+}

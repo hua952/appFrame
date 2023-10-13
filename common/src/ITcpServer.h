@@ -8,6 +8,7 @@ struct endPoint
 {
 	char ip[16];
 	void* userData;	
+	ISession**   ppIConnector; // when connect rec the connector if no neet set it null
 	udword   userDataLen;
 	uword    port;
 	uword    unUse;
@@ -26,17 +27,15 @@ struct callbackS
 	onConnectT			connectFun;
 	onCloseT			closeFun;
 	onWritePackT        onWritePackFun;
-	/*
-	freePackFT			freePackFun;
-	allocPackFT			allocPackFun;
-	*/
 };
 
-typedef void (*event_callback_fn)(intptr_t, short, void *);
+// typedef void (*event_callback_FN)(intptr_t, short, void *);
+typedef void (*event_callback_FN)(/*intptr_t, */short, void *);
 struct sigInfo
 {
 	int first;
-	event_callback_fn second;
+	event_callback_FN second;
+	void* pUserData;
 };
 
 class ITcpServer
@@ -47,6 +46,7 @@ public:
 			endPoint* pConnector, udword conNum, sigInfo* pInfo, udword sigNum) = 0;*/
 	virtual int onLoopFrame () = 0;
 	virtual ISession* getSession (SessionIDType id) = 0;
+	virtual int       getAllConnector (ISession** ppRec, int recBuffNum) = 0;
 	virtual void*     userData() = 0;
 	virtual void      setUserData (void* pData, udword dataSize) = 0;
 };

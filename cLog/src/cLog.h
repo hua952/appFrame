@@ -5,6 +5,7 @@
 #include <iostream>
 #include <memory>
 
+int initLogGlobal ();
 int initLog (const char* logName, const char* logfileName, uword minLevel);
 int logMsg (const char* logName, const char* szMsg, uword wLevel);
 void loggerDrop();

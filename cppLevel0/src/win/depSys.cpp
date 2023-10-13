@@ -1,7 +1,7 @@
 #include <Winsock2.h>
 #include <windows.h>
 
-int   beginMain(int argC, const char* argV[])
+int   beginMain(int argC, char** argV)
 {
     int   nRet = 0;
     do {

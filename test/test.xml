@@ -28,6 +28,7 @@
 		</appServer>
 		<appClient>
 			<appArg>logLevel=2</appArg>
+			<appArg>detachServerS=1</appArg>
 			<module>
 				<appClientM2>
 					<server>
@@ -53,6 +54,9 @@
 								<manualList askType="ask"/>
 							</procRpc>
 						</appClientM1Th2>
+						<appClientM1Th3 autoRun="0">
+							
+						</appClientM1Th3>
 					</server>
 				</appClientM1>
 			</module>

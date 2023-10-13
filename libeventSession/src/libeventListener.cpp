@@ -14,6 +14,7 @@
 #include "loop.h"
 #include "nLog.h"
 #include "strFun.h"
+#include "sysinc.h"
 
 libeventListener::libeventListener ()
 {
@@ -62,7 +63,7 @@ static int tcp_server_init(int port, int listen_num)
 	return nRet;
 }
 
-static void socket_read_cb(bufferevent* bev, void* arg)
+void socket_read_cb(bufferevent* bev, void* arg)
 {
 	auto pNode = (libeventServerSession*)arg;
 	size_t len = 0;
@@ -77,7 +78,7 @@ static void socket_read_cb(bufferevent* bev, void* arg)
 			auto fun = pServer->procPackfun ();
 			auto pN = P2NHead (pack);
 			auto nRet = fun (pNode, pack);
-			if (procPacketFunRetType_doNotDel != nRet) {
+			if (!(procPacketFunRetType_doNotDel & nRet)) {
 				auto freeF = pNode->serverCom()->freePackFun ();
 				freeF (pack);
 			}
@@ -85,7 +86,7 @@ static void socket_read_cb(bufferevent* bev, void* arg)
 	} while (len > 0);
 }
 
-static void event_cb(struct bufferevent *bev, short event, void *arg)
+void event_cb(struct bufferevent *bev, short event, void *arg)
 {
     if (event & BEV_EVENT_EOF) {
         nInfo("connection closed");

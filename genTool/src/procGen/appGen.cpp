@@ -11,6 +11,7 @@
 #include "rLog.h"
 #include "moduleGen.h"
 #include "moduleMgrGen.h"
+#include "mainGen.h"
 
 appGen:: appGen ()
 {
@@ -81,6 +82,11 @@ int  appGen:: startGen (appFile& rApp)
 		if (nRet) {
 			break;
 		}
+		auto dS = rApp.detachServerS ();
+		if (dS) {
+			mainGen mg;
+			nR = mg.startGen (rApp);
+		}
     } while (0);
     return nRet;
 }
@@ -107,16 +113,44 @@ int  appGen:: batFileGen (appFile& rApp)
 		std::string strBinDir = strInsHome;
 		strBinDir += "/bin/";
 		auto procId = rApp.procId ();
-		os<<"cppLevel0.exe level0=cppLevel0L.dll netLib=libeventSession.dll addLogic="
-			<<strBinDir<<szAppName<<"ModuleMgr.dll procId="<<procId;
+		auto& rMainArgS = rApp.mainArgS();
+		rMainArgS.push_back("netLib=libeventSession");
+		{
+			std::stringstream ts;
+			ts<<"procId="<<procId;
+			rMainArgS.push_back(ts.str());
+		}
+		{
+			std::stringstream ts;
+			ts<<"addLogic="<<szAppName<<"ModuleMgr";
+			rMainArgS.push_back(ts.str());
+		}
+		{
+			std::stringstream ts;
+			ts<<"workDir="<<strBinDir;
+			rMainArgS.push_back(ts.str());
+		}
+		std::string strLogFile = szAppName;
+		strLogFile += ".log";
+		std::string strLogFull = R"(logFile=)";
+		strLogFull += strLogFile;
+		rMainArgS.push_back(strLogFull);
+		os<<"cppLevel0.exe netLib=libeventSession addLogic="
+			<<szAppName<<"ModuleMgr procId="<<procId
+			<<" logFile="<<strLogFile
+			<<" workDir="<<strBinDir;
 		auto& rModules = rApp.moduleFileNameS ();
 		auto& rModMgr = tSingleton <moduleFileMgr>::single ();
 		for (auto it = rModules.begin (); rModules.end () != it; ++it) {
-			os<<" logicModel="<<strBinDir<<*it<<".dll";
+			std::stringstream ts;
+			ts<<" logicModel="<<*it;
+			os<<ts.str();
+			rMainArgS.push_back(ts.str());
 		}
 		auto& rV = rApp.argS ();
 		for (auto it = rV.begin(); rV.end() != it; ++it) {
 			os<<" "<<*it;
+			rMainArgS.push_back(*it);
 		}
     } while (0);
     return nRet;
@@ -141,14 +175,15 @@ int  appGen:: CMakeListGen (appFile& rApp)
 		auto szPrjName = rGlobalFile.projectName ();
 		os<<R"(cmake_minimum_required(VERSION 3.16) 
 set(BUILD_USE_64BITS on)
-SET(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -g ")
-SET(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3 -Wall")
 set(CMAKE_CXX_STANDARD 17) 
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 add_subdirectory ()"<<strMgr<<R"()
 )";
-
+		auto ds = rApp.detachServerS ();
+		if (ds) {
+			os<<R"(add_subdirectory (main))"<<std::endl;
+		}
 		auto& moduleS =  rApp.moduleFileNameS ();
 		for (auto it = moduleS.begin (); moduleS.end () != it; ++it) {
 			os<<R"(add_subdirectory ()"<<*it<<")"<<std::endl;

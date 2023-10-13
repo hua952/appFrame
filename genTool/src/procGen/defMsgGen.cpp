@@ -53,6 +53,9 @@ int defMsgGen::loopHandleSGen ()
 		auto& rAppS = tSingleton<appFileMgr>::single ().appS ();
 		auto& rModMgr = tSingleton<moduleFileMgr>::single ();
 		int ip = 0;
+		std::stringstream sss;
+		sss<<R"(static serverIdType s_allSer[] = {)";
+		bool sssFirst = true;
 		for (auto it = rAppS.begin (); rAppS.end () != it; ++it) {
 			auto& rApp = *(it->second.get ());
 			int is = ip++ * LoopNum;
@@ -72,9 +75,16 @@ int defMsgGen::loopHandleSGen ()
 					auto pServer = iter->get (); // iter->second.get ();
 					auto pSName = pServer->strHandle ();
 					os<<R"(#define  )"<<pSName<<"  "<<is++<<std::endl;
+					if (sssFirst) {
+						sssFirst = false;
+					} else {
+						sss<<",";
+					}
+					sss<<pSName;
 				}
 			}
 		}
+		sss<<"};";
 		auto& rGlobal = tSingleton<globalFile>::single ();
 		auto& rRootV = rGlobal.rootServerS ();
 		os<<R"(static serverIdType s_RootSer[] = {)";
@@ -84,7 +94,7 @@ int defMsgGen::loopHandleSGen ()
 			}
 			os<<*it;
 		}
-		os<<"};"<<std::endl;
+		os<<"};"<<std::endl<<sss.str()<<std::endl;
 		os<<R"(#endif)";
     } while (0);
     return nRet;

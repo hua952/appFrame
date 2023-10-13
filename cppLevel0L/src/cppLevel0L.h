@@ -5,7 +5,7 @@
 #include "mainLoop.h"
 extern "C"
 {
-	int initFun (int cArg, const char* argS[]);
+	int initFun (int cArg, char** argS);
 }
 
 #endif

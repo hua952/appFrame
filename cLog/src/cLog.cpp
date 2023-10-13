@@ -1,6 +1,13 @@
 #include "cLog.h"
 #include <iostream>
-#include <windows.h>
+#include <string>
+#include <sstream>
+#include <fstream>
+#include "myLogger.h"
+#include "myLoggerMgr.h"
+#include "tSingleton.h"
+
+/*
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/rotating_file_sink.h"
 #include "spdlog/sinks/daily_file_sink.h"
@@ -23,17 +30,16 @@ int initLog (const char* logName, const char* logfileName, uword minLevel)
 {
 	int nRet = 0;
 	auto nLevel = getLogLevel (minLevel);
-	auto file_logger = spdlog::rotating_logger_mt("cppLevel0", "logs/cppLevel0.txt", 1024 * 1024 * 20,  10);
-	//auto con_logger = spdlog::color_logger_mt ("cppLevel0_con");
+	std::string strFile;
+	strFile += logfileName;
+	auto file_logger = spdlog::rotating_logger_mt("cppLevel0", strFile.c_str(), 1024 * 1024 * 20,  10);
 	auto nL = getLogLevel (minLevel);
 	spdlog::flush_every(std::chrono::seconds(2));
 	spdlog::set_level((decltype(spdlog::level::trace))(nL));
-	// spdlog::set_pattern("[%Y-%m-%d %H:%M:%S][%l][%p:%t][%s:%#] %v");
-	// spdlog::set_pattern("%Y-%m-%d %H:%M:%S [%l] [%t] - <%s>|<%#>|<%!>,%v");
 	spdlog::set_pattern("%Y-%m-%d %H:%M:%S.%e [%L] [%t] %v");
-
 	return nRet;
 }
+
 void loggerDrop()
 {
 	spdlog::drop_all();
@@ -50,23 +56,18 @@ int logMsg (const char* logName, const char* szMsg, uword wLevel)
 		spdlog::apply_all([&](std::shared_ptr<spdlog::logger> l) { l->trace(szMsg); });
 		break;
 	case spdlog::level::debug:
-		//SPDLOG_LOGGER_DEBUG(logger, szMsg);
 		spdlog::apply_all([&](std::shared_ptr<spdlog::logger> l) { l->debug(szMsg); });
 		break;
 	case spdlog::level::info:
-		//SPDLOG_LOGGER_INFO(logger, szMsg);
 		spdlog::apply_all([&](std::shared_ptr<spdlog::logger> l) { l->info(szMsg); });
 		break;
 	case spdlog::level::warn:
-		//SPDLOG_LOGGER_WARN(logger, szMsg);
 		spdlog::apply_all([&](std::shared_ptr<spdlog::logger> l) { l->warn(szMsg); });
 		break;
 	case spdlog::level::err:
-		//SPDLOG_LOGGER_ERROR(logger, szMsg);
 		spdlog::apply_all([&](std::shared_ptr<spdlog::logger> l) { l->error(szMsg); });
 		break;
 	case spdlog::level::critical:
-		//SPDLOG_LOGGER_CRITICAL(logger, szMsg);
 		spdlog::apply_all([&](std::shared_ptr<spdlog::logger> l) { l->critical(szMsg); });
 		break;
 	default:
@@ -75,8 +76,56 @@ int logMsg (const char* logName, const char* szMsg, uword wLevel)
 	}
 	return nRet;
 }
-/*
-int logTxt (const char* logName, const char* szTxt, int level)
+*/
+
+int initLogGlobal ()
+{
+	int nRet = 0;
+	do {
+		tSingleton<myLoggerMgr>::createSingleton ();
+	} while(0);
+	return nRet;
+}
+
+int initLog (const char* logName, const char* logfileName, uword minLevel)
+{
+	int nRet = 0;
+	do {
+		auto c_num = myLogger::c_comLevelNum;
+		if (minLevel >= c_num) {
+			nRet = 1;
+			break;
+		}
+		auto pLog = std::make_shared <myLogger>(logfileName);
+		pLog->setMinLevel (myLogger::s_comLevel[minLevel] - 1000);
+		auto& logs = tSingleton<myLoggerMgr>::single();
+		nRet = logs.addLogger (logName, pLog);
+	} while (0);
+	return nRet;
+}
+
+int logMsg (const char* logName, const char* szMsg, uword wLevel)
+{
+	int nRet = 0;
+	do {
+		auto& logs = tSingleton<myLoggerMgr>::single();
+		auto pL = logs.findLogger(logName);
+		if (!pL) {
+			nRet = 1;
+			break;
+		}
+
+		auto c_num = myLogger::c_comLevelNum;
+		// const auto c_num = sizeof(myLogger::s_comLevel)/sizeof(myLogger::s_comLevel[0]);
+		if (wLevel >= c_num) {
+			nRet = 2;
+			break;
+		}
+		nRet = pL->logTxt (szMsg, myLogger::s_comLevel[wLevel] - 500);
+	} while(0);
+	return nRet;
+}
+
+void loggerDrop()
 {
 }
-*/

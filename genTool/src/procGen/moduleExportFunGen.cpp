@@ -54,7 +54,7 @@ int   moduleExportFunGen:: genH (moduleGen& rMod)
 
 extern "C"
 {
-	void  afterLoad(int nArgC, const char* argS[], ForLogicFun* pForLogic);
+	void  afterLoad(int nArgC, char** argS, ForLogicFun* pForLogic);
 	void onLoopBegin	(serverIdType	fId);
 	void onLoopEnd	(serverIdType	fId);
 	void logicOnAccept(serverIdType	fId, SessionIDType sessionId, uqword userData);
@@ -96,7 +96,7 @@ int   moduleExportFunGen:: genCpp (moduleGen& rMod)
 #include "gLog.h"
 #include ")"<<strMgrClassName<<R"(.h"
 
-void  afterLoad(int nArgC, const char* argS[], ForLogicFun* pForLogic)
+void  afterLoad(int nArgC, char** argS, ForLogicFun* pForLogic)
 {
 	tSingleton<)"<<strMgrClassName<<R"(>::createSingleton();
 	auto &rMgr = tSingleton<)"<<strMgrClassName<<R"(>::single();

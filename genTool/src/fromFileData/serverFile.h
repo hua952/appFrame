@@ -8,6 +8,7 @@
 struct procRpcNode
 {
 	std::string  rpcName;
+	std::string  retValue;
 	bool         bAsk;
 };
 
@@ -36,11 +37,10 @@ struct toolServerNode
 	ServerIDType			handle;
 	ubyte					connectorNum;
 	ubyte                   listenerNum;
-	ubyte	                ubyUnuse;
     toolServerEndPointInfo  listenEndpoint [c_onceServerMaxListenNum];
 	toolServerEndPointInfo  connectEndpoint [c_onceServerMaxConnectNum];
 };
-
+class appFile;
 class serverFile
 {
 public:
@@ -54,6 +54,7 @@ public:
 	rpcMap&  procMsgS ();
 	const char*  moduleName ();
 	void  setModuleName (const char* v);
+	appFile* getApp ();
 	const char*  strHandle ();
 	void  setStrHandle (const char* v);
 	toolServerNode&  serverInfo ();
@@ -75,7 +76,10 @@ public:
 	udword  fpsSetp ();
 	void  setFpsSetp (udword v);
 	bool  isRoot ();
+	bool  autoRun ();
+	void  setAutoRun (bool v);
 private:
+	bool  m_autoRun;
 	std::unique_ptr <char[]>  m_frameFunDec;
 	std::unique_ptr <char[]>  m_frameFunName;
 	std::unique_ptr <char[]>  m_initFunName;

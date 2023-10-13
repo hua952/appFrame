@@ -16,6 +16,7 @@
 #include "myAssert.h"
 #include "loop.h"
 #include "nLog.h"
+#include "sysinc.h"
 
 static allocPackFT         g_allocPackFun = nullptr;
 static freePackFT			g_freePackFun = nullptr;
@@ -32,12 +33,12 @@ logMsgFT logMsgFun () {
 	return g_logMsgFun;
 }
 
-int initGlobal (allocPackFT  allocPackFun, freePackFT  freePackFun, logMsgFT logMsgFun)
+int initGlobal (allocPackFT  allocPackFun, freePackFT  freePackFun, logMsgFT argLogMsgFun)
 {
 	int nRet = 0;
 	g_allocPackFun = allocPackFun;
 	g_freePackFun = freePackFun;
-	g_logMsgFun = logMsgFun;
+	g_logMsgFun = argLogMsgFun;
 	return nRet;
 }
 
@@ -140,18 +141,16 @@ static bool sConnectComTimerFun(void* p)
 	} else {
 		auto pL = it->second.get();
 		auto sta = pL->state ();
-		//nTrace (__FUNCTION__<<" 1111 state = "<<sta);
 		if (SessionState_waitCon == sta) {
 			auto nRet = pL->connect();
-			//nTrace (__FUNCTION__<<" 2222 nRet = "<< nRet);
 			if (0 == nRet) {
 				auto conFun = rServer.connectFun ();
 				auto pU = pL->userData ();
 				auto token = (uqword*)pU;
 				auto sid = pL->id();
 				pL->setState (SessionState_Online);
-				//nTrace ("will call onConnect sid = "<<sid<<" token = "<<*token);
 				conFun (pL, token);
+				pL->trySend();
 			} else {
 				nRet = true;
 			}
@@ -188,42 +187,31 @@ int libeventServerCom::init (callbackS* pCallbackS, endPoint* pLister, udword li
 	setConnectFun (pCallbackS->connectFun);
 	setOnWritePackFun (pCallbackS->onWritePackFun);
 
-	// m_freePackFun = pCallbackS->freePackFun ;
-	// m_allocPackFun = pCallbackS->allocPackFun;
-	//setAllocPackFun (pCallbackS->allocPackFun);
-	//setFreePackFun (pCallbackS->freePackFun);
 	m_procPackfun = pCallbackS->procPackfun;
 	if (listerNum > 0) {
-		//nTrace (__FUNCTION__<<" 111");
 		m_listerS = std::make_unique<libeventListener[]> (listerNum);
 		for (udword i = 0; i < listerNum; i++) {
 			auto& ep = pLister[i];
 			auto& rRL = m_listerS [i];
 			rRL.init (this, ep.ip, ep.port);
-			// rRL.setUserData (ep.userData);
 			rRL.setUserData (ep.userData, ep.userDataLen);
 		}
 	}
 	if (conNum > 0) {
-		//nTrace (__FUNCTION__<<" 222");
 		auto& rConMap = getConnectMap ();
 		for (udword i = 0; i < conNum; i++) {
 			auto pCon = std::make_shared<libeventConnector> ();
 			auto id = nextSessionId ();
-			//auto& rS = pCon.get ();
-			//rS.setId (id);
 			auto& ep = pConnector[i];
 			pCon->init (this, ep.ip, ep.port);
 			pCon->setId(id);
 			pCon->setState(SessionState_waitCon);
 			pCon->setUserData (ep.userData, ep.userDataLen);
-			//auto nR = pCon->init (this, ep.ip, ep.port);
-			//if (0 == nR) {
-			//pCon->setIp (ep.ip);
-			//pCon->setPort (ep.port);
+			if (ep.ppIConnector) {
+				*ep.ppIConnector = pCon.get();
+			}
 			auto& rMap = getSessonMap ();
 			auto& rConMap = getConnectMap ();
-				//auto& rSC = pCon->sessionCom ();
 				rMap[id] = pCon.get();// &rSC;
 				rConMap [id] = pCon;
 				forConInfo info;
@@ -231,22 +219,16 @@ int libeventServerCom::init (callbackS* pCallbackS, endPoint* pLister, udword li
 				info.second = id;
 				auto& rTimeMgr = getTimerMgr ();
 				rTimeMgr.addComTimer (c_waitConTime, sConnectComTimerFun, &info, sizeof (info));
-				/*
-				auto fun = connectFun ();
-				fun (pCon.get (), i);
-				*/
-			//}
 		}
 	}
 
 	if (sigNum > 0) {
 		m_sigInfo = std::make_unique<sigInfo[]> (sigNum);
 		for (udword i = 0; i < sigNum; i++) {
-			auto& rS = m_sigInfo[i];
+			auto& rS = pInfo[i];
 			m_sigInfo[i] = rS;
-
 			//创建信号事件
-			struct event *signal_event = evsignal_new(base, rS.first, rS.second, NULL);
+			struct event *signal_event = evsignal_new(base, rS.first, event_callback_com/*rS.second*/, &m_sigInfo[i]);
 			event_add(signal_event, NULL);
 		}
 	}
@@ -262,6 +244,18 @@ cTimerMgr&  libeventServerCom::   getTimerMgr ()
 libeventServerCom::serverSessonMap&   libeventServerCom::getServerSessonMap()
 {
 	return m_serverSessonMap;
+}
+
+int libeventServerCom:: getAllConnector (ISession** ppRec, int recBuffNum)
+{
+    int        nRet = 0;
+    do {
+		auto& rConMap = getConnectMap ();
+		for (auto it = rConMap.begin(); rConMap.end() != it; ++it) {
+			ppRec[nRet++] = it->second.get();
+		}
+    } while (0);
+    return nRet;
 }
 
 int libeventServerCom::closeSession (SessionIDType   id)

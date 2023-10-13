@@ -94,6 +94,8 @@ void showTraceStack(std::unique_ptr<char[]>& pBuff);
 void second2Str (uqword uqwCur, std::unique_ptr<char[]>& strTime);
 uqword curNanosecond ();
 int  createUuid (char* outPut);
+const char*  dllExtName ();
+const char*  exeExtName ();
 std::ostream& operator << (std::ostream& os, const packetHead& pack);
 
 #define SD(p) {delete p;p=nullptr;}

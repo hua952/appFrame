@@ -2,6 +2,7 @@
 #include "comFun.h"
 #include "strFun.h"
 #include <string.h>
+#include <sstream>
 #include <memory>
 #include <thread>
 #include <chrono>
@@ -9,11 +10,11 @@
 #include "myAssert.h"
 #include "modelLoder.h"
 
-int  beginMain(int argC, const char* argV[]);
+int  beginMain(int argC, char** argV);
 void endMain();
 int loadLevel0(const char* levelName, int cArg, const char* argS[]);
-static std::unique_ptr<char[]> g_home;
-int main(int cArg, const char* argS[])
+// static std::unique_ptr<char[]> g_home;
+int main(int cArg, char** argS)
 {
 	auto& ws = std::cout;
 	//std::this_thread::sleep_for(std::chrono:: milliseconds(11000));
@@ -26,9 +27,10 @@ int main(int cArg, const char* argS[])
 			break;
 		}
 		std::string pLevel0Name;
-		auto nHomeR = getCurModelPath (g_home);
-		myAssert (0 == nHomeR);
-		ws<<"home is : "<<g_home.get()<<std::endl;
+		// auto nHomeR = getCurModelPath (g_home);
+		// myAssert (0 == nHomeR);
+		// ws<<"home is : "<<g_home.get()<<std::endl;
+		std::string strFrameHome;
 		for (int i = 1; i < cArg; i++)
 		{
 			auto pArg = argS[i];
@@ -44,11 +46,15 @@ int main(int cArg, const char* argS[])
 				ws << "2 != nNum = " << nNum << std::endl;
 				continue;
 			}
-			if (0 == strcmp(pRetBuf[0], "level0"))
+			std::stringstream sst(pRetBuf[0]);
+			std::string strKey;
+			sst>>strKey;
+			if (strKey == "level0")
 			{
 				ws << "level0 find" << std::endl;
 				pLevel0Name = pRetBuf[1];
-				break;
+			} else if (strKey == "frameHome"){
+				strFrameHome = pRetBuf[1];
 			}
 		}
 		if (pLevel0Name.empty()) {
@@ -56,9 +62,14 @@ int main(int cArg, const char* argS[])
 			nRet = 1;
 		}
 		else {
-			std::string strDll = g_home.get();
+			std::string strDll;
+			if (!strFrameHome.empty()) {
+				strDll += strFrameHome;
+				strDll += "/bin/";
+			}
 			strDll += pLevel0Name;
-			g_home.reset ();
+			strDll += dllExtName ();
+			// g_home.reset ();
 			auto handle = loadDll (strDll.c_str());
 			//myAssert(handle);
 			auto& ws = std::cout;
@@ -70,7 +81,7 @@ int main(int cArg, const char* argS[])
 					ws<<"load module "<<pLevel0Name<<" error"<<std::endl;
 					break;
 				}
-				typedef int (*initFunType) (int cArg, const char* argS[]);
+				typedef int (*initFunType) (int cArg, char** argS);
 				//auto funOnLoad = (initFunType)(dlsym(handle, "initFun"));
 				auto funOnLoad = (initFunType)(getFun(handle, "initFun"));
 				myAssert(funOnLoad);
@@ -85,5 +96,6 @@ int main(int cArg, const char* argS[])
 		}
 		endMain();
 	} while (0);
+	ws<<" exit main"<<std::endl;
 	return nRet;
 }

@@ -1,20 +1,19 @@
 SET(prjName midFrame)
 set(srcS)
 file(GLOB srcS src/*.cpp)
-
 set(defS)
 set(osSrc)
 if (UNIX)
     MESSAGE(STATUS "unix")
-	#file(GLOB osSrc /src/unix/*.cpp)
+	file(GLOB osSrc src/unix/*.cpp)
+	add_compile_options(-fPIC)
 elseif (WIN32)
 	MESSAGE(STATUS "windows")
 	add_definitions(-w)
 	ADD_DEFINITIONS(/Zi)
 	ADD_DEFINITIONS(/W1)
 	ADD_DEFINITIONS(/Od)
-	#file(GLOB osSrc /src/win/*.cpp)
-	#aux_source_directory(src/win osSrc)
+	file(GLOB osSrc src/win/*.cpp)
 	file(GLOB defS src/win/*.def)
 	include_directories(
 		${CMAKE_SOURCE_DIR}/../include

@@ -38,7 +38,7 @@ typedef void (*logCallStackFT) (loopHandleType pThis, int nL);
 
 typedef struct _PhyCallback
 {
-	sendPackToLoopFT fnSendPackToLoop; // Thread safety
+	// sendPackToLoopFT fnSendPackToLoop; // Thread safety
 	pushPackToLoopFT fnPushPackToLoop; // Thread safety
 	stopLoopSFT      fnStopLoopS;
 	allocPackFT		 fnAllocPack; // Thread safety
@@ -80,7 +80,7 @@ typedef struct _ForLogicFun
     getDefProcServerIdFT   fnGetDefProcServerId;
 } ForLogicFun;
 
-typedef void (*afterLoadFunT)(int nArgC, const char* argS[], ForLogicFun* pForLogic);
+typedef void (*afterLoadFunT)(int nArgC, char** argS, ForLogicFun* pForLogic);
 typedef void (*beforeUnloadFT)();
 typedef void (*logicOnAcceptFT)(serverIdType	fId, SessionIDType sessionId, uqword userData);
 typedef void (*logicOnConnectFT)(serverIdType fId, SessionIDType sessionId, uqword userData);
@@ -117,6 +117,8 @@ struct serverNode
 	ServerIDType			handle;
 	ubyte					connectorNum;
 	ubyte                   listenerNum;
+	bool                    autoRun;
+	ubyte                   unUse[3];
 	// logicOnAcceptSessionFT  fnOnAccept;
 	// logicOnConnectFT        fnOnConnect;
 	serverEndPointInfo		listenEndpoint [c_onceServerMaxListenNum];
@@ -125,7 +127,7 @@ struct serverNode
 
 extern "C"
 {
-	int InitMidFrame(int nArgC, const char* argS[], PhyCallback* pCallbackS); // call by level 0
+	int InitMidFrame(int nArgC, char** argS, PhyCallback* pCallbackS); // call by level 0
 	int getAllLoopAndStart(serverNode* pBuff, int nBuffNum); // call by level 0
 	//void loopStartResult(loopHandleType pLoop, int res, ServerIDType id); // call by level 0
 }

@@ -44,7 +44,7 @@ void  regMsgS(regMsgFT fnRegMsg)
 	
 }
 
-void  afterLoad(int nArgC, const char* argS[], ForLogicFun* pForLogic)
+void  afterLoad(int nArgC, char** argS, ForLogicFun* pForLogic)
 {
 	tSingleton<logicServerMgr>::createSingleton();
 	auto &rMgr = tSingleton<logicServerMgr>::single();

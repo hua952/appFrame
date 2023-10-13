@@ -16,7 +16,7 @@
 #include "modelLoder.h"
 #include "comMsgMsgId.h"
 
-int  InitMidFrame(int nArgC, const char* argS[],PhyCallback* pCallbackS)
+int  InitMidFrame(int nArgC, char** argS, PhyCallback* pCallbackS)
 {
 	int nRet = 0;
 	do {
@@ -91,7 +91,7 @@ static int sAddComTimer(loopHandleType pThis, udword firstSetp, udword udwSetp,
 	rTimeMgr.addComTimer (firstSetp, udwSetp, pF, pUsrData, userDataLen);
 	return nRet;
 }
-static sendPackToLoopFT g_sendPackToLoopFun = nullptr;
+// static sendPackToLoopFT g_sendPackToLoopFun = nullptr;
 
 static int sSendChMsg (packetHead* pack)
 {
@@ -177,25 +177,13 @@ static int sCreateServer (const char* szName, loopHandleType serId,
 }
 typedef void		(*freePackFT)(packetHead* pack);
 
-static void regSysRpcS (const ForLogicFun* pForLogic)
-{
-	/*
-	auto regRpc = pForLogic->fnRegRpc;
-	regRpc (comMsg2FullMsg(comMsgMsgId_addChannelAsk), comMsg2FullMsg(comMsgMsgId_addChannelRet), c_emptyLoopHandle, c_emptyLoopHandle);
-    regRpc (comMsg2FullMsg(comMsgMsgId_delChannelAsk), comMsg2FullMsg(comMsgMsgId_delChannelRet), c_emptyLoopHandle, c_emptyLoopHandle);
-    regRpc (comMsg2FullMsg(comMsgMsgId_listenChannelAsk), comMsg2FullMsg(comMsgMsgId_listenChannelRet), c_emptyLoopHandle, c_emptyLoopHandle);
-    regRpc (comMsg2FullMsg(comMsgMsgId_quitChannelAsk), comMsg2FullMsg(comMsgMsgId_quitChannelRet), c_emptyLoopHandle, c_emptyLoopHandle);
-    regRpc (comMsg2FullMsg(comMsgMsgId_sendToChannelAsk), comMsg2FullMsg(comMsgMsgId_sendToChannelRet), c_emptyLoopHandle, c_emptyLoopHandle);
-	*/
-}
-
-int loopMgr::init(int nArgC, const char* argS[], PhyCallback& info)
+int loopMgr::init(int nArgC, char** argS, PhyCallback& info)
 {
 	m_callbackS = info;
 	auto& forLogic = getForLogicFun();
 	g_allocPackFun = info.fnAllocPack;
 	g_freePackFun = info.fnFreePack;
-	g_sendPackToLoopFun = info.fnSendPackToLoop;
+	// g_sendPackToLoopFun = info.fnSendPackToLoop;
 	forLogic.fnCreateLoop = sCreateServer;
 	forLogic.fnAllocPack = sAllocPack; // info.fnAllocPack;
 	forLogic.fnFreePack = sFreePack; //  info.fnFreePack;
@@ -228,7 +216,6 @@ int loopMgr::init(int nArgC, const char* argS[], PhyCallback& info)
 			break;
 		}
 		auto& rModuleS = m_ModuleS;
-		regSysRpcS (&forLogic);
 		for(auto i = 0; i < m_ModuleNum; i++)
 		{
 			auto& rM = m_ModuleS[i];
@@ -238,7 +225,7 @@ int loopMgr::init(int nArgC, const char* argS[], PhyCallback& info)
 	return nRet;
 }
 
-int loopMgr::procArgS(int nArgC, const char* argS[])
+int loopMgr::procArgS(int nArgC, char** argS)
 {
 	using tempModuleInfo = std::set<std::string>;
 	tempModuleInfo moduleS;
@@ -386,6 +373,8 @@ ForLogicFun&  loopMgr::getForLogicFun()
 	return  m_forLogic;
 }
 
+int getMidDllPath (std::unique_ptr<char[]>& pathBuf);
+
 int    loopMgr:: initNetServer ()
 {
     int    nRet = 0;
@@ -393,9 +382,11 @@ int    loopMgr:: initNetServer ()
 		auto& rArgS = tSingleton<mArgMgr>::single ();
 		auto midNetLibName = rArgS.midNetLibName ();
 		std::unique_ptr<char[]> binH;
-		getCurModelPath(binH);
+		getMidDllPath (binH);
 		std::string strPath = binH.get (); 
 		strPath += midNetLibName;
+		// strPath += "/";
+		strPath += dllExtName ();
 		auto& rC = getPhyCallback();
 		nRet = initComTcpNet (strPath.c_str(), rC.fnAllocPack, rC.fnFreePack, rC.fnLogMsg);
 		if (nRet) {

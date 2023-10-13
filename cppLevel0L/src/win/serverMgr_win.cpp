@@ -3,28 +3,14 @@
 #include "cppLevel0LCom.h"
 #include "serverMgr.h"
 // #pragma comment(lib, "ws2_32.lib")
-
+/*
 int  serverMgr:: initNetServer (const char* szLibname)
 {
 	int nRet = 0;
 	auto szName = szLibname;
-	// rTrace ("At Then begin of loadNetServer libName = "<<szName);
-	//HINSTANCE hdll;
 
 	do {
-		/*
-		WORD wVersionRequested;
-		WSADATA wsaData;
-		int err;
-
-		wVersionRequested = MAKEWORD(2, 2);
-
-		err = WSAStartup(wVersionRequested, &wsaData);
-		if (err != 0) {
-			rError ("WSAStartup failed with error: "<< err);
-			nRet = 1;
-		}
-		*/
+		
 		auto hdll = LoadLibraryA(szName);
 		// rTrace (" After LoadLibraryA hdll = "<<hdll);
 		if (!hdll) {
@@ -62,3 +48,4 @@ int  serverMgr:: initNetServer (const char* szLibname)
 	} while (0);
 	return nRet;
 }
+*/

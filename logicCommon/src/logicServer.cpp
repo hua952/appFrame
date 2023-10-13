@@ -17,6 +17,7 @@ const char*  logicServer:: serverName ()
 
 int logicServer::onFrameFun ()
 {
+	// return willExit()?procPacketFunRetType_exitNow : procPacketFunRetType_del;
 	return procPacketFunRetType_del;
 }
 
@@ -53,10 +54,15 @@ static int OnFrameCli(void* pArgS)
 	return pS->onFrameFun ();
 }
  
-int  logicServerMgr:: procArgS (int nArgC, const char* argS[])
+int  logicServerMgr:: procArgS (int nArgC, char** argS)
 {
 	int nRet;
 	return nRet;
+}
+
+logicServer::logicServer ()
+{
+	m_willExit = false;
 }
 
 int logicServer::onServerInitGen(ForLogicFun* pForLogic)
@@ -147,6 +153,9 @@ int   logicServer:: sendPackToSomeServer(packetHead* pack, serverIdType* pSerS, 
 		pN->ubySrcServId = serverId ();
 		auto  fnSendPackToLoop =  getForMsgModuleFunS ().fnSendPackToLoop;
 		for (decltype (serverNum) i = 0; i < serverNum; i++) {
+			if (pSerS[i] == pN->ubySrcServId) {
+				continue;
+			}
 			auto p = allocPacket (pN->udwLength);
 			auto pNN = P2NHead (p);
 			memcpy (pNN, pN, pN->udwLength + NetHeadSize);
@@ -155,6 +164,63 @@ int   logicServer:: sendPackToSomeServer(packetHead* pack, serverIdType* pSerS, 
 		}
 		auto fnFreePack = getForMsgModuleFunS ().fnFreePack;
 		fnFreePack (pack);
+    } while (0);
+    return nRet;
+}
+
+int logicServer:: sendPackToSomeLocalServer(packetHead* pack, serverIdType* pSerS, udword serverNum)
+{
+    int nRet = 0;
+    do {
+		auto fnFreePack = getForMsgModuleFunS ().fnFreePack;
+		auto& es =  exitHandleS ();
+		if (!es.empty()) {
+			fnFreePack (pack);
+			break;
+		}
+		auto pN = P2NHead (pack);
+		pN->ubySrcServId = serverId ();
+		loopHandleType ph, lh;
+		fromHandle (pN->ubySrcServId, ph, lh);
+		// auto  fnSendPackToLoop =  getForMsgModuleFunS ().fnSendPackToLoop;
+		auto pBuff = std::make_unique<serverIdType[]>(serverNum);
+		decltype (serverNum) sendNum = 0;
+		for (decltype (serverNum) i = 0; i < serverNum; i++) {
+			loopHandleType sp, sl;
+			auto serH = pSerS[i];
+			if (serH == pN->ubySrcServId) {
+				continue;
+			}
+			fromHandle (serH, sp, sl);
+			if (sp != ph) {
+				continue;
+			}
+			pBuff[sendNum++] = serH;
+			es.insert(serH);
+		}
+		if (sendNum) {
+			sendPackToSomeServer (pack, pBuff.get(), sendNum);
+		} else {
+			fnFreePack (pack);
+		}
+    } while (0);
+    return nRet;
+}
+
+logicServer::exitHandleSet&  logicServer:: exitHandleS ()
+{
+    return m_exitHandleS;
+}
+
+int logicServer:: sendMsgToSomeLocalServer(CMsgBase& rMsg, serverIdType* pSerS, udword serverNum)
+{
+    int nRet = 0;
+    do {
+		auto pack = rMsg.toPack ();
+		auto nR = sendPackToSomeLocalServer(pack, pSerS, serverNum);
+		if (!nR) {
+			rMsg.pop ();
+		}
     } while (0);
     return nRet;
 }
@@ -182,7 +248,7 @@ void  logicServer:: addTimer(udword firstSetp, udword udwSetp, ComTimerFun pF, v
 {
     do {
 		void* pB[2];
-		pB[0] = pF;
+		pB[0] = (void*)pF;
 		pB[1] = pUserData;
 		addTimer (firstSetp, udwSetp, sTimerProc, pB, sizeof (pB));
     } while (0);
@@ -213,7 +279,7 @@ bool logicServer::cmpChannelKey::operator ()(const channelKey& k1,const channelK
 	return k1.key<k2.key?true:k2.key<k1.key?false:k1.value<k2.value;
 }
 
-void  logicServerMgr::afterLoad(int nArgC, const char* argS[], ForLogicFun* pForLogic)
+void  logicServerMgr::afterLoad(int nArgC, char** argS, ForLogicFun* pForLogic)
 {
 }
 
@@ -271,5 +337,15 @@ void logicServer:: sLogicOnConnect(serverIdType	fId, SessionIDType sessionId, uq
 		pThis->logicOnConnect(sessionId, userData);
 		*/
     } while (0);
+}
+
+bool  logicServer:: willExit ()
+{
+    return m_willExit;
+}
+
+void  logicServer:: setWillExit (bool v)
+{
+    m_willExit = v;
 }
 

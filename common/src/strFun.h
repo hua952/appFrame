@@ -5,6 +5,7 @@
 extern "C"
 {
 void strNCpy(char* szD, int nSize, const char* szS);
+void wcsNCpy(wchar_t* szD, int nSize, const wchar_t* szS);
 int strR(char* szTex, char sp, char** pBuf, int BufNum);
 int strRS(char* szText, char* szP, char** pBuf, int BufNum);
 int strCaseCmp (const char* str1, const char* str2);

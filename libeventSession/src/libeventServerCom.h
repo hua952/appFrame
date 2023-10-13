@@ -11,7 +11,7 @@
 #include "mainLoop.h"
 #include "cTimer.h"
 
-int initGlobal (allocPackFT  allocPackFun, freePackFT	freePackFun, logMsgFT logMsgFun);
+int initGlobal (allocPackFT  allocPackFun, freePackFT	freePackFun, logMsgFT  argLogMsgFun);
 allocPackFT    allocPackFun ();
 freePackFT    freePackFun ();
 logMsgFT logMsgFun ();
@@ -33,6 +33,7 @@ public:
 	int onLoopFrame () override;
 	void*     userData() override;
 	void      setUserData (void* pData, udword dataSize) override;
+	int       getAllConnector (ISession** ppRec, int recBuffNum) override;
 	sessonMap&  getSessonMap();
 	serverSessonMap&  getServerSessonMap ();
 	struct event_base* getBase();
@@ -56,6 +57,7 @@ public:
     void  setOnWritePackFun (onWritePackT va);
 	allocPackFT  allocPackFun ();
 	freePackFT  freePackFun ();
+	// using userCallback = std::pair<void*, sigInfo>;
 private:
 	/*
 	freePackFT  m_freePackFun;

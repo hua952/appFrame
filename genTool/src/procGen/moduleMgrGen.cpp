@@ -7,6 +7,7 @@
 #include "rLog.h"
 #include <string>
 #include <fstream>
+#include <vector>
 
 moduleMgrGen:: moduleMgrGen ()
 {
@@ -97,7 +98,7 @@ set(libDep)
 if (WIN32)
 	MESSAGE(STATUS "windows")
 	ADD_DEFINITIONS(/Zi)
-	ADD_DEFINITIONS(/W1)
+	ADD_DEFINITIONS(/W2)
 	file(GLOB defS src/gen/win/*.def)
 	include_directories()";
 	auto depInc = rGlobalFile.depIncludeHome ();
@@ -187,7 +188,7 @@ int   moduleMgrGen:: writeExportFunH ()
 class logicServer;
 extern "C"
 {
-	void  afterLoad(int nArgC, const char* argS[], ForLogicFun* pForLogic);
+	void  afterLoad(int nArgC, char** argS, ForLogicFun* pForLogic);
 	void  beforeUnload();
 
 	void onLoopBegin	(serverIdType	fId);
@@ -219,7 +220,7 @@ int   moduleMgrGen:: writeExportFunCpp ()
 #include "tSingleton.h"
 #include "cLog.h"
 
-void  afterLoad(int nArgC, const char* argS[], ForLogicFun* pForLogic)
+void  afterLoad(int nArgC, char** argS, ForLogicFun* pForLogic)
 {
 	tSingleton<allLogicServerMgr>::createSingleton();
 	auto &rMgr = tSingleton<allLogicServerMgr>::single();
@@ -302,7 +303,7 @@ public:
 		// findServerFT   fnFindServer;
 	};
 	using moduleMap = std::map<std::string, moduleInfo>;
-	void  afterLoad(int nArgC, const char* argS[], ForLogicFun* pForLogic);
+	void  afterLoad(int nArgC, char** argS, ForLogicFun* pForLogic);
 	// logicServer*  findServer (serverIdType	sId);
 	moduleMap&  moduleS ();
 	void logicOnAccept(serverIdType	fId, SessionIDType sessionId, uqword userData);
@@ -343,9 +344,12 @@ int   moduleMgrGen:: writeLogicServerCpp ()
 #include "comFun.h"
 #include "rpcInfo.h"
 #include "modelLoder.h"
+#include <string>
+#include <sstream>
 #include <vector>
 
-void getModelS (int nArgC, const char* argS[], std::vector<std::string>& vModelS)
+void getModelS (int nArgC, char** argS, std::vector<std::string>& vModelS,
+	std::string& strWorkDir)
 {
 	char* pRetBuf[3];
 	for (int i = 1; i < nArgC; i++) {
@@ -359,8 +363,13 @@ void getModelS (int nArgC, const char* argS[], std::vector<std::string>& vModelS
 			gWarn("arg num error"<< "2 != nNum = " << nNum);
 			continue;
 		}
-		if (strcmp (pRetBuf[0], "logicModel") == 0) {
+		std::stringstream ssKey (pRetBuf[0]);
+		std::string strKey;
+		ssKey>>strKey;
+		if (strKey == "logicModel") {
 			vModelS.push_back (pRetBuf[1]);
+		} else if (strKey == "workDir") {
+			strWorkDir = pRetBuf[1];
 		}
 	}
 }
@@ -369,20 +378,7 @@ allLogicServerMgr::moduleMap& allLogicServerMgr:: moduleS ()
 {
 	return m_moduleS;
 }
-/*
-logicServer*  allLogicServerMgr::findServer (serverIdType	sId)
-{
-	logicServer* pRet = nullptr;
-	auto& modS = moduleS ();
-	for (auto it = modS.begin(); modS.end() != it; ++it) {
-		pRet = it->second.fnFindServer (sId);
-		if(pRet) {
-			break;
-		}
-	}
-	return pRet;
-}
-*/
+
 void allLogicServerMgr::logicOnAccept(serverIdType	fId, SessionIDType sessionId, uqword userData)
 {
 	auto& modS = moduleS ();
@@ -415,7 +411,7 @@ void allLogicServerMgr::onLoopEnd(serverIdType	fId)
 	}
 }
 
-void allLogicServerMgr::afterLoad(int nArgC, const char* argS[], ForLogicFun* pForLogic)
+void allLogicServerMgr::afterLoad(int nArgC, char** argS, ForLogicFun* pForLogic)
 {
 	m_ForLogicFun = *pForLogic;
 	auto pForMsg = &m_ForLogicFun;
@@ -424,12 +420,19 @@ void allLogicServerMgr::afterLoad(int nArgC, const char* argS[], ForLogicFun* pF
 	regRpcS (&rFunS);
 
 	std::vector<std::string> vModelS;
-	getModelS (nArgC, argS, vModelS);
+	std::string strWorkDir;
+	getModelS (nArgC, argS, vModelS, strWorkDir);
 	gInfo ("logicModelNum = "<<vModelS.size());
 	do {
+		// std::unique_ptr<char[]> myPath;
+		// auto nGet = getCurModelPath (myPath);
+		// std::string strBase = myPath.get();
 		auto& modS = moduleS ();
 		for (auto it = vModelS.begin (); vModelS.end () != it; ++it) {
-			std::string strDll = *it;
+			std::string strDll = strWorkDir;
+			// strDll += "/";
+			strDll += *it;
+			strDll += dllExtName();
 			gInfo ("will load "<<strDll.c_str ());
 			moduleInfo info;
 			info.handle = loadDll (strDll.c_str());

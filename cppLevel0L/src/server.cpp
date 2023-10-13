@@ -19,6 +19,7 @@ server::server()
 	m_nextToken  = 0;
 	m_curCallNum = 0;
 	m_sleepSetp = 10;
+	m_autoRun = true;
 }
 
 server::~server()
@@ -62,42 +63,6 @@ server::netMsgMap&  server::netMsgProcMap()
 	return m_netMsgMap;
 }
 
-int sOnRegMyHandleAsk(server* pServer, ISession* session, packetHead* packet)
-{
-	int nRet = procPacketFunRetType_del;
-    auto & rMap = pServer->serverSessionMap ();
-	auto pN = P2NHead (packet);
-	auto pU = (regMyHandleAskPack*)(N2User (pN));
-
-	rMap [pU->myHandle] = session;
-	auto& rServerMgr = tSingleton<serverMgr>::single ();
-	auto& rCallback = rServerMgr.getPhyCallback ();
-	auto allocFun = rCallback.fnAllocPack;
-	auto pSend = allocFun (sizeof (regMyHandleRetPack));
-	if (pSend) {
-		auto pRN = P2NHead (pSend);
-		pRN->uwMsgID = toFramMsgId(enFramMsgId_regMyHandleRet);
-		pRN->dwToKen = pN->dwToKen;
-		pRN->ubyDesServId = pN->ubySrcServId;
-		pRN->ubySrcServId = pN->ubyDesServId;
-		auto pRU = (regMyHandleRetPack*)(N2User (pRN));
-		pRU->myHandle = pU->myHandle;
-		pRU->result = 0;
-		auto  fnSendPackToLoop = rCallback.fnSendPackToLoop;
-		fnSendPackToLoop (pSend);
-	}
-	return nRet;
-}
-
-int sOnRegMyHandleRet(server* pServer, ISession* session, packetHead* packet)
-{
-	int nRet = procPacketFunRetType_del;
-	auto pN = P2NHead (packet);
-	auto pU = (regMyHandleRetPack*)(N2User (pN));
-	rTrace (__FUNCTION__<<" token= "<<pN->dwToKen<<" result = "<<pU->result<<" myHandle = "<<(int)pU->myHandle);
-	return nRet;
-}
-
 int server::init(serverNode* pMyNode)
 {
 	int nRet = 1;
@@ -109,6 +74,7 @@ int server::init(serverNode* pMyNode)
 		auto handle = pMyNode->handle;
 		m_loopHandle = handle;
 		setSleepSetp (pMyNode->sleepSetp);
+		setAutoRun (pMyNode->autoRun);
 	} while (0);
 	return nRet;
 }
@@ -116,6 +82,7 @@ int server::init(serverNode* pMyNode)
 thread_local  loopHandleType  server::s_loopHandleLocalTh = c_emptyLoopHandle;
 bool server::start()
 {
+	rTrace("startThread handle = "<<m_loopHandle<<" this = "<<this);
 	m_pTh =std::make_unique<std::thread>(server::ThreadFun, this);
 	return true;
 }
@@ -124,6 +91,12 @@ void server::join()
 {
 	myAssert (m_pTh);
 	m_pTh->join();
+}
+
+void server::detach ()
+{
+	myAssert (m_pTh);
+	m_pTh->detach ();
 }
 
 void server::run()
@@ -164,10 +137,10 @@ bool server::onFrame()
 	
 	auto myHandle = m_loopHandle;
 	auto nQuit = onLoopFrame(myHandle); // call by level 0
-	if (procPacketFunRetType_exitNow == nQuit) {
+	if (procPacketFunRetType_exitNow & nQuit) {
 		bExit = true;
 	} else {
-		if (procPacketFunRetType_exitAfterLoop == nQuit) {
+		if (procPacketFunRetType_exitAfterLoop & nQuit) {
 			bExit = true;
 		}
 		packetHead head;
@@ -182,17 +155,16 @@ bool server::onFrame()
 			int nRet =  procPacketFunRetType_del;
 			auto pN = P2NHead (d);
 			nRet = processOncePack(m_loopHandle, d);// call by level 0
-			if (procPacketFunRetType_doNotDel == nRet) {
+			if (procPacketFunRetType_doNotDel & nRet) {
 				p->pNext = n;
 				n->pPer = p;
-			} else {
-				if (procPacketFunRetType_exitNow == nRet) {
-					bExit = true;
-					break;
-				}
-				if (procPacketFunRetType_exitAfterLoop == nRet) {
-					bExit = true;
-				}
+			}
+			if (procPacketFunRetType_exitNow & nRet) {
+				bExit = true;
+				break;
+			}
+			if (procPacketFunRetType_exitAfterLoop & nRet) {
+				bExit = true;
 			}
 		}
 		n = pH->pNext;
@@ -245,5 +217,15 @@ udword  server:: sleepSetp ()
 void  server:: setSleepSetp (udword v)
 {
     m_sleepSetp = v;
+}
+
+bool  server:: autoRun ()
+{
+    return m_autoRun;
+}
+
+void  server:: setAutoRun (bool v)
+{
+    m_autoRun = v;
 }
 

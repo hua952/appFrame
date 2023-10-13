@@ -12,6 +12,11 @@
 #include <string>
 #include "depOSFun.h"
 
+void wcsNCpy(wchar_t* szD, int nSize, const wchar_t* szS)
+{
+	wcscpy_s (szD, nSize, szS);
+}
+
 bool  isPathExit (const char* szPath)
 {
 	return _access(szPath, 0) == 0;
@@ -118,7 +123,7 @@ void myU8ToW(const char* szText, std::unique_ptr<wchar_t[]>& var)
     wszString[wcsLen] = 0;
 }
 
-int             getCurModelPath (std::unique_ptr<char[]>& pathBuf)
+int getCurModelPath (std::unique_ptr<char[]>& pathBuf)
 {
 	const auto c_pathMax = 512;
 	auto tempBuf = std::make_unique<char[]>(c_pathMax + 1);
@@ -160,6 +165,15 @@ bool isPathInterval (char c)
 }
 
 
+const char*  dllExtName ()
+{
+	return ".dll";
+}
+
+const char*  exeExtName ()
+{
+	return ".exe";
+}
 
 /*
 void TraceStack(std::stringstream& oss)

@@ -23,8 +23,19 @@ void  mArgMgr:: onCmpKey (char* argv[])
     do {
 		procUwordA("savePackTag", argv, m_savePackTag);
 		procStrA("netLib", argv, m_midNetLibName);
+		procStrA("workDir", argv, m_workDir);
 		procUwordA("procId", argv, m_procId);
     } while (0);
+}
+
+const char*  mArgMgr:: workDir ()
+{
+    return m_workDir.get ();
+}
+
+void  mArgMgr:: setWorkDir (const char* v)
+{
+    strCpy (v, m_workDir);
 }
 
 const char*  mArgMgr:: midNetLibName ()

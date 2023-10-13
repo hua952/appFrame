@@ -14,7 +14,7 @@ public:
 	~CModule();
 	int init(const char* szName);
 	const char* name();
-	int load(int nArgC, const char* argS[],ForLogicFun* pForLogic);
+	int load(int nArgC, char** argS,ForLogicFun* pForLogic);
 	// int load_os (const char* szName, ForLogicFun* pForLogic);
 	logicOnAcceptFT  fnLogicOnAccept ();
 	logicOnConnectFT  fnLogicOnConnect ();

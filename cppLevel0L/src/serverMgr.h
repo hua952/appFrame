@@ -8,7 +8,7 @@ class serverMgr
 public:
 	serverMgr();
 	~serverMgr();
-	int				initFun (int cArg, const char* argS[]);
+	int				initFun (int cArg, char** argS);
 	serverIdType	getServerNum();
 	pserver*		getServerS();
 	server*         getServer(loopHandleType handle);
@@ -23,7 +23,7 @@ public:
     void  setCreateTcpServerFn (createTcpServerFT va);
     delTcpServerFT    delTcpServerFn ();
     void  setDelTcpServerFn (delTcpServerFT va);
-	int   initNetServer (const char* szLibname);
+	// int   initNetServer (const char* szLibname);
 	server*         getOutServer();
     udword    packSendInfoTime ();
     void  setPackSendInfoTime (udword va);
@@ -35,10 +35,11 @@ private:
     delTcpServerFT  m_delTcpServerFn;
     createTcpServerFT  m_createTcpServerFn;
     ubyte  m_outNum;
-	int procArgS(int nArgC, const char* argS[]);
+	int procArgS(int nArgC, char** argS);
 	loopHandleType	m_procId;
 	loopHandleType	m_gropId;
 	std::unique_ptr<pserver[]>	 g_serverS;
+	std::unique_ptr<server[]>	m_pServerImpS;
 	std::unique_ptr<char[]>      m_netLibName;
 	uword			g_ServerNum;
 	PhyCallback m_PhyCallback;

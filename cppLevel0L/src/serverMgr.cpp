@@ -35,7 +35,7 @@ void	freePack(packetHead* pack)
 	delete [] ((char*)(pack));
 	POP_FUN_CALL
 }
-
+/*
 static int sendPackToLoop(packetHead* pack)
 {
 	int nRet = 0;
@@ -63,6 +63,7 @@ static int sendPackToLoop(packetHead* pack)
 	}
 	return nRet;
 }
+*/
 static int sPushPackToLoop (loopHandleType pThis, packetHead* pack)
 {
 	int nRet = 0;
@@ -155,7 +156,7 @@ PhyCallback&  serverMgr::getPhyCallback()
 }
 
 
-int serverMgr::procArgS(int nArgC, const char* argS[])
+int serverMgr::procArgS(int nArgC, char** argS)
 {
 	for(int i = 1; i < nArgC; i++)
 	{
@@ -184,21 +185,7 @@ int serverMgr::procArgS(int nArgC, const char* argS[])
 	}
 	return 0;
 }
-/*
-static int sAddComTimer(loopHandleType pThis, udword firstSetp, udword udwSetp,
-		ComTimerFun pF, void* pUsrData, udword userDataLen)
-{
-	int nL = pThis;
-	rTrace ("at then begin of sAddComTimer pThis = "<<nL);
-	int nRet = 0;
-	auto& rMgr = tSingleton<serverMgr>::single();
-	auto pTH = rMgr.getServer(pThis);
-	rTrace ("at then begin of sAddComTimer pTH = "<<pTH);
-	cTimerMgr&  rTimeMgr =    pTH->getTimerMgr();
-	rTimeMgr.addComTimer (firstSetp, udwSetp, pF, pUsrData, userDataLen);
-	return nRet;
-}
-*/
+
 static NetTokenType   sNextToken(loopHandleType pThis)
 {
 	NetTokenType   nRet = 0;
@@ -207,7 +194,6 @@ static NetTokenType   sNextToken(loopHandleType pThis)
 	if (pTH) {
 		nRet = pTH->nextToken ();
 	}
-	//rTrace (" 00000000000  handle = "<<pThis<<" ret token = "<<nRet);
 	return nRet;
 }
 
@@ -262,16 +248,14 @@ static loopHandleType      getCurServerHandle ()
 	return server::s_loopHandleLocalTh;
 }
 
-int serverMgr::initFun (int cArg, const char* argS[])
+int serverMgr::initFun (int cArg, char** argS)
 {
-	//std::cout<<"start main"<<std::endl;
 	int nRet = 0;
 	tSingleton <cArgMgr>::createSingleton ();
 	auto& rArgS = tSingleton<cArgMgr>::single ();
 	rArgS.procArgS (cArg, argS);
 	procArgS (cArg, argS);
 	auto& rMgr = getPhyCallback();
-	rMgr.fnSendPackToLoop = sendPackToLoop;
 	rMgr.fnPushPackToLoop = sPushPackToLoop;
 	rMgr.fnStopLoopS = stopLoopS;
 	rMgr.fnAllocPack = allocPack;
@@ -284,7 +268,14 @@ int serverMgr::initFun (int cArg, const char* argS[])
 	rMgr.fnLogCallStack = sLogCallStack;
 	do {
 		auto logLevel = rArgS.logLevel ();
-		auto nInitLog = initLog ("appFrame", "appFrameLog.log", logLevel);
+		auto pWorkDir = rArgS.workDir ();
+		myAssert (pWorkDir);
+		std::string strFile = pWorkDir;
+		strFile += "logs/";
+		auto pLogFile = rArgS.logFile();
+		strFile += pLogFile;
+		initLogGlobal ();
+		auto nInitLog = initLog ("appFrame", strFile.c_str(), logLevel);
 		if (0 != nInitLog) {
 			std::cout<<"initLog error nInitLog = "<<nInitLog<<std::endl;
 			break;
@@ -296,25 +287,23 @@ int serverMgr::initFun (int cArg, const char* argS[])
 			rError ("InitMidFrame error nRet =  "<<nInitMidFrame);
 			break;
 		}
-		const auto c_maxLoopNum = 10;
+		const auto c_maxLoopNum = 16;
 		serverNode loopHandleS[c_maxLoopNum];
 		auto proLoopNum =  getAllLoopAndStart(loopHandleS, c_maxLoopNum);
 		rInfo ("initFun proLoopNum = "<<proLoopNum);
 		if (proLoopNum > 0) {
+			/*
 			auto pNetLibName = m_netLibName.get();
 			std::unique_ptr<char[]> binH;
 			getCurModelPath(binH);
 			std::string strPath = binH.get (); 
 			binH.reset ();
 			strPath += pNetLibName;
-			auto nNetInit = initNetServer (strPath.c_str());
-			if (nNetInit) {
-				rError ("initNetServer error nNetInit = "<<nNetInit);
-				break;
-			}
+			*/
 			g_ServerNum = proLoopNum;
 			g_serverS = std::make_unique<pserver[]>(proLoopNum);
-			std::unique_ptr<server[]>	pServerImpS =  std::make_unique<server[]>(proLoopNum);
+			auto& pServerImpS =  m_pServerImpS;
+			pServerImpS =  std::make_unique<server[]>(proLoopNum);
 			auto pServerS = getServerS();
 			auto pImpS = pServerImpS.get();
 			for (int i = 0; i < proLoopNum; i++ ) {
@@ -322,16 +311,29 @@ int serverMgr::initFun (int cArg, const char* argS[])
 				auto p = pServerS [i];
 				p->init (&loopHandleS[i]);
 			}
-			for (int i = 0; i < proLoopNum; i++ ) {
-				auto p = pServerS[i];
-				p->start();
-			}
-			for (int i = 0; i < proLoopNum; i++ ) {
-				auto p = pServerS [i];
-				p->join();
+			auto detachServerS = rArgS.detachServerS ();
+			
+			if (detachServerS) {
+				for (int i = 0; i < proLoopNum; i++ ) {
+					auto p = pServerS[i];
+					auto autoRun = p->autoRun ();
+					if (autoRun) {
+						p->start();
+						p->detach();
+					}
+				}
+			} else {
+				for (int i = 0; i < proLoopNum; i++ ) {
+					auto p = pServerS[i];
+					p->start();
+				}
+				for (int i = 0; i < proLoopNum; i++ ) {
+					auto p = pServerS[i];
+					p->join();
+				}
+				std::cout<<"All server End"<<std::endl;
 			}
 			loggerDrop ();
-			std::cout<<"All server End"<<std::endl;
 		}
 	} while (0);
 	return nRet;

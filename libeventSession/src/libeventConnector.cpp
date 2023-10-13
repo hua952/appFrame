@@ -5,11 +5,13 @@
 #include "event2/buffer.h"
 #include "event2/bufferevent.h"
 #include "event2/bufferevent_compat.h"
-#include "event2/http_struct.h"
-#include "event2/http_compat.h"
+// #include "event2/http_struct.h"
+// #include "event2/http_compat.h"
 #include "event2/util.h"
 #include "loop.h"
 #include "nLog.h"
+#include "sysinc.h"
+#include <stdio.h>
 
 libeventConnector::libeventConnector ()
 {
@@ -70,7 +72,7 @@ int tcp_connect_server(const char* server_ip, int port)
 
     if( status == -1 ) {
         save_errno = errno;
-		closesocket(sockfd);
+		close(sockfd);
         errno = save_errno; //the close may be error  
         return -1;
     }
@@ -100,7 +102,7 @@ static void server_msg_cb(struct bufferevent* bev, void* arg)
 					<<" length = "<<pN->udwLength);
 					*/
 				auto nRet = fun (pNode, pack);
-				if (procPacketFunRetType_doNotDel != nRet ) {
+				if (!(procPacketFunRetType_doNotDel & nRet)) {
 					auto freeF = pConnector->serverCom()->freePackFun ();
 					freeF (pack);
 				}
@@ -110,7 +112,7 @@ static void server_msg_cb(struct bufferevent* bev, void* arg)
 	} while (len > 0);
 }
 
-static void event_cb(struct bufferevent *bev, short event, void *arg)
+static void event_cb_con(struct bufferevent *bev, short event, void *arg)
 {
 	auto pConnector = (libeventConnector*)arg;
     if (event & BEV_EVENT_EOF) {
@@ -140,7 +142,7 @@ int    libeventConnector::connect()
 		auto bev = bufferevent_socket_new(baseL, sockfd,
 				BEV_OPT_CLOSE_ON_FREE);
 		setBev (bev);
-		bufferevent_setcb(bev, server_msg_cb, NULL, event_cb, this);
+		bufferevent_setcb(bev, server_msg_cb, NULL, event_cb_con, this);
 		bufferevent_enable(bev, EV_READ | EV_PERSIST);
 	} while (0);
 	return nRet;

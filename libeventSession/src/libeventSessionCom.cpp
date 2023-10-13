@@ -211,7 +211,7 @@ void libeventSessionCom:: setServerCom (libeventServerCom*  va)
 
 int 	libeventSessionCom:: send(packetHead* pack)
 {
-	int nRet =  procPacketFunRetType_del;
+	int nRet = 0;
 	auto pH = &m_writeH;
 	pack->pPer = pH->pPer;
 	pH->pPer->pNext = pack;

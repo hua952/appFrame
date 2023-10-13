@@ -17,7 +17,8 @@
 int main (int argNum, char* argS[])
 {
 	int nRet = 0;
-	auto nInitLog = initLog ("genTool", "genTool.log", 0);
+	initLogGlobal ();
+	auto nInitLog = initLog ("genTool", "logs/genTool.log", 0);
 	do {
 		if (0 != nInitLog) {
 			std::cout<<"initLog error nInitLog = "<<nInitLog<<std::endl;

@@ -20,7 +20,7 @@ void  configMgr:: setDefFile (const char* v)
     strCpy (v, m_defFile);
 }
 
-int  configMgr:: procArgS(int cArg, char* argS[])
+int  configMgr:: procArgS(int cArg, char** argS)
 {
     int  nRet = 0;
     do {

@@ -17,7 +17,10 @@ public:
 	void  setProcId (loopHandleType v);
 	udword  packTokenTime ();
 	void  setPackTokenTime (udword v);
+	const char*  workDir ();
+	void  setWorkDir (const char* v);
 private:
+	std::unique_ptr<char[]>  m_workDir;
 	udword  m_packTokenTime;
 	loopHandleType  m_procId;
 	std::unique_ptr<char[]>  m_midNetLibName;

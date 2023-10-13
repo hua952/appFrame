@@ -5,10 +5,10 @@
 
 enum procPacketFunRetType
 {
-	procPacketFunRetType_del,
-	procPacketFunRetType_doNotDel,
-	procPacketFunRetType_exitNow,
-	procPacketFunRetType_exitAfterLoop
+	procPacketFunRetType_del = 0,
+	procPacketFunRetType_doNotDel = 1,
+	procPacketFunRetType_exitNow = 2,
+	procPacketFunRetType_exitAfterLoop = 4
 };
 
 typedef struct _procPacketArg

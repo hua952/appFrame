@@ -207,15 +207,22 @@ int impLoop::processOncePack(packetHead* pPack)
 		argP.handle = id ();
 		if (NIsAskSave(pN)) {
 			myAssert (!NIsRet(pN));
-			iPackSave* pISave = getIPackSave ();
-			pISave->netTokenPackInsert (pPack);
-			std::pair<NetTokenType, impLoop*> pa;
-			pa.first = pN->dwToKen;
-			pa.second = this;
-			// mDebug ("netTokenPackInsert "<<*pPack);
-			auto delTime = 5000;
-			auto& rTimeMgr = getTimerMgr ();
-			rTimeMgr.addComTimer (delTime, sDelNetPack, &pa, sizeof (pa));
+			auto& rMsgInfoMgr = tSingleton<loopMgr>::single ().defMsgInfoMgr ();
+			auto retMsgId = rMsgInfoMgr.getRetMsg (pN->uwMsgID);
+			if (c_null_msgID != retMsgId) {
+				auto pRetF = findMsg (retMsgId);
+				if (pRetF) {
+					iPackSave* pISave = getIPackSave ();
+					pISave->netTokenPackInsert (pPack);
+					std::pair<NetTokenType, impLoop*> pa;
+					pa.first = pN->dwToKen;
+					pa.second = this;
+					auto delTime = 5000;
+					auto& rTimeMgr = getTimerMgr ();
+					rTimeMgr.addComTimer (delTime, sDelNetPack, &pa, sizeof (pa));
+					nRet = procPacketFunRetType_doNotDel;
+				}
+			}
 			break;
 		}
 		auto bInOncePro = packInOnceProc(pPack);
@@ -277,7 +284,7 @@ int  impLoop:: processLocalServerPack(packetHead* pPack)
 			nRet = pF((pPacketHead)(pPack->pAsk), pPack, nullptr);
 		} else {
 			packetHead* pRet = nullptr;
-			pF(pPack, pRet, nullptr);
+			auto fRet = pF(pPack, pRet, nullptr);
 			if (pRet) {
 				pRet->pAsk = (uqword)pPack;
 				auto pRN = P2NHead (pRet);
@@ -286,6 +293,9 @@ int  impLoop:: processLocalServerPack(packetHead* pPack)
 				pRN->dwToKen = pN->dwToKen;
 				nRet = procPacketFunRetType_doNotDel;
 
+				if (procPacketFunRetType_exitNow == fRet || procPacketFunRetType_exitAfterLoop == fRet) {
+					nRet |= fRet;
+				}
 				sendFun (pRN->ubyDesServId, pRet);
 			}
 		}
@@ -394,10 +404,7 @@ void impLoop::onConnect(ISession* session, void* userData)
 {
 	ServerIDType* pBuff = (ServerIDType*)&userData;
 	auto sid = session->id();
-	if (pBuff[0]) {
-		myAssert (!m_defSession);
-		m_defSession = session;
-	} else {
+	if (!pBuff[0]) {  // not def
 		auto& rMap = serverSessionS ();
 		auto inRet = rMap.insert (std::make_pair(pBuff[1], sid));
 		myAssert (inRet.second);
@@ -405,8 +412,6 @@ void impLoop::onConnect(ISession* session, void* userData)
 
 	auto& rMgr = tSingleton<loopMgr>::single();
 	rMgr.logicOnConnect (id(), sid, *(pBuff + 2));
-	// auto fu = m_serverNode.fnOnConnect;
-	// fu(id(), sid, *(pBuff + 2));
 }
 
 void impLoop::onClose(ISession* session)
@@ -424,6 +429,14 @@ void impLoop::onWritePack(ISession* session, packetHead* pack)
 			pFree (pack);
 			break;
 		}
+		/*
+		auto& rMsgInfoMgr = tSingleton<loopMgr>::single ().defMsgInfoMgr ();
+		auto retMsgId = rMsgInfoMgr.getRetMsg (pN->uwMsgID);
+		if (c_null_msgID == retMsgId) {
+			pFree (pack);
+			break;
+		}
+		*/
 		auto myHandle = id();
 		loopHandleType myPId;
 		loopHandleType mySId;
@@ -490,6 +503,11 @@ int impLoop::init(const char* szName, ServerIDType id, serverNode* pNode,
 				auto& info = pNode->connectEndpoint[i];
 				strNCpy (ep.ip, sizeof (ep.ip), info.ip);
 				uword uwDef = info.bDef ? 1 : 0;
+				if (info.bDef) {
+					ep.ppIConnector = &m_defSession;
+				} else {
+					ep.ppIConnector = nullptr;
+				}
 				ep.port = info.port;
 				ep.userDataLen = sizeof(loopHandleType)*2 + sizeof(info.userData); // info.userDataLen;
 				auto pTemp = std::make_unique<ubyte[]>(ep.userDataLen);
@@ -560,13 +578,18 @@ int impLoop::onLoopFrame()
 {
 	int nRet = 0;
 	m_timerMgr.onFrame ();
+	do {
 	if (m_funOnFrame) {
 		nRet = m_funOnFrame(m_pArg);
+		if (procPacketFunRetType_exitNow == nRet || procPacketFunRetType_exitAfterLoop == nRet) {
+			break;
+		}
 	}
 	auto pNet = tcpServer ();
 	if (pNet) {
 		pNet->onLoopFrame ();
 	}
+	}while(0);
 	m_frameNum++;
 	return nRet;
 }

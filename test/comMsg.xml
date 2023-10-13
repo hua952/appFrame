@@ -3,9 +3,10 @@
 	<struct>
 	</struct>
 	<rpc>
-		<comMsg addrType="1" cppDir="../libMsg/src" order="610" extPH="1">
+		<comMsg addrType="1" cppDir="../libMsg/src" order="610">
 			<addChannel>
 				<ask neetSession="1">
+					<chKey dataType="ubyte" length="16" haveSize="0"/>
 					<token dataType="udword" />
 				</ask>
 				<ret neetSession="1">
@@ -14,34 +15,46 @@
 			</addChannel>
 			<delChannel>
 				<ask>
+					<chKey dataType="ubyte" length="16" haveSize="0"/>
 				</ask>
 				<ret>
 					<result dataType="udword" />
 				</ret>
 			</delChannel>
 			<listenChannel>
-				<ask>
+				<ask neetSession="1">
+					<chKey dataType="ubyte" length="16" haveSize="0"/>
 				</ask>
 				<ret>
 					<result dataType="udword" />
 				</ret>
 			</listenChannel>
 			<quitChannel>
-				<ask>
+				<ask neetSession="1">
+					<chKey dataType="ubyte" length="16" haveSize="0"/>
 				</ask>
 				<ret>
 					<result dataType="udword" />
 				</ret>
 			</quitChannel>
 			<sendToChannel>
-				<ask>
+				<ask neetSession="1">
+					<chKey dataType="ubyte" length="16" haveSize="0"/>
 					<excSender dataType="udword" commit="do not send ntf to me"/>
-					<pack dataType="ubyte" length="1100000" haveSize="1" commit="数据包"> </pack>
+					<pack dataType="ubyte" length="1100000" haveSize="1" commit=""> </pack>
 				</ask>
 				<ret>
 					<result dataType="udword" />
 				</ret>
 			</sendToChannel>
+			<ntfExit>
+				<ask>
+					<exitType dataType="udword" />
+				</ask>
+				<ret neetSession="1">
+					<result dataType="udword" />
+				</ret>
+			</ntfExit>
 		</comMsg >
 	</rpc>
 </servers>

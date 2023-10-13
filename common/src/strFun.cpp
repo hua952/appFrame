@@ -29,7 +29,7 @@ void wstrCpy (const wchar_t* szSrc, std::unique_ptr<wchar_t[]>& pDec)
 		auto len = wcslen(szSrc);
 		pDec = std::make_unique<wchar_t[]> (len + 1);
 		auto p = pDec.get();
-		wcscpy_s (p, len + 1, szSrc);
+		wcsNCpy(p, len + 1, szSrc);
 	}
 }
 

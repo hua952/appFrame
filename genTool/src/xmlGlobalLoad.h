@@ -21,9 +21,9 @@ public:
 	int  appSLoad (rapidxml::xml_node<char>* pAppS);
 	int  onceAppLoad (rapidxml::xml_node<char>* pApp, std::shared_ptr<appFile>& rApp);
 	int  moduleSLoad (rapidxml::xml_node<char>* pModuleS, appFile& rApp);
-	int  onceModuleLoad (rapidxml::xml_node<char>* pM, std::shared_ptr<moduleFile>& rM);
-	int  serverSLoad (rapidxml::xml_node<char>*  pServerS, moduleFile& rM);
-	int  onceServerLoad (rapidxml::xml_node<char>* pS, std::shared_ptr<serverFile>& rS);
+	int  onceModuleLoad (rapidxml::xml_node<char>* pM, std::shared_ptr<moduleFile>& rM, appFile& rApp);
+	int  serverSLoad (rapidxml::xml_node<char>*  pServerS, moduleFile& rM, appFile& rApp);
+	int  onceServerLoad (rapidxml::xml_node<char>* pS, std::shared_ptr<serverFile> rS, appFile& rApp);
 	int  secondProcess ();
 	serverFile*    getServerByHandle(const char* szHandle);
 	allServerMap&  allServer ();

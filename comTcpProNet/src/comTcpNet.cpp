@@ -7,13 +7,11 @@
 static	void*  s_hDll = nullptr;
 static delTcpServerFT  s_delTcpServerFun = nullptr;
 static createTcpServerFT s_creTcpServerFun = nullptr;
+
+int initGlobal (allocPackFT  allocPackFun, freePackFT  freePackFun, logMsgFT logMsgFun);
 comTcpNet:: comTcpNet ()
 {
 	m_tcpServer = nullptr;
-	/*
-	m_hDll = nullptr;
-	m_delTcpServerFun = nullptr;
-	*/
 }
 
 comTcpNet:: ~comTcpNet ()
@@ -34,7 +32,6 @@ static int sProcessNetPackFun(ISession* session, packetHead* pack)
 
 static void sOnAcceptSession(ISession* session, void* userData)
 {
-	// auto pKV = (comTcpNet::usrDataType*)(*((void**)userData));
 	auto pKV = (comTcpNet::usrDataType*)(userData);
 	auto pNet = pKV->first;
 	pNet->onAcceptSession (session, &pKV->second);
@@ -42,7 +39,6 @@ static void sOnAcceptSession(ISession* session, void* userData)
 
 static void sOnConnect(ISession* session, void* userData)
 {
-	// auto pKV = (comTcpNet::usrDataType*)(*((void**)userData));
 	auto pKV = (comTcpNet::usrDataType*)(userData);
 	auto pNet = pKV->first;
 	pNet->onConnect (session, &pKV->second);
@@ -185,9 +181,18 @@ int initComTcpNet (const char* szDllFile, allocPackFT  allocPackFun,
 			nRet = 3;
 			break;
 		}
+
+		typedef int (*initGlobalFT) (allocPackFT  allocPackFun, freePackFT	freePackFun, logMsgFT logMsgFun);
+		auto initGlobalF = (initGlobalFT)(getFun (hDll, "initGlobal"));
+		if (!initGlobalF) {
+			unloadDll (hDll);
+			nRet = 3;
+			break;
+		}
 		s_hDll = hDll;
 		s_creTcpServerFun = creF;
 		s_delTcpServerFun = pDelF;
+		initGlobalF(allocPackFun, freePackFun, logMsgFun);
 	} while (0);
 	return nRet;
 }

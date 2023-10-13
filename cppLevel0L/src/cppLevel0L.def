@@ -1,3 +1,6 @@
 LIBRARY
 EXPORTS
 	initFun    @1
+	onPhyLoopBegin    @2
+	onPhyLoopEnd      @3
+	onPhyFrame        @4

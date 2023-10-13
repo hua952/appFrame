@@ -19,9 +19,9 @@ public:
 	impLoop*   getLoopByIndex(uword index);
 	int createServer(const char* szName, loopHandleType serId,
 			serverNode* pNode, frameFunType funFrame, void* arg);
-	int		init(int nArgC, const char* argS[], PhyCallback& info);
+	int		init(int nArgC, char** argS, PhyCallback& info);
 	int   initNetServer ();
-	int procArgS(int nArgC, const char* argS[]);
+	int procArgS(int nArgC, char** argS);
 	loopHandleType	procId();
 	loopHandleType	gropId();
 	void			setProcId(loopHandleType proc);
