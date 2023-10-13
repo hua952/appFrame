@@ -2,6 +2,7 @@
 #include "xmlCommon.h"
 #include "tSingleton.h"
 #include "strFun.h"
+#include <cstring>
 #include "rLog.h"
 #include "fromFileData/structFileMgr.h"
 #include "fromFileData/structFile.h"
