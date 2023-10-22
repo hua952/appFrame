@@ -64,8 +64,9 @@ void getModelS (int nArgC, const char* argS[], std::vector<std::string>& vModelS
 	}
 }
 
-void logicServerMgr::afterLoad(int nArgC, char** argS, ForLogicFun* pForLogic)
+dword logicServerMgr::afterLoad(int nArgC, char** argS, ForLogicFun* pForLogic)
 {
+	dword nRet = 0;
 	m_ForLogicFun = *pForLogic;
 	auto pForMsg = &m_ForLogicFun;
 	//setForMsgModuleFunS (pForMsg);
@@ -101,4 +102,5 @@ void logicServerMgr::afterLoad(int nArgC, char** argS, ForLogicFun* pForLogic)
 			gInfo ("after call onLoad");
 		}
 	} while (0);
+	return nRet;
 }

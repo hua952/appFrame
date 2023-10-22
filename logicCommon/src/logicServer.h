@@ -68,7 +68,7 @@ class logicServerMgr
 public:
     logicServerMgr ();
     ~logicServerMgr ();
-	virtual void  afterLoad(int nArgC, char** argS, ForLogicFun* pForLogic);
+	virtual dword afterLoad(int nArgC, char** argS, ForLogicFun* pForLogic);
 	int   procArgS (int nArgC, char** argS);
 	ubyte  serverNum ();
 	void   setServerNum (ubyte ubyNum);

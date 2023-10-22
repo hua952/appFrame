@@ -80,7 +80,7 @@ typedef struct _ForLogicFun
     getDefProcServerIdFT   fnGetDefProcServerId;
 } ForLogicFun;
 
-typedef void (*afterLoadFunT)(int nArgC, char** argS, ForLogicFun* pForLogic);
+typedef dword (*afterLoadFunT)(int nArgC, char** argS, ForLogicFun* pForLogic);
 typedef void (*beforeUnloadFT)();
 typedef void (*logicOnAcceptFT)(serverIdType	fId, SessionIDType sessionId, uqword userData);
 typedef void (*logicOnConnectFT)(serverIdType fId, SessionIDType sessionId, uqword userData);

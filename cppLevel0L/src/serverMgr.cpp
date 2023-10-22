@@ -228,12 +228,7 @@ static void  sLogCallStack (loopHandleType pThis, int nL)
 server*   serverMgr:: getServer(loopHandleType handle)
 {
 	server* pRet = nullptr;
-	/*
-	loopHandleType  pid = 0;
-	loopHandleType  sid = 0;
-	fromHandle (handle, pid, sid);
-	pRet = g_serverS[sid];
-	*/
+	
 	for (auto i = 0; i < g_ServerNum; i++) {
 		auto curH = g_serverS[i]->myHandle ();
 		if (curH == handle) {
@@ -282,6 +277,11 @@ int serverMgr::initFun (int cArg, char** argS)
 		}
 		rInfo ("Loger init OK");
 		auto nInitMidFrame = InitMidFrame(cArg, argS, &rMgr);
+		auto dumpMsg = rArgS.dumpMsg ();
+		if (dumpMsg) {
+			rInfo ("dupmMsg end plese check");
+			break;
+		}
 		if (0 != nInitMidFrame) {
 			nRet = 1;
 			rError ("InitMidFrame error nRet =  "<<nInitMidFrame);
@@ -292,14 +292,6 @@ int serverMgr::initFun (int cArg, char** argS)
 		auto proLoopNum =  getAllLoopAndStart(loopHandleS, c_maxLoopNum);
 		rInfo ("initFun proLoopNum = "<<proLoopNum);
 		if (proLoopNum > 0) {
-			/*
-			auto pNetLibName = m_netLibName.get();
-			std::unique_ptr<char[]> binH;
-			getCurModelPath(binH);
-			std::string strPath = binH.get (); 
-			binH.reset ();
-			strPath += pNetLibName;
-			*/
 			g_ServerNum = proLoopNum;
 			g_serverS = std::make_unique<pserver[]>(proLoopNum);
 			auto& pServerImpS =  m_pServerImpS;

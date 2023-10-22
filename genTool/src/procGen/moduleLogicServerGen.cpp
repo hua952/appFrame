@@ -11,6 +11,7 @@
 #include "fromFileData/msgFileMgr.h"
 #include "fromFileData/msgPmpFile.h"
 #include "fromFileData/globalFile.h"
+#include "fromFileData/toolServerEndPointInfoMgr.h"
 #include "xmlGlobalLoad.h"
 #include "tSingleton.h"
 #include "rLog.h"
@@ -63,13 +64,6 @@ int   moduleLogicServerGen:: startGen (moduleGen& rMod)
 		auto& rSS = rData.orderS ();
 		for (auto it = rSS.begin (); rSS.end () != it; ++it) {
 			auto pName = it->get()->serverName ();
-			/*
-			nR = genOnFrameFun (rMod, pName);
-			if (nR) {
-				nRet = 3;
-				break;
-			}
-			*/
 			nR = genPackFun (rMod, pName);
 			if (nR) {
 				nRet = 4;
@@ -84,6 +78,7 @@ int   moduleLogicServerGen:: genMgrCpp (moduleGen& rMod)
 {
 	int   nRet = 0;
 	do {
+		auto& rEndPointS = tSingleton<toolServerEndPointInfoMgr>:: single().endPointS ();
 		auto& rData = rMod.moduleData();
 		auto& rSS = rData.orderS ();
 		auto& rGloble = tSingleton<xmlGlobalLoad>::single ();
@@ -109,12 +104,17 @@ int   moduleLogicServerGen:: genMgrCpp (moduleGen& rMod)
 #include "loopHandleS.h"
 #include "tSingleton.h"
 #include "msg.h"
+#include <map>
+#include <string>
+#include <cstring>
+#include "myAssert.h"
 
 struct conEndPointT 
 {
-	std::string first;
+	std::string ip;
+	std::string strEndPointName;
 	ServerIDType	targetHandle;
-	uword       second;
+	uword       port;
 	uword       userData;
 	bool        bDef;
 };
@@ -125,8 +125,58 @@ static int OnFrameCli (void* pArgS)
 	return pS->willExit()?procPacketFunRetType_exitNow:pS->onFrameFun();
 }
 
-void )"<<strMgrClassName<<R"(::afterLoad(int nArgC, char** argS, ForLogicFun* pForLogic)
+static void getEndPointAttr (int nArgC, char** argS, conEndPointT& rEndP)
 {
+	char* retS[3];
+	for (decltype (nArgC) i = 0; i < nArgC; i++) {
+		std::unique_ptr<char[]> pArg;
+		strCpy (argS[i], pArg);
+		auto nRet = strR (pArg.get(), '=', retS, 3);
+		if (2 != nRet) {
+			continue;
+		}
+		std::string strKey = retS[0];
+		if (strKey != "endPoint") {
+			continue;
+		}
+		const int c_2RetMax = 6;
+		char* retS2[c_2RetMax];
+		auto nRet2 = strR (retS[1], '!', retS2, c_2RetMax);
+		myAssert (nRet2 < c_2RetMax);
+		std::string strName;
+		char* retS3[3];
+		for (decltype (nRet2) j = 0; j < nRet2; i++) {
+			auto nRet3 = strR (retS2[j], ':', retS3, 3);
+			if (nRet3 != 2) {
+				continue;
+			}
+			if (0 == strcmp (retS3[0], "name")) {
+				strName = retS3[1];
+				break;
+			}
+		}
+		if (strName != rEndP.strEndPointName) {
+			break;
+		}
+		for (decltype (nRet2) j = 0; j < nRet2; j++) {
+			auto nRet3 = strR (retS2[j], ':', retS3, 3);
+			if (nRet3 != 2) {
+				continue;
+			}
+			if (0 == strcmp (retS3[0], "ip")) {
+				rEndP.ip = retS3[1];
+			} else if (0 == strcmp (retS3[0], "port")) {
+				rEndP.port = (decltype (rEndP.port))(atoi(retS3[1]));
+			} else if (0 == strcmp (retS3[0], "teag")) {
+				rEndP.userData = (decltype (rEndP.userData))(atoi(retS3[1]));
+			}
+		}
+	}
+}
+
+dword )"<<strMgrClassName<<R"(::afterLoad(int nArgC, char** argS, ForLogicFun* pForLogic)
+{
+	dword nRet = 0;
 	do {
 		auto& rFunS = getForMsgModuleFunS();
 		rFunS = *pForLogic;
@@ -190,12 +240,13 @@ void )"<<strMgrClassName<<R"(::afterLoad(int nArgC, char** argS, ForLogicFun* pF
 	)";
 			for (decltype (rSS[i]->serverInfo().listenerNum) k = 0; k < rSS[i]->serverInfo().listenerNum; k++) {
 				osCN<<"auto& rEndP = pLenEndPointS["<<(int)i<<"]["<<(int)k<<R"(];
-	rEndP.second = )"<<
+	rEndP.port= )"<<
 			rSS[i]->serverInfo().listenEndpoint[k].port<<R"(;
 	rEndP.userData = )"<<
 			rSS[i]->serverInfo().listenEndpoint[k].userData<<R"(;
 	rEndP.bDef = )"<<
 			rSS[i]->serverInfo().listenEndpoint[k].bDef<<R"(;
+	rEndP.strEndPointName = ")"<<rSS[i]->serverInfo().listenEndpoint[k].endPointName<<R"(";
 		)";
 			} // for
 		} // if
@@ -205,24 +256,26 @@ void )"<<strMgrClassName<<R"(::afterLoad(int nArgC, char** argS, ForLogicFun* pF
 				(int)rSS[i]->serverInfo().connectorNum<<R"();
 	)";
 			for (decltype (rSS[i]->serverInfo().connectorNum) k = 0; k < rSS[i]->serverInfo().connectorNum; k++) {
-				auto pFS = rGloble.getServerByHandle (rSS[i]->serverInfo().connectEndpoint[k].szTarget);
-				myAssert (pFS);
+				auto itF = rEndPointS.find (rSS[i]->serverInfo().connectEndpoint[k].endPointName);
+				myAssert (itF != rEndPointS.end());
+				auto pFS = itF->second.first;
 				if (!pFS) {
-					rError (" handle name error : "<<rSS[i]->serverInfo().connectEndpoint[k].szTarget);
+					rError (" handle name error : "<<rSS[i]->serverInfo().connectEndpoint[k].endPointName);
 					nRet = 3;
 					break;
 				}
 				osCN<<"auto& rEndP = pConEndPointS["<<(int)i<<"]["<<(int)k<<R"(];
-	rEndP.first = ")"<<rSS[i]->serverInfo().connectEndpoint[k].ip<<
+
+	rEndP.ip = ")"<<rSS[i]->serverInfo().connectEndpoint[k].ip<<
 				R"(";
-	rEndP.second = )"<<
+	rEndP.port = )"<<
 			rSS[i]->serverInfo().connectEndpoint[k].port<<R"(;
 	rEndP.bDef = )"<<
 			rSS[i]->serverInfo().connectEndpoint[k].bDef<<R"(;
 	rEndP.userData = )"<<
 			rSS[i]->serverInfo().connectEndpoint[k].userData<<R"(;
-	rEndP.targetHandle = )"<<
-			rSS[i]->serverInfo().connectEndpoint[k].szTarget<<R"(;
+	rEndP.targetHandle = )"<<pFS->strHandle ()<<R"(;
+	rEndP.strEndPointName = ")"<<rSS[i]->serverInfo().connectEndpoint[k].endPointName<<R"(";
 		)";
 			} // for
 			if (nRet) {
@@ -272,29 +325,31 @@ void )"<<strMgrClassName<<R"(::afterLoad(int nArgC, char** argS, ForLogicFun* pF
 		rInfo.autoRun = autoRunS[i];
 		rInfo.listenerNum = listenNumS [i];
 		rInfo.connectorNum = connectNumS [i];
-		// rInfo.fnOnAccept = rServer.sLogicOnAcceptSession;
-		// rInfo.fnOnConnect = rServer.sLogicOnConnect;
 		auto pThis = &rServer;
 		for (decltype(rInfo.listenerNum) j = 0; j < rInfo.listenerNum; j++) {
+			getEndPointAttr (nArgC, argS, pLenEndPointS [i][j]);
 			auto& ep = rInfo.listenEndpoint [j];
-			strNCpy (ep.ip, sizeof(ep.ip), "0.0.0.0");
+			strNCpy (ep.ip, sizeof(ep.ip), pLenEndPointS [i][j].ip.c_str());
 			ep.bDef = pLenEndPointS[i][j].bDef;
 			ep.userData = pLenEndPointS[i][j].userData;
-			ep.port = pLenEndPointS[i][j].second;
+			ep.port = pLenEndPointS[i][j].port;
 		}
 		for (decltype(rInfo.connectorNum) j = 0; j < rInfo.connectorNum; j++) {
+			getEndPointAttr (nArgC, argS,  pConEndPointS [i][j]);
 			auto& ep = rInfo.connectEndpoint [j];
-			strNCpy (ep.ip, sizeof(ep.ip), pConEndPointS [i][j].first.c_str());
-			ep.port = pConEndPointS[i][j].second;
+			strNCpy (ep.ip, sizeof(ep.ip), pConEndPointS [i][j].ip.c_str());
+			ep.port = pConEndPointS[i][j].port;
 			ep.userData = pConEndPointS[i][j].userData;
 			ep.bDef = pConEndPointS[i][j].bDef;
 			ep.targetHandle = pConEndPointS[i][j].targetHandle;
+
 		}
 		fnCreateLoop (serverNameS[i], serverHS[i], &rInfo, OnFrameCli, &rServer);
 		rServer.onServerInitGen (pForLogic);
 	}
 
 	} while (0);
+	return nRet;
 }
 )";
 	} while (0);
@@ -345,7 +400,7 @@ int   moduleLogicServerGen:: genH (moduleGen& rMod)
 class )"<<strMgrClassName<<R"( : public logicServerMgr
 {
 public:
-	virtual void  afterLoad(int nArgC, char** argS, ForLogicFun* pForLogic);
+	virtual dword afterLoad(int nArgC, char** argS, ForLogicFun* pForLogic);
 )"<<serVar.str()<<R"(
 };
 #endif

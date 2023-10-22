@@ -7,6 +7,7 @@
 #include "fromFileData/moduleFileMgr.h"
 #include "fromFileData/msgGroupFileMgr.h"
 #include "fromFileData/msgFileMgr.h"
+#include "fromFileData/toolServerEndPointInfoMgr.h"
 #include "xmlGlobalLoad.h"
 #include "xmlCommon.h"
 #include "rLog.h"
@@ -46,6 +47,7 @@ int main (int argNum, char* argS[])
 		*/
 		tSingleton<xmlCommon>::createSingleton ();
 		tSingleton<globalGen>::createSingleton ();
+		tSingleton<toolServerEndPointInfoMgr>::createSingleton ();
 		
 		auto& rGlobalFile = tSingleton<globalFile>::single ();
 		auto& rXmlGlobal = tSingleton <xmlGlobalLoad>::single ();

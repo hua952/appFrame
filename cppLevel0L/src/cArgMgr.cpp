@@ -4,6 +4,7 @@
 cArgMgr:: cArgMgr ()
 {
 	m_logLevel = 1;
+	m_dumpMsg = false;
 	m_detachServerS = false;
 	strCpy("appFrameLog.log", m_logFile);
 }
@@ -15,11 +16,22 @@ cArgMgr:: ~cArgMgr ()
 void  cArgMgr:: onCmpKey (char* argv[])
 {
     do {
+		procBoolA("dumpMsg", argv, m_dumpMsg);
 		procUwordA("logLevel", argv, m_logLevel);
 		procStrA ("logFile", argv, m_logFile);
 		procBoolA("detachServerS", argv, m_detachServerS);
 		procStrA("workDir", argv, m_workDir);
     } while (0);
+}
+
+bool  cArgMgr:: dumpMsg ()
+{
+    return m_dumpMsg;
+}
+
+void  cArgMgr:: setDumpMsg (bool v)
+{
+    m_dumpMsg = v;
 }
 
 const char*  cArgMgr:: workDir ()

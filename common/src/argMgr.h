@@ -14,6 +14,7 @@ protected:
 	bool    procStrA(const char* cKey, char* argv[], std::unique_ptr<char[]>& var);
 	void    procBoolA(const char* cKey, char* argv[], bool& var);
 	void    procUdwordA(const char* cKey, char* argv[], udword& var);
+	void    procDwordA(const char* cKey, char* argv[], dword& var);
 	void	procUwordA(const char* cKey, char* argv[], uword& var);
 };
 #endif

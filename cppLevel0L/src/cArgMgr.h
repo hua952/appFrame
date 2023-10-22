@@ -17,7 +17,10 @@ public:
 	void  setLogFile (const char* v);
 	const char*  workDir ();
 	void  setWorkDir (const char* v);
+	bool  dumpMsg ();
+	void  setDumpMsg (bool v);
 private:
+	bool  m_dumpMsg;
 	std::unique_ptr<char[]>  m_workDir;
 	std::unique_ptr<char[]>  m_logFile;
 	bool  m_detachServerS;

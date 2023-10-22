@@ -44,11 +44,11 @@ void  regMsgS(regMsgFT fnRegMsg)
 	
 }
 
-void  afterLoad(int nArgC, char** argS, ForLogicFun* pForLogic)
+dword afterLoad(int nArgC, char** argS, ForLogicFun* pForLogic)
 {
 	tSingleton<logicServerMgr>::createSingleton();
 	auto &rMgr = tSingleton<logicServerMgr>::single();
-	rMgr.afterLoad(nArgC, argS, pForLogic);
+	return rMgr.afterLoad(nArgC, argS, pForLogic);
 }
 
 void  beforeUnload()

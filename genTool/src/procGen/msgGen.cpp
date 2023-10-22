@@ -102,6 +102,9 @@ int  msgGen:: rpcInfoCppGen ()
 		}
 		os<<R"(#include "msgGroupId.h"
 #include "msg.h"
+#include <fstream>
+#include <map>
+#include "myAssert.h"
 #include "loopHandleS.h"
 )";
 		auto& rPmp = m_rPmp;
@@ -109,8 +112,50 @@ int  msgGen:: rpcInfoCppGen ()
 		for (auto it = rMap.begin ();rMap.end () != it; ++it) {
 			auto& strName = it->first;
 			os<<R"(#include ")"<<strName<<R"(MsgId.h")"<<std::endl;
+			os<<R"(#include ")"<<strName<<R"(Rpc.h")"<<std::endl;
 		}
 		os<<R"(
+
+void dumpStructS ()
+{
+	std::ofstream os("dumpStructS.txt");
+)";
+
+	auto& rSS = dumpOs ();
+	os<<rSS.str()<<R"(
+}
+
+int  checkStructS (const char* szFile)
+{
+	int nRet = 0;
+	do {
+		uword ut = 0x201;
+		auto pB = (ubyte*)&ut;
+		if (1 != pB[0] || 2 != pB[1]) {
+			nRet = 1;
+			break;
+		}
+		std::ifstream ifs(szFile);
+		if (!ifs) {
+			nRet = 2;
+			break;
+		}
+		std::map<std::string, uqword> tempMap;
+		std::string strLine;
+		while (std::getline (ifs, strLine)) {
+			std::stringstream ts (strLine);
+			std::string strKey;
+			uqword uqwValue;
+			ts>>strKey>>uqwValue;
+			auto inRet = tempMap.insert (std::make_pair(strKey, uqwValue));
+			myAssert (inRet.second);
+		}
+		std::map<std::string, uqword>::iterator it;
+
+		)"<<m_checkOs.str()<<R"(
+	} while (0);
+	return nRet;
+}
 
 void regRpcS (const ForMsgModuleFunS* pForLogic)
 {
@@ -152,6 +197,11 @@ void regRpcS (const ForMsgModuleFunS* pForLogic)
     return nRet;
 }
 
+std::stringstream&  msgGen:: dumpOs ()
+{
+    return m_dumpOs;
+}
+
 int  msgGen:: rpcInfoHGen ()
 {
     int  nRet = 0;
@@ -167,6 +217,8 @@ int  msgGen:: rpcInfoHGen ()
 #define rpcInfo_h__
 #include "msg.h"
 
+void dumpStructS ();
+int  checkStructS (const char* szFile);
 void regRpcS (const ForMsgModuleFunS* pForLogic);
 #endif)";
     } while (0);
@@ -324,7 +376,7 @@ int   msgGen:: genOnceStruct (structFile& rS, std::string& strOut)
 		for (auto iter = rDv.begin(); rDv.end() != iter; ++iter) {
 			auto& rData = *(iter->get());
 			std::string strD;
-			genOnceData (rData, strD);
+			genOnceData (rS, rData, strD);
 			os<<strD;
 		}
 		os<<R"(};
@@ -334,12 +386,47 @@ int   msgGen:: genOnceStruct (structFile& rS, std::string& strOut)
     return nRet;
 }
 
-int   msgGen:: genOnceData (dataFile& rData, std::string& strOut)
+
+std::stringstream&  msgGen:: loadFileOs ()
+{
+    return m_loadFileOs;
+}
+
+void  msgGen:: procDataCheck (const char* structName, const char* valueName, bool bArry)
+{
+    do {
+		std::string dDataStruct = structName;
+		dDataStruct += ".";
+		dDataStruct += valueName;
+		
+		std::stringstream ss;
+		ss<<R"((uqword))";
+		if (!bArry) {
+			ss<<"&";
+		}
+		ss<<R"(((()"<<structName<<R"(*)0)->)"<<valueName<<R"())";
+		m_dumpOs<<R"(	os<<")"<<dDataStruct<<R"(    "<<)"<<ss.str()<<R"(<<std::endl;)"<<std::endl;
+		m_checkOs<<R"(	it = tempMap.find (")"<<dDataStruct<<R"(");
+		if (it == tempMap.end ()) {
+				nRet = 3;
+				break;
+			}
+			if (it->second != )"<<ss.str()<<R"() {
+				nRet = 4;
+				break;
+			}
+			)";
+    } while (0);
+}
+
+int   msgGen:: genOnceData (structFile& rS, dataFile& rData, std::string& strOut)
 {
     int   nRet = 0;
     do {
-		std::stringstream ss;
+		auto pStructName = rS.structName ();
 		auto pDN = rData.dataName ();
+
+		std::stringstream ss;
 		bool  haveSize  = rData.haveSize ();
 		if (haveSize) {
 			std::string strST = "udword";
@@ -347,23 +434,39 @@ int   msgGen:: genOnceData (dataFile& rData, std::string& strOut)
 			if (wordSize) {
 				strST = "uword";
 			}
-			ss<<"    " << strST<<"    m_"<<pDN<<"Num;"<<std::endl;
+			std::string sizeName = "m_";
+			sizeName += pDN;
+			sizeName += "Num";
+			ss<<"    " << strST<<"    "<<sizeName<<";"<<std::endl;
+			
+			procDataCheck (pStructName, sizeName.c_str(), false);
 		}
+		std::string dDataName = "m_";
+		dDataName += pDN;
+		
 		auto pDT = rData.dataType ();
 		ss <<"    "<<pDT<<"    m_"<<pDN;
 		auto len = rData.dataLength ();
 		if (len) {
 			ss<<" ["<<len<<"]";
+			procDataCheck (pStructName, dDataName.c_str(), true);
+		} else {
+			procDataCheck (pStructName, dDataName.c_str(), false);
 		}
 		ss<<";";
 		auto pCom = rData.commit ();
 		if (pCom) {
-			ss<<R"(// )"<<pCom;
+			ss<<R"(/* )"<<pCom<<" */";
 		}
 		ss<<std::endl;
 		strOut = ss.str();
     } while (0);
     return nRet;
+}
+
+std::stringstream&  msgGen:: checkOs ()
+{
+    return m_checkOs;
 }
 
 int   msgGen:: genOnceMsgClassH (msgFile& rMsg, std::string& strOut)

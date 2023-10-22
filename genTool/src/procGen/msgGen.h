@@ -2,6 +2,8 @@
 #define _msgGen_h__
 #include <memory>
 #include <string>
+#include <sstream>
+#include <fstream>
 
 class msgPmpFile;
 class msgGroupFile;
@@ -26,13 +28,20 @@ public:
 	int rpcCppGen ();
 	int rpcInfoHGen ();
 	int rpcInfoCppGen ();
+	std::stringstream&  loadFileOs ();
+	std::stringstream&  dumpOs ();
+	std::stringstream&  checkOs ();
 private:
+	std::stringstream  m_checkOs;
+	std::stringstream  m_dumpOs;
+	std::stringstream  m_loadFileOs;
+	void procDataCheck (const char* structName, const char* valueName, bool bArry);
 	int  genOnceMsgClassCpp (msgGroupFile& rG, msgFile& rMsg, bool, std::string& strOut);
 	int  genOnceMsgClassH (msgFile& rMsg, std::string& strOut);
 	int  genOnceRpcH (msgGroupFile& rG);
 	int  genOnceRpcCpp (msgGroupFile& rG);
 	int  genOnceStruct (structFile& rS, std::string& strOut);
-	int  genOnceData (dataFile& rData, std::string& strOut);
+	int  genOnceData (structFile& rS, dataFile& rData, std::string& strOut);
 	std::unique_ptr <char[]>  m_srcDir;
 	msgPmpFile& m_rPmp;
 };

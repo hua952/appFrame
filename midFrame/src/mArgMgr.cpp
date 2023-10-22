@@ -5,6 +5,7 @@
 mArgMgr:: mArgMgr ()
 {
 	m_savePackTag = 0;
+	m_dumpMsg = false;
 	m_procId = c_emptyLoopHandle;
 	m_packTokenTime = 5000;
 }
@@ -21,6 +22,7 @@ uword  mArgMgr:: savePackTag ()
 void  mArgMgr:: onCmpKey (char* argv[])
 {
     do {
+		procBoolA("dumpMsg", argv, m_dumpMsg);
 		procUwordA("savePackTag", argv, m_savePackTag);
 		procStrA("netLib", argv, m_midNetLibName);
 		procStrA("workDir", argv, m_workDir);
@@ -66,5 +68,15 @@ udword  mArgMgr:: packTokenTime ()
 void  mArgMgr:: setPackTokenTime (udword v)
 {
     m_packTokenTime = v;
+}
+
+bool  mArgMgr:: dumpMsg ()
+{
+    return m_dumpMsg;
+}
+
+void  mArgMgr:: setDumpMsg (bool v)
+{
+    m_dumpMsg = v;
 }
 

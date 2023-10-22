@@ -2,24 +2,31 @@
 #define _configMgr_h__
 #include <memory>
 #include "comFun.h"
+#include "argMgr.h"
 
-class configMgr
+enum structBadyType
+{
+	structBadyTime_com = 0,
+	structBadyTime_check = 1,
+	structBadyTime_proto = 2
+};
+class configMgr:public argMgr 
 {
 public:
     configMgr ();
     ~configMgr ();
+
+	void onCmpKey (char* argv[])override;
+
 	const char*  defFile ();
 	void  setDefFile (const char* v);
-	int procArgS(int cArg, char* argS[]);
-
 	bool  reProc ();
 	void  setReProc (bool v);
+	dword  structBadyType ();
+	void  setStructBadyType (dword v);
 private:
+	dword  m_structBadyType;
 	bool  m_reProc;
-	bool    procStrA(const char* cKey, char* argv[], std::unique_ptr<char[]>& var);
-	void    procBoolA(const char* cKey, char* argv[], bool& var);
-	void    procUdwordA(const char* cKey, char* argv[], udword& var);
-	void	procUwordA(const char* cKey, char* argv[], uword& var);
 	std::unique_ptr<char[]>  m_defFile;
 };
 #endif

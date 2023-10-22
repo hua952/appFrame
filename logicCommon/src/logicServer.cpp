@@ -279,8 +279,9 @@ bool logicServer::cmpChannelKey::operator ()(const channelKey& k1,const channelK
 	return k1.key<k2.key?true:k2.key<k1.key?false:k1.value<k2.value;
 }
 
-void  logicServerMgr::afterLoad(int nArgC, char** argS, ForLogicFun* pForLogic)
+dword logicServerMgr::afterLoad(int nArgC, char** argS, ForLogicFun* pForLogic)
 {
+	return 0;
 }
 
 logicServer*   logicServerMgr:: findServer(serverIdType	fId)

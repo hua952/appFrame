@@ -178,7 +178,6 @@ int  mainGen:: writeMain (appFile& rApp)
 
 int  beginMain(int argC, char** argV);
 void endMain();
-// static std::unique_ptr<char[]> g_home;
 int main(int cArg, char** argS)
 {
 	auto& ws = std::cout;
@@ -192,6 +191,7 @@ int main(int cArg, char** argS)
 		}
 		std::set<std::string> setMut;
 		setMut.insert("logicModel");
+		setMut.insert("endPoint");
 		using argVector = std::vector<std::string>;
 		argVector vArgS;
 		argVector  procArgS;
@@ -247,9 +247,6 @@ int main(int cArg, char** argS)
 			reArgS[reArgNum++] = pArgBuf;
 			pArgBuf += (nL + 1);
 		}
-		// auto nHomeR = getCurModelPath (g_home);
-		// myAssert (0 == nHomeR);
-		// ws<<"home is : "<<g_home.get()<<std::endl;
 		std::string strFrameHome;
 		for (decltype (reArgNum) i = 1; i < reArgNum; i++) {
 			auto pArg = reArgS[i];
@@ -284,7 +281,6 @@ int main(int cArg, char** argS)
 			}
 			strDll += pLevel0Name;
 			strDll += dllExtName ();
-			// g_home.reset ();
 			auto handle = loadDll (strDll.c_str());
 			myAssert(handle);
 			do {

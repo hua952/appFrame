@@ -19,7 +19,10 @@ public:
 	void  setPackTokenTime (udword v);
 	const char*  workDir ();
 	void  setWorkDir (const char* v);
+	bool  dumpMsg ();
+	void  setDumpMsg (bool v);
 private:
+	bool  m_dumpMsg;
 	std::unique_ptr<char[]>  m_workDir;
 	udword  m_packTokenTime;
 	loopHandleType  m_procId;

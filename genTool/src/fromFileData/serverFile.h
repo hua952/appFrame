@@ -23,13 +23,15 @@ private:
 
 struct toolServerEndPointInfo
 {
-	char			  szTarget [32];
+	char			  endPointName[24];
+	// char			  szTarget [24];
+	char			  targetEndPoint [24];
 	char              ip[16];
 	uword             port;
 	ServerIDType	  targetHandle; // use to reg route use on onConnect
 	uword             userData;  // 
 	bool              bDef;  // def route
-	bool              bRegHandle; // 几乎没用 
+	// bool              bRegHandle; // 几乎没用 
 };
 struct toolServerNode
 {

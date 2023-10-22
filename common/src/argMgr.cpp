@@ -57,6 +57,16 @@ void argMgr::  procUdwordA(const char* cKey, char* argv[], udword& var)
 	}
 }
 
+void     argMgr:: procDwordA(const char* cKey, char* argv[], dword& var)
+{
+	do {
+		if (strcmp(cKey, argv[0]) == 0) {
+			std::stringstream ss(argv[1]);
+			ss>>var;
+		}
+	} while (0);
+}
+
 void  argMgr ::procUwordA(const char* cKey, char* argv[], uword& var)
 {
 	if (strcmp(cKey, argv[0]) == 0) {

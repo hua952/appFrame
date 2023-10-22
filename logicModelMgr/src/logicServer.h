@@ -21,7 +21,7 @@ private:
 class logicServerMgr
 {
 public:
-	void  afterLoad(int nArgC, char** argS, ForLogicFun* pForLogic);
+	dword afterLoad(int nArgC, char** argS, ForLogicFun* pForLogic);
 private:
 	ForLogicFun m_ForLogicFun;
 };

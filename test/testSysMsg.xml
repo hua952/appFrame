@@ -20,7 +20,7 @@
 				<appServerM>
 					<server>
 						<appServerTh1 sleepSetp="1" showFps="1" fpsSetp="40000">
-							<listen port="11000" teag="1" defRoute="1"/>
+							<listen port="11000" teag="1" defRoute="1" name="appServerTh1Len"/>
 							<procRpc>
 								<move askType="ask"/>
 							</procRpc>
@@ -63,7 +63,7 @@
 							</procRpc>
 						</appClientM1Th1>
 						<appClientM1Th2 sleepSetp="1" showFps="1" fpsSetp="40000">
-							<connect ip="127.0.0.1" port="11000" target="appServerTh1" defRoute="1" teag="1"/>
+							<connect ip="127.0.0.1" port="11000" target="appServerTh1" defRoute="1"  name="appClientM1Th2Con" targetEndPoint="appServerTh1Len" teag="1"/>
 							<procRpc>
 								<manualList askType="ask"/>
 							</procRpc>
