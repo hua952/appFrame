@@ -24,3 +24,7 @@ target_include_directories(${prjName} PUBLIC
 target_link_libraries(${prjName} PUBLIC  common
 	)
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
+
+install(TARGETS ${prjName} ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+set(incS src/cLog.h)
+install(FILES ${incS} DESTINATION include/${myProjectName})

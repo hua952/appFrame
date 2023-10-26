@@ -35,7 +35,11 @@ int   moduleCMakeListsGen:: startGen (moduleGen& rModel)
 		strFile += "/";
 		strFile += moduleName;
 		strFile += "/CMakeLists.txt";
-
+		auto bE = isPathExit (strFile.c_str());
+		if (bE) {
+			nRet = 0;
+			break;
+		}
 		std::ofstream os(strFile.c_str ());
 		if (!os) {
 			nRet = 1;
@@ -93,18 +97,25 @@ if (WIN32)
 	const char* szC2 = R"(endif ()
 	include_directories(
 	src/gen)";
-	auto framePath = rGlobalFile.frameHome ();
+	// auto framePath = rGlobalFile.frameHome ();
+	auto frameInPath = rGlobalFile.frameInstallPath ();
 	auto szGenFrame  = rModel.frameFunDir ();
 
 	os<<szC2<<std::endl
-	<<"    ${CMAKE_SOURCE_DIR}/defMsg/src"<<std::endl
+	<<"    ${CMAKE_SOURCE_DIR}/defMsg/src"<<std::endl;
+
+	auto prjName = rGlobalFile.projectName ();
+	os<<frameInPath<<"include/"<<prjName<<std::endl;
+	/*
 	<<"    "<<framePath<<"common/src"<<std::endl
 	<<"    "<<framePath<<"logicCommon/src"<<std::endl
 	<<"    "<<framePath<<"cLog/src"<<std::endl
-	<<"    "<<szGenFrame<<std::endl
+	*/
+	os<<"    "<<szGenFrame<<std::endl
 	<<")"<<std::endl;
 
 	auto libPath = rGlobalFile.frameLibPath ();
+
 	os<<"list(APPEND libPath "<<libPath<<")"<<std::endl;
 	const char* szC3 = R"(link_directories(${libPath} ${libDep})
 	add_library(${prjName} SHARED ${genSrcS} ${defS})
@@ -112,7 +123,13 @@ target_link_libraries(${prjName} PUBLIC
 	common
 	logicCommon
 	cLog
-	defMsg
+)";
+	auto bH = rGlobalFile.haveServer ();
+	if (bH) {
+		os<<R"(defMsg
+	)";
+	}
+os<<R"(
 	)
 	SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 	install(TARGETS ${prjName} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})

@@ -19,6 +19,7 @@ int   projectCMakeListGen:: startGen ()
 	int   nRet = 0;
 	do {
 		auto& rGlobalFile = tSingleton<globalFile>::single ();
+		auto bH = rGlobalFile.haveServer ();
 		auto& rAppS = tSingleton<appFileMgr>::single ().appS ();
 			std::string strFile = rGlobalFile.projectHome ();
 			strFile += "CMakeLists.txt";
@@ -40,7 +41,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 set (myProjectName )"<<szPrjName <<R"()
 project(${myProjectName})
 SET(CMAKE_INSTALL_PREFIX )"<<strInstall<<R"()
-add_subdirectory (defMsg)
+)";
+if (bH) {
+	os<<R"(add_subdirectory (defMsg)
+	)";
+}
+os<<R"(
 )";
 			for (auto it = rAppS.begin (); rAppS.end () != it; ++it) {
 				os<<R"(add_subdirectory ()"<<it->first<<")"<<std::endl;

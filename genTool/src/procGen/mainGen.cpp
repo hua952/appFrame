@@ -98,6 +98,7 @@ elseif (WIN32)
 endif ()
 )";
 
+	auto bH = rGlobalFile.haveServer ();
 	auto libPath = rGlobalFile.frameLibPath ();
 	os<<"list(APPEND libPath "<<libPath<<")"<<std::endl;
 
@@ -105,13 +106,21 @@ os<<R"(link_directories(${libPath} ${libDep})
 add_executable (${prjName} ${srcS} ${osSrc})
 target_include_directories(${prjName} PUBLIC 
 							src
-							${CMAKE_SOURCE_DIR}/defMsg/src
 							)";
-
-		auto framePath = rGlobalFile.frameHome ();
-							os<<R"()"
+							if (bH) {
+								os<<R"(${CMAKE_SOURCE_DIR}/defMsg/src)";
+							}
+							os<<R"(
+							)";
+	auto frameInPath = rGlobalFile.frameInstallPath ();
+	auto prjName = rGlobalFile.projectName ();
+		//auto framePath = rGlobalFile.frameHome ();
+		os<<frameInPath<<"include/"<<prjName<<std::endl
+		/*
 	<<"    "<<framePath<<"common/src"<<std::endl
 	<<"    "<<framePath<<"common/src"<<std::endl<<R"(
+	*/
+	<<R"(
                            )
 
 target_link_libraries(${prjName} PUBLIC  ${libS})
@@ -174,8 +183,15 @@ int  mainGen:: writeMain (appFile& rApp)
 #include <string>
 #include "myAssert.h"
 #include "modelLoder.h"
-#include "loopHandleS.h"
+)";
 
+	auto& rGlobalFile = tSingleton<globalFile>::single ();
+	auto  bHave = rGlobalFile.haveServer ();
+	if (bHave) {
+		os<<R"(#include "loopHandleS.h"
+)";
+	}
+os<<R"(
 int  beginMain(int argC, char** argV);
 void endMain();
 int main(int cArg, char** argS)

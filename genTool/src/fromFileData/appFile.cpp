@@ -65,3 +65,14 @@ void appFile:: setMainLoopServer (const char* v)
 {
     strCpy (v, m_mainLoopServer);
 }
+
+bool   appFile:: haveServer ()
+{
+    bool   nRet = 0;
+    do {
+		auto& rMs =  moduleFileNameS ();
+		nRet = !rMs.empty ();
+    } while (0);
+    return nRet;
+}
+

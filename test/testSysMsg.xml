@@ -5,9 +5,6 @@
 	<frameHome>C:/work/appFrame/</frameHome>
 	<depIncludeHome>C:/work/include/</depIncludeHome>
 	<depLibHome>C:/work/lib/</depLibHome>
-	<frameBinPath>C:/work/appFrame/bin/Debug/</frameBinPath>
-	<frameLibPath>C:/work/appFrame/bin/Debug/</frameLibPath>
-	<outPutPath>C:/work/appFrame/bin/</outPutPath>
 	<frameInstallPath>C:/work/appFrame/install/</frameInstallPath>
 	<defMsg file="cChess.xml"/>
 	<app>

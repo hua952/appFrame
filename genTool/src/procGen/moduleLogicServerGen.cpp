@@ -82,6 +82,7 @@ int   moduleLogicServerGen:: genMgrCpp (moduleGen& rMod)
 		auto& rData = rMod.moduleData();
 		auto& rSS = rData.orderS ();
 		auto& rGloble = tSingleton<xmlGlobalLoad>::single ();
+		auto& rGlobleFile = tSingleton<globalFile>::single ();
 		auto serverNum = rSS.size ();
 		auto genPath = rMod.genPath ();
 		std::string strFilename = genPath;
@@ -101,7 +102,13 @@ int   moduleLogicServerGen:: genMgrCpp (moduleGen& rMod)
 		auto& os = osCpp;
 		osCpp<<R"(#include ")"<<strMgrClassName<<R"(.h"
 #include "strFun.h"
-#include "loopHandleS.h"
+)";
+		auto bH = rGlobleFile.haveServer ();
+		if (bH) {
+			os<<R"(#include "loopHandleS.h"
+)";
+		}
+os<<R"(
 #include "tSingleton.h"
 #include "msg.h"
 #include <map>
@@ -934,8 +941,14 @@ static int )"<<pPackFun<<
 #include "msg.h"
 #include "gLog.h"
 #include "myAssert.h"
-#include "loopHandleS.h"
-#include "logicServer.h"
+)";
+		auto bH = rGlobalFile.haveServer ();
+		if (bH) {
+			ps<<R"(#include "loopHandleS.h"
+)";
+		}
+
+ps<<R"(#include "logicServer.h"
 #include ")"<<strMgrClassName<<R"(.h")"<<std::endl<<R"(
 #include ")"<<pGSrcName<<R"(.h")"<<std::endl<<std::endl
 		<<strDec<<R"(

@@ -4,7 +4,8 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True) 
 # set the project name 
 
-set (myProjectName appFrame)
+# set (myProjectName appFrame)
+set (myProjectName  appFrame CACHE INTERNAL "Shared variable")
 project(${myProjectName})
 SET(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/../${myProjectName}Install)
 add_subdirectory (common)

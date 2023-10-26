@@ -24,6 +24,7 @@ public:
 	argV&  mainArgS ();
 	const char*  mainLoopServer ();
 	void  setMainLoopServer (const char* v);
+	bool  haveServer ();
 private:
 	std::unique_ptr <char[]>  m_mainLoopServer;
 	argV  m_mainArgS;

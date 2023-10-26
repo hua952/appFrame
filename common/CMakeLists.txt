@@ -19,6 +19,12 @@ elseif (WIN32)
 	MESSAGE(STATUS "windows osSrc = ${osSrc}")
 endif ()
 
+set(incS src/argMgr.h src/arrayMap.h src/comFun.h src/cTimer.h src/depOSFun.h
+	src/fpsCount.h src/ITcpServer.h src/ISession.h src/loop.h
+	src/mainLoop.h src/msgMgr.h src/myAssert.h src/packet.h
+	src/staticArrayMap.h src/strFun.h src/TAlgorithm.h src/tJumpListNS.h
+	src/tJumpListNSAuto.h src/tSingleton.h src/typeDef.h
+)
 
 add_library(${prjName} ${srcS} ${osSrc})
 
@@ -33,4 +39,8 @@ endif ()
 
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 
-install(TARGETS ${prjName} ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(TARGETS ${prjName}
+	ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+	# PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${myProjectName}
+	)
+install(FILES ${incS} DESTINATION include/${myProjectName})

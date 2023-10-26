@@ -13,7 +13,10 @@ public:
 	void  setThisRoot (const char* v);
 	const char*  genSrcDir ();
 	void  setGenSrcDir (const char* v);
+	const char*  procSrcDir ();
+	void  setProcSrcDir (const char* v);
 private:
+	std::unique_ptr <char[]>  m_procSrcDir;
 	std::unique_ptr <char[]>  m_genSrcDir;
 	std::unique_ptr <char[]>  m_thisRoot;
 	int  writeCMakeLists (appFile& rApp);

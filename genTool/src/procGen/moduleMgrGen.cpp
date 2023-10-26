@@ -22,16 +22,23 @@ int   moduleMgrGen:: startGen (appFile& rApp)
     int   nRet = 0;
     do {
 		auto& rGlobalFile = tSingleton<globalFile>::single ();
+		std::string strProc = thisRoot ();
+		strProc += "/src/proc";
+		setProcSrcDir (strProc.c_str());
+		int nR = 0;
+		nR = myMkdir (strProc.c_str());
 		std::string strDir = thisRoot ();
 		strDir += "/src/gen";
 		setGenSrcDir (strDir.c_str ());
-		int nR = 0;
 		std::string strWin = strDir;
 		strWin += "/win";
 		nR = myMkdir (strWin.c_str());
-		// std::string strUnix = strDir;
-		// strUnix += "/unix";
-		// nR = myMkdir (strUnix.c_str());
+		std::string strUnix = thisRoot ();
+		strUnix += "/src/unix";
+		nR = myMkdir (strUnix.c_str());
+		std::string strRWin = thisRoot ();
+		strRWin += "/src/win";
+		nR = myMkdir (strRWin.c_str());
 		nR = writeCMakeLists (rApp);
 		if (nR) {
 			rError (" writeCMakeLists return error nR = "<<nR);
@@ -78,6 +85,10 @@ int   moduleMgrGen:: writeCMakeLists (appFile& rApp)
 	do {
 		std::string fileName = thisRoot ();
 		fileName += "/CMakeLists.txt";
+		auto bE = isPathExit (fileName.c_str());
+		if (bE) {
+			break;
+		}
 		std::ofstream os(fileName.c_str ());
 		if (!os) {
 			nRet = 1;
@@ -91,15 +102,21 @@ int   moduleMgrGen:: writeCMakeLists (appFile& rApp)
 os<<"SET(prjName "<<mgrName<<")"<<std::endl;
 	// <<"SET(CMAKE_INSTALL_PREFIX "<<installPath<<")"<<std::endl;
 		const char* szCon = R"(set(genSrcS)
-file(GLOB genSrcS src/gen/*.cpp)
+file(GLOB genSrcS src/gen/*.cpp src/proc/*.cpp)
 set(defS)
+set(osSrc)
 set(libPath)
 set(libDep)
-if (WIN32)
+if (UNIX)
+    MESSAGE(STATUS "unix")
+	file(GLOB osSrc src/unix/*.cpp)
+elseif (WIN32)
+	
 	MESSAGE(STATUS "windows")
 	ADD_DEFINITIONS(/Zi)
 	ADD_DEFINITIONS(/W2)
 	file(GLOB defS src/gen/win/*.def)
+	file(GLOB osSrc src/win/*.cpp)
 	include_directories()";
 	auto depInc = rGlobalFile.depIncludeHome ();
 	os<<szCon<<depInc<<")"<<std::endl;
@@ -109,28 +126,39 @@ if (WIN32)
 	const char* szC2 = R"(endif ()
 
 	include_directories()";
-	auto framePath = rGlobalFile.frameHome ();
+	//auto framePath = rGlobalFile.frameHome ();
+	std::string frameInPath =  rGlobalFile.frameInstallPath ();
+	auto prjName = rGlobalFile.projectName ();
 	os<<szC2<<std::endl
 	<<"    ${CMAKE_SOURCE_DIR}/defMsg/src"<<std::endl
+	<<"    "<<frameInPath<<"include/"<<prjName<<std::endl
+	/*
 	<<"    "<<framePath<<"common/src"<<std::endl
 	<<"    "<<framePath<<"logicCommon/src"<<std::endl
 	<<"    "<<framePath<<"cLog/src"<<std::endl
+	*/
 	<<")"<<std::endl;
-	auto libPath = rGlobalFile.frameLibPath ();
-	os<<"list(APPEND libPath "<<libPath<<")"<<std::endl;
 
-	const char* szC3 = R"(link_directories(${libPath} ${libDep})
-	add_library(${prjName} SHARED ${genSrcS} ${defS})
+	auto libPath = rGlobalFile.frameLibPath ();
+	os<<"list(APPEND libPath "<<libPath<<")"<<std::endl
+	<<R"(link_directories(${libPath} ${libDep})
+	add_library(${prjName} SHARED ${genSrcS} ${defS} ${osSrc})
 	target_link_libraries(${prjName} PUBLIC
 	common
 	logicCommon
 	cLog
-	defMsg
+	)";
+	auto bH = rGlobalFile.haveServer ();
+	if (bH) {
+		os<<R"(defMsg
+		)";
+	}
+	os<<R"(
 	)
 	SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 	install(TARGETS ${prjName} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 	)";
-	os<<szC3;
+	// os<<szC3;
 	// SET(LIBRARY_OUTPUT_PATH )"<<outPath<<R"())";
 	} while (0);
     return nRet;
@@ -219,8 +247,16 @@ int   moduleMgrGen:: writeExportFunCpp ()
 #include "allLogicServerMgr.h"
 #include "tSingleton.h"
 #include "cLog.h"
-#include "rpcInfo.h"
+)";
 
+		auto& rGlobal = tSingleton<globalFile>::single ();
+		auto bH = rGlobal.haveServer ();
+		if (bH) {
+
+			os<<R"(#include "rpcInfo.h"
+)";
+		}
+os<<R"(
 dword afterLoad(int nArgC, char** argS, ForLogicFun* pForLogic)
 {
 	tSingleton<allLogicServerMgr>::createSingleton();
@@ -291,7 +327,6 @@ class logicServer;
 class allLogicServerMgr
 {
 public:
-	// typedef logicServer* (*findServerFT)(serverIdType);
 	struct moduleInfo
 	{
 		void* handle;
@@ -301,11 +336,9 @@ public:
 		beforeUnloadFT fnBeforeUnload;
 		onLoopBeginFT  fnOnLoopBegin;
 		onLoopEndFT  fnOnLoopEnd;
-		// findServerFT   fnFindServer;
 	};
 	using moduleMap = std::map<std::string, moduleInfo>;
 	dword afterLoad(int nArgC, char** argS, ForLogicFun* pForLogic);
-	// logicServer*  findServer (serverIdType	sId);
 	moduleMap&  moduleS ();
 	void logicOnAccept(serverIdType	fId, SessionIDType sessionId, uqword userData);
 	void logicOnConnect(serverIdType fId, SessionIDType sessionId, uqword userData);
@@ -326,6 +359,20 @@ int   moduleMgrGen:: writeLogicServerCpp ()
     int   nRet = 0;
     do {
 		std::string fileName = genSrcDir ();
+		std::string logicFile = procSrcDir();
+		logicFile += "/logicFile.cpp";
+		auto bE = isPathExit (logicFile.c_str());
+		if (!bE) {
+			std::ofstream lf (logicFile.c_str());
+			lf<<R"(int initLogic(int argNum, char** argS)
+{
+	int nRet = 0;
+	do {
+	} while (0);
+	return nRet;
+}
+	)";
+		}
 		fileName += "/allLogicServerMgr.cpp";
 		std::ofstream os(fileName.c_str ());
 		if (!os) {
@@ -333,6 +380,7 @@ int   moduleMgrGen:: writeLogicServerCpp ()
 			rError ("create file error file name is : "<<fileName.c_str ());
 			break;
 		}
+		auto& rGlobal = tSingleton<globalFile>::single ();
 		os<<R"(#include <iostream>
 #include <string>
 #include "allLogicServerMgr.h"
@@ -340,10 +388,16 @@ int   moduleMgrGen:: writeLogicServerCpp ()
 #include "msg.h"
 #include "gLog.h"
 #include "myAssert.h"
-#include "loopHandleS.h"
+)";
+auto bH = rGlobal.haveServer ();
+if (bH) {
+	os<<R"(#include "loopHandleS.h"
+#include "rpcInfo.h"
+)";
+}
+os<<R"(
 #include "strFun.h"
 #include "comFun.h"
-#include "rpcInfo.h"
 #include "modelLoder.h"
 #include <string>
 #include <sstream>
@@ -423,8 +477,12 @@ dword allLogicServerMgr::afterLoad(int nArgC, char** argS, ForLogicFun* pForLogi
 	auto pForMsg = &m_ForLogicFun;
 	auto& rFunS = getForMsgModuleFunS();
 	rFunS = *pForLogic;
-	regRpcS (&rFunS);
-
+)";
+	if (bH) {
+		os<<R"(regRpcS (&rFunS);
+)";
+	}
+os<<R"(
 	std::vector<std::string> vModelS;
 	std::string strWorkDir;
 	bool dumpMsg = false;
@@ -432,6 +490,15 @@ dword allLogicServerMgr::afterLoad(int nArgC, char** argS, ForLogicFun* pForLogi
 	getModelS (nArgC, argS, vModelS, strWorkDir, dumpMsg, checkMsg);
 	gInfo ("logicModelNum = "<<vModelS.size());
 	do {
+		int initLogic(int argNum, char** argS);
+		auto nR = initLogic (nArgC, argS);
+		if (nR) {
+			nRet = 5;
+			break;
+		}
+)";
+	if (bH) {
+os<<R"(
 		if (dumpMsg) {
 			dumpStructS ();
 			break;
@@ -444,7 +511,9 @@ dword allLogicServerMgr::afterLoad(int nArgC, char** argS, ForLogicFun* pForLogi
 				break;
 			}
 		}
-		auto& modS = moduleS ();
+)";
+	}
+		os<<R"(auto& modS = moduleS ();
 		for (auto it = vModelS.begin (); vModelS.end () != it; ++it) {
 			std::string strDll = strWorkDir;
 			strDll += *it;
@@ -504,5 +573,15 @@ dword allLogicServerMgr::afterLoad(int nArgC, char** argS, ForLogicFun* pForLogi
 })";
     } while (0);
     return nRet;
+}
+
+const char*  moduleMgrGen:: procSrcDir ()
+{
+    return m_procSrcDir.get ();
+}
+
+void  moduleMgrGen:: setProcSrcDir (const char* v)
+{
+    strCpy (v, m_procSrcDir);
 }
 

@@ -157,13 +157,13 @@ int  xmlGlobalLoad::xmlLoad (const char* szFile)
 			rGlobal.setProjectHome (szPath);
 		} else if(0 == strcmp(pName, "projectName")) {
 			rGlobal.setProjectName (szPath);
-		} else if(0 == strcmp(pName, "frameHome")) {
+		}/* else if(0 == strcmp(pName, "frameHome")) {
 			rGlobal.setFrameHome(szPath);
-		} else if(0 == strcmp(pName, "depIncludeHome")) {
+		}*/ else if(0 == strcmp(pName, "depIncludeHome")) {
 			rGlobal.setDepIncludeHome(szPath);
 		} else if(0 == strcmp(pName, "depLibHome")) {
 			rGlobal.setDepLibHome(szPath);
-		} else if(0 == strcmp(pName, "frameBinPath")) {
+		} /*else if(0 == strcmp(pName, "frameBinPath")) {
 			rGlobal.setFrameBinPath(szPath);
 		} else if(0 == strcmp(pName, "frameLibPath")) {
 			rGlobal.setFrameLibPath(szPath);
@@ -171,7 +171,7 @@ int  xmlGlobalLoad::xmlLoad (const char* szFile)
 			rGlobal.setOutPutPath(szPath);
 		} else if(0 == strcmp(pName, "installPath")) {
 			rGlobal.setInstallPath(szPath);
-		} else if(0 == strcmp(pName, "frameInstallPath")) {
+		} */else if(0 == strcmp(pName, "frameInstallPath")) {
 			rGlobal.setFrameInstallPath(szPath);
 		} else if(0 == strcmp(pName, "defMsg")) {
 			auto pPmp = std::make_shared <msgPmpFile> ();
@@ -188,8 +188,6 @@ int  xmlGlobalLoad::xmlLoad (const char* szFile)
 			for (auto pNP = pRpc->first_attribute("file");
 					pNP; pNP = pNP->next_attribute("file")) {
 				// myAssert (pNP);
-				// std::string pFilePath = pNP->value ();
-				// pPmp->setDefFile (pNP->value ());
 				rFileV.push_back (pNP->value ());
 			}
 		} else if(0 == strcmp(pName, "app")) {
@@ -206,6 +204,14 @@ int  xmlGlobalLoad::xmlLoad (const char* szFile)
 			nRet = 3;
 			break;
 		}
+
+		auto pPmpT = rMsgFileS.find ("defMsg");
+		if (pPmpT == rMsgFileS.end()) {
+			auto pT = std::make_shared <msgPmpFile> ();
+			pT->setPmpName ("defMsg");
+			auto inR = rMsgFileS.insert(std::make_pair("defMsg", pT));
+			myAssert (inR.second);
+		}
 		for (auto it = rMsgFileS.begin (); rMsgFileS.end () != it; ++it) {
 			xmlMsgFileLoad msgFileLoader;
 			std::string strF = dirBuf.get ();
@@ -217,12 +223,20 @@ int  xmlGlobalLoad::xmlLoad (const char* szFile)
 				strFile += *ite;
 				nR = msgFileLoader.xmlLoad (it->first.c_str(), strFile.c_str (), *pPmp);
 				myAssert (0 == nR);
+				/*
 				if (0 == strcmp (it->first.c_str(), "defMsg")) {
 					std::unique_ptr<char[]> comMsgBuf;
 					strCpy (s_comMsg, comMsgBuf);
 					nR = msgFileLoader.xmlLoadFromStr (it->first.c_str(), comMsgBuf.get(), *pPmp);
 					myAssert (0 == nR);
 				}
+				*/
+			}
+			if (0 == strcmp (it->first.c_str(), "defMsg")) {
+				std::unique_ptr<char[]> comMsgBuf;
+				strCpy (s_comMsg, comMsgBuf);
+				nR = msgFileLoader.xmlLoadFromStr (it->first.c_str(), comMsgBuf.get(), *pPmp);
+				myAssert (0 == nR);
 			}
 		}
 		if (!pAppS) {
@@ -287,22 +301,11 @@ int   xmlGlobalLoad:: onceAppLoad (rapidxml::xml_node<char>* pApp, std::shared_p
 		auto pName = pApp->name ();
 		rInfo ("proc app name = "<<pName);
 		
-		rapidxml::xml_node<char>* pModuleS = pApp->first_node("module");
-		if (!pModuleS) {
-			nRet = 1;
-			rError ("app : "<<pApp->name ()<<" not find moduleS ");
-			break;
-		}
+		
 
 		auto& rMap = tSingleton<appFileMgr>::single ().appS ();
 		auto pA = std::make_shared<appFile> ();
 		pA->setAppName (pName);
-		auto nR = moduleSLoad (pModuleS, *pA);
-		if (nR) {
-			rError ("moduleSLoad  error nR = "<<nR<<" app name: "<<pName);
-			nRet = 2;
-			break;
-		}
 		rApp = pA;
 		auto& rV = rApp->argS ();
 		for (auto pArg = pApp->first_node ("appArg");
@@ -322,6 +325,17 @@ int   xmlGlobalLoad:: onceAppLoad (rapidxml::xml_node<char>* pApp, std::shared_p
 				}
 			}
 			rV.push_back (pArg->value ());
+		}
+		rapidxml::xml_node<char>* pModuleS = pApp->first_node("module");
+		if (!pModuleS) {
+			rInfo ("app : "<<pApp->name ()<<" not find moduleS ");
+			break;
+		}
+		auto nR = moduleSLoad (pModuleS, *pA);
+		if (nR) {
+			rError ("moduleSLoad  error nR = "<<nR<<" app name: "<<pName);
+			nRet = 2;
+			break;
 		}
     } while (0);
     return nRet;

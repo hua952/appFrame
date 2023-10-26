@@ -36,3 +36,4 @@ target_link_libraries(${prjName} PUBLIC  ${libS})
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 install(TARGETS ${prjName} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
+

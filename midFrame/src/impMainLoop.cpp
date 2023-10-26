@@ -136,11 +136,12 @@ int midSendPackToLoopFun(packetHead* pack) /* 返回值貌似没用 */
 	} while (0);
 	return nRet;
 }
+/*
 static iRpcInfoMgr* sGetIRpcInfoMgr()
 {
 	return &tSingleton<loopMgr>::single().defMsgInfoMgr();
 }
-
+*/
 int    sRegRpc(msgIdType askId, msgIdType retId, serverIdType	askDefProcSer,
 			serverIdType	retDefProcSer)
 {
@@ -209,11 +210,16 @@ int loopMgr::init(int nArgC, char** argS, PhyCallback& info)
 			nRet = 1;
 			break;
 		}
-		nR = initNetServer ();
-		if (nR) {
-			mError("initNetServer  return error nR = "<<nR);
-			nRet = 2;
-			break;
+
+		auto& rArgS = tSingleton<mArgMgr>::single ();
+		auto midNetLibName = rArgS.midNetLibName ();
+		if (midNetLibName ) {
+			nR = initNetServer ();
+			if (nR) {
+				mError("initNetServer  return error nR = "<<nR);
+				nRet = 2;
+				break;
+			}
 		}
 		auto& rModuleS = m_ModuleS;
 		for(auto i = 0; i < m_ModuleNum; i++)

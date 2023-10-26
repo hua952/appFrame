@@ -688,17 +688,18 @@ int  msgGen:: CMakeListGen ()
 		strFilename += "/CMakeLists.txt";
 		std::ofstream os(strFilename);
 		auto& rTool = rGlobal;
-		auto outPutPath = rTool.outPutPath ();
+		// auto outPutPath = rTool.outPutPath ();
 		auto depIncludeHome = rTool.depIncludeHome ();
 		auto depLibHome = rTool.depLibHome ();
-		auto frameHome = rTool.frameHome ();
+		// auto frameHome = rTool.frameHome ();
 		auto frameLibPath = rTool.frameLibPath ();
+		std::string framePath = rTool.frameInstallPath ();
 		os<<"SET(prjName defMsg)"<<std::endl
 			<<"SET(depIncludeHome "<<depIncludeHome<<")"<<std::endl
 			<<"SET(depLibHome "<<depLibHome<<")"<<std::endl
-			<<"SET(frameHome "<<frameHome<<")"<<std::endl
+			// <<"SET(frameHome "<<frameHome<<")"<<std::endl
 			<<"SET(frameLibPath "<<frameLibPath<<")"<<std::endl
-			<<"SET(outPutPath "<<outPutPath<<")"<<std::endl
+			// <<"SET(outPutPath "<<outPutPath<<")"<<std::endl
 			<<R"(
 set(srcS)
 set(genSrcS)
@@ -723,10 +724,16 @@ endif ()
 add_library(${prjName} ${genSrcS} ${srcS} ${srcOS} ${defS})
 target_include_directories(${prjName} PUBLIC 
 							src
+							)";
+							auto prjName = rTool.projectName ();
+							os<<framePath<<"include/"<<prjName<<std::endl;
+							/*
 							${frameHome}/common/src
 							${frameHome}/logicCommon/src
 							${frameHome}/cLog/src
-                           )
+							*/
+                           os<<R"(
+						   )
 target_link_libraries(${prjName} PUBLIC  common logicCommon)
 
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)

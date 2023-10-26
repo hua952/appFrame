@@ -1,5 +1,8 @@
 #include "globalFile.h"
 #include "strFun.h"
+#include "appFileMgr.h"
+#include "tSingleton.h"
+#include "appFile.h"
 
 globalFile:: globalFile ()
 {
@@ -8,7 +11,7 @@ globalFile:: globalFile ()
 globalFile:: ~globalFile ()
 {
 }
-
+/*
 const char*  globalFile::frameBinPath ()
 {
     return m_frameBinPath.get ();
@@ -18,7 +21,7 @@ void  globalFile::setFrameBinPath (const char* v)
 {
     strCpy (v, m_frameBinPath);
 }
-
+*/
 const char* globalFile:: depLibHome ()
 {
     return m_depLibHome.get ();
@@ -38,7 +41,7 @@ void  globalFile::setDepIncludeHome (const char* v)
 {
     strCpy (v, m_depIncludeHome);
 }
-
+/*
 const char*  globalFile::frameHome ()
 {
     return m_frameHome.get ();
@@ -48,7 +51,7 @@ void  globalFile::setFrameHome (const char* v)
 {
     strCpy (v, m_frameHome);
 }
-
+*/
 const char* globalFile:: projectHome ()
 {
     return m_projectHome.get ();
@@ -59,6 +62,12 @@ void  globalFile::setProjectHome (const char* v)
     strCpy (v, m_projectHome);
 }
 
+const char*   globalFile:: frameLibPath ()
+{
+    return m_frameLibPath.get();
+}
+
+/*
 const char*  globalFile::frameLibPath ()
 {
     return m_frameLibPath.get ();
@@ -68,7 +77,6 @@ void  globalFile::setFrameLibPath (const char* v)
 {
     strCpy (v, m_frameLibPath);
 }
-
 const char* globalFile:: outPutPath ()
 {
     return m_outPutPath.get ();
@@ -77,6 +85,22 @@ const char* globalFile:: outPutPath ()
 void  globalFile::setOutPutPath (const char* v)
 {
     strCpy (v, m_outPutPath);
+}
+*/
+
+bool  globalFile:: haveServer ()
+{
+    bool   nRet = false;
+    do {
+		auto &rAppS = tSingleton<appFileMgr>::single ().appS ();
+		for (auto it = rAppS.begin (); it != rAppS.end (); it++) {
+			nRet = it->second->haveServer ();
+			if (nRet) {
+				break;
+			}
+		}
+    } while (0);
+    return nRet;
 }
 
 globalFile::msgFileV& globalFile:: msgFileS ()
@@ -93,7 +117,7 @@ void  globalFile:: setProjectName (const char* v)
 {
     strCpy (v, m_projectName);
 }
-
+/*
 const char*  globalFile:: installPath ()
 {
     return m_installPath.get ();
@@ -103,21 +127,23 @@ void  globalFile:: setInstallPath (const char* v)
 {
     strCpy (v, m_installPath);
 }
-
+*/
 const char*  globalFile:: frameInstallPath ()
 {
     return m_frameInstallPath.get ();
 }
-
 void  globalFile:: setFrameInstallPath (const char* v)
 {
     strCpy (v, m_frameInstallPath);
+	std::string strT = v;
+	strT += "lib";
+	strCpy (strT.c_str (), m_frameLibPath);
 }
 
 void   globalFile:: getRealInstallPath (std::string& strPath)
 {
     do {
-		auto p = installPath ();
+		auto p = frameInstallPath ();
 		if (p) {
 			strPath = p;
 		} else {

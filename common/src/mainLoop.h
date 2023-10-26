@@ -2,7 +2,7 @@
 #define _mainLoop_h__
 #include "loop.h"
 #include "comFun.h"
-#include "iRpcInfoMgr.h"
+// #include "iRpcInfoMgr.h"
 #include "ISession.h"
 
 #define LoopNumBitLen 4
@@ -56,7 +56,7 @@ struct  serverNode;
 typedef int (*createLoopFT)(const char* szName, loopHandleType serId, serverNode* pNode, frameFunType funFrame, void* arg);
 typedef  int (*regMsgFT)(loopHandleType serverId, uword uwMsgId, procRpcPacketFunType pFun); // call by level 2
 typedef  int (*removeMsgFT)(loopHandleType handle, uword uwMsgId); // call by level 2
-typedef  iRpcInfoMgr* (*getIRpcInfoMgrFT)();
+// typedef  iRpcInfoMgr* (*getIRpcInfoMgrFT)();
 typedef  void (*popFromCallStackFT) (loopHandleType handle);
 typedef  int    (*regRpcFT) (msgIdType askId, msgIdType retId, serverIdType	askDefProcSer,
 			serverIdType	retDefProcSer);

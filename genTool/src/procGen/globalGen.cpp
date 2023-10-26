@@ -34,30 +34,35 @@ int   globalGen:: startGen ()
 			break;
 		}
 		nR = 0;
-		auto &rPmpS = tSingleton<globalFile>::single().msgFileS ();
+		auto &rGlobal = tSingleton<globalFile>::single();
+		auto bH = rGlobal.haveServer ();
 		std::vector <std::shared_ptr<msgGen>> gv;
-		for (auto it = rPmpS.begin(); rPmpS.end() != it; ++it) {
-			auto& rPmp = *(it->second.get());
-			auto pP = std::make_shared <msgGen> (rPmp);
-			msgGen  &gen = *pP;
-			nR = gen.startGen ();
-			gv.push_back (pP);
+		if (bH) {
+			auto &rPmpS = rGlobal.msgFileS ();
+			for (auto it = rPmpS.begin(); rPmpS.end() != it; ++it) {
+				auto& rPmp = *(it->second.get());
+				auto pP = std::make_shared <msgGen> (rPmp);
+				msgGen  &gen = *pP;
+				nR = gen.startGen ();
+				gv.push_back (pP);
+				if (nR) {
+					break;
+				}
+			}
 			if (nR) {
+				nRet = 2;
+				rError ("msg gen error nRet = "<<nR);
+				break;
+			}
+			defMsgGen msgGenD;
+			nR = msgGenD.startGen ();
+			if (nR) {
+				rError ("defMsg gen error nR = "<<nR);
+				nRet = 3;
 				break;
 			}
 		}
-		if (nR) {
-			nRet = 2;
-			rError ("msg gen error nRet = "<<nR);
-			break;
-		}
-		defMsgGen msgGenD;
-		nR = msgGenD.startGen ();
-		if (nR) {
-			rError ("defMsg gen error nR = "<<nR);
-			nRet = 3;
-			break;
-		}
+		
 		auto& rAppS = tSingleton<appFileMgr>::single ().appS ();
 		for (auto it = rAppS.begin (); rAppS.end () != it; ++it) {
 			auto& rApp = *(it->second.get ());

@@ -20,3 +20,6 @@ target_include_directories(${prjName} PUBLIC
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 
 install(TARGETS ${prjName} ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+
+set(incS src/comTcpNet.h)
+install(FILES ${incS} DESTINATION include/${myProjectName})

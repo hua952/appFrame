@@ -2,6 +2,7 @@
 #include "strFun.h"
 #include "comFun.h"
 #include "fromFileData/appFile.h"
+#include "fromFileData/appFileMgr.h"
 #include <string>
 #include <fstream>
 #include "tSingleton.h"
@@ -114,7 +115,11 @@ int  appGen:: batFileGen (appFile& rApp)
 		strBinDir += "/bin/";
 		auto procId = rApp.procId ();
 		auto& rMainArgS = rApp.mainArgS();
-		rMainArgS.push_back("netLib=libeventSession");
+
+		auto& rMap = tSingleton<appFileMgr>::single ().appS ();
+		if (rMap.size () > 1) {
+			rMainArgS.push_back("netLib=libeventSession");
+		}
 		{
 			std::stringstream ts;
 			ts<<"procId="<<procId;
@@ -135,7 +140,11 @@ int  appGen:: batFileGen (appFile& rApp)
 		std::string strLogFull = R"(logFile=)";
 		strLogFull += strLogFile;
 		rMainArgS.push_back(strLogFull);
-		os<<"cppLevel0.exe netLib=libeventSession addLogic="
+		os<<"cppLevel0.exe ";
+		if (rMap.size () > 1) {
+			os<<"netLib=libeventSession ";
+		}
+		os<<"addLogic="
 			<<szAppName<<"ModuleMgr procId="<<procId
 			<<" logFile="<<strLogFile
 			<<" workDir="<<strBinDir;

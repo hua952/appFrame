@@ -3,9 +3,9 @@
 #include "packet.h"
 #include <memory>
 #include "arrayMap.h"
-#include "iRpcInfoMgr.h"
+// #include "iRpcInfoMgr.h"
 
-class msgMgr:public iRpcInfoMgr // Thread safety
+class msgMgr// :public iRpcInfoMgr // Thread safety
 {
 public:
 	struct msgInfo
@@ -18,11 +18,11 @@ public:
     msgMgr ();
     ~msgMgr ();
 	int    regRpc (msgIdType askId, msgIdType retId, serverIdType	askDefProcSer,
-			serverIdType	retDefProcSer) override;
-	int    regAskOnly (msgIdType askId, serverIdType	askDefProcSer) override;
-	bool   isRetMsg (msgIdType msgId) override;
-	msgIdType     getRetMsg(msgIdType    askMsg) override;
-	msgIdType     getAskMsg(msgIdType    retMsg) override;
+			serverIdType	retDefProcSer) ;
+	int    regAskOnly (msgIdType askId, serverIdType	askDefProcSer) ;
+	bool   isRetMsg (msgIdType msgId) ;
+	msgIdType     getRetMsg(msgIdType    askMsg) ;
+	msgIdType     getAskMsg(msgIdType    retMsg) ;
 	serverIdType  getDefProcServerId (msgIdType msgId);
 private:
 	msgInfoMap				  m_msgInfoS;
