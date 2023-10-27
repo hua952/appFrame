@@ -18,9 +18,9 @@ public:
 	void  setFrameBinPath (const char* v);
 	*/
 	const char*  depLibHome ();
-	void  setDepLibHome (const char* v);
+	// void  setDepLibHome (const char* v);
 	const char*  depIncludeHome ();
-	void  setDepIncludeHome (const char* v);
+	// void  setDepIncludeHome (const char* v);
 	/*
 	const char*  frameHome ();
 	void  setFrameHome (const char* v);
@@ -47,7 +47,10 @@ public:
 	msgPmpFile* findMsgPmp (const char* szPmpName);
 	std::vector<std::string>&  rootServerS ();
 	bool haveServer (); 
+    const char*  thirdPartyDir ();
+    void  setThirdPartyDir (const char* v);
 private:
+    std::unique_ptr <char[]>  m_thirdPartyDir;
 	std::vector<std::string>  m_rootServerS;
     std::unique_ptr <char[]>  m_installPath;
     std::unique_ptr <char[]>  m_frameInstallPath;

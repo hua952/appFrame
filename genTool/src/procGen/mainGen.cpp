@@ -113,9 +113,9 @@ target_include_directories(${prjName} PUBLIC
 							os<<R"(
 							)";
 	auto frameInPath = rGlobalFile.frameInstallPath ();
-	auto prjName = rGlobalFile.projectName ();
+	// auto prjName = rGlobalFile.projectName ();
 		//auto framePath = rGlobalFile.frameHome ();
-		os<<frameInPath<<"include/"<<prjName<<std::endl
+		os<<frameInPath<<"include/appFrame"<<std::endl
 		/*
 	<<"    "<<framePath<<"common/src"<<std::endl
 	<<"    "<<framePath<<"common/src"<<std::endl<<R"(

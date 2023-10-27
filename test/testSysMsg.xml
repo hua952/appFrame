@@ -2,17 +2,13 @@
 <servers>
 	<projectHome>C:/work/testSysMsg/</projectHome>
 	<projectName>testSysMsg</projectName>
-	<frameHome>C:/work/appFrame/</frameHome>
 	<depIncludeHome>C:/work/include/</depIncludeHome>
 	<depLibHome>C:/work/lib/</depLibHome>
-	<frameInstallPath>C:/work/appFrame/install/</frameInstallPath>
+	<thirdPartyDir>C:/work/</thirdPartyDir>
+	<frameInstallPath>C:/work/appFrameInstall/</frameInstallPath>
 	<defMsg file="cChess.xml"/>
 	<app>
 		<appServer>
-			<appArg>logLevel=2</appArg>
-			<appArg>level0=cppLevel0L</appArg>
-			<appArg>frameHome=C:/work/appFrameInstall</appArg>
-			<appArg>netLib=libeventSession</appArg>
 			<module>
 				<appServerM>
 					<server>
@@ -33,11 +29,7 @@
 			</module>
 		</appServer>
 		<appClient>
-			<appArg>logLevel=2</appArg>
 			<appArg>detachServerS=1</appArg>
-			<appArg>level0=cppLevel0L</appArg>
-			<appArg>frameHome=C:/work/appFrameInstall</appArg>
-			<appArg>netLib=libeventSession</appArg>
 			<module>
 				<appClientM2>
 					<server>

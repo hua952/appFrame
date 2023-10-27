@@ -140,10 +140,14 @@ int  appGen:: batFileGen (appFile& rApp)
 		std::string strLogFull = R"(logFile=)";
 		strLogFull += strLogFile;
 		rMainArgS.push_back(strLogFull);
+		std::string level0Full = "level0=cppLevel0L ";
+		rMainArgS.push_back(level0Full);
+		std::string frameHomeFull = "frameHome=";
+		frameHomeFull += strInsHome;
 		os<<"cppLevel0.exe ";
-		if (rMap.size () > 1) {
-			os<<"netLib=libeventSession ";
-		}
+		os<<strLogFull<<" "<<frameHomeFull;
+		rMainArgS.push_back(frameHomeFull);
+		
 		os<<"addLogic="
 			<<szAppName<<"ModuleMgr procId="<<procId
 			<<" logFile="<<strLogFile

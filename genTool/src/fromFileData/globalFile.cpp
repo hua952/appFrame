@@ -26,22 +26,22 @@ const char* globalFile:: depLibHome ()
 {
     return m_depLibHome.get ();
 }
-
+/*
 void  globalFile::setDepLibHome (const char* v)
 {
     strCpy (v, m_depLibHome);
 }
-
+*/
 const char*  globalFile::depIncludeHome ()
 {
     return m_depIncludeHome.get ();
 }
 
+/*
 void  globalFile::setDepIncludeHome (const char* v)
 {
     strCpy (v, m_depIncludeHome);
 }
-/*
 const char*  globalFile::frameHome ()
 {
     return m_frameHome.get ();
@@ -138,6 +138,23 @@ void  globalFile:: setFrameInstallPath (const char* v)
 	std::string strT = v;
 	strT += "lib";
 	strCpy (strT.c_str (), m_frameLibPath);
+}
+
+const char*  globalFile:: thirdPartyDir ()
+{
+    return m_thirdPartyDir.get ();
+}
+
+void  globalFile:: setThirdPartyDir (const char* v)
+{
+    strCpy (v, m_thirdPartyDir);
+	std::string strI = v;
+	strI += "include/";
+	strCpy (strI.c_str(), m_depIncludeHome);
+
+	std::string strL = v;
+	strL += "lib/";
+	strCpy (strL.c_str(), m_depLibHome);
 }
 
 void   globalFile:: getRealInstallPath (std::string& strPath)

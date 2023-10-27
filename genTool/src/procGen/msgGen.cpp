@@ -725,8 +725,8 @@ add_library(${prjName} ${genSrcS} ${srcS} ${srcOS} ${defS})
 target_include_directories(${prjName} PUBLIC 
 							src
 							)";
-							auto prjName = rTool.projectName ();
-							os<<framePath<<"include/"<<prjName<<std::endl;
+							//auto prjName = rTool.projectName ();
+							os<<framePath<<"include/appFrame"<<std::endl;
 							/*
 							${frameHome}/common/src
 							${frameHome}/logicCommon/src

@@ -159,11 +159,11 @@ int  xmlGlobalLoad::xmlLoad (const char* szFile)
 			rGlobal.setProjectName (szPath);
 		}/* else if(0 == strcmp(pName, "frameHome")) {
 			rGlobal.setFrameHome(szPath);
-		}*/ else if(0 == strcmp(pName, "depIncludeHome")) {
+		} else if(0 == strcmp(pName, "depIncludeHome")) {
 			rGlobal.setDepIncludeHome(szPath);
 		} else if(0 == strcmp(pName, "depLibHome")) {
 			rGlobal.setDepLibHome(szPath);
-		} /*else if(0 == strcmp(pName, "frameBinPath")) {
+		} else if(0 == strcmp(pName, "frameBinPath")) {
 			rGlobal.setFrameBinPath(szPath);
 		} else if(0 == strcmp(pName, "frameLibPath")) {
 			rGlobal.setFrameLibPath(szPath);
@@ -173,6 +173,8 @@ int  xmlGlobalLoad::xmlLoad (const char* szFile)
 			rGlobal.setInstallPath(szPath);
 		} */else if(0 == strcmp(pName, "frameInstallPath")) {
 			rGlobal.setFrameInstallPath(szPath);
+		} else if(0 == strcmp(pName, "thirdPartyDir")) {
+			rGlobal.setThirdPartyDir(szPath);
 		} else if(0 == strcmp(pName, "defMsg")) {
 			auto pPmp = std::make_shared <msgPmpFile> ();
 			std::string pmpName = "defMsg";
