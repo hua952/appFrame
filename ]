@@ -57,18 +57,6 @@ int  msgGen:: startGen ()
 		setProtoDir (strPro.c_str());
 		auto& proOs = protoOs ();
 		
-		std::string strIDFull = pPmpName;
-		std::string strFile = srcDir ();
-		strFile += "/serialize/";
-		myMkdir (strFile.c_str());
-		strFile += strIDFull;
-		auto strSerFile = strFile;
-		strSerFile += "Ser_com.cpp";
-		setComSerFileName (strSerFile.c_str());
-		strSerFile = strFile;
-		strSerFile += "Ser_Proto.cpp";
-		setProtoSerFileName (strSerFile.c_str());
-
 		proOs<<R"(syntax = "proto3";
 )";
 		int nR = 0;
@@ -260,13 +248,12 @@ void regRpcS (const ForMsgModuleFunS* pForLogic);
     return nRet;
 }
 
-int   msgGen:: genOnceMsgClassCpp (msgGroupFile& rG, msgFile& rMsg, bool bRet, std::string& strOut, std::string& strToPack)
+int   msgGen:: genOnceMsgClassCpp (msgGroupFile& rG, msgFile& rMsg, bool bRet, std::string& strOut)
 {
     int   nRet = 0;
     do {
 		auto& rConfig = tSingleton<configMgr>::single ();
 		std::stringstream ss;
-		std::stringstream ssP;
 		auto strN = rMsg.structName ();
 		auto msgName = rMsg.msgName ();
 		std::string strClass = msgName;
@@ -313,127 +300,6 @@ int   msgGen:: genOnceMsgClassCpp (msgGroupFile& rG, msgFile& rMsg, bool bRet, s
 		auto& rData = *(rDv.rbegin ()->get ());
 		auto rDN = rData.dataName ();
 		auto len = rData.dataLength ();
-		auto zeroEnd = rData.zeroEnd ();
-		auto haveSize = rData.haveSize ();
-		auto bt = rConfig.structBadyType ();
-
-		if (structBadyTime_com != bt) {
-			auto powerCom = rMsg.powerCom ();
-			if (powerCom) {
-				bt = structBadyTime_com;
-			}
-		}
-
-		if (structBadyTime_com == bt) {
-			if (len) {
-				if (haveSize) {
-					ssP<<R"(packetHead* )"<<strFunWon<<R"(toPack()
-{
-	netPacketHead* pN = P2NHead(m_pPacket);
-    )";
-
-				ssP<<strN<<R"(* p = (()"<<strN<<R"++(*)(N2User(pN)));
-	)++";
-				ssP<<R"(myAssert (p->m_)"<<rDN<<R"(Num <= )"<<len<<R"();
-	bool bWZ = false;
-	)";
-				if (zeroEnd	) {
-					ssP<<R"(if(p->m_)"<<rDN<<R"(Num) {
-	)"
-					<<R"(bWZ = )"<<R"(p->m_)"<<rDN<<R"([)"
-					<<R"(p->m_)"<<rDN<<R"(Num - 1] != 0;
-	} else {
-		bWZ = true;
-	}
-	if(bWZ) {
-		p->m_)"<<rDN<<R"(Num++;
-			}
-			)";
-				}
-				ssP<<R"(myAssert (p->m_)"<<rDN<<R"(Num <= )"<<len<<R"();
-	pN->udwLength = sizeof()"<<strN<<R"() - sizeof(p->m_)"
-				<<rDN<<R"([0]) * ()"<<len<<R"( - p->m_)"<<rDN<<R"(Num);
-	)";
-				if (zeroEnd) {
-					ssP<<R"(if(bWZ) { 
-			p->m_)"<<rDN<<R"([p->m_)"<<rDN<<R"(Num - 1] = 0;
-				}
-				)";
-				}
-				ssP<<R"(return m_pPacket;
-}
-)";
-				}
-} // if (len > 1)
-		strToPack += ssP.str();
-		} else if (structBadyTime_proto == bt) {
-			std::stringstream  fromOs;
-			std::stringstream  toOs;
-		fromOs<<R"(bool )"<<strFunWon<<R"(fromPack(packetHead* p)
-{
-	bool nRet = true;
-	do {
-		myAssert (!m_pPacket);
-		auto pN = P2NHead (p);
-
-	)";
-	auto fromFuName = rMsg.fromPbFuName ();
-	fromOs<<msgName<<R"(	newC;
-		)"<<msgName<<R"(Proto  msgPb;
-		auto bRet = msgPb.ParseFromArray (N2User(pN), pN->udwLength);
-		myAssert (bRet);
-		auto pU = newC.pack ();
-		m_pPacket = newC.pop ();
-		auto pNN = P2NHead(m_pPacket);
-		auto newLen = pNN->udwLength;
-		*pNN = *pN;
-		pNN->udwLength = newLen;
-		)"<<fromFuName<<R"((*pU, msgPb);
-		releasePack(p);
-	while (0);
-	return nRet;
-)";
-
-	toOs<<R"(packetHead* )"<<strFunWon<<R"(toPack()
-{
-	packetHead* nRet = nullptr;
-	do {
-		
-	)";
-	auto toPbFu = rMsg.toPbFuName ();
-	toOs<<msgName<<R"(Proto  msgPb;
-		myAssert(m_pPacket);
-		auto pU = pack();
-		)";
-	toOs<<toPbFu<<R"((*pU, msgPb);
-		
-		auto newLen = msgPb.ByteSize ();
-		auto pNewP = (packetHead*)allocPacket(newLen);
-		auto pNU = ()";toOs<<strN<<R"(*)(N2User(pNN));
-		auto pNN = P2NHead(pNewP);
-		auto pN = P2NHead(m_pPacket);
-		*pNN = *pN;
-		pNN->udwLength = newLen;
-		auto pD = m_pPacket;
-		m_pPacket = pNewP;
-)";
-	
-	fromOs<<R"(
-	} while (0);
-	return nRet;
-}
-	)";
-	toOs<<R"(
-	} while (0);
-	return nRet;
-}
-	)";
-
-		strToPack += fromOs.str();
-		strToPack += toOs.str();
-		} else {
-			myAssert (0);
-		}
 		if (len) {
 			auto haveSize = rData.haveSize ();
 			if (haveSize) {
@@ -466,6 +332,100 @@ int   msgGen:: genOnceMsgClassCpp (msgGroupFile& rG, msgFile& rMsg, bool bRet, s
 }
 )";
 
+	auto enStructBadyType = rConfig.structBadyType ();
+	bool bWProto = ((structBadyTime_proto == enStructBadyType) && rMsg.canProto ());
+	if (bWProto) {
+		std::stringstream  fromOs;
+		std::stringstream  toOs;
+		fromOs<<R"(bool )"<<strFunWon<<R"(fromPack(packetHead* p)
+{
+	bool nRet = true;
+	do {
+		auto pN = P2NHead (p);
+
+	)";
+	fromOs<<msgName<<R"(	newC;
+		)"<<msgName<<R"(Proto  msgPb;
+		auto bRet = msgPb.ParseFromArray (N2User(pN), pN->udwLength);
+		myAssert (bRet);
+		myAssert (!m_pPacket);
+		auto pU = newC.pack ();
+		m_pPacket = newC.pop ();
+		auto pNN = P2NHead(m_pPacket);
+		auto newLen = pNN->udwLength;
+		*pNN = *pN;
+		pNN->udwLength = newLen;
+	} while(0);
+	return nRet;
+}
+)";
+
+	toOs<<R"(packetHead* )"<<strFunWon<<R"(toPack()
+{
+	packetHead* nRet = nullptr;
+	do {
+		
+	)";
+	toOs<<msgName<<R"(Proto  msgPb;
+		myAssert(m_pPacket);
+		auto pN = P2NHead(m_pPacket);
+		auto pNewP = (packetHead*)allocPacket(pN->udwLength);
+		auto pNN = P2NHead(pNewP);
+		auto pNU = ()";toOs<<strN<<R"(*)(N2User(pNN));
+	} while (0);
+	return nRet;
+}
+)";
+	ss<<fromOs.str()<<toOs.str();
+	} else {
+		auto& rData = *(rDv.rbegin ()->get ());
+		auto len = rData.dataLength ();
+		if (len) {
+			auto rDN = rData.dataName ();
+			auto zeroEnd = rData.zeroEnd ();
+			auto haveSize = rData.haveSize ();
+			if (haveSize) {
+				auto len = rData.dataLength ();
+				ss<<R"(packetHead* )"<<strFunWon<<R"(toPack()
+{
+	netPacketHead* pN = P2NHead(m_pPacket);
+    )";
+
+				ss<<strN<<R"(* p = (()"<<strN<<R"++(*)(N2User(pN)));
+	)++";
+				ss<<R"(myAssert (p->m_)"<<rDN<<R"(Num <= )"<<len<<R"();
+	bool bWZ = false;
+	)";
+				if (zeroEnd	) {
+					ss<<R"(if(p->m_)"<<rDN<<R"(Num) {
+	)"
+					<<R"(bWZ = )"<<R"(p->m_)"<<rDN<<R"([)"
+					<<R"(p->m_)"<<rDN<<R"(Num - 1] != 0;
+	} else {
+		bWZ = true;
+	}
+	if(bWZ) {
+		p->m_)"<<rDN<<R"(Num++;
+			}
+			)";
+				}
+				ss<<R"(myAssert (p->m_)"<<rDN<<R"(Num <= )"<<len<<R"();
+	pN->udwLength = sizeof()"<<strN<<R"() - sizeof(p->m_)"
+				<<rDN<<R"([0]) * ()"<<len<<R"( - p->m_)"<<rDN<<R"(Num);
+	)";
+				if (zeroEnd) {
+					ss<<R"(if(bWZ) { 
+			p->m_)"<<rDN<<R"([p->m_)"<<rDN<<R"(Num - 1] = 0;
+				}
+				)";
+				}
+				ss<<R"(return m_pPacket;
+}
+)";
+				}
+} // if (len > 1)
+
+}
 }
 ss<<std::endl;
 	strOut = ss.str ();
@@ -473,11 +433,10 @@ ss<<std::endl;
     return nRet;
 }
 
-int   msgGen:: genOnceStruct (structFile& rS, std::string& strOut, std::stringstream& protoStr, std::string& strSerializeOut)
+int   msgGen:: genOnceStruct (structFile& rS, std::string& strOut, std::stringstream& protoStr)
 {
     int   nRet = 0;
     do {
-		auto& rConfig = tSingleton<configMgr>::single ();
 		auto& rDv = rS.dataOrder ();
 		if (rDv.empty ()) {
 			break;
@@ -492,28 +451,12 @@ struct )"<<sName<<R"(
 		protoStr<<R"(message )"<<sName<<R"(Proto
 {
 )";
-		std::stringstream osFrom;
-		std::stringstream osTo;
-		auto bt = rConfig.structBadyType ();
-		if (structBadyTime_com != bt) {
-			auto powerCom = rS.powerCom ();
-			if (powerCom) {
-				bt = structBadyTime_com;
-			}
-		}
 
-		if (structBadyTime_proto == bt) {
-			auto pFromFull = rS.fromPbFuFullName ();
-			osFrom<<pFromFull<<std::endl<<"{"<<std::endl<<"	";
-			auto pToFull = rS.toPbFuFullName ();
-			osTo<<pToFull<<std::endl<<"{"<<std::endl<<"	";
-		}
-		
 		int nIndex = 1;
 		for (auto iter = rDv.begin(); rDv.end() != iter; ++iter) {
 			auto& rData = *(iter->get());
 			std::string strD;
-			genOnceData (rS, rData, strD, protoStr, nIndex++, osFrom, osTo);
+			genOnceData (rS, rData, strD, protoStr, nIndex++);
 			os<<strD;
 		}
 		os<<R"(};
@@ -522,13 +465,6 @@ struct )"<<sName<<R"(
 protoStr<<R"(}
 
 )";
-
-	if (structBadyTime_proto == bt) {
-		osFrom<<"}"<<std::endl<<std::endl;
-		osTo<<"}"<<std::endl<<std::endl;
-		strSerializeOut += osFrom.str();
-		strSerializeOut += osTo.str();
-	}
 		strOut = os.str();
     } while (0);
     return nRet;
@@ -561,7 +497,7 @@ void  msgGen:: procDataCheck (const char* structName, const char* valueName, boo
     } while (0);
 }
 
-int   msgGen:: genOnceData (structFile& rS, dataFile& rData, std::string& strOut, std::stringstream& protoStr, int nIndex, std::stringstream& fromOs, std::stringstream& toOs)
+int   msgGen:: genOnceData (structFile& rS, dataFile& rData, std::string& strOut, std::stringstream& protoStr, int nIndex)
 {
     int   nRet = 0;
     do {
@@ -569,12 +505,8 @@ int   msgGen:: genOnceData (structFile& rS, dataFile& rData, std::string& strOut
 		auto& rPTS = tSingleton <globalFile>::single ().protoDataTypeS ();
 		auto pStructName = rS.structName ();
 		auto pDN = rData.dataName ();
-		auto strDN = rData.memberName ();
+
 		std::stringstream ss;
-		std::string sizeName = "m_";
-		sizeName += pDN;
-		sizeName += "Num";
-		auto& numName= sizeName;
 		bool  haveSize  = rData.haveSize ();
 		if (haveSize) {
 			std::string strST = "udword";
@@ -582,7 +514,9 @@ int   msgGen:: genOnceData (structFile& rS, dataFile& rData, std::string& strOut
 			if (wordSize) {
 				strST = "uword";
 			}
-			
+			std::string sizeName = "m_";
+			sizeName += pDN;
+			sizeName += "Num";
 			ss<<"    " << strST<<"    "<<sizeName<<";"<<std::endl;
 			
 			procDataCheck (pStructName, sizeName.c_str(), false);
@@ -592,12 +526,9 @@ int   msgGen:: genOnceData (structFile& rS, dataFile& rData, std::string& strOut
 		
 		auto pDT = rData.dataType ();
 		ss <<"    "<<pDT<<"    m_"<<pDN;
-
-		auto& rStMap = tSingleton <structFileMgr>::single ().structS ();
 		auto len = rData.dataLength ();
 		if (len) {
 			ss<<" ["<<len<<"]";
-			auto  bString = true;
 			procDataCheck (pStructName, dDataName.c_str(), true);
 			if (0 == strcmp (pDT, "char")) {
 				protoStr<<"	string "<<pDN<<" = "<<nIndex<<";"<<std::endl;
@@ -613,79 +544,16 @@ int   msgGen:: genOnceData (structFile& rS, dataFile& rData, std::string& strOut
 						strDT = it->second;
 					}
 					protoStr<<"	repeated "<<strDT<<" "<<pDN<<" = "<<nIndex<<";"<<std::endl;
-					bString = false;
 				}
 			}
-			if (bString) {
-				if (haveSize) {
-					fromOs<<"	pU->"<<numName<<" = (decltype(pU->"<<numName<<"))(rPb."<<pDN<<"().size())"<<std::endl;
-				}
-				auto zeroEnd = rData.zeroEnd ();
-				if (zeroEnd) {
-					fromOs<<"	strNCpy (pU->"<<strDN<<", sizeof (pU->"<<strDN<<"), rPb."<<pDN<<"().c_str())"<<std::endl;
-					toOs<<"	msgPb.set_"<<pDN<<" ((char*)(pU->"<<strDN<<"));"<<std::endl;
-				} else {
-					fromOs<<"	memcpy (pU->"<<strDN<<",  msgPb."<<pDN<<".data(), rPb."<<pDN<<"().size());"<<std::endl;
-					toOs<<"	msgPb.set_"<<pDN<<" ((char*)(pU->"<<strDN<<"), sizeof(pU->"<<strDN<<"));"<<std::endl;
-				}
-			} else {
-				if (haveSize) {
-					fromOs<<"	pU->"<<numName<<" = (decltype(pU->"<<numName<<"))(rPb."<<pDN<<"_size())"<<std::endl;
-				}
-
-				std::string strDT = pDT;
-				auto it = rPTS.find (pDT);
-				if (it == rPTS.end ()) {
-					strDT += "Proto";
-					auto ite = rStMap.find (pDT);
-					myAssert (ite != rStMap.end ());
-					auto subForFuN = ite->second->fromPbFuName ();
-					auto subToFuN = ite->second->toPbFuName ();
-
-					fromOs<<R"(
-		auto    nSize = rPb.)"<<pDN<<R"((_size ());
-		myAssert (nSize <= )"<<len<<R"();
-		for (int i = 0; i < nSize; i++) {
-			)"<<subForFuN<<"(pU->"<<strDN<<"[i], rPb."<<pDN<<R"((i)));
-		}
-		)";
-					toOs<<R"(
-		for (int i = 0; i < )"<<len<<R"(; i++) {
-			)"<<subToFuN<<"(pU->"<<strDN<<"[i], *rPb.add_"<<pDN<<R"(());
-		}
-		)";
-				} else {
-					strDT = it->second;
-					fromOs<<R"(
-		auto    nSize = rPb.)"<<pDN<<R"((_size ());
-		myAssert (nSize <= )"<<len<<R"();
-		for (int i = 0; i < nSize; i++) {
-			pU->)"<<strDN<<"[i] = rPb."<<pDN<<R"((i);
-			)
-		}
-		)";
-					toOs<<R"(
-		for (int i = 0; i < )"<<len<<R"(; i++) {
-			rPb.add_)"<<pDN<<R"((pU->)"<<strDN<<R"([i]);
-		}
-		)";
-
-				} //else
-			} //else
-		} else {  // !if(len)
+		} else {
 			procDataCheck (pStructName, dDataName.c_str(), false);
 			std::string strDT = pDT;
 			auto it = rPTS.find (pDT);
 			if (rPTS.end () == it) {
 				strDT += "Proto";
-					auto subForFuN = rS.fromPbFuName ();
-					auto subToFuN = rS.toPbFuName ();
-					fromOs<<"	"<<subForFuN<<"(pU->"<<strDN<<", rPb."<<pDN<<"());"<<std::endl;
-					toOs<<"	"<<subToFuN<<"(pU->"<<strDN<<", *rPb.mutable_"<<pDN<<"());"<<std::endl;
 			} else {
 				strDT = it->second;
-				fromOs<<"	pU->"<<strDN<<" = rPb."<<pDN<<"();"<<std::endl;
-				toOs<<"	rPb.set_"<<pDN<<" (pU->"<<strDN<<");"<<std::endl;
 			}
 			protoStr<<"	"<<strDT<<" "<<pDN<<" = "<<nIndex<<";"<<std::endl;
 		}
@@ -713,11 +581,8 @@ int   msgGen:: genOnceMsgClassH (msgFile& rMsg, std::string& strOut)
 		std::stringstream ss;
 		structFile* pSA = (structFile *)&rMsg;
 		std::string strOutS;
-		std::string&  strSerializeOut = this->strSerializeOut ();
-		auto nR = genOnceStruct (*pSA, strOutS, m_protoOs, strSerializeOut);
+		auto nR = genOnceStruct (*pSA, strOutS, m_protoOs);
 		myAssert (0 == nR);
-		// auto& rPbc = pbcOs ();
-		// rPbc<<strPbChangeOut;
 		if (!strOutS.empty ()) {
 			ss<<strOutS;
 		}
@@ -735,21 +600,12 @@ public:
 			auto &rDv = rMsg.dataOrder ();
 			if (!rDv.empty ()) {
 				auto enStructBadyType = rConfig.structBadyType ();
-				bool stPowerCom = rMsg.powerCom ();
-				bool bWCom = false;
-				if (structBadyTime_com == enStructBadyType) {
-					bWCom = true;
-				} if (structBadyTime_proto == enStructBadyType) {
-					if (stPowerCom) {
-						bWCom = true;
-					} else {
-						ss<<R"(packetHead*   toPack() override;
-						bool fromPack(packetHead* p) override;
+				bool bWProto = ((structBadyTime_proto == enStructBadyType) && rMsg.canProto ());
+				if (bWProto) {
+					ss<<R"(packetHead*   toPack() override;
+	bool fromPack(packetHead* p) override;
 	)";
-
-					}
-				}
-				if (bWCom) {
+				} else {
 					auto& rData = *(rDv.rbegin ()->get ());
 					auto len = rData.dataLength ();
 					if (len) {
@@ -759,9 +615,15 @@ public:
 						}
 					}
 				}
+				if (structBadyTime_com == enStructBadyType ) {
+					
+				} else {
+					ss<<R"(packetHead*   toPack() override;)";
+				}
+				
 			}
-		}
-		ss<<R"(
+			}
+			ss<<R"(
 };
 )";
 	strOut = ss.str ();
@@ -818,26 +680,6 @@ os<<R"(#endif
     return nRet;
 }
 
-const char*  msgGen:: protoSerFileName ()
-{
-    return m_protoSerFileName.get ();
-}
-
-void  msgGen:: setProtoSerFileName (const char* v)
-{
-    strCpy (v, m_protoSerFileName);
-}
-
-const char*  msgGen:: comSerFileName ()
-{
-    return m_comSerFileName.get ();
-}
-
-void  msgGen:: setComSerFileName (const char* v)
-{
-    strCpy (v, m_comSerFileName);
-}
-
 int   msgGen:: genOnceRpcCpp (msgGroupFile& rG)
 {
     int   nRet = 0;
@@ -863,7 +705,12 @@ int   msgGen:: genOnceRpcCpp (msgGroupFile& rG)
 #include "msgGroupId.h"
 )";
 
-	
+	auto& rPmp = m_rPmp;
+	if (bWProto) {
+		auto pPName = rPmp.pmpName ();
+		os<<R"(#include ")"<<pPName<<R"(.pb.h"
+)";
+	}
 	os<<R"(
 #include ")"<<msgGroupName<<R"(MsgId.h"
 #include ")"<<msgGroupName<<R"(Rpc.h"
@@ -872,17 +719,15 @@ packetHead* allocPacket(udword udwS);
 packetHead* allocPacketExt(udword udwS, udword ExtNum);
 )";
 
-	auto& rPmp = m_rPmp;
 	auto& rNameS =  rG.rpcNameS ();
 	auto& rMsgMgr = rPmp.msgFileS ();
-	auto& rSerOut = strSerializeOut ();
 	for (auto it = rNameS.begin (); rNameS.end () != it; ++it) {
 		std::string strN = *it;
 		strN += "Ask";
 		auto pAsk = rMsgMgr.findMsg (strN.c_str ());
 		myAssert (pAsk);
 		std::string strOut;
-		auto nR = genOnceMsgClassCpp (rG, *pAsk, false,strOut, rSerOut);	
+		auto nR = genOnceMsgClassCpp (rG, *pAsk, false,strOut);	
 		myAssert (0 == nR);
 		os<<strOut;
 		strN = *it;
@@ -890,42 +735,12 @@ packetHead* allocPacketExt(udword udwS, udword ExtNum);
 		auto pRet = rMsgMgr.findMsg (strN.c_str ());
 		if (pRet) {
 			std::string strOut;
-			auto nR = genOnceMsgClassCpp (rG, *pRet, true, strOut, rSerOut);	
+			auto nR = genOnceMsgClassCpp (rG, *pRet, true, strOut);	
 			myAssert (0 == nR);
 			os<<strOut;
 		}
 	}
 
-	if (enStructBadyType == structBadyTime_com) {
-		auto strSerFile = comSerFileName ();
-		std::ofstream ofSer (strSerFile);
-		myAssert (ofSer);
-		ofSer<<R"(
-#include ")"<<msgGroupName<<R"(MsgId.h"
-#include ")"<<msgGroupName<<R"(Rpc.h"
-
-packetHead* allocPacket(udword udwS);
-packetHead* allocPacketExt(udword udwS, udword ExtNum);
-)";
-		ofSer<<rSerOut;
-	} else if (enStructBadyType == structBadyTime_proto) {
-		auto strSerFile = protoSerFileName ();
-		std::ofstream ofSer (strSerFile);
-		myAssert (ofSer);
-		auto& rPmp = m_rPmp;
-		auto pPName = rPmp.pmpName ();
-		ofSer<<R"(#include ")"<<pPName<<R"(.pb.h"
-
-#include ")"<<msgGroupName<<R"(MsgId.h"
-#include ")"<<msgGroupName<<R"(Rpc.h"
-
-packetHead* allocPacket(udword udwS);
-packetHead* allocPacketExt(udword udwS, udword ExtNum);
-)";
-		ofSer<<rSerOut;
-	} else {
-		myAssert (0);
-	}
     } while (0);
     return nRet;
 }
@@ -985,10 +800,7 @@ int  msgGen:: msgStructGen ()
 			auto& rS = *(it->get ());
 			std::string strS;
 			std::string protoStr;
-			std::string&  strSerializeOut = this->strSerializeOut ();
-			genOnceStruct (rS, strS, m_protoOs, strSerializeOut);
-			// auto& rPbc = pbcOs ();
-			// rPbc<<strPbChangeOut;
+			genOnceStruct (rS, strS, m_protoOs);
 			os << strS;
 		}
 		os<<std::endl<<"#endif"<<std::endl;
@@ -1002,7 +814,6 @@ int  msgGen:: CMakeListGen ()
     do {
 		auto& rGlobal = tSingleton <globalFile>::single ();
 		auto& rPmp = m_rPmp;
-		auto& rConfig = tSingleton <configMgr>::single ();
 		auto projectHome = rGlobal.projectHome ();
 		std::string strFilename = projectHome;
 		auto pPmpName = rPmp.pmpName ();
@@ -1026,23 +837,7 @@ int  msgGen:: CMakeListGen ()
 			<<R"(
 set(srcS)
 set(genSrcS)
-set(serFile)
-)";
-
-		auto bt = rConfig.structBadyType ();
-		if (bt == structBadyTime_com) {
-			auto pFile = comSerFileName ();
-			os<<R"(list(APPEND serFile )"<<pFile<<R"()
-			)";
-		} else if (bt == structBadyTime_proto) {
-			auto pFile = protoSerFileName ();
-			os<<R"(list(APPEND serFile )"<<pFile<<R"( src/protobuf/*.cc)
-			)";
-		} else {
-			myAssert (0);
-		}
-os<<R"(
-file(GLOB srcS src/*.cpp)
+file(GLOB srcS src/*.cpp src/protobuf/*.cc)
 set(defS)
 set(srcOS)
 if (UNIX)
@@ -1060,17 +855,25 @@ elseif (WIN32)
 		${depLibHome}
 		)
 endif ()
-add_library(${prjName} ${genSrcS} ${srcS} ${srcOS} ${defS} ${serFile})
+add_library(${prjName} ${genSrcS} ${srcS} ${srcOS} ${defS})
 target_include_directories(${prjName} PUBLIC 
 							src
 							)";
+							//auto prjName = rTool.projectName ();
 							os<<framePath<<"include/appFrame"<<std::endl;
 
-	bool bWProto = ((structBadyTime_proto == bt));
+	auto& rConfig = tSingleton<configMgr>::single ();
+	auto enStructBadyType = rConfig.structBadyType ();
+	bool bWProto = ((structBadyTime_proto == enStructBadyType));
 	if (bWProto) {
 		os<<R"(src/protobuf
-							)";
+							)"
 	}
+							/*
+							${frameHome}/common/src
+							${frameHome}/logicCommon/src
+							${frameHome}/cLog/src
+							*/
                            os<<R"(
 						   )
 target_link_libraries(${prjName} PUBLIC  common logicCommon)
@@ -1234,15 +1037,5 @@ const char*  msgGen:: protoDir ()
 void  msgGen:: setProtoDir (const char* v)
 {
     strCpy (v, m_protoDir);
-}
-
-std::stringstream&  msgGen:: pbcOs ()
-{
-    return m_pbcOs;
-}
-
-std::string&  msgGen:: strSerializeOut ()
-{
-    return m_strSerializeOut;
 }
 

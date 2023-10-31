@@ -79,7 +79,7 @@ int   xmlGlobalLoad:: secondProcess ()
     return nRet;
 }
 static const char* s_comMsg = R"(<?xml version='1.0' encoding='utf-8' ?>
-<servers>
+	<powerCom>1</powerCom>
 	<struct>
 	</struct>
 	<rpc>
@@ -137,7 +137,7 @@ static const char* s_comMsg = R"(<?xml version='1.0' encoding='utf-8' ?>
 			</ntfExit>
 		</comMsg >
 	</rpc>
-</servers>)";
+)";
 
 int  xmlGlobalLoad::xmlLoad (const char* szFile)
 {

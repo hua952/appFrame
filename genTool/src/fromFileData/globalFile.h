@@ -13,6 +13,8 @@ public:
     ~globalFile ();
 	// using msgFileV = std::vector<std::string>;
 	using msgFileV = std::map<std::string, std::shared_ptr<msgPmpFile>>;
+
+	using protoDataTypeMap = std::map<std::string, std::string>;
 	/*
 	const char*  frameBinPath ();
 	void  setFrameBinPath (const char* v);
@@ -49,7 +51,10 @@ public:
 	bool haveServer (); 
     const char*  thirdPartyDir ();
     void  setThirdPartyDir (const char* v);
+	void  initProtoDataTypeS ();
+	protoDataTypeMap&  protoDataTypeS ();
 private:
+	protoDataTypeMap  m_protoDataTypeS;
     std::unique_ptr <char[]>  m_thirdPartyDir;
 	std::vector<std::string>  m_rootServerS;
     std::unique_ptr <char[]>  m_installPath;

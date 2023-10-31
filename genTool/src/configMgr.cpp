@@ -4,6 +4,7 @@
 configMgr:: configMgr ()
 {
 	m_reProc = false;
+	m_structBadyType = structBadyTime_com;
 }
 
 configMgr:: ~configMgr ()

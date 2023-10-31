@@ -38,7 +38,7 @@ packetHead*  CMsgBase::getPack()const
 
 packetHead* CMsgBase::pop()
 {
-	packetHead* p = toPack();
+	packetHead* p = m_pPacket; //toPack();
     m_pPacket = NULL;
 	return p;
 }

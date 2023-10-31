@@ -22,13 +22,15 @@ public:
 	void  setZeroEnd (bool v);
 	const char*  commit ();
 	void  setCommit (const char* v);
+	const char*  memberName ();
+	void  setMemberName (const char* v);
 private:
+	std::unique_ptr <char[]>  m_memberName;
+	std::unique_ptr <char[]>  m_dataType;
+	std::unique_ptr <char[]>  m_dataName;
+	bool  m_wordSize;std::unique_ptr <char[]>  m_commit;
 	int  m_dataLength;
 	bool  m_zeroEnd;
 	bool  m_haveSize;
-	bool  m_wordSize;
-	std::unique_ptr <char[]>  m_dataType;
-	std::unique_ptr <char[]>  m_dataName;
-	std::unique_ptr <char[]>  m_commit;
 };
 #endif

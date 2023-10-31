@@ -6,6 +6,7 @@
 
 globalFile:: globalFile ()
 {
+	initProtoDataTypeS ();
 }
 
 globalFile:: ~globalFile ()
@@ -191,4 +192,34 @@ std::vector<std::string>&  globalFile:: rootServerS ()
     return m_rootServerS;
 }
 
+
+globalFile::protoDataTypeMap&  globalFile:: protoDataTypeS ()
+{
+    return m_protoDataTypeS;
+}
+
+void   globalFile:: initProtoDataTypeS ()
+{
+    do {
+		auto& rTS = protoDataTypeS ();
+		rTS ["double"] = "double";
+		rTS ["float"] = "float";
+		rTS ["int32"] = "int32";
+		rTS ["int"] = "int32";
+		rTS ["sort"] = "int32";
+		rTS ["dword"] = "int32";
+		rTS ["word"] = "int32";
+		rTS ["char"] = "int32";
+		rTS ["int64"] = "int64";
+		rTS ["qword"] = "int64";
+
+		rTS ["uint32"] = "uint32";
+		rTS ["udword"] = "uint32";
+		rTS ["uword"] = "uint32";
+		rTS ["ubyte"] = "uint32";
+		rTS ["uint64"] = "uint64";
+		rTS ["uqword"] = "uint64";
+
+    } while (0);
+}
 

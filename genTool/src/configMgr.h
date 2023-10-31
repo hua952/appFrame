@@ -7,7 +7,6 @@
 enum structBadyType
 {
 	structBadyTime_com = 0,
-	structBadyTime_check = 1,
 	structBadyTime_proto = 2
 };
 class configMgr:public argMgr 

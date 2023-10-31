@@ -1,5 +1,6 @@
 #include "dataFile.h"
 #include "strFun.h"
+#include <string>
 
 dataFile:: dataFile ()
 {
@@ -21,6 +22,19 @@ const char*  dataFile:: dataName ()
 void  dataFile:: setDataName (const char* v)
 {
     strCpy (v, m_dataName);
+	std::string strM = "m_";
+	strM += v;
+	setMemberName (strM.c_str());
+}
+
+const char*  dataFile:: memberName ()
+{
+    return m_memberName.get ();
+}
+
+void  dataFile:: setMemberName (const char* v)
+{
+    strCpy (v, m_memberName);
 }
 
 const char*  dataFile:: dataType ()

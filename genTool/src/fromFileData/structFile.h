@@ -20,7 +20,27 @@ public:
 	dataV&  dataOrder ();
 	dataMap&  dataS ();
 	bool   hasData ();
+	/*
+	bool  canProto ();
+	void  setCanProto (bool v);
+	*/
+	const char*  fromPbFuName ();
+	void  setFromPbFuName (const char* v);
+	const char*  fromPbFuFullName ();
+	void  setFromPbFuFullName (const char* v);
+	const char*  toPbFuFullName ();
+	void  setToPbFuFullName (const char* v);
+	const char*  toPbFuName ();
+	void  setToPbFuName (const char* v);
+	bool  powerCom ();
+	void  setPowerCom (bool v);
 private:
+	bool  m_powerCom;
+	std::unique_ptr <char[]>  m_toPbFuName;
+	std::unique_ptr <char[]>  m_toPbFuFullName;
+	std::unique_ptr <char[]>  m_fromPbFuFullName;
+	std::unique_ptr <char[]>  m_fromPbFuName;
+	// bool  m_canProto;
 	dataMap  m_dataS;
 	dataV  m_dataOrder;
 	std::unique_ptr <char[]>  m_commit;
