@@ -1,5 +1,6 @@
 #include "msgPmpFile.h"
 #include "strFun.h"
+#include <string>
 
 msgPmpFile:: msgPmpFile ()
 {
@@ -47,6 +48,9 @@ const char*  msgPmpFile:: pmpName ()
 void  msgPmpFile:: setPmpName (const char* v)
 {
     strCpy (v, m_pmpName);
+	std::string strS = v;
+	strS += "SerializePackFunS";
+	setSerializePackFunStName (strS.c_str());
 }
 
 msgPmpFile::msgFileV&  msgPmpFile:: msgDefFileS ()
@@ -54,4 +58,14 @@ msgPmpFile::msgFileV&  msgPmpFile:: msgDefFileS ()
     return m_msgDefFileS;
 }
 
+
+const char*  msgPmpFile:: serializePackFunStName ()
+{
+    return m_serializePackFunStName.get ();
+}
+
+void  msgPmpFile:: setSerializePackFunStName (const char* v)
+{
+    strCpy (v, m_serializePackFunStName);
+}
 

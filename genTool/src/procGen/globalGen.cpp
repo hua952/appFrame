@@ -4,6 +4,7 @@
 #include "fromFileData/globalFile.h"
 #include "fromFileData/appFile.h"
 #include "fromFileData/appFileMgr.h"
+#include "protobufSerGen.h"
 #include "tSingleton.h"
 #include "appGen.h"
 #include "msgGen.h"
@@ -36,6 +37,13 @@ int   globalGen:: startGen ()
 		nR = 0;
 		auto &rGlobal = tSingleton<globalFile>::single();
 		auto bH = rGlobal.haveServer ();
+		protobufSerGen  protoGen;
+		nR = protoGen.startGen ();
+		if (nR) {
+			rError ("projectGen.startGen error nR = "<<nR);
+			nRet = 2;
+			break;
+		}
 		std::vector <std::shared_ptr<msgGen>> gv;
 		if (bH) {
 			auto &rPmpS = rGlobal.msgFileS ();

@@ -58,7 +58,7 @@ int CModule::load(int nArgC, char** argS, ForLogicFun* pForLogic)
 		getCurModelPath (t);
 		strPath = t.get();
 	}
-	strPath += "/";
+	strPath += "/bin/";
 	strPath += szName;
 	strPath += dllExtName();
 	auto hdll = loadDll (strPath.c_str());

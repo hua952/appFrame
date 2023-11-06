@@ -18,19 +18,40 @@ CMsgBase::CMsgBase():m_pPacket(NULL)
 CMsgBase::CMsgBase(packetHead* p):m_pPacket(p)
 {
 }
-
-packetHead*  CMsgBase::toPack()
+/*
+void CMsgBase:: unZip()
 {
-    return m_pPacket;
+    do {
+		auto pN = P2NHead(m_pPacket);
+		if (NIsZip(pN)) {
+			fromPack ();
+			pN = P2NHead(m_pPacket);
+			NSetUnZip(pN);
+		}
+    } while (0);
 }
 
-bool CMsgBase::fromPack(packetHead* p)
+void  CMsgBase:: zip()
 {
-	releasePack(m_pPacket);
-	m_pPacket = p;
-	return true;
+	auto pN = P2NHead(m_pPacket);
+    do {
+		if (!NIsZip(pN)) {
+			toPack();
+			pN = P2NHead(m_pPacket);
+			NSetZip(pN);
+		}
+    } while (0);
+}
+int CMsgBase::toPack()
+{
+    return 0;
 }
 
+int CMsgBase::fromPack()
+{
+	return 0;
+}
+*/
 packetHead*  CMsgBase::getPack()const
 {
 	return m_pPacket;
@@ -80,7 +101,7 @@ packetHead* allocPacket(udword udwS)
 
 packetHead* allocPacketExt(udword udwS, udword ExtNum)
 {
-	auto pRet =  allocPacket (udwS + 16 * ExtNum);
+	auto pRet =  allocPacket (udwS + sizeof(packetHead) * ExtNum);
 	if (ExtNum) {
 		pNetPacketHead pN = P2NHead(pRet);
 		NSetExtPH(pN);
@@ -88,15 +109,38 @@ packetHead* allocPacketExt(udword udwS, udword ExtNum)
 	return pRet;
 }
 
+packetHead* clonePack(packetHead* p)
+{
+	auto pN = P2NHead(p);
+	udword extNum = NIsExtPH(pN)?1:0;
+	auto pRet = allocPacketExt (pN->udwLength, extNum);
+	auto pRN = P2NHead(pRet);
+	auto udwLength = pN->udwLength;
+	*pRN++ = *pN++;
+	if (udwLength ) {
+		memcpy (pRN, pN, udwLength);
+	}
+	return pRet;
+}
+
+/*
 static ForMsgModuleFunS* g_ForMsgModuleFunS = nullptr;
 void              setForMsgModuleFunS (ForMsgModuleFunS* pFunS)
 {
 	g_ForMsgModuleFunS = pFunS;
 }
+*/
+ForMsgModuleFunS* s_pForMsgModuleFunS = nullptr;
+
+void setForMsgModuleFunS(ForMsgModuleFunS* pF)
+{
+	s_pForMsgModuleFunS = pF;
+}
 
 ForMsgModuleFunS& getForMsgModuleFunS()
 {
-	static ForMsgModuleFunS s_ForMsgModuleFunS;
-	return  s_ForMsgModuleFunS;
+	return *s_pForMsgModuleFunS;
+	// static ForMsgModuleFunS s_ForMsgModuleFunS;
+	// return  s_ForMsgModuleFunS;
 	//return *g_ForMsgModuleFunS;
 }

@@ -72,5 +72,6 @@ int main (int argNum, char* argS[])
 			break;
 		}
 	} while (0);
+	std::cout<<" tool will end nRet = "<<nRet<<std::endl;
 	return nRet;
 }

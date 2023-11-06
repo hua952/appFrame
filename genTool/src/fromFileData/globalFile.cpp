@@ -3,6 +3,8 @@
 #include "appFileMgr.h"
 #include "tSingleton.h"
 #include "appFile.h"
+#include "comFun.h"
+#include "myAssert.h"
 
 globalFile:: globalFile ()
 {
@@ -61,6 +63,7 @@ const char* globalFile:: projectHome ()
 void  globalFile::setProjectHome (const char* v)
 {
     strCpy (v, m_projectHome);
+	reSetProjectInstallDir ();
 }
 
 const char*   globalFile:: frameLibPath ()
@@ -117,18 +120,28 @@ const char*  globalFile:: projectName ()
 void  globalFile:: setProjectName (const char* v)
 {
     strCpy (v, m_projectName);
-}
-/*
-const char*  globalFile:: installPath ()
-{
-    return m_installPath.get ();
+	reSetProjectInstallDir ();
 }
 
-void  globalFile:: setInstallPath (const char* v)
+void  globalFile:: reSetProjectInstallDir ()
 {
-    strCpy (v, m_installPath);
+    do {
+		auto dirN = projectHome ();
+		auto nameN = projectName ();
+		if (dirN && nameN) {
+			std::unique_ptr<char[]> pUp;
+			strCpy (dirN, pUp);
+			auto bUp = upDir (pUp.get());
+			myAssert(bUp);
+			std::string str = pUp.get();
+			str += "/";
+			str += nameN;
+			str += "Install";
+			setProjectInstallDir (str.c_str());
+		}
+    } while (0);
 }
-*/
+
 const char*  globalFile:: frameInstallPath ()
 {
     return m_frameInstallPath.get ();
@@ -158,6 +171,16 @@ void  globalFile:: setThirdPartyDir (const char* v)
 	strCpy (strL.c_str(), m_depLibHome);
 }
 
+const char*  globalFile:: projectInstallDir ()
+{
+    return m_projectInstallDir.get ();
+}
+
+void  globalFile:: setProjectInstallDir (const char* v)
+{
+    strCpy (v, m_projectInstallDir);
+}
+/*
 void   globalFile:: getRealInstallPath (std::string& strPath)
 {
     do {
@@ -173,7 +196,7 @@ void   globalFile:: getRealInstallPath (std::string& strPath)
 		}
     } while (0);
 }
-
+*/
 msgPmpFile*  globalFile:: findMsgPmp (const char* szPmpName)
 {
     msgPmpFile*  nRet = nullptr;

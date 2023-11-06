@@ -83,6 +83,18 @@ int   moduleLogicServerGen:: genMgrCpp (moduleGen& rMod)
 		auto& rSS = rData.orderS ();
 		auto& rGloble = tSingleton<xmlGlobalLoad>::single ();
 		auto& rGlobleFile = tSingleton<globalFile>::single ();
+		auto& rConfig = tSingleton<configMgr>::single ();
+		auto structBadyType = rConfig.structBadyType ();
+
+		auto pPmp = rGlobleFile.findMsgPmp ("defMsg");
+		auto serializePackFunStName = pPmp->serializePackFunStName ();
+
+		std::string protoSerOs;
+		if (structBadyTime_proto == structBadyType ) {
+			protoSerOs = R"(int  setSerFunS (void* pFunS);
+			setSerFunS (pForLogic->pSerFunSPtr);)";
+		}
+		
 		auto serverNum = rSS.size ();
 		auto genPath = rMod.genPath ();
 		std::string strFilename = genPath;
@@ -115,6 +127,7 @@ os<<R"(
 #include <string>
 #include <cstring>
 #include "myAssert.h"
+#include "rpcInfo.h"
 
 struct conEndPointT 
 {
@@ -185,6 +198,8 @@ dword )"<<strMgrClassName<<R"(::afterLoad(int nArgC, char** argS, ForLogicFun* p
 {
 	dword nRet = 0;
 	do {
+		)"<<protoSerOs
+		<<R"(
 		auto& rFunS = getForMsgModuleFunS();
 		rFunS = *pForLogic;
 		auto fnCreateLoop = pForLogic->fnCreateLoop;
@@ -679,7 +694,7 @@ static void   sOutSendToChannel (bool bAsk, std::ostream& ps)
 		auto& rSidS = it->second;
 		auto bodySize = rAsk.m_packNum - NetMsgLenSize;
 		myAssert (bodySize >= 0);
-		auto  fnSendPackToLoop =  getForMsgModuleFunS ().fnSendPackToLoop;
+		auto  fnSendPackToLoop =  getForMsgModuleFunS ().fnSendPackToLoopForChannel;
 		for (auto it = rSidS.begin(); rSidS.end() != it; ++it) {
 			uqword uqwK = *it;
 			auto sessionId = (SessionIDType)(uqwK);
@@ -846,12 +861,13 @@ static int sProcMsgReg (const char* pModName, const char* serverName,
 		strMgrClassName += "ServerMgr";
 		os<<R"(
 static int )"<<pPackFun<<
-				R"((packetHead* pAsk, pPacketHead& pRet, procPacketArg* pArg)
+				R"((pPacketHead pAsk, pPacketHead& pRet, procPacketArg* pArg)
 {
 	int nRet = )"<<rProcRpc.retValue<<R"(;
     )";
-	os<<pAskMsg->msgName ()<<R"( ask (nullptr);
-    ask.fromPack(pAsk);
+	os<<pAskMsg->msgName ()<<R"( ask (pAsk);
+	// ask.unZip();
+	pAsk = ask.getPack ();
 	)";
 	bool bHaveRet = true;
 	if (bAsk) {
@@ -864,8 +880,9 @@ static int )"<<pPackFun<<
 		}
 	} else {
 		myAssert (pRetMsg);
-		os<<pRetMsg->msgName ()<<R"( ret (nullptr);
-	ret.fromPack(pRet);
+		os<<pRetMsg->msgName ()<<R"( ret (pRet);
+		// ret.unZip();
+		pRet = ret.getPack ();
 	)";
 	}
 	auto neetSe = pMsg->neetSession();
@@ -1176,7 +1193,9 @@ int )"<<pName<<R"( :: sendMsgToChannel(CMsgBase& rMsg, channelKey& chK, bool ntf
 {
 	int  nRet = 0;
     do {
-		auto pack = rMsg.toPack ();
+		// rMsg.zip();
+		// rMsg.toPack();
+		auto pack = rMsg.getPack();
 		rMsg.pop ();
 		nRet = sendPackToChannel (pack, chK, ntfMe);
     } while (0);

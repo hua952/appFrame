@@ -1,4 +1,8 @@
 # appFrame
+
+cmake .. -A x64 -Dprotobuf_BUILD_TESTS=OFF -DCMAKE_BUILD_TYPE=Release -Dprotobuf_BUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=C:/myProgram/protobufInstallMd
+cmake .. -A x64 -Dprotobuf_BUILD_TESTS=OFF -DCMAKE_BUILD_TYPE=Debug -Dprotobuf_BUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=C:/myProgram/protobufInstallMdDebug
+
 cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -DCMAKE_BUILD_TYPE=Debug  ..
 cmake cmake -DCMAKE_BUILD_TYPE=Debug ..
 level0=libcppLevel0L.so addLogic=libtestLogic.so procId=1
@@ -11,5 +15,5 @@ gcc -E server.cpp -ID:\pzh\work\include -ID:\pzh\work\appFrame\common\src -ID:\p
 genTool.exe defFile=..\..\fileS\msgdef\game.xml
 genTool.exe defFile=C:\work\appFrame\test\openWorkDir.xml
 genTool.exe defFile=C:\work\appFrame\test\test.xml
-genTool.exe defFile=C:\work\appFrame\test\testSysMsg.xml
+genTool.exe defFile=C:\work\appFrame\test\testSysMsg.xml structBadyType=1
 

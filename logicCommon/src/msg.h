@@ -29,8 +29,11 @@ public:
     CMsgBase(packetHead* p);
     CMsgBase();
     ~CMsgBase();
-	virtual bool fromPack(packetHead* p);
-    virtual packetHead*   toPack();
+
+	// void unZip();
+    // void   zip ();
+	// virtual int fromPack();
+    // virtual int toPack();
     packetHead*  pop();
 	packetHead*  getPack()const;
 protected:
@@ -57,6 +60,7 @@ extern "C"
 {
 	packetHead* allocPacket(udword udwS);
 	packetHead* allocPacketExt(udword udwS, udword ExtNum);
+	packetHead* clonePack(packetHead* p);
 	void releasePack(packetHead* p);
 }
 

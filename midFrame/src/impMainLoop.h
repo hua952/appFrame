@@ -8,6 +8,7 @@
 #include "CModule.h"
 #include "msgMgr.h"
 #include "ITcpServer.h"
+#include "mainLoop.h"
 
 class impLoop;
 class loopMgr
@@ -38,7 +39,11 @@ public:
 	void onLoopEnd(ServerIDType fId);
 	void logicOnConnect(serverIdType fId, SessionIDType sessionId, uqword userData);
 	void logicOnAccept(serverIdType	fId, SessionIDType sessionId, uqword userData);
+	serializePackFunType  fromNetPack ();
+	serializePackFunType  toNetPack ();
 private:	
+	serializePackFunType  m_toNetPack;
+	serializePackFunType  m_fromNetPack;
 	uword  m_upNum;
     udword  m_delSendPackTime;
 	msgMgr		m_defMsgInfoMgr;

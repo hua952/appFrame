@@ -28,7 +28,13 @@ public:
 	void  setAddrType (packAddrType v);
 	bool  neetSession ();
 	void  setNeetSession (bool v);
+	const char*  serFunStuFromName ();
+	void  setSerFunStuFromName (const char* v);
+	const char*  serFunStuToName ();
+	void  setSerFunStuToName (const char* v);
 private:
+	std::unique_ptr <char[]>  m_serFunStuToName;
+	std::unique_ptr <char[]>  m_serFunStuFromName;
 	bool  m_neetSession;
 	packAddrType m_addrType;
 	bool  m_extPH;

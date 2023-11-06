@@ -99,8 +99,8 @@ int  appGen:: batFileGen (appFile& rApp)
 		// bin\Debug\cppLevel0.exe level0=cppLevel0L.dll addLogic=logicModelMgr.dll logicModel=testLogic.dll logicModel=testLogicB.dll procId=0 netLib=libeventSession.dll
 		auto szAppName = rApp.appName ();
 		auto& rGlobalFile = tSingleton<globalFile>::single ();
-		std::string strInsHome;
-		rGlobalFile.getRealInstallPath (strInsHome);
+		std::string strInsHome = rGlobalFile.projectInstallDir ();
+		// rGlobalFile.getRealInstallPath (strInsHome);
 		std::string strInstall = strInsHome;
 		myMkdir (strInstall.c_str ());
 		strInstall += "/run_";
@@ -132,7 +132,7 @@ int  appGen:: batFileGen (appFile& rApp)
 		}
 		{
 			std::stringstream ts;
-			ts<<"workDir="<<strBinDir;
+			ts<<"workDir="<<strInsHome;
 			rMainArgS.push_back(ts.str());
 		}
 		std::string strLogFile = szAppName;
@@ -143,15 +143,16 @@ int  appGen:: batFileGen (appFile& rApp)
 		std::string level0Full = "level0=cppLevel0L ";
 		rMainArgS.push_back(level0Full);
 		std::string frameHomeFull = "frameHome=";
-		frameHomeFull += strInsHome;
+		auto aFreeHome = rGlobalFile.frameInstallPath();
+		frameHomeFull += aFreeHome;
 		os<<"cppLevel0.exe ";
 		os<<strLogFull<<" "<<frameHomeFull;
 		rMainArgS.push_back(frameHomeFull);
 		
-		os<<"addLogic="
+		os<<" addLogic="
 			<<szAppName<<"ModuleMgr procId="<<procId
 			<<" logFile="<<strLogFile
-			<<" workDir="<<strBinDir;
+			<<" workDir="<<strInsHome;
 		auto& rModules = rApp.moduleFileNameS ();
 		auto& rModMgr = tSingleton <moduleFileMgr>::single ();
 		for (auto it = rModules.begin (); rModules.end () != it; ++it) {

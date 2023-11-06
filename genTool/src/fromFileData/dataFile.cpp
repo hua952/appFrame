@@ -1,6 +1,7 @@
 #include "dataFile.h"
 #include "strFun.h"
 #include <string>
+#include <algorithm>
 
 dataFile:: dataFile ()
 {
@@ -25,6 +26,19 @@ void  dataFile:: setDataName (const char* v)
 	std::string strM = "m_";
 	strM += v;
 	setMemberName (strM.c_str());
+	std::string strL = v;
+	transform(strL.begin(), strL.end(), strL.begin(), ::tolower);
+	setLowerName (strL.c_str());
+}
+
+const char*  dataFile:: lowerName ()
+{
+    return m_lowerName.get ();
+}
+
+void  dataFile:: setLowerName (const char* v)
+{
+    strCpy (v, m_lowerName);
 }
 
 const char*  dataFile:: memberName ()

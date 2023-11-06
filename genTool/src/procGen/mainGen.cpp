@@ -93,6 +93,7 @@ if (UNIX)
 elseif (WIN32)
 	ADD_DEFINITIONS(/Zi)
 	ADD_DEFINITIONS(/W3)
+
 	list(APPEND libS ws2_32)
 	file(GLOB osSrc src/win/*.cpp)
 endif ()
@@ -232,10 +233,16 @@ int main(int cArg, char** argS)
 				std::stringstream ts(pRetBuf[0]);
 				std::string strKey;
 				ts>>strKey;
+				std::stringstream vs(pRetBuf[1]);
+				std::string strValue;
+				vs>>strValue;
 				if (setMut.find (strKey) == setMut.end()) {
-					kvMap.insert(std::make_pair(strKey, pRetBuf[1]));
+					kvMap.insert(std::make_pair(strKey, strValue));
 				} else {
-					vArgS.push_back(*it);
+					std::string strIn = strKey;
+					strIn += "=";
+					strIn += strValue;
+					vArgS.push_back(strIn);
 				}
 			} else {
 				vArgS.push_back(*it);

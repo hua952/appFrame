@@ -98,6 +98,7 @@ int   moduleExportFunGen:: genCpp (moduleGen& rMod)
 
 dword afterLoad(int nArgC, char** argS, ForLogicFun* pForLogic)
 {
+	setForMsgModuleFunS (pForLogic);
 	tSingleton<)"<<strMgrClassName<<R"(>::createSingleton();
 	auto &rMgr = tSingleton<)"<<strMgrClassName<<R"(>::single();
 	return rMgr.afterLoad(nArgC, argS, pForLogic);

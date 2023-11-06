@@ -3,6 +3,7 @@
 #include "msgFile.h"
 #include "strFun.h"
 #include "myAssert.h"
+#include <string>
 
 msgFile:: msgFile ()
 {
@@ -100,6 +101,33 @@ const char*  msgFile:: msgName ()
 void  msgFile:: setMsgName (const char* v)
 {
     strCpy (v, m_msgName);
+	std::string str =v;
+	str += "FromSerFun";
+	setSerFunStuFromName (str.c_str());	
+
+	str =v;
+	str += "ToSerFun";
+	setSerFunStuToName (str.c_str());	
+}
+
+const char*  msgFile:: serFunStuToName ()
+{
+    return m_serFunStuToName.get ();
+}
+
+void  msgFile:: setSerFunStuToName (const char* v)
+{
+    strCpy (v, m_serFunStuToName);
+}
+
+const char*  msgFile:: serFunStuFromName ()
+{
+    return m_serFunStuFromName.get ();
+}
+
+void  msgFile:: setSerFunStuFromName (const char* v)
+{
+    strCpy (v, m_serFunStuFromName);
 }
 
 bool  msgFile:: extPH ()

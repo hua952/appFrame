@@ -101,6 +101,43 @@ static int sSendChMsg (packetHead* pack)
 	return nRet;
 }
 
+static bool sDelNetPack (void* pUP)
+{
+	auto pArg = (std::pair<NetTokenType, impLoop*>*) pUP; 
+	auto pS = pArg->second;
+	auto pISavePack = pS->getIPackSave ();
+	auto pack = pISavePack->netTokenPackFind (pArg->first);
+	if (pack) {
+		mWarn ("pack delete by timer"<<*pack);
+		auto fnFree = tSingleton<loopMgr>::single ().getPhyCallback().fnFreePack;
+		pISavePack->netTokenPackErase (pArg->first);
+		fnFree (pack);
+	}
+	return false;
+}
+int midSendPackToLoopForChannelFun(packetHead* pack) /* 返回值貌似没用 */
+{
+	/* 发消息得起点函数 */
+	int nRet = 0; // procPacketFunRetType_del;
+	int nR = 0;
+	auto pN = P2NHead (pack);
+	auto& rMgr = tSingleton<loopMgr>::single ();
+	
+	pack->pAsk = 0;
+	auto bInOnceProc =  packInOnceProc(pack);
+	do {
+		auto objSer = pN->ubyDesServId;
+		if (!bInOnceProc) {
+			auto upN = rMgr.upNum ();
+			auto s = rand () % upN;
+			objSer = rMgr.getLoopByIndex (s)->id();
+		}
+		auto fnPushPackToLoop = tSingleton<loopMgr>::single().getPhyCallback().fnPushPackToLoop;
+		fnPushPackToLoop (objSer, pack);
+	} while (0);
+	return nRet;
+}
+
 int midSendPackToLoopFun(packetHead* pack) /* 返回值貌似没用 */
 {
 	/* 发消息得起点函数 */
@@ -108,14 +145,14 @@ int midSendPackToLoopFun(packetHead* pack) /* 返回值貌似没用 */
 	int nR = 0;
 	auto pN = P2NHead (pack);
 	auto& rMgr = tSingleton<loopMgr>::single ();
-	/*
+
 	auto curHandleFun = tSingleton<loopMgr>::single ().getPhyCallback().fnGetCurServerHandle;
 	auto curHandle = curHandleFun ();
 	if (curHandle !=  pN->ubySrcServId) {
 		mTrace ("curHandle = "<<curHandle<<"pN->ubySrcServId = "<<pN->ubySrcServId);
 	}
 	myAssert (pN->ubySrcServId == curHandle);
-	*/
+
 	auto pS = rMgr.getLoop(pN->ubySrcServId);
 	myAssert (pS);
 	bool bIsRet = NIsRet(pN);
@@ -125,10 +162,30 @@ int midSendPackToLoopFun(packetHead* pack) /* 返回值貌似没用 */
 	auto bInOnceProc =  packInOnceProc(pack);
 	do {
 		auto objSer = pN->ubyDesServId;
+		pack->pAsk = 0;
 		if (!bInOnceProc) {
 			auto upN = rMgr.upNum ();
 			auto s = rand () % upN;
 			objSer = rMgr.getLoopByIndex (s)->id();
+
+			if (!bIsRet) {
+				auto& rMsgInfoMgr = tSingleton<loopMgr>::single ().defMsgInfoMgr ();
+				auto retMsgId = rMsgInfoMgr.getRetMsg (pN->uwMsgID);
+				if (c_null_msgID != retMsgId) {
+					auto pFun = pS->findMsg(retMsgId);
+					if (pFun ) {
+						pack->pAsk = 1;  /* 告知发送线程需要保存原包 */
+						iPackSave* pISave = pS->getIPackSave ();
+						pISave->netTokenPackInsert (pack);  /* 保存pack */
+						std::pair<NetTokenType, impLoop*> pa;
+						pa.first = pN->dwToKen;
+						pa.second = pS;
+						auto delTime = 6180;
+						auto& rTimeMgr = pS->getTimerMgr ();
+						rTimeMgr.addComTimer (delTime, sDelNetPack, &pa, sizeof (pa));
+					}
+				}
+			}
 		}
 		// fnPushPackToLoop
 		auto fnPushPackToLoop = tSingleton<loopMgr>::single().getPhyCallback().fnPushPackToLoop;
@@ -178,8 +235,15 @@ static int sCreateServer (const char* szName, loopHandleType serId,
 }
 typedef void		(*freePackFT)(packetHead* pack);
 
+serializePackFunType  loopMgr:: fromNetPack ()
+{
+    return m_fromNetPack;
+}
+
 int loopMgr::init(int nArgC, char** argS, PhyCallback& info)
 {
+	m_fromNetPack = nullptr;
+	m_toNetPack = nullptr;
 	m_callbackS = info;
 	auto& forLogic = getForLogicFun();
 	g_allocPackFun = info.fnAllocPack;
@@ -190,6 +254,8 @@ int loopMgr::init(int nArgC, char** argS, PhyCallback& info)
 	forLogic.fnFreePack = sFreePack; //  info.fnFreePack;
 	forLogic.fnRegMsg = sRegMsg;
 	forLogic.fnSendPackToLoop =  midSendPackToLoopFun;
+	forLogic.fnSendPackToLoopForChannel = midSendPackToLoopForChannelFun;
+
 	forLogic.fnLogMsg = info.fnLogMsg;
 	forLogic.fnAddComTimer = sAddComTimer;//m_callbackS.fnAddComTimer;
 	forLogic.fnNextToken = info.fnNextToken;
@@ -226,6 +292,17 @@ int loopMgr::init(int nArgC, char** argS, PhyCallback& info)
 		{
 			auto& rM = m_ModuleS[i];
 			rM.load(nArgC, argS, &forLogic );
+			if (m_fromNetPack) {
+				myAssert (m_fromNetPack == forLogic.fromNetPack);
+			} else {
+				m_fromNetPack = forLogic.fromNetPack;
+			}
+			if (m_toNetPack) {
+				myAssert (m_toNetPack == forLogic.toNetPack);
+			} else {
+				m_toNetPack = forLogic.toNetPack;
+			}
+
 		}
 	}while(0);
 	return nRet;
@@ -362,7 +439,6 @@ int loopMgr::getAllLoopAndStart(serverNode* pBuff, int nBuffNum)
 		}
 		auto sid = p->id ();
 		node.handle = sid;//toHandle (pid, id);
-		regSysProcPacketFun (getForLogicFun().fnRegMsg, sid);
 	}
 
 	mTrace ("at the end nRet = "<<nRet);
@@ -402,6 +478,11 @@ int    loopMgr:: initNetServer ()
 		}
     } while (0);
     return nRet;
+}
+
+serializePackFunType loopMgr :: toNetPack ()
+{
+    return m_toNetPack;
 }
 
 uword loopMgr :: upNum ()

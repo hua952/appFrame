@@ -3,8 +3,10 @@
 #include "comFun.h"
 #include "fromFileData/appFile.h"
 #include "fromFileData/globalFile.h"
+#include "fromFileData/msgPmpFile.h"
 #include "tSingleton.h"
 #include "rLog.h"
+#include "configMgr.h"
 #include <string>
 #include <fstream>
 #include <vector>
@@ -96,7 +98,12 @@ int   moduleMgrGen:: writeCMakeLists (appFile& rApp)
 			break;
 		}
 		auto& rGlobalFile = tSingleton<globalFile>::single ();
-		// auto installPath = rGlobalFile.installPath ();
+		auto& rConfig = tSingleton<configMgr>::single ();
+		auto structBadyType = rConfig.structBadyType ();
+		std::string strProtobufSer;
+		if (structBadyTime_proto == structBadyType) {
+			strProtobufSer = "protobufSer";
+		}
 		std::string mgrName = rApp.appName ();
 		mgrName += "ModuleMgr";
 os<<"SET(prjName "<<mgrName<<")"<<std::endl;
@@ -115,6 +122,7 @@ elseif (WIN32)
 	MESSAGE(STATUS "windows")
 	ADD_DEFINITIONS(/Zi)
 	ADD_DEFINITIONS(/W2)
+
 	file(GLOB defS src/gen/win/*.def)
 	file(GLOB osSrc src/win/*.cpp)
 	include_directories()";
@@ -131,12 +139,8 @@ elseif (WIN32)
 	auto prjName = rGlobalFile.projectName ();
 	os<<szC2<<std::endl
 	<<"    ${CMAKE_SOURCE_DIR}/defMsg/src"<<std::endl
-	<<"    "<<frameInPath<<"include/"<<prjName<<std::endl
-	/*
-	<<"    "<<framePath<<"common/src"<<std::endl
-	<<"    "<<framePath<<"logicCommon/src"<<std::endl
-	<<"    "<<framePath<<"cLog/src"<<std::endl
-	*/
+	<<"    "<<frameInPath<<"include/appFrame"<<std::endl
+	
 	<<")"<<std::endl;
 
 	auto libPath = rGlobalFile.frameLibPath ();
@@ -145,6 +149,7 @@ elseif (WIN32)
 	add_library(${prjName} SHARED ${genSrcS} ${defS} ${osSrc})
 	target_link_libraries(${prjName} PUBLIC
 	common
+	)"<<strProtobufSer<<R"(
 	logicCommon
 	cLog
 	)";
@@ -158,8 +163,6 @@ elseif (WIN32)
 	SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 	install(TARGETS ${prjName} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 	)";
-	// os<<szC3;
-	// SET(LIBRARY_OUTPUT_PATH )"<<outPath<<R"())";
 	} while (0);
     return nRet;
 }
@@ -259,6 +262,7 @@ int   moduleMgrGen:: writeExportFunCpp ()
 os<<R"(
 dword afterLoad(int nArgC, char** argS, ForLogicFun* pForLogic)
 {
+	setForMsgModuleFunS (pForLogic);
 	tSingleton<allLogicServerMgr>::createSingleton();
 	auto &rMgr = tSingleton<allLogicServerMgr>::single();
 	return rMgr.afterLoad(nArgC, argS, pForLogic);
@@ -322,6 +326,7 @@ int   moduleMgrGen:: writeLogicServerH ()
 #include "mainLoop.h"
 #include <string>
 #include <map>
+#include "arrayMap.h"
 
 class logicServer;
 class allLogicServerMgr
@@ -354,10 +359,15 @@ private:
     return nRet;
 }
 
+
 int   moduleMgrGen:: writeLogicServerCpp ()
 {
     int   nRet = 0;
     do {
+		auto& rGlobal = tSingleton<globalFile>::single ();
+		auto pPmp = rGlobal.findMsgPmp ("defMsg");
+		auto serializePackFunStName = pPmp->serializePackFunStName ();
+
 		std::string fileName = genSrcDir ();
 		std::string logicFile = procSrcDir();
 		logicFile += "/logicFile.cpp";
@@ -380,7 +390,27 @@ int   moduleMgrGen:: writeLogicServerCpp ()
 			rError ("create file error file name is : "<<fileName.c_str ());
 			break;
 		}
-		auto& rGlobal = tSingleton<globalFile>::single ();
+		auto& rConfig = tSingleton<configMgr>::single ();
+		auto structBadyType = rConfig.structBadyType ();
+		std::stringstream strProtobufSerSS;
+		std::string strProtoSerInc;
+		if (structBadyTime_proto == structBadyType) {
+			strProtoSerInc = R"(#include ")";
+			strProtoSerInc += serializePackFunStName;
+			strProtoSerInc += R"(.h")";
+			strProtobufSerSS<<R"(	static )"<<serializePackFunStName<<R"(   s_FunS;
+			int  getSerializeFunS ()"<<serializePackFunStName<<R"(* pFunS, ForLogicFun* pForLogic);
+			getSerializeFunS (&s_FunS, pForLogic);
+			auto serNum = sizeof (s_FunS) / sizeof (pSerializePackFunType3);
+			if (serNum) {
+				s_SerFunSet.init ((pSerializePackFunType3*)(&s_FunS), serNum);
+			}
+			m_ForLogicFun.pSerFunSPtr = &s_FunS;
+			pForLogic->fromNetPack = sFromNetPack;
+			pForLogic->toNetPack = sToNetPack;
+	)";
+		}
+
 		os<<R"(#include <iostream>
 #include <string>
 #include "allLogicServerMgr.h"
@@ -388,7 +418,7 @@ int   moduleMgrGen:: writeLogicServerCpp ()
 #include "msg.h"
 #include "gLog.h"
 #include "myAssert.h"
-)";
+)"<<strProtoSerInc<<std::endl;
 auto bH = rGlobal.haveServer ();
 if (bH) {
 	os<<R"(#include "loopHandleS.h"
@@ -399,9 +429,73 @@ os<<R"(
 #include "strFun.h"
 #include "comFun.h"
 #include "modelLoder.h"
+#include "mainLoop.h"
 #include <string>
 #include <sstream>
 #include <vector>
+
+// typedef serializePackFunType pSerializePackFunType3[3];
+struct pSerializePackFunType3
+{
+	serializePackFunType f[3];
+};
+
+class pSerializePackFunType3Cmp 
+{
+public:
+	bool operator () (const pSerializePackFunType3& a, const pSerializePackFunType3& b) const
+	{
+		return a.f[0] < b.f[0];
+	}
+};
+
+using  msgSerFunSet = arraySet<pSerializePackFunType3, pSerializePackFunType3Cmp>;
+static msgSerFunSet s_SerFunSet;
+
+static pSerializePackFunType3* sGetNode (udword msgId)
+{
+	auto & rArr = s_SerFunSet;
+	pSerializePackFunType3 temp;
+	temp.f[0] = (serializePackFunType)msgId;
+	auto pRet = rArr.GetNode (temp);
+	return pRet;
+}
+
+static int sFromNetPack (packetHead* p, pPacketHead& pNew)
+{
+	int nRet = 0;
+	do {
+		myAssert (p);
+		auto pN = P2NHead(p);
+		auto pF = sGetNode (pN->uwMsgID);
+		if (pF) {
+			auto fun = (*pF).f[1];
+			auto nR = fun (p, pNew);
+			if (nR) {
+				nRet = 2;
+			}	
+		}
+	} while (0);
+	return nRet;
+}
+
+static int sToNetPack (packetHead* p, pPacketHead& pNew)
+{
+	int nRet = 0;
+	do {
+		myAssert (p);
+		auto pN = P2NHead(p);
+		auto pF = sGetNode (pN->uwMsgID);
+		if (pF) {
+			auto fun = (*pF).f[2];
+			auto nR = fun (p, pNew);
+			if (nR) {
+				nRet = 2;
+			}
+		}
+	} while (0);
+	return nRet;
+}
 
 void getModelS (int nArgC, char** argS, std::vector<std::string>& vModelS,
 	std::string& strWorkDir, bool& dumpMsg, std::unique_ptr<char[]>& checkMsg)
@@ -474,6 +568,7 @@ dword allLogicServerMgr::afterLoad(int nArgC, char** argS, ForLogicFun* pForLogi
 {
 	dword nRet = 0;
 	m_ForLogicFun = *pForLogic;
+	)"<<strProtobufSerSS.str()<<R"(
 	auto pForMsg = &m_ForLogicFun;
 	auto& rFunS = getForMsgModuleFunS();
 	rFunS = *pForLogic;
@@ -516,6 +611,7 @@ os<<R"(
 		os<<R"(auto& modS = moduleS ();
 		for (auto it = vModelS.begin (); vModelS.end () != it; ++it) {
 			std::string strDll = strWorkDir;
+			strDll += "/bin/";
 			strDll += *it;
 			strDll += dllExtName();
 			gInfo ("will load "<<strDll.c_str ());

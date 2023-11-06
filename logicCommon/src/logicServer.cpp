@@ -75,7 +75,9 @@ int logicServer:: sendMsg (CMsgBase& rMsg)
 {
     int  nRet = 0;
     do {
-		auto pack = rMsg.toPack ();
+		//rMsg.zip();
+		// rMsg.toPack();
+		auto pack = rMsg.getPack();
 		auto nR = sendPack (pack);
 		if (!nR) {
 			rMsg.pop ();
@@ -88,7 +90,9 @@ int logicServer:: sendToServer (CMsgBase& rMsg, loopHandleType handle)
 {
     int  nRet = 0;
     do {
-		auto pack = rMsg.toPack ();
+		// rMsg.zip();
+		// rMsg.toPack();
+		auto pack = rMsg.getPack();
 		auto nR = sendPackToServer  (pack, handle);
 		if (!nR) {
 			rMsg.pop ();
@@ -135,7 +139,9 @@ int   logicServer:: sendMsgToSomeServer(CMsgBase& rMsg, serverIdType* pSerS, udw
 {
     int  nRet = 0;
     do {
-		auto pack = rMsg.toPack ();
+		// rMsg.zip();
+		// rMsg.toPack();
+		auto pack = rMsg.getPack();
 		auto nR = sendPackToSomeServer(pack, pSerS, serverNum);
 		if (!nR) {
 			rMsg.pop ();
@@ -157,6 +163,7 @@ int   logicServer:: sendPackToSomeServer(packetHead* pack, serverIdType* pSerS, 
 				continue;
 			}
 			auto p = allocPacket (pN->udwLength);
+			*p = *pack;
 			auto pNN = P2NHead (p);
 			memcpy (pNN, pN, pN->udwLength + NetHeadSize);
 			pNN->ubyDesServId = pSerS[i];
@@ -216,7 +223,9 @@ int logicServer:: sendMsgToSomeLocalServer(CMsgBase& rMsg, serverIdType* pSerS, 
 {
     int nRet = 0;
     do {
-		auto pack = rMsg.toPack ();
+		//rMsg.zip();
+		// rMsg.toPack();
+		auto pack = rMsg.getPack();
 		auto nR = sendPackToSomeLocalServer(pack, pSerS, serverNum);
 		if (!nR) {
 			rMsg.pop ();

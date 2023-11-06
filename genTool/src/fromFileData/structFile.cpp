@@ -42,7 +42,7 @@ void  structFile:: setStructName (const char* v)
 	strFrom += "& rData, ";
 	strFrom += v;
 	strFrom += "Proto& rPb)";
-	setFromPbFuFullName (strFrom.c_str ());
+	setToPbFuFullName (strFrom.c_str ());
 }
 
 const char*  structFile:: commit ()

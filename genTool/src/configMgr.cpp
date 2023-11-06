@@ -4,6 +4,7 @@
 configMgr:: configMgr ()
 {
 	m_reProc = false;
+	m_installThreadDll = false;
 	m_structBadyType = structBadyTime_com;
 }
 
@@ -48,6 +49,17 @@ void  configMgr:: onCmpKey (char* argv[])
 		procDwordA ("structBadyType", argv, m_structBadyType);
 		procStrA ("defFile", argv, m_defFile);
 		procBoolA ("reProc", argv,  m_reProc);
+		procBoolA ("installThreadDll", argv,  m_installThreadDll);
     } while (0);
+}
+
+bool  configMgr:: installThreadDll ()
+{
+    return m_installThreadDll;
+}
+
+void  configMgr:: setInstallThreadDll (bool v)
+{
+    m_installThreadDll = v;
 }
 

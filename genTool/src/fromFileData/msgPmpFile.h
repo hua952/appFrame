@@ -24,7 +24,11 @@ public:
 	const char*  pmpName ();
 	void  setPmpName (const char* v);
 	msgFileV&  msgDefFileS ();
+	const char*  serializePackFunStName ();
+	void  setSerializePackFunStName (const char* v);
 private:
+	std::unique_ptr <char[]>  m_serializePackFunStName;
+
 	msgFileV  m_msgDefFileS;
 	std::unique_ptr <char[]>  m_pmpName;
 	// std::unique_ptr <char[]>  m_defFile;

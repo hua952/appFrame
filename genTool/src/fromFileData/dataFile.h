@@ -24,7 +24,10 @@ public:
 	void  setCommit (const char* v);
 	const char*  memberName ();
 	void  setMemberName (const char* v);
+	const char*  lowerName ();
+	void  setLowerName (const char* v);
 private:
+	std::unique_ptr <char[]>  m_lowerName;
 	std::unique_ptr <char[]>  m_memberName;
 	std::unique_ptr <char[]>  m_dataType;
 	std::unique_ptr <char[]>  m_dataName;

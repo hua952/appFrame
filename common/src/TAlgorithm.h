@@ -18,9 +18,9 @@ private:
 		LessFunType leFun;
 		do{
 			ValueType TempV;
-			qword nC = (nB + nE) >> 1;
-			TempV = m_pBuff[nC];
-			m_pBuff[nC] = m_pBuff[nB];
+			// qword nC = (nB + nE) >> 1;
+			TempV = m_pBuff[nB];
+			// m_pBuff[nC] = m_pBuff[nB];
 			while(nB < nE){
 				while(nB < nE && !leFun(m_pBuff[nE], TempV))nE--;
 				m_pBuff[nB] = m_pBuff[nE];

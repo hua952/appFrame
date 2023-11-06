@@ -4,6 +4,7 @@
 #include "fromFileData/globalFile.h"
 #include "fromFileData/appFileMgr.h"
 #include <fstream>
+#include "configMgr.h"
 #include "rLog.h"
 
 projectCMakeListGen:: projectCMakeListGen ()
@@ -19,6 +20,12 @@ int   projectCMakeListGen:: startGen ()
 	int   nRet = 0;
 	do {
 		auto& rGlobalFile = tSingleton<globalFile>::single ();
+		auto& rConfig = tSingleton<configMgr>::single ();
+		auto structBadyType = rConfig.structBadyType ();
+		std::string strAddProSer;
+		if (structBadyTime_proto == structBadyType) {
+			strAddProSer = R"(add_subdirectory (protobufSer))";
+		}
 		auto bH = rGlobalFile.haveServer ();
 		auto& rAppS = tSingleton<appFileMgr>::single ().appS ();
 			std::string strFile = rGlobalFile.projectHome ();
@@ -32,8 +39,8 @@ int   projectCMakeListGen:: startGen ()
 			}
 
 			auto szPrjName = rGlobalFile.projectName ();
-			std::string strInstall;
-			rGlobalFile.getRealInstallPath (strInstall);
+			std::string strInstall = rGlobalFile.projectInstallDir ();
+			// rGlobalFile.getRealInstallPath (strInstall);
 			os<<R"(cmake_minimum_required(VERSION 3.16) 
 set(BUILD_USE_64BITS on)
 set(CMAKE_CXX_STANDARD 17) 
@@ -43,7 +50,7 @@ project(${myProjectName})
 SET(CMAKE_INSTALL_PREFIX )"<<strInstall<<R"()
 )";
 if (bH) {
-	os<<R"(add_subdirectory (defMsg)
+	os<<strAddProSer<<std::endl<<R"(add_subdirectory (defMsg)
 	)";
 }
 os<<R"(

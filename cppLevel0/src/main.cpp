@@ -128,7 +128,7 @@ int main(int cArg, char** argS)
 			procArgS.push_back(argS[i]);
 		}
 			procArgS.push_back("netLib=libeventSession");
-			procArgS.push_back("workDir=C:/work/testSysMsg//../testSysMsgInstall/bin/");
+			procArgS.push_back("workDir=C:/work/testSysMsgInstall/");
 			procArgS.push_back("logLevel=2");
 			procArgS.push_back("level0=cppLevel0L");
 		std::string pLevel0Name;
@@ -143,10 +143,16 @@ int main(int cArg, char** argS)
 				std::stringstream ts(pRetBuf[0]);
 				std::string strKey;
 				ts>>strKey;
+				std::stringstream vs(pRetBuf[1]);
+				std::string strValue;
+				vs>>strValue;
 				if (setMut.find (strKey) == setMut.end()) {
-					kvMap.insert(std::make_pair(strKey, pRetBuf[1]));
+					kvMap.insert(std::make_pair(strKey, strValue));
 				} else {
-					vArgS.push_back(*it);
+					std::string strIn = strKey;
+					strIn += "=";
+					strIn += strValue;
+					vArgS.push_back(strIn);
 				}
 			} else {
 				vArgS.push_back(*it);

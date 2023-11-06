@@ -19,7 +19,9 @@ typedef struct _procPacketArg
 typedef int (*frameFunType)(void* arg);
 //typedef void* loopHandleType;
 typedef int (*procPacketFunType)(packetHead*, procPacketArg*);
-typedef int (*procRpcPacketFunType)(packetHead*,  pPacketHead&, procPacketArg*);
+typedef int (*serializePackFunType) (packetHead* pPack, pPacketHead& pNew);
+typedef serializePackFunType* pSerializePackFunType;
+typedef int (*procRpcPacketFunType)(pPacketHead,  pPacketHead&, procPacketArg*);
 typedef loopHandleType  ServerIDType;
 typedef uword MsgIdT;
 #define c_emptyModelId 255

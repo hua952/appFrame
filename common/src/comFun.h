@@ -96,6 +96,7 @@ uqword curNanosecond ();
 int  createUuid (char* outPut);
 const char*  dllExtName ();
 const char*  exeExtName ();
+bool  upDir (char* szPath);
 std::ostream& operator << (std::ostream& os, const packetHead& pack);
 
 #define SD(p) {delete p;p=nullptr;}

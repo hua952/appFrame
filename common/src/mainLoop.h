@@ -69,6 +69,7 @@ typedef struct _ForLogicFun
 	createLoopFT	 fnCreateLoop;
 	regMsgFT		 fnRegMsg;
 	sendPackToLoopFT fnSendPackToLoop;// Thread safety
+	sendPackToLoopFT fnSendPackToLoopForChannel;// Thread safety
 	logMsgFT		 fnLogMsg;
     addComTimerFT    fnAddComTimer;// Thread safety
 	nextTokenFT      fnNextToken;
@@ -78,6 +79,9 @@ typedef struct _ForLogicFun
 	logCallStackFT         fnLogCallStack;
 	regRpcFT               fnRegRpc;
     getDefProcServerIdFT   fnGetDefProcServerId;
+	void*                  pSerFunSPtr;
+	serializePackFunType   fromNetPack;   // rec
+	serializePackFunType   toNetPack;   // rec
 } ForLogicFun;
 
 typedef dword (*afterLoadFunT)(int nArgC, char** argS, ForLogicFun* pForLogic);

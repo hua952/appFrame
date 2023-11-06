@@ -9,6 +9,7 @@
 	<defMsg file="cChess.xml"/>
 	<app>
 		<appServer>
+			<appArg>detachServerS=1</appArg>
 			<module>
 				<appServerM>
 					<server>
@@ -24,6 +25,8 @@
 								<roomChatTxt askType="ask"/>
 							</procRpc>
 						</appServerTh2>
+						<appServerTh3 autoRun="0" showFps="0">
+						</appServerTh3>
 					</server>
 				</appServerM>
 			</module>

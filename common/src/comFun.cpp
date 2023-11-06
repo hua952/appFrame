@@ -84,3 +84,24 @@ uqword curNanosecond ()
 	auto uqwRet = (uqword)(tSub.count());
 	return uqwRet;
 }
+
+bool  upDir (char* szPath)
+{
+	bool bRet = false;
+	int len = (int)(strlen (szPath));
+	decltype (len) i = len - 1; 
+	for (; i >= 0 ; i--) {
+		if ('/' != szPath[i] && '\\' != szPath[i]) {
+			break;
+		}
+	}
+
+	for (; i >= 0 ; i--) {
+		if ('/' == szPath[i] || '\\' == szPath[i]) {
+			szPath[i] = 0;
+			bRet = true;
+			break;
+		}
+	}
+	return bRet;
+}
