@@ -110,9 +110,7 @@ void server::run()
 		{
 			break;
 		}
-		if (m_sleepSetp) {
-			std::this_thread::sleep_for(std::chrono::microseconds (m_sleepSetp));
-		}
+		
 	}
 	onMidLoopEnd(m_loopHandle);
 	auto& os = std::cout;
@@ -179,6 +177,9 @@ bool server::onFrame()
 				POP_FUN_CALL
 			}
 		}
+	}
+	if (m_sleepSetp) {
+		std::this_thread::sleep_for(std::chrono::microseconds (m_sleepSetp));
 	}
 	POP_FUN_CALL
 	return bExit;

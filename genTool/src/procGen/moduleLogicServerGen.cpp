@@ -90,11 +90,12 @@ int   moduleLogicServerGen:: genMgrCpp (moduleGen& rMod)
 		auto serializePackFunStName = pPmp->serializePackFunStName ();
 
 		std::string protoSerOs;
+		/*
 		if (structBadyTime_proto == structBadyType ) {
 			protoSerOs = R"(int  setSerFunS (void* pFunS);
 			setSerFunS (pForLogic->pSerFunSPtr);)";
 		}
-		
+		*/	
 		auto serverNum = rSS.size ();
 		auto genPath = rMod.genPath ();
 		std::string strFilename = genPath;

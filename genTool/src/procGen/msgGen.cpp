@@ -182,21 +182,9 @@ int  msgGen:: startGen ()
 		std::ofstream ofSer (strSerWFile.c_str());
 		ofSer<<incToPackOs.str()<<R"(packetHead* allocPacket(udword udwS);
 packetHead* allocPacketExt(udword udwS, udword ExtNum);
-static )"<<serializePackFunStName<<R"(*  s_pFunS = nullptr;
-int  setSerFunS (void* pFunS)
-{
-	myAssert (!s_pFunS);
-	s_pFunS = ()"<<serializePackFunStName<<R"(*))"<<R"(pFunS;
-	auto nMsgNum = )"<<nMsgNum<<R"(;
-	// auto serFunSBuf = std::make_unique<netPackSerFunNode[]>(nMsgNum);
-	// auto pSerFun = serFunSBuf.get();
-	)"<</*serArrayOs.str()*/""<<R"(
-	// msgSerFunS ().init (serFunSBuf.get(), nMsgNum);
-	return 0;
-}
 )"<<strToPack;
 
-		if (enStructBadyType == structBadyTime_proto) {
+		// if (enStructBadyType == structBadyTime_proto) {
 			std::string strStFunS = aProtoFile;
 			strStFunS += "/";
 			strStFunS += serializePackFunStName;
@@ -229,13 +217,22 @@ int  getSerializeFunS ()"<<serializePackFunStName<<R"(* pFunS, ForLogicFun* pFor
 )";
 	for (auto it = serFunStuOs.begin (); it != serFunStuOs.end (); it++) {
 		ofPro<<R"(	pFunS->)"<<it->first<<R"( = (serializePackFunType))"<<it->first<<R"(;
-)"<<R"(	pFunS->)"<<it->second.first<<R"( = )"<<it->second.first<<R"(;
+)"<<R"(	pFunS->)"<<it->second.first<<R"( = )";
+
+	if (it->nCom == structBadyTime_com ) {
+		ofPro<<"nullptr";
+	} else if (it->nCom == structBadyTime_proto ) {
+		ofPro<<it->second.first;
+	} else {
+		myAssert (0);
+	}
+	ofPro<<R"(;
 )"<<R"(	pFunS->)"<<it->second.second<<R"( = )"<<it->second.second<<R"(;
 )";
 	}
 	ofPro<<R"(	return nRet;
 })";
-		} // if
+		// } // if
     } while (0);
     return nRet;
 }
@@ -517,12 +514,15 @@ int   msgGen:: genOnceMsgClassCpp (msgGroupFile& rG, msgFile& rMsg, bool bRet, s
 			}
 		}
 
+		auto serFunStuFromName = rMsg.serFunStuFromName ();
+		auto serFunStuToName = rMsg.serFunStuToName ();
 		if (structBadyTime_com == bt) {
 			if (len) {
 				if (haveSize) {
-					ssP<<R"(packetHead* )"<<strFunWon<<R"(toPack()
+
+					ssP<<"static int "<<serFunStuToName<<R"( (packetHead* pSrc, pPacketHead& pNew)
 {
-	netPacketHead* pN = P2NHead(m_pPacket);
+	netPacketHead* pN = P2NHead(pSrc);
     )";
 
 				ssP<<strN<<R"(* p = (()"<<strN<<R"++(*)(N2User(pN)));
@@ -553,23 +553,23 @@ int   msgGen:: genOnceMsgClassCpp (msgGroupFile& rG, msgFile& rMsg, bool bRet, s
 				}
 				)";
 				}
-				ssP<<R"(return m_pPacket;
+
+				ssP<<R"( return 0;
 }
 )";
 				}
 } // if (len > 1)
-		strToPack += ssP.str();
+		// strToPack += ssP.str();
+		strSerializeOut += ssP.str();
 		} else if (structBadyTime_proto == bt) {
 			auto toPbFu = rMsg.toPbFuName ();
 			auto fromFuName = rMsg.fromPbFuName ();
-			std::stringstream  fromOs;
-			std::stringstream  toOs;
+			// std::stringstream  fromOs;
+			// std::stringstream  toOs;
 
 
 			std::stringstream  fromSer;
 			std::stringstream  toSer;
-			auto serFunStuFromName = rMsg.serFunStuFromName ();
-			auto serFunStuToName = rMsg.serFunStuToName ();
 			fromSer<<"static int "<<serFunStuFromName<<R"( (packetHead* p, pPacketHead& pNew)
 {
 	int nRet = 0;
@@ -946,37 +946,40 @@ public:
 				auto enStructBadyType = rConfig.structBadyType ();
 				bool stPowerCom = rMsg.powerCom ();
 				bool bWCom = false;
+
+				strVecV node;
+				auto serFunStuFromName = rMsg.serFunStuFromName ();
+				auto serFunStuToName = rMsg.serFunStuToName ();
+				node.first = rMsg.strMsgId ();
 				if (structBadyTime_com == enStructBadyType) {
+					node.nCom = structBadyTime_com;
 					bWCom = true;
-				} if (structBadyTime_proto == enStructBadyType) {
+				} else if (structBadyTime_proto == enStructBadyType) {
 					if (stPowerCom) {
+						node.nCom = structBadyTime_com;
 						bWCom = true;
 					} else {
-						auto serFunStuFromName = rMsg.serFunStuFromName ();
-						auto serFunStuToName = rMsg.serFunStuToName ();
-						/*
-						ss<<R"(int   toPack() override;
-						int fromPack() override;
-	)"; */
-						// serFunStuOs<<"	serializePackFunType   "<<serFunStuFromName<<";"<<std::endl<<"	serializePackFunType    "<<serFunStuToName<<";"<<std::endl;
-						strVecV node;
-						node.first = rMsg.strMsgId ();
-						node.second.first = serFunStuFromName;
-						node.second.second = serFunStuToName;
-						serFunStuOs.push_back (node);
-						//serFunStuOs.push_back(serFunStuFromName);
-						//serFunStuOs.push_back(serFunStuToName);
+						node.nCom = structBadyTime_proto;
 					}
+				} else {
+					myAssert (0);
 				}
-				if (bWCom) {
+
+				if (structBadyTime_com == node.nCom) {
 					auto& rData = *(rDv.rbegin ()->get ());
 					auto len = rData.dataLength ();
 					if (len) {
 						auto haveSize = rData.haveSize ();
 						if (haveSize) {
-							ss<<R"(packetHead*   toPack() override;)";
+							node.second.first = serFunStuFromName;
+							node.second.second = serFunStuToName;
+							serFunStuOs.push_back (node);
 						}
 					}
+				} else {
+					node.second.first = serFunStuFromName;
+					node.second.second = serFunStuToName;
+					serFunStuOs.push_back (node);
 				}
 			}
 		}
@@ -1279,7 +1282,7 @@ elseif (WIN32)
 		${depLibHome}
 		)
 endif ()
-add_library(${prjName} ${genSrcS} ${srcS} ${srcOS} ${defS} ${serFile} ${pbFileS})
+add_library(${prjName} ${genSrcS} ${srcS} ${srcOS} ${defS} ${pbFileS})
 target_include_directories(${prjName} PUBLIC 
 							src
 							${CMAKE_SOURCE_DIR}/protobufSer/src

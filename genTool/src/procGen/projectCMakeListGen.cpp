@@ -23,9 +23,9 @@ int   projectCMakeListGen:: startGen ()
 		auto& rConfig = tSingleton<configMgr>::single ();
 		auto structBadyType = rConfig.structBadyType ();
 		std::string strAddProSer;
-		if (structBadyTime_proto == structBadyType) {
+		// if (structBadyTime_proto == structBadyType) {
 			strAddProSer = R"(add_subdirectory (protobufSer))";
-		}
+		//}
 		auto bH = rGlobalFile.haveServer ();
 		auto& rAppS = tSingleton<appFileMgr>::single ().appS ();
 			std::string strFile = rGlobalFile.projectHome ();

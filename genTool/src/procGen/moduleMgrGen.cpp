@@ -394,7 +394,7 @@ int   moduleMgrGen:: writeLogicServerCpp ()
 		auto structBadyType = rConfig.structBadyType ();
 		std::stringstream strProtobufSerSS;
 		std::string strProtoSerInc;
-		if (structBadyTime_proto == structBadyType) {
+		// if (structBadyTime_proto == structBadyType) {
 			strProtoSerInc = R"(#include ")";
 			strProtoSerInc += serializePackFunStName;
 			strProtoSerInc += R"(.h")";
@@ -409,7 +409,7 @@ int   moduleMgrGen:: writeLogicServerCpp ()
 			pForLogic->fromNetPack = sFromNetPack;
 			pForLogic->toNetPack = sToNetPack;
 	)";
-		}
+		// }
 
 		os<<R"(#include <iostream>
 #include <string>
@@ -470,10 +470,12 @@ static int sFromNetPack (packetHead* p, pPacketHead& pNew)
 		auto pF = sGetNode (pN->uwMsgID);
 		if (pF) {
 			auto fun = (*pF).f[1];
-			auto nR = fun (p, pNew);
-			if (nR) {
-				nRet = 2;
-			}	
+			if (fun) {
+				auto nR = fun (p, pNew);
+				if (nR) {
+					nRet = 2;
+				}
+			}
 		}
 	} while (0);
 	return nRet;

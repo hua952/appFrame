@@ -79,7 +79,7 @@ int   xmlGlobalLoad:: secondProcess ()
     return nRet;
 }
 static const char* s_comMsg = R"(<?xml version='1.0' encoding='utf-8' ?>
-	<powerCom>o</powerCom>
+	<powerCom>0</powerCom>
 	<struct>
 	</struct>
 	<rpc>

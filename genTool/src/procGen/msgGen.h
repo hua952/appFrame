@@ -15,7 +15,13 @@ class dataFile;
 class msgGen
 {
 public:
-	using strVecV = std::pair<std::string, std::pair<std::string, std::string>>;
+	struct strVecV 
+	{
+		int nCom;
+		std::string first;
+		std::pair<std::string, std::string> second;
+	};
+	// using strVecV = std::pair<std::string, std::pair<std::string, std::string>>;
 	using  strVec = std::vector<strVecV>;
     msgGen (msgPmpFile& rPmp);
     ~msgGen ();
