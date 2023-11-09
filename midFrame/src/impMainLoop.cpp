@@ -233,6 +233,28 @@ static int sCreateServer (const char* szName, loopHandleType serId,
 	return tSingleton<loopMgr>::single().createServer(szName, serId,
 			pNode, funFrame, arg);
 }
+
+static int sRegRouteFun(loopHandleType myServerId, loopHandleType objServerId, SessionIDType sessionId,  udword onlyId)
+{
+	int nRet = 0;
+	do {
+		auto pS = tSingleton<loopMgr>::single().getLoop(myServerId);
+		myAssert (pS);
+		if (!pS) {
+			nRet = 1;
+			mError ("can not find server id = "<<myServerId);
+			break;
+		}
+		auto nR = pS->regRoute (objServerId, sessionId, onlyId);
+		if (nR) {
+			nRet = 2;
+			mError ("RegRouteFun ret error nR = "<<nR);
+			break;
+		}
+	} while (0);
+	return nRet;
+}
+
 typedef void		(*freePackFT)(packetHead* pack);
 
 serializePackFunType  loopMgr:: fromNetPack ()
@@ -265,6 +287,8 @@ int loopMgr::init(int nArgC, char** argS, PhyCallback& info)
 	forLogic.fnLogCallStack = info.fnLogCallStack;
 	forLogic.fnRegRpc = sRegRpc;
 	forLogic.fnGetDefProcServerId = sGetDefProcServerId;
+	forLogic.fnRegRoute = sRegRouteFun;
+
 	//forLogic.fnRemoveMsg = removeMsg;
 	int nR = 0;
 	int nRet = 0;

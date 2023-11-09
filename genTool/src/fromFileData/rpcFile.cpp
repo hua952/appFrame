@@ -59,7 +59,7 @@ void  rpcFile:: setRetMsgName (const char* v)
 {
     strCpy (v, m_retMsgName);
 }
-
+/*
 bool          rpcFile:: isChannel ()
 {
     bool          nRet = false;
@@ -76,4 +76,4 @@ bool          rpcFile:: isChannel ()
     } while (0);
     return nRet;
 }
-
+*/

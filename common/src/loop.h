@@ -24,9 +24,8 @@ typedef serializePackFunType* pSerializePackFunType;
 typedef int (*procRpcPacketFunType)(pPacketHead,  pPacketHead&, procPacketArg*);
 typedef loopHandleType  ServerIDType;
 typedef uword MsgIdT;
-#define c_emptyModelId 255
-#define c_emptyLoopHandle	0xff
-
+// #define c_emptyModelId 255
+#define c_emptyLoopHandle	((1<<(sizeof(serverIdType)*8))-1)
 extern "C"
 {
 	//int regMsg(loopHandleType handle, uword uwMsgId, procPacketFunType pFun); // call by level 2

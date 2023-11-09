@@ -5,17 +5,19 @@
 // #include "iRpcInfoMgr.h"
 #include "ISession.h"
 
-#define LoopNumBitLen 4
-#define ProcNumBitLen 3
-#define GroupNumBitLen 1 
+#define LoopNumBitLen 8
+#define ProcNumBitLen (sizeof(loopHandleType)*8-LoopNumBitLen)
+// #define GroupNumBitLen 1 
 #define LoopNum			(1<<LoopNumBitLen)
 #define LoopMark		(LoopNum-1)
+#define AllGateLoopId  (LoopMark-1)
 #define ProcNum			(1<<ProcNumBitLen)
-//#define ProcMark		((ProcNum-1)<<LoopNum)
+// #define ProcMark		((ProcNum-1)<<LoopNum)
 #define ProcMark		((ProcNum-1))
+/*
 #define GroupNum		(1<<GroupNumBitLen)
 #define GroupMark		((GroupNum-1)<<(LoopNumBitLen+ProcNumBitLen))
-
+*/
 #define serverNameSize  32
 #define getProcFromHandle(h) ((h>>LoopNumBitLen)&ProcMark)
 #define netPackInOnceProc(n) (getProcFromHandle(n->ubySrcServId)==getProcFromHandle(n->ubyDesServId))
@@ -62,6 +64,7 @@ typedef  int    (*regRpcFT) (msgIdType askId, msgIdType retId, serverIdType	askD
 			serverIdType	retDefProcSer);
 typedef  serverIdType (*getDefProcServerIdFT) (msgIdType msgId);
 
+typedef int (*regRouteFT)(loopHandleType myServerId, loopHandleType objServerId, SessionIDType sessionId, udword onlyId);
 typedef struct _ForLogicFun
 {
 	allocPackFT		 fnAllocPack; // Thread safety
@@ -79,6 +82,7 @@ typedef struct _ForLogicFun
 	logCallStackFT         fnLogCallStack;
 	regRpcFT               fnRegRpc;
     getDefProcServerIdFT   fnGetDefProcServerId;
+	regRouteFT             fnRegRoute;
 	void*                  pSerFunSPtr;
 	serializePackFunType   fromNetPack;   // rec
 	serializePackFunType   toNetPack;   // rec

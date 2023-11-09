@@ -51,7 +51,7 @@ impLoop::impLoop()//:m_MsgMap(8)
 	m_packSave = nullptr;
 	m_packSave = nullptr;
 	// m_midTcpServer = nullptr;
-	m_id = c_emptyModelId;
+	m_id = c_emptyLoopHandle;
 	m_serverNode.listenerNum = 0;
 	m_serverNode.connectorNum = 0;
 	m_frameNum = 0;
@@ -240,28 +240,7 @@ int impLoop::processOncePack(packetHead* pPack)
 	do {
 		procPacketArg argP;
 		argP.handle = id ();
-		/*
-		if (NIsAskSave(pN)) {
-			myAssert (!NIsRet(pN));
-			auto& rMsgInfoMgr = tSingleton<loopMgr>::single ().defMsgInfoMgr ();
-			auto retMsgId = rMsgInfoMgr.getRetMsg (pN->uwMsgID);
-			if (c_null_msgID != retMsgId) {
-				auto pRetF = findMsg (retMsgId);
-				if (pRetF) {
-					iPackSave* pISave = getIPackSave ();
-					pISave->netTokenPackInsert (pPack);
-					std::pair<NetTokenType, impLoop*> pa;
-					pa.first = pN->dwToKen;
-					pa.second = this;
-					auto delTime = 5000;
-					auto& rTimeMgr = getTimerMgr ();
-					rTimeMgr.addComTimer (delTime, sDelNetPack, &pa, sizeof (pa));
-					nRet = procPacketFunRetType_doNotDel;
-				}
-			}
-			break;
-		}
-		*/
+		
 		auto bInOncePro = packInOnceProc(pPack);
 		if (bInOncePro) {
 			myAssert (myHandle == pN->ubyDesServId);
@@ -313,18 +292,16 @@ int  impLoop:: processLocalServerPack(packetHead* pPack)
 		auto pF = findMsg(pN->uwMsgID);
 		auto myHandle = id ();
 		if(!pF) {
-			mWarn ("can not find proc function token: "
+			if (pN->uwMsgID < 60000) {
+				mWarn ("can not find proc function token: "
 					<<pN->dwToKen<<" msgId = "<<pN->uwMsgID
 					<<" length = "<<pN->udwLength
 					<<"myHandle = "<<(int)myHandle);
+			}
 			break;
 		}
 		if (bIsRet) { // pPack->pAsk put by other server
-			//auto pp = (pPacketHead*)(&(pPack->pAsk));
-			//nRet = pF(*pp, pPack, nullptr);
 			auto  pAsk = (pPacketHead)(pPack->pAsk);
-			// auto fromNetPack = tSingleton<loopMgr>::single().fromNetPack ();
-			// fromNetPack (&pAsk);
 			pPack->pAsk = (decltype (pPack->pAsk))pAsk;
 			nRet = pF((pPacketHead)(pPack->pAsk), pPack, nullptr);
 		} else {
@@ -698,4 +675,14 @@ NetTokenType	 impLoop:: nextToken ()
     return nRet;
 }
 
+int  impLoop:: regRoute (ServerIDType objServer, SessionIDType sessionId, udword onlyId)
+{
+    int  nRet = 0;
+    do {
+		auto& rMap = serverSessionS ();
+		auto inRet = rMap.insert (std::make_pair(objServer, sessionId));
+		myAssert (inRet.second);
+    } while (0);
+    return nRet;
+}
 

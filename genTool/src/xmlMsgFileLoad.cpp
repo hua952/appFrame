@@ -30,7 +30,6 @@ int  xmlMsgFileLoad::xmlLoadFromStr (const char* szPmpName, char* szCon, msgPmpF
 		rapidxml::xml_document<> doc;
 		doc.parse<0>(szCon);
 
-		// rapidxml::xml_node<> *root = doc.first_node("servers");
 		rapidxml::xml_node<>* pStructS = doc.first_node ("struct");
 		rapidxml::xml_node<>* pRpcS = doc.first_node ("rpc");
 		auto pPowerCom = doc.first_node ("powerCom");
@@ -255,11 +254,8 @@ int   xmlMsgFileLoad:: onceRpcGroupLoad (rapidxml::xml_node<char>* pGroup, msgPm
 			nRet = 7;
 			break;
 		}
-		// extern const char* szRootRpc[];
-		// auto szRootRpcNum = sizeof (szRootRpc) / sizeof (szRootRpc[0]);
 		int szRootRpcNum = 0;
 		const char** getRpptRpc (int &num);
-		auto szRootRpc = getRpptRpc (szRootRpcNum);
 		auto& rNameS = pG->rpcNameS ();
 		for (auto pRpc = pGroup->first_node();  pRpc; pRpc = pRpc->next_sibling()) {
 			auto pRpcName = pRpc->name ();
@@ -275,7 +271,6 @@ int   xmlMsgFileLoad:: onceRpcGroupLoad (rapidxml::xml_node<char>* pGroup, msgPm
 				break;
 			}
 			rNameS.push_back (pRpcName);
-			// rRpcOrder.push_back ( pRpcFile);
 			std::string strIdSave = pGName;
 			strIdSave += "MsgId_";
 			auto pAsk = pRpc->first_node("ask");
@@ -391,13 +386,7 @@ int   xmlMsgFileLoad:: onceRpcGroupLoad (rapidxml::xml_node<char>* pGroup, msgPm
 					break;
 				}
 			std::string strRetPack = "on";
-			bool isRootRpc = false;
-			for (decltype (szRootRpcNum) i = 0; i < szRootRpcNum; i++) {
-				if (strcmp (pRpcName, szRootRpc[i]) == 0) {
-					isRootRpc = true;
-					break;
-				}
-			}
+			
 			std::unique_ptr <char[]> pmRetName;
 			strCpy (strRetName.c_str (), pmRetName);
 			toWord (pmRetName.get());
@@ -436,6 +425,7 @@ int   xmlMsgFileLoad:: onceRpcGroupLoad (rapidxml::xml_node<char>* pGroup, msgPm
 			if (retNeetSe) {
 				strDec += ", serverIdType srcSer, SessionIDType seId";
 			}
+
 			strDec += ")";
 			pRetMsg->setMsgFunDec (strDec.c_str ());
 			auto retRet = rMsgS.insert (std::make_pair (strRetName, pRetMsg));

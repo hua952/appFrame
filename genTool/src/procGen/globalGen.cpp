@@ -37,15 +37,16 @@ int   globalGen:: startGen ()
 		nR = 0;
 		auto &rGlobal = tSingleton<globalFile>::single();
 		auto bH = rGlobal.haveServer ();
-		protobufSerGen  protoGen;
-		nR = protoGen.startGen ();
-		if (nR) {
-			rError ("projectGen.startGen error nR = "<<nR);
-			nRet = 2;
-			break;
-		}
+		
 		std::vector <std::shared_ptr<msgGen>> gv;
 		if (bH) {
+			protobufSerGen  protoGen;
+			nR = protoGen.startGen ();
+			if (nR) {
+				rError ("projectGen.startGen error nR = "<<nR);
+				nRet = 2;
+				break;
+			}
 			auto &rPmpS = rGlobal.msgFileS ();
 			for (auto it = rPmpS.begin(); rPmpS.end() != it; ++it) {
 				auto& rPmp = *(it->second.get());

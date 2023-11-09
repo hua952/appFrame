@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8' ?>
 <servers>
-	<projectHome>C:/work/testSysMsg/</projectHome>
-	<projectName>testSysMsg</projectName>
+	<projectHome>C:/work/appFrameProject/project/genTest/</projectHome>
+	<projectName>genTest</projectName>
 	<thirdPartyDir>C:/work/</thirdPartyDir>
 	<frameInstallPath>C:/work/appFrameInstall/</frameInstallPath>
 	<defMsg file="cChess.xml"/>

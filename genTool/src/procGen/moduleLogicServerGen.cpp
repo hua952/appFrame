@@ -501,7 +501,7 @@ public:
 			auto szMsgStructName = rProcRpc.bAsk ? 
 				pRpc->askMsgName () : pRpc->retMsgName ();
 			auto pMsg = rMsgMgr.findMsg (szMsgStructName);
-			auto pDec = pMsg->msgFunDec ();
+ 			auto pDec = pMsg->msgFunDec ();
 			osH<<"    "<<pDec<<";"<<std::endl;
 		}
 osH<<R"(
@@ -716,6 +716,15 @@ static void   sOutSendToChannel (bool bAsk, std::ostream& ps)
 	)";
 		}
 }
+static void   sOutRegRoute(bool bAsk, std::ostream& ps)
+{
+	if (bAsk) {
+			ps<<R"(auto  fnReg =  getForMsgModuleFunS ().fnRegRoute;
+	fnReg (serverId(), srcSer, seId, rAsk.m_nolyId);)";
+		
+	}
+}
+
 static void   sOutQuitChannel (bool bAsk, std::ostream& ps)
 {
 	if (bAsk) {
@@ -739,7 +748,6 @@ static void   sOutQuitChannel (bool bAsk, std::ostream& ps)
 	)";
 		}
 }
-
 static void   sOutDelChannel (bool bAsk, std::ostream& ps)
 {
 	if (bAsk) {
@@ -852,7 +860,7 @@ static int sProcMsgReg (const char* pModName, const char* serverName,
 
 		auto askMsgStructName = pRpc->askMsgName ();
 		auto retMsgStructName = pRpc->retMsgName ();
-		auto isChannel = pRpc->isChannel ();
+		// auto isChannel = pRpc->isChannel ();
 		auto msgProcFun = pMsg->msgFunName ();
 		auto pAskMsg = rMsgMgr.findMsg (askMsgStructName);
 		myAssert (pAskMsg);
@@ -986,6 +994,8 @@ ps<<R"(#include "logicServer.h"
 		sOutSendToChannel (bAsk, ps);
 	} else if (strcmp (rpcName, "quitChannel") == 0) {
 		sOutQuitChannel (bAsk, ps);
+	} else if (strcmp (rpcName, "regRoute") == 0) {
+		sOutRegRoute(bAsk, ps);
 	}
 ps<<R"(
 }

@@ -2,18 +2,13 @@
 <servers>
 	<projectHome>C:/work/openWorkDir/</projectHome>
 	<projectName>openWorkDir</projectName>
-	<frameHome>C:/work/appFrame/</frameHome>
-	<depIncludeHome>C:/work/include/</depIncludeHome>
-	<depLibHome>C:/work/lib/</depLibHome>
-	<frameBinPath>C:/work/appFrame/bin/Debug/</frameBinPath>
-	<frameLibPath>C:/work/appFrame/bin/Debug/</frameLibPath>
-	<frameInstallPath>C:/work/appFrame/install/</frameInstallPath>
+	<thirdPartyDir>C:/work/</thirdPartyDir>
+	<frameInstallPath>C:/work/appFrameInstall/</frameInstallPath>
 	<app>
 		<openWorkDir>
 			<appArg>logLevel=2</appArg>
 			<appArg>detachServerS=1</appArg>
 			<appArg>level0=cppLevel0L</appArg>
-			<appArg>frameHome=C:/work/appFrameInstall</appArg>
 		</openWorkDir>
 	</app>
 </servers>

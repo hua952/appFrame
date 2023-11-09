@@ -15,5 +15,6 @@ gcc -E server.cpp -ID:\pzh\work\include -ID:\pzh\work\appFrame\common\src -ID:\p
 genTool.exe defFile=..\..\fileS\msgdef\game.xml
 genTool.exe defFile=C:\work\appFrame\test\openWorkDir.xml
 genTool.exe defFile=C:\work\appFrame\test\test.xml
-genTool.exe defFile=C:\work\appFrame\test\testSysMsg.xml structBadyType=1
+genTool.exe defFile=C:\work\appFrame\test\testSysMsg.xml structBadyType=0
+genTool.exe defFile=C:\work\appFrame\test\genTest.xml structBadyType=0
 

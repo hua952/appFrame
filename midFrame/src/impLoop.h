@@ -54,6 +54,8 @@ public:
 	ISession*  defSession ();
 	void  setDefSession (ISession* v);
 	ISession*  getServerSession(ServerIDType sid);
+
+	int regRoute (ServerIDType objServer, SessionIDType sessionId, udword onlyId);
 private:
 	ISession*  m_defSession;
 	serverSessionMap  m_serverSessionS;

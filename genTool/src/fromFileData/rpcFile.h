@@ -7,7 +7,7 @@ class rpcFile
 public:
     rpcFile ();
     ~rpcFile ();
-	bool         isChannel ();
+	// bool         isChannel ();
 	const char*  commit ();
 	void  setCommit (const char* v);
 	const char*  rpcName ();

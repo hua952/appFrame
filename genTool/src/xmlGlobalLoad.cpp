@@ -135,6 +135,15 @@ static const char* s_comMsg = R"(<?xml version='1.0' encoding='utf-8' ?>
 					<result dataType="udword" />
 				</ret>
 			</ntfExit>
+			<regRoute>
+				<ask neetSession="1">
+					<nolyId dataType="udword" />
+					<signature dataType="ubyte" length="256" haveSize="1" commit="" />
+				</ask>
+				<ret>
+					<result dataType="udword" />
+				</ret>
+			</regRoute>
 		</comMsg >
 	</rpc>
 )";
@@ -225,14 +234,6 @@ int  xmlGlobalLoad::xmlLoad (const char* szFile)
 				strFile += *ite;
 				nR = msgFileLoader.xmlLoad (it->first.c_str(), strFile.c_str (), *pPmp);
 				myAssert (0 == nR);
-				/*
-				if (0 == strcmp (it->first.c_str(), "defMsg")) {
-					std::unique_ptr<char[]> comMsgBuf;
-					strCpy (s_comMsg, comMsgBuf);
-					nR = msgFileLoader.xmlLoadFromStr (it->first.c_str(), comMsgBuf.get(), *pPmp);
-					myAssert (0 == nR);
-				}
-				*/
 			}
 			if (0 == strcmp (it->first.c_str(), "defMsg")) {
 				std::unique_ptr<char[]> comMsgBuf;
@@ -596,7 +597,7 @@ static int procEndPoint (rapidxml::xml_node<char>* pXmlListen
 	return nRet;
 }
 const char* szRootRpc[] = {"addChannel", "delChannel", "listenChannel"
-			,"quitChannel", "sendToChannel"};
+			,"quitChannel", "sendToChannel", "regRoute"};
 const char** getRpptRpc (int &num)
 {
 	num = sizeof (szRootRpc) / sizeof (szRootRpc[0]);
@@ -817,7 +818,7 @@ int   xmlGlobalLoad:: onceServerLoad (rapidxml::xml_node<char>* pS,
 		}
 		{
 			procRpcNode node;
-			node.retValue = "procPacketFunRetType_exitNow";
+			node.retValue = "procPacketFunRetType_exitNow"; /* 特殊情况单独处理 */
 			node.bAsk = true;
 			node.rpcName = "ntfExit";
 			auto inRet = rProcS.insert (node);

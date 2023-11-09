@@ -249,6 +249,7 @@ int   moduleMgrGen:: writeExportFunCpp ()
 #include "myAssert.h"
 #include "allLogicServerMgr.h"
 #include "tSingleton.h"
+#include "msg.h"
 #include "cLog.h"
 )";
 
@@ -263,7 +264,8 @@ os<<R"(
 dword afterLoad(int nArgC, char** argS, ForLogicFun* pForLogic)
 {
 	setForMsgModuleFunS (pForLogic);
-	tSingleton<allLogicServerMgr>::createSingleton();
+	)";
+	os<<R"(	tSingleton<allLogicServerMgr>::createSingleton();
 	auto &rMgr = tSingleton<allLogicServerMgr>::single();
 	return rMgr.afterLoad(nArgC, argS, pForLogic);
 }
@@ -394,7 +396,9 @@ int   moduleMgrGen:: writeLogicServerCpp ()
 		auto structBadyType = rConfig.structBadyType ();
 		std::stringstream strProtobufSerSS;
 		std::string strProtoSerInc;
-		// if (structBadyTime_proto == structBadyType) {
+
+		auto bH = rGlobal.haveServer ();
+		if (bH) {
 			strProtoSerInc = R"(#include ")";
 			strProtoSerInc += serializePackFunStName;
 			strProtoSerInc += R"(.h")";
@@ -409,7 +413,7 @@ int   moduleMgrGen:: writeLogicServerCpp ()
 			pForLogic->fromNetPack = sFromNetPack;
 			pForLogic->toNetPack = sToNetPack;
 	)";
-		// }
+		}
 
 		os<<R"(#include <iostream>
 #include <string>
@@ -418,9 +422,9 @@ int   moduleMgrGen:: writeLogicServerCpp ()
 #include "msg.h"
 #include "gLog.h"
 #include "myAssert.h"
-)"<<strProtoSerInc<<std::endl;
-auto bH = rGlobal.haveServer ();
+)";
 if (bH) {
+	os<<strProtoSerInc<<std::endl;
 	os<<R"(#include "loopHandleS.h"
 #include "rpcInfo.h"
 )";
@@ -572,11 +576,11 @@ dword allLogicServerMgr::afterLoad(int nArgC, char** argS, ForLogicFun* pForLogi
 	m_ForLogicFun = *pForLogic;
 	)"<<strProtobufSerSS.str()<<R"(
 	auto pForMsg = &m_ForLogicFun;
-	auto& rFunS = getForMsgModuleFunS();
-	rFunS = *pForLogic;
+	// auto& rFunS = getForMsgModuleFunS();
+	// rFunS = *pForLogic;
 )";
 	if (bH) {
-		os<<R"(regRpcS (&rFunS);
+		os<<R"(regRpcS (pForLogic);
 )";
 	}
 os<<R"(
