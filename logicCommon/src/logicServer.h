@@ -35,6 +35,7 @@ public:
 	virtual void onLoopEnd();
 	int         sendMsg (CMsgBase& rMsg);
 	int         sendToServer (CMsgBase& rMsg, loopHandleType handle);
+	int         sendToAllGateServer (CMsgBase& rMsg);
 	int         sendPack (packetHead* pack);
 	int         sendPackToServer (packetHead* pack, loopHandleType handle);
 	int         sendPackToSomeServer(packetHead* pack, serverIdType* pSerS, udword serverNum);
@@ -55,6 +56,7 @@ public:
 	exitHandleSet&  exitHandleS ();
 	bool  willExit ();
 	void  setWillExit (bool v);
+	int   createChannel (channelKey& rCh, serverIdType srcSer, SessionIDType seId);
 private:
 	bool  m_willExit;
 	exitHandleSet  m_exitHandleS;
@@ -74,7 +76,10 @@ public:
 	void   setServerNum (ubyte ubyNum);
 	logicServer*  findServer(serverIdType	serverId);
 	logicServer**   serverS ();
+
+	ForLogicFun&     forLogicFunSt ();
 protected:
+	ForLogicFun*     m_pForLogicFun;
 	ubyte  m_serverNum;
 	std::unique_ptr <logicServer* []>  m_serverS;
 };

@@ -201,6 +201,7 @@ dword )"<<strMgrClassName<<R"(::afterLoad(int nArgC, char** argS, ForLogicFun* p
 	do {
 		)"<<protoSerOs
 		<<R"(
+		m_pForLogicFun = pForLogic;
 		auto& rFunS = getForMsgModuleFunS();
 		rFunS = *pForLogic;
 		auto fnCreateLoop = pForLogic->fnCreateLoop;
@@ -475,7 +476,7 @@ public:
 	int onFrameFun () override;
 	int onServerInitGen(ForLogicFun* pForLogic) override;
 	int onServerInit(ForLogicFun* pForLogic);
-	int sendAddChannel (udword& token);
+	int sendAddChannel (udword& token, channelKey& rCh);
 	int onAddChannelResult (udword token, udword result, channelKey& rKey);
 	int sendDelChannel (channelKey & chK);
 	int sendListenChannel (channelKey & chK);
@@ -662,7 +663,8 @@ static void   sOutListenChannel (bool bAsk, std::ostream& ps)
 		if (rChS.end() == it) {
 			gError("can not find channel chId = "<<std::hex<<rCh.key
 			<<" "<<rCh.value);
-			rRet.m_result = 1;
+			// rRet.m_result = 1;
+			rRet.m_result =createChannel (rCh, srcSer, seId);
 			break;
 		}
 		auto& rSidS = it->second;
@@ -710,6 +712,7 @@ static void   sOutSendToChannel (bool bAsk, std::ostream& ps)
 			pNN->ubySrcServId = srcSer;
 			pNN->ubyDesServId = toSid;
 			p->sessionID = sessionId;
+			p->pAsk = 0;
 			fnSendPackToLoop (p);
 		}
 	} while (0);
@@ -775,7 +778,11 @@ static void   sOutNtfExit (bool bAsk, std::ostream& ps)
 static void   sOutAddChannel (bool bAsk, std::ostream& ps)
 {
 	if (bAsk) {
-		ps<<R"(auto& rChS = channelS ();
+		ps<<R"(
+	auto& rCh = *((channelKey*)rAsk.m_chKey);
+	rRet.m_result =createChannel (rCh, srcSer, seId);
+		/*
+		auto& rChS = channelS ();
 	channelValue sidS;
 	uqword uqwSe = srcSer;
 	uqwSe <<= 32;
@@ -789,6 +796,7 @@ static void   sOutAddChannel (bool bAsk, std::ostream& ps)
 	} else {
 		rRet.m_result = 1;
 	}
+	*/
 )";	
 	} else {
 		ps<<R"(auto rSendS = channelSendS ();
@@ -1117,7 +1125,6 @@ int   moduleLogicServerGen:: genServerReadOnlyCpp (moduleGen& rMod)
 #include "comMsgMsgId.h"
 #include "msgGroupId.h"
 
-
 int )"<<pName<<R"( :: onServerInitGen(ForLogicFun* pForLogic)
 {
 	int nRet = 0;
@@ -1152,6 +1159,8 @@ int )"<<pName<<R"( :: sendDelChannel (channelKey & chK)
 		auto pU = askMsg.pack ();
 		auto pK = (channelKey*)(&pU->m_chKey[0]);
 		*pK = chK;
+		sendToAllGateServer (askMsg);
+		/*
 		auto rootServerNum = sizeof (s_RootSer) / sizeof (s_RootSer[0]);
 		auto nR = sendMsgToSomeServer (askMsg, s_RootSer, rootServerNum);
 		if (nR) {
@@ -1159,6 +1168,7 @@ int )"<<pName<<R"( :: sendDelChannel (channelKey & chK)
 			gError("sendMsgToSomeServer error nR = "<<nR);
 			break;
 		}
+		*/
 	} while (0);
 	return nRet;
 }
@@ -1171,6 +1181,8 @@ int )"<<pName<<R"( :: sendListenChannel (channelKey & chK)
 		auto pU = askMsg.pack ();
 		auto pK = (channelKey*)(&pU->m_chKey[0]);
 		*pK = chK;
+		sendToAllGateServer (askMsg);
+		/*
 		auto rootServerNum = sizeof (s_RootSer) / sizeof (s_RootSer[0]);
 		auto nR = sendMsgToSomeServer (askMsg, s_RootSer, rootServerNum);
 		if (nR) {
@@ -1178,6 +1190,7 @@ int )"<<pName<<R"( :: sendListenChannel (channelKey & chK)
 			gError("sendMsgToSomeServer error nR = "<<nR);
 			break;
 		}
+		*/
 	} while (0);
 	return nRet;
 }
@@ -1190,6 +1203,8 @@ int )"<<pName<<R"( :: sendQuitChannel (channelKey & chK)
 		auto pU = askMsg.pack ();
 		auto pK = (channelKey*)(&pU->m_chKey[0]);
 		*pK = chK;
+		sendToAllGateServer (askMsg);
+		/*
 		auto rootServerNum = sizeof (s_RootSer) / sizeof (s_RootSer[0]);
 		auto nR = sendMsgToSomeServer (askMsg, s_RootSer, rootServerNum);
 		if (nR) {
@@ -1197,6 +1212,7 @@ int )"<<pName<<R"( :: sendQuitChannel (channelKey & chK)
 			gError("sendMsgToSomeServer error nR = "<<nR);
 			break;
 		}
+		*/
 	} while (0);
 	return nRet;
 }
@@ -1206,8 +1222,7 @@ int )"<<pName<<R"( :: sendMsgToChannel(CMsgBase& rMsg, channelKey& chK, bool ntf
     do {
 		// rMsg.zip();
 		// rMsg.toPack();
-		auto pack = rMsg.getPack();
-		rMsg.pop ();
+		auto pack = rMsg.pop();
 		nRet = sendPackToChannel (pack, chK, ntfMe);
     } while (0);
     return nRet;
@@ -1217,15 +1232,26 @@ int )"<<pName<<R"( :: sendPackToChannel(packetHead* pack, channelKey& chK, bool 
 {
 	int nRet = 0;
 	do {
+		auto toNetPack = getForMsgModuleFunS().toNetPack;
+		packetHead* pNew = nullptr;
+		toNetPack (pack, pNew);
+		auto fnFreePack = getForMsgModuleFunS ().fnFreePack;
+		if (pNew) {
+			fnFreePack (pack);
+			pack = pNew;
+		}
 		auto pSN = P2NHead(pack);
 		pSN->ubySrcServId = serverId ();
-		auto sendSize = AllNetHeadSize(pSN) + pSN->udwLength;
+		auto sendSize = NetHeadSize + pSN->udwLength;
 		auto pT = (sendToChannelAsk*)(0);
 		auto uqwS = (uqword)&(pT->m_pack[0]);
 		uqwS += sendSize;
 		auto p = allocPacket ((udword)uqwS);
+		p->pAsk = 0;
+		p->sessionID = EmptySessionID;
 		auto pNN = P2NHead (p);
 		pNN->ubySrcServId = serverId ();
+		pNN->ubyDesServId = c_emptyLoopHandle;
 		pNN->uwMsgID = comMsg2FullMsg(comMsgMsgId_sendToChannelAsk);
 		auto pU = (sendToChannelAsk*)(N2User(pNN));
 		memcpy (pU->m_pack, pSN, sendSize);
@@ -1233,8 +1259,10 @@ int )"<<pName<<R"( :: sendPackToChannel(packetHead* pack, channelKey& chK, bool 
 		pU->m_excSender = ntfMe ? 0 : 1;
 		auto pK = (channelKey*)(&pU->m_chKey[0]);
 		*pK = chK;
-		auto fnFreePack = getForMsgModuleFunS ().fnFreePack;
 		fnFreePack (pack);
+		auto fnSendPackToLoopForChannel = getForMsgModuleFunS ().fnSendPackToLoopForChannel;
+		fnSendPackToLoopForChannel (p);
+		/*
 		auto rootServerNum = sizeof (s_RootSer) / sizeof (s_RootSer[0]);
 		auto nR = sendPackToSomeServer (p, s_RootSer, rootServerNum);
 		if (nR) {
@@ -1242,30 +1270,38 @@ int )"<<pName<<R"( :: sendPackToChannel(packetHead* pack, channelKey& chK, bool 
 			gError("sendMsgToSomeServer error nR = "<<nR);
 			break;
 		}
+		*/
 	} while (0);
 	return nRet;
 }
 
-int )"<<pName<<R"( :: sendAddChannel (udword& token)
+int )"<<pName<<R"( :: sendAddChannel (udword& token, channelKey& rCh)
 {
 	int nRet = 0;
 	addChannelAskMsg ask;
 	auto pU = ask.pack();
 	auto pK = (channelKey*)(&(pU->m_chKey[0]));
-	auto nR = createUuid ((char*)pK);
+	*pK = rCh;
+	//auto nR = createUuid ((char*)pK);
 	auto fnNextToken = getForMsgModuleFunS().fnNextToken;
 	auto newToken = fnNextToken (serverId());
+	/*
 	auto& rSendS = channelSendS ();
 	channelSendValue v;
 	auto inRet = rSendS.insert(std::make_pair(newToken, v));
 	myAssert (inRet.second);
+	*/
 	do {
+		/*
 		if (!inRet.second) {
 			gError("insert channel token err: token = "<<newToken);
 			nRet = 1;
 			break;
 		}
+		*/
 		pU->m_token = newToken;
+		sendToAllGateServer (ask);
+		/*
 		auto rootServerNum = sizeof (s_RootSer) / sizeof (s_RootSer[0]);
 		auto nR = sendMsgToSomeServer (ask, s_RootSer, rootServerNum);
 		if (nR) {
@@ -1273,6 +1309,7 @@ int )"<<pName<<R"( :: sendAddChannel (udword& token)
 			gError("sendMsgToSomeServer error nR = "<<nR);
 			break;
 		}
+		*/
 		token = newToken;
 	} while (0);
 	return nRet;

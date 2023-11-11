@@ -122,17 +122,19 @@ int midSendPackToLoopForChannelFun(packetHead* pack) /* 返回值貌似没用 */
 	int nR = 0;
 	auto pN = P2NHead (pack);
 	auto& rMgr = tSingleton<loopMgr>::single ();
-	
+	auto fnPushPackToLoop = tSingleton<loopMgr>::single().getPhyCallback().fnPushPackToLoop;
 	pack->pAsk = 0;
-	auto bInOnceProc =  packInOnceProc(pack);
 	do {
+		bool bRand = true;
+		if (pN->ubyDesServId != c_emptyLoopHandle) {
+			bRand = !packInOnceProc(pack);
+		}
 		auto objSer = pN->ubyDesServId;
-		if (!bInOnceProc) {
+		if (bRand) {
 			auto upN = rMgr.upNum ();
 			auto s = rand () % upN;
 			objSer = rMgr.getLoopByIndex (s)->id();
 		}
-		auto fnPushPackToLoop = tSingleton<loopMgr>::single().getPhyCallback().fnPushPackToLoop;
 		fnPushPackToLoop (objSer, pack);
 	} while (0);
 	return nRet;
@@ -160,46 +162,52 @@ int midSendPackToLoopFun(packetHead* pack) /* 返回值貌似没用 */
 		pN->dwToKen = pS->nextToken ();
 	}
 	auto bInOnceProc =  packInOnceProc(pack);
+	auto fnPushPackToLoop = tSingleton<loopMgr>::single().getPhyCallback().fnPushPackToLoop;
 	do {
-		auto objSer = pN->ubyDesServId;
 		pack->pAsk = 0;
-		if (!bInOnceProc) {
+		myAssert(pN->ubyDesServId != c_emptyLoopHandle);
+		if (pN->ubyDesServId == c_emptyLoopHandle) {
+			mError ("ubyDesServId == c_emptyLoopHandle pack = "<<pack);
+			break;
+		}
+		auto bLocal = packInOnceProc(pack);
+		auto objSer = pN->ubyDesServId;
+		if (!bLocal) {
 			auto upN = rMgr.upNum ();
 			auto s = rand () % upN;
 			objSer = rMgr.getLoopByIndex (s)->id();
-
-			if (!bIsRet) {
-				auto& rMsgInfoMgr = tSingleton<loopMgr>::single ().defMsgInfoMgr ();
-				auto retMsgId = rMsgInfoMgr.getRetMsg (pN->uwMsgID);
-				if (c_null_msgID != retMsgId) {
-					auto pFun = pS->findMsg(retMsgId);
-					if (pFun ) {
-						pack->pAsk = 1;  /* 告知发送线程需要保存原包 */
-						iPackSave* pISave = pS->getIPackSave ();
-						pISave->netTokenPackInsert (pack);  /* 保存pack */
-						std::pair<NetTokenType, impLoop*> pa;
-						pa.first = pN->dwToKen;
-						pa.second = pS;
-						auto delTime = 6180;
-						auto& rTimeMgr = pS->getTimerMgr ();
-						rTimeMgr.addComTimer (delTime, sDelNetPack, &pa, sizeof (pa));
-					}
+		}
+		if (!bIsRet) {
+			auto& rMsgInfoMgr = tSingleton<loopMgr>::single ().defMsgInfoMgr ();
+			auto retMsgId = rMsgInfoMgr.getRetMsg (pN->uwMsgID);
+			if (c_null_msgID != retMsgId) {
+				auto pFun = pS->findMsg(retMsgId);
+				if (pFun ) {
+					pack->pAsk = 1;  /* 告知发送线程需要保存原包 */
+					iPackSave* pISave = pS->getIPackSave ();
+					pISave->netTokenPackInsert (pack);  /* 保存pack 因为该函数是通过网络发送的第一站,故在此保存   */
+					std::pair<NetTokenType, impLoop*> pa;
+					pa.first = pN->dwToKen;
+					pa.second = pS;
+					auto delTime = 6180;
+					auto& rTimeMgr = pS->getTimerMgr ();
+					rTimeMgr.addComTimer (delTime, sDelNetPack, &pa, sizeof (pa));
 				}
 			}
 		}
-		// fnPushPackToLoop
-		auto fnPushPackToLoop = tSingleton<loopMgr>::single().getPhyCallback().fnPushPackToLoop;
 		fnPushPackToLoop (objSer, pack);
 	} while (0);
 	return nRet;
 }
+
 /*
 static iRpcInfoMgr* sGetIRpcInfoMgr()
 {
 	return &tSingleton<loopMgr>::single().defMsgInfoMgr();
 }
 */
-int    sRegRpc(msgIdType askId, msgIdType retId, serverIdType	askDefProcSer,
+
+static int    sRegRpc(msgIdType askId, msgIdType retId, serverIdType	askDefProcSer,
 			serverIdType	retDefProcSer)
 {
 	auto& rMgr = tSingleton<loopMgr>::single().defMsgInfoMgr();

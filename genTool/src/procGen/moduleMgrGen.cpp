@@ -575,7 +575,7 @@ dword allLogicServerMgr::afterLoad(int nArgC, char** argS, ForLogicFun* pForLogi
 	dword nRet = 0;
 	m_ForLogicFun = *pForLogic;
 	)"<<strProtobufSerSS.str()<<R"(
-	auto pForMsg = &m_ForLogicFun;
+	auto pForMsg = pForLogic; // &m_ForLogicFun;
 	// auto& rFunS = getForMsgModuleFunS();
 	// rFunS = *pForLogic;
 )";

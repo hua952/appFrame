@@ -32,6 +32,7 @@ public:
 
 	int processLocalServerPack(packetHead* pPack);
 	int processOtherAppPack(packetHead* pPack);
+	int processAllGatePack(packetHead* pPack);
 	int procProx(packetHead* pPack);
     NetTokenType	nextToken ();
 	ServerIDType id();
@@ -42,7 +43,7 @@ public:
 	iPackSave*    getIPackSave ();
 	void  showFps ();
 	fpsCount&  fpsC ();
-	
+	int clonePackToOtherNetThread (packetHead* pack);	
 	int processNetPackFun(ISession* session, packetHead* pack)override;
 	void onAcceptSession(ISession* session, void* userData)override;
 	void onConnect(ISession* session, void* userData)override;

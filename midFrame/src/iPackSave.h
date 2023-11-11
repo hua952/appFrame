@@ -2,10 +2,13 @@
 #define iPackSave_h__
 #include "packet.h"
 #include "ISession.h"
+#include "loop.h"
+
 struct tokenInfo
 {
 	NetTokenType   oldToken;
 	SessionIDType  sessionId;
+	ServerIDType   lastServer;
 };
 struct iPackSave
 {

@@ -114,6 +114,8 @@ packetHead* clonePack(packetHead* p)
 	auto pN = P2NHead(p);
 	udword extNum = NIsExtPH(pN)?1:0;
 	auto pRet = allocPacketExt (pN->udwLength, extNum);
+	pRet->pAsk = 0;
+	pRet->sessionID = p->sessionID;
 	auto pRN = P2NHead(pRet);
 	auto udwLength = pN->udwLength;
 	*pRN++ = *pN++;
@@ -123,13 +125,6 @@ packetHead* clonePack(packetHead* p)
 	return pRet;
 }
 
-/*
-static ForMsgModuleFunS* g_ForMsgModuleFunS = nullptr;
-void              setForMsgModuleFunS (ForMsgModuleFunS* pFunS)
-{
-	g_ForMsgModuleFunS = pFunS;
-}
-*/
 ForMsgModuleFunS* s_pForMsgModuleFunS = nullptr;
 
 void setForMsgModuleFunS(ForMsgModuleFunS* pF)

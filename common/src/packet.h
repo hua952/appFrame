@@ -50,11 +50,11 @@ typedef struct  _netPacketHead
 #define     NSetExtPH(p) ((p->uwTag|=0x40))
 #define     NIsRet(p) ((p->uwTag&0x80))
 #define     NSetRet(p) ((p->uwTag|=0x80))
-/*
-#define     NIsZip(p) ((p->uwTag&0x20))
-#define     NSetZip(p) ((p->uwTag|=0x20))
-#define     NSetUnZip(p) ((p->uwTag|=0xdf))
 
+#define     NIsOtherNetLoopSend(p) ((p->uwTag&0x20))
+#define     NSetOtherNetLoopSend(p) ((p->uwTag|=0x20))
+
+/*
 #define     NIsAskSave(p) ((p->uwTag&0x40))
 #define     NSetAskSave(p) ((p->uwTag|=0x40))
 
@@ -79,8 +79,8 @@ enum packAddrType
 #define		PacketHeadSize    (sizeof(packetHead))
 #define     NetMsgLenSize  (sizeof(netPacketHead))
 #define     NetHeadSize   (NetMsgLenSize)
-#define     AllNetHeadSize(p)   (((NIsExtPH(p))?2:1)*NetMsgLenSize)
-#define     AllNetSendSize(p)   (AllNetHeadSize(p)+p->udwLength)
+// #define     AllNetHeadSize(p)   (((NIsExtPH(p))?2:1)*NetMsgLenSize)
+// #define     AllNetSendSize(p)   (AllNetHeadSize(p)+p->udwLength)
 #define     AllPacketHeadSize  (PacketHeadSize+NetHeadSize)
 //#define     NetPacketHeadSize (sizeof(NetPacketHead))
 //#define     FullPacketHeadSize   (sizeof(PacketHead)+NetPacketHeadSize)

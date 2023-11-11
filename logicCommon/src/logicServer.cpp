@@ -28,9 +28,16 @@ void  logicServer::setServerName (const char* v)
 
 logicServerMgr::logicServerMgr ()
 {
+	m_pForLogicFun = nullptr;
 }
+
 logicServerMgr::~logicServerMgr ()
 {
+}
+
+ForLogicFun& logicServerMgr:: forLogicFunSt ()
+{
+    return *m_pForLogicFun;
 }
 
 ubyte  logicServerMgr::serverNum ()
@@ -173,6 +180,40 @@ int   logicServer:: sendPackToSomeServer(packetHead* pack, serverIdType* pSerS, 
 		fnFreePack (pack);
     } while (0);
     return nRet;
+}
+
+int logicServer:: sendToAllGateServer (CMsgBase& rMsg)
+{
+    int nRet = 0;
+    do {
+		auto pack = rMsg.pop();
+		auto pNN = P2NHead (pack);
+		pNN->ubySrcServId = serverId ();
+		pNN->ubyDesServId = c_emptyLoopHandle;
+		auto fnSendPackToLoopForChannel = getForMsgModuleFunS ().fnSendPackToLoopForChannel;
+		fnSendPackToLoopForChannel (pack);
+    } while (0);
+    return nRet;
+}
+
+int    logicServer:: createChannel (channelKey& rCh, serverIdType srcSer, SessionIDType seId)
+{
+	int    nRet = 0;
+	do {
+		auto& rChS = channelS ();
+		channelValue sidS;
+		uqword uqwSe = srcSer;
+		uqwSe <<= 32;
+		uqwSe |= seId;
+		sidS.insert(uqwSe);
+		// auto& rCh = *((channelKey*)rAsk.m_chKey);
+		auto inRet = rChS.insert(std::make_pair(rCh, sidS));
+		myAssert (inRet.second);
+		if (!inRet.second) {
+			nRet = 1;
+		}
+	} while (0);
+	return nRet;
 }
 
 int logicServer:: sendPackToSomeLocalServer(packetHead* pack, serverIdType* pSerS, udword serverNum)
