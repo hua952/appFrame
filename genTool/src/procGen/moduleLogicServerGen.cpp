@@ -1232,14 +1232,16 @@ int )"<<pName<<R"( :: sendPackToChannel(packetHead* pack, channelKey& chK, bool 
 {
 	int nRet = 0;
 	do {
+		auto fnFreePack = getForMsgModuleFunS ().fnFreePack;
+		/*
 		auto toNetPack = getForMsgModuleFunS().toNetPack;
 		packetHead* pNew = nullptr;
 		toNetPack (pack, pNew);
-		auto fnFreePack = getForMsgModuleFunS ().fnFreePack;
 		if (pNew) {
 			fnFreePack (pack);
 			pack = pNew;
 		}
+		*/
 		auto pSN = P2NHead(pack);
 		pSN->ubySrcServId = serverId ();
 		auto sendSize = NetHeadSize + pSN->udwLength;

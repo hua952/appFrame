@@ -78,7 +78,7 @@
 							</procRpc>
 						</appClientM1Th1>
 						<appClientM1Th2 sleepSetp="1" showFps="1" fpsSetp="40000">
-							<connect ip="127.0.0.1" port="12000" target="gateTh1" defRoute="1"  name="appServerTh1" targetEndPoint="gateTh1" teag="1"/>
+							<connect ip="127.0.0.1" port="12001" target="gateTh1" defRoute="1"  name="appServerTh1" targetEndPoint="gateTh1" teag="1"/>
 							<procRpc>
 								<manualList askType="ask"/>
 							</procRpc>
