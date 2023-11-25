@@ -5,6 +5,10 @@
 	<thirdPartyDir>C:/work/</thirdPartyDir>
 	<frameInstallPath>C:/work/appFrameInstall/</frameInstallPath>
 	<defMsg file="cChess.xml"/>
+	<endPoint>
+		<en1 port="12000"/>
+		<en2 port="12001"/>
+	</endPoint>
 	<app>
 		<gate>
 			<appArg>detachServerS=1</appArg>
@@ -12,17 +16,10 @@
 				<gateM>
 					<server>
 						<gateTh1 sleepSetp="1" showFps="1" fpsSetp="40000">
-							<listen port="12000" teag="1" defRoute="1" name="gateTh1"/>
-							<procRpc>
-								<move askType="ask"/>
-							</procRpc>
+							<listen teag="1" defRoute="1" name="en1"/>
 						</gateTh1>
 						<gateTh2 sleepSetp="1" showFps="1" fpsSetp="40000">
-							<listen port="12001" teag="1" defRoute="1" name="gateTh2"/>
-							<procRpc>
-								<roomChannel askType="ask"/>
-								<roomChatTxt askType="ask"/>
-							</procRpc>
+							<listen  teag="1" defRoute="1" name="en2"/>
 						</gateTh2>
 						<gateTh3 autoRun="0" showFps="0">
 						</gateTh3>
@@ -36,8 +33,7 @@
 				<appServerM>
 					<server>
 						<appServerTh1 sleepSetp="1" showFps="1" fpsSetp="40000">
-							<connect ip="127.0.0.1" port="12000" target="gateTh1" defRoute="1"  name="appServerTh1" targetEndPoint="gateTh1" teag="1"/>
-							<listen port="11000" teag="1" defRoute="1" name="appServerTh1Len"/>
+							<connect defRoute="1"  targetEndPoint="en1" teag="1"/>
 							<procRpc>
 								<move askType="ask"/>
 							</procRpc>
@@ -59,7 +55,7 @@
 			<module>
 				<appClientM2>
 					<server>
-						<appClientM2Th sleepSetp="1" showFps="1" fpsSetp="40000">
+						<appClientM2Th sleepSetp="1" rearEnd="0" regRoute="0" showFps="1" fpsSetp="40000">
 							<procRpc>
 								<regret askType="ask"/>
 							</procRpc>
@@ -77,8 +73,8 @@
 								<roomChatTxt askType="ask"/>
 							</procRpc>
 						</appClientM1Th1>
-						<appClientM1Th2 sleepSetp="1" showFps="1" fpsSetp="40000">
-							<connect ip="127.0.0.1" port="12001" target="gateTh1" defRoute="1"  name="appServerTh1" targetEndPoint="gateTh1" teag="1"/>
+						<appClientM1Th2 rearEnd="0" regRoute="0" sleepSetp="1" showFps="1" fpsSetp="40000">
+							<connect defRoute="1"  targetEndPoint="en2" teag="1"/>
 							<procRpc>
 								<manualList askType="ask"/>
 							</procRpc>

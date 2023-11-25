@@ -24,15 +24,14 @@ private:
 struct toolServerEndPointInfo
 {
 	char			  endPointName[24];
-	// char			  szTarget [24];
 	char			  targetEndPoint [24];
 	char              ip[16];
 	uword             port;
 	ServerIDType	  targetHandle; // use to reg route use on onConnect
 	uword             userData;  // 
 	bool              bDef;  // def route
-	// bool              bRegHandle; // 几乎没用 
 };
+
 struct toolServerNode
 {
 	udword                  udwUnuse;
@@ -80,7 +79,13 @@ public:
 	bool  isRoot ();
 	bool  autoRun ();
 	void  setAutoRun (bool v);
+	bool  rearEnd ();
+	void  setRearEnd (bool v);
+	bool  regRoute ();
+	void  setRegRoute (bool v);
 private:
+	bool  m_regRoute;
+	bool  m_rearEnd;
 	bool  m_autoRun;
 	std::unique_ptr <char[]>  m_frameFunDec;
 	std::unique_ptr <char[]>  m_frameFunName;

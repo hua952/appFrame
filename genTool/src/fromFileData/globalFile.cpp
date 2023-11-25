@@ -246,3 +246,8 @@ void   globalFile:: initProtoDataTypeS ()
     } while (0);
 }
 
+globalFile::endPointGlobalMap&  globalFile:: endPointGlobalS ()
+{
+    return m_endPointGlobalS;
+}
+

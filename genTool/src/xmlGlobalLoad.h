@@ -26,8 +26,10 @@ public:
 	int  onceServerLoad (rapidxml::xml_node<char>* pS, std::shared_ptr<serverFile> rS, appFile& rApp);
 	int  secondProcess ();
 	serverFile*    getServerByHandle(const char* szHandle);
+	serverFile*    getServerByListenEndPointName(const char* szEnName);
 	allServerMap&  allServer ();
 private:
+	int  procEndPointS (rapidxml::xml_node<char>* pEndPointS);
 	allServerMap  m_allServer;
 };
 #endif

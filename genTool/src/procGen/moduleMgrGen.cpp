@@ -101,9 +101,9 @@ int   moduleMgrGen:: writeCMakeLists (appFile& rApp)
 		auto& rConfig = tSingleton<configMgr>::single ();
 		auto structBadyType = rConfig.structBadyType ();
 		std::string strProtobufSer;
-		if (structBadyTime_proto == structBadyType) {
+		// if (structBadyTime_proto == structBadyType) {
 			strProtobufSer = "protobufSer";
-		}
+		//}
 		std::string mgrName = rApp.appName ();
 		mgrName += "ModuleMgr";
 os<<"SET(prjName "<<mgrName<<")"<<std::endl;

@@ -9,6 +9,7 @@ struct tokenInfo
 	NetTokenType   oldToken;
 	SessionIDType  sessionId;
 	ServerIDType   lastServer;
+	ServerIDType   inGateSerId;
 };
 struct iPackSave
 {

@@ -20,8 +20,8 @@ typedef struct _packetHead
 	struct _packetHead*    pPer;
 	// struct _packetHead*    pAsk;
 	uqword    pAsk;
-	udword    sessionID;
-	udword    unUse;
+	udword    sessionID; /*   处理ret网络消息要用   */
+	udword    loopId;     /*   处理ret网络消息要用   */
 }packetHead;
 
 typedef packetHead* pPacketHead;
@@ -40,7 +40,7 @@ typedef struct  _netPacketHead
 	serverIdType	ubyDesServId;
 	msgIdType		uwMsgID;
 	ubyte			uwTag;
-	ubyte           unUse;
+	ubyte           inGateSerId;
  }netPacketHead ,*pNetPacketHead;
 
 #define     P2NHead(p)  ((pNetPacketHead)(p+1))
@@ -53,6 +53,10 @@ typedef struct  _netPacketHead
 
 #define     NIsOtherNetLoopSend(p) ((p->uwTag&0x20))
 #define     NSetOtherNetLoopSend(p) ((p->uwTag|=0x20))
+
+#define     NNeetRet(p) ((p->uwTag&0x10))
+#define     NSetNeetRet(p) ((p->uwTag|=0x10))
+#define     NSetUnRet(p) ((p->uwTag&=~0x10))
 
 /*
 #define     NIsAskSave(p) ((p->uwTag&0x40))

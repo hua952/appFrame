@@ -17,4 +17,6 @@ genTool.exe defFile=C:\work\appFrame\test\openWorkDir.xml
 genTool.exe defFile=C:\work\appFrame\test\test.xml
 genTool.exe defFile=C:\work\appFrame\test\testSysMsg.xml structBadyType=0
 genTool.exe defFile=C:\work\appFrame\test\genTest.xml structBadyType=0
+genTool.exe defFile=C:\work\appFrame\test\gateTest.xml structBadyType=0
+
 

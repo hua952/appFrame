@@ -29,7 +29,11 @@ public:
 	void  setTcpServer (ITcpServer* v);
 	ISession* getSession (SessionIDType id);
 	// delTcpServerFT  delTcpServerFun ();
-	typedef ubyte usrDataValue[16];
+	// typedef ubyte usrDataValue[32];
+	struct usrDataValue
+	{
+		uqword val[4];
+	};
 	using usrDataType = std::pair<comTcpNet*, usrDataValue>;
 private:
 	std::unique_ptr<usrDataType[]>   m_usrDataS;

@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <map>
+#include "comFun.h"
 
 class msgPmpFile;
 class globalFile
@@ -11,6 +12,7 @@ class globalFile
 public:
     globalFile ();
     ~globalFile ();
+	using endPointGlobalMap = std::map<std::string, uword>;
 	using msgFileV = std::map<std::string, std::shared_ptr<msgPmpFile>>;
 	using protoDataTypeMap = std::map<std::string, std::string>;
 	const char*  depLibHome ();
@@ -33,7 +35,9 @@ public:
 	protoDataTypeMap&  protoDataTypeS ();
 	const char*  projectInstallDir ();
 	void  setProjectInstallDir (const char* v);
+	endPointGlobalMap&  endPointGlobalS ();
 private:
+	endPointGlobalMap  m_endPointGlobalS;
 	std::unique_ptr <char[]>  m_projectInstallDir;
     std::unique_ptr <char[]>  m_thirdPartyDir;
     std::unique_ptr <char[]>  m_installPath;

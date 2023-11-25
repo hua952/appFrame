@@ -96,6 +96,8 @@ packetHead* allocPacket(udword udwS)
 	memset(pN, 0, NetHeadSize);
 	pN->udwLength = udwS;
 	pRet->pAsk = 0;
+	pRet->sessionID = EmptySessionID;
+	pRet->loopId = c_emptyLoopHandle;
 	return pRet;
 }
 

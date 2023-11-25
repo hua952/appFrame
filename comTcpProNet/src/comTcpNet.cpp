@@ -90,7 +90,7 @@ int   comTcpNet:: initNet (endPoint* pLister,
 			auto&le = pLister[i];
 			myAssert (le.userDataLen <= sizeof (re.second));
 			// re.second = *((uqword*)(le.userData));
-			memcpy(re.second, le.userData, le.userDataLen);
+			memcpy(&re.second, le.userData, le.userDataLen);
 			endPS[i] = le;
 		}
 		for (decltype (conNum) i = 0; i < conNum; i++) {
@@ -98,12 +98,13 @@ int   comTcpNet:: initNet (endPoint* pLister,
 			auto&co = pConnector[i];
 			myAssert (co.userDataLen <= sizeof (re.second));
 			// re.second = *((uqword*)(co.userData));
-			memcpy(re.second, co.userData, co.userDataLen);
+			memcpy(&re.second, co.userData, co.userDataLen);
 			endPS[i + listerNum] = co;
 		}
 		for (decltype (endPointNum) i = 0; i < endPointNum; i++) {
 			m_usrDataS[i].first = this;
-			endPS[i].userData = (&m_usrDataS[i]);
+			endPS[i].userData = &(m_usrDataS[i]);
+			endPS[i].userDataLen = sizeof (m_usrDataS[i]);
 		}
 
 		auto pNet = creF(&cb, pEDS, listerNum, pEDS + listerNum,

@@ -12,9 +12,12 @@
 #include "impLoop.h"
 #include "mArgMgr.h"
 #include <iostream>
+#include <cstdio>
+#include <cstdlib>
 #include <cmath>
 #include "modelLoder.h"
 #include "comMsgMsgId.h"
+#include <vector>
 
 int  InitMidFrame(int nArgC, char** argS, PhyCallback* pCallbackS)
 {
@@ -115,6 +118,7 @@ static bool sDelNetPack (void* pUP)
 	}
 	return false;
 }
+
 int midSendPackToLoopForChannelFun(packetHead* pack) /* 返回值貌似没用 */
 {
 	/* 发消息得起点函数 */
@@ -131,9 +135,12 @@ int midSendPackToLoopForChannelFun(packetHead* pack) /* 返回值貌似没用 */
 		}
 		auto objSer = pN->ubyDesServId;
 		if (bRand) {
+			/*
 			auto upN = rMgr.upNum ();
 			auto s = rand () % upN;
 			objSer = rMgr.getLoopByIndex (s)->id();
+			*/
+			objSer = rMgr.getOnceUpServer ();
 		}
 		fnPushPackToLoop (objSer, pack);
 	} while (0);
@@ -148,52 +155,88 @@ int midSendPackToLoopFun(packetHead* pack) /* 返回值貌似没用 */
 	auto pN = P2NHead (pack);
 	auto& rMgr = tSingleton<loopMgr>::single ();
 
-	auto curHandleFun = tSingleton<loopMgr>::single ().getPhyCallback().fnGetCurServerHandle;
+	auto curHandleFun = rMgr.getPhyCallback().fnGetCurServerHandle;
+	auto freeFun = rMgr.getForLogicFun().fnFreePack;
 	auto curHandle = curHandleFun ();
 	if (curHandle !=  pN->ubySrcServId) {
 		mTrace ("curHandle = "<<curHandle<<"pN->ubySrcServId = "<<pN->ubySrcServId);
 	}
 	myAssert (pN->ubySrcServId == curHandle);
-
 	auto pS = rMgr.getLoop(pN->ubySrcServId);
 	myAssert (pS);
 	bool bIsRet = NIsRet(pN);
-	if (!bIsRet) {
-		pN->dwToKen = pS->nextToken ();
-	}
+	bool  bNeetRet = false;
 	auto bInOnceProc =  packInOnceProc(pack);
-	auto fnPushPackToLoop = tSingleton<loopMgr>::single().getPhyCallback().fnPushPackToLoop;
+
 	do {
-		pack->pAsk = 0;
 		myAssert(pN->ubyDesServId != c_emptyLoopHandle);
 		if (pN->ubyDesServId == c_emptyLoopHandle) {
-			mError ("ubyDesServId == c_emptyLoopHandle pack = "<<pack);
+			mError ("ubyDesServId == c_emptyLoopHandle pack = "<<*pack);
+			freeFun (pack);
 			break;
 		}
-		auto bLocal = packInOnceProc(pack);
-		auto objSer = pN->ubyDesServId;
-		if (!bLocal) {
-			auto upN = rMgr.upNum ();
-			auto s = rand () % upN;
-			objSer = rMgr.getLoopByIndex (s)->id();
+		auto fnPushPackToLoop = rMgr.getPhyCallback().fnPushPackToLoop;
+		if (bInOnceProc) {
+			fnPushPackToLoop (pN->ubyDesServId, pack);
+			break;
 		}
-		if (!bIsRet) {
-			auto& rMsgInfoMgr = tSingleton<loopMgr>::single ().defMsgInfoMgr ();
-			auto retMsgId = rMsgInfoMgr.getRetMsg (pN->uwMsgID);
-			if (c_null_msgID != retMsgId) {
-				auto pFun = pS->findMsg(retMsgId);
-				if (pFun ) {
-					pack->pAsk = 1;  /* 告知发送线程需要保存原包 */
-					iPackSave* pISave = pS->getIPackSave ();
-					pISave->netTokenPackInsert (pack);  /* 保存pack 因为该函数是通过网络发送的第一站,故在此保存   */
-					std::pair<NetTokenType, impLoop*> pa;
-					pa.first = pN->dwToKen;
-					pa.second = pS;
-					auto delTime = 6180;
-					auto& rTimeMgr = pS->getTimerMgr ();
-					rTimeMgr.addComTimer (delTime, sDelNetPack, &pa, sizeof (pa));
+		if (bIsRet) {
+			if (EmptySessionID == pack->sessionID) {
+				auto objSe = rMgr.getOnceUpServer ();
+				myAssert (c_emptyLoopHandle != objSe);
+				if (c_emptyLoopHandle == objSe) {       /*     由于本函数是处理首站发出, 不可能会出现这种情况        */
+					mError(" can not find net server whith pack pack is : "<<*pack);
+					freeFun (pack);
+				} else {
+					fnPushPackToLoop (objSe, pack);
+				}
+			} else {
+				auto pSess = pS->getSession (pack->sessionID);
+				myAssert (pSess);
+				if (pSess) {
+					pSess->send (pack);
+				} else {
+					mError(" can not find sesssion whith pack pack is : "<<*pack);
+					freeFun (pack);
 				}
 			}
+			break;
+		}
+		
+		/*  以下处理ask类型消息的发送    */
+		myAssert(EmptySessionID == pack->sessionID);
+
+		auto& rMsgInfoMgr = tSingleton<loopMgr>::single ().defMsgInfoMgr ();
+		auto retMsgId = rMsgInfoMgr.getRetMsg (pN->uwMsgID);
+		if (c_null_msgID != retMsgId) {
+			auto pFun = pS->findMsg(retMsgId);
+			if (pFun ) {
+				bNeetRet = true;
+			}
+		}
+
+		if (bNeetRet) {
+			NSetNeetRet(pN);
+		} else {
+			NSetUnRet(pN);
+		}
+		if (bNeetRet) {
+			pN->dwToKen = pS->nextToken ();
+		}
+		pack->pAsk = 0;
+		
+		auto objSer = rMgr.getOnceUpServer ();
+		myAssert (c_emptyLoopHandle != objSer);
+		if (bNeetRet) {
+			pack->pAsk = 1;  /* 告知发送线程需要保存原包 */
+			iPackSave* pISave = pS->getIPackSave ();
+			pISave->netTokenPackInsert (pack);  /* 保存pack 因为该函数是通过网络发送的第一站,故在此保存   */
+			std::pair<NetTokenType, impLoop*> pa;
+			pa.first = pN->dwToKen;
+			pa.second = pS;
+			auto delTime = 6180;
+			auto& rTimeMgr = pS->getTimerMgr ();
+			rTimeMgr.addComTimer (delTime, sDelNetPack, &pa, sizeof (pa));
 		}
 		fnPushPackToLoop (objSer, pack);
 	} while (0);
@@ -378,7 +421,9 @@ loopMgr::loopMgr():m_CurLoopNum(0), m_gropId(0)
 {
 	// m_netLibHandle = nullptr;
     m_delSendPackTime = 5000;
-	m_upNum = 1;
+	// m_upNum = 1;
+	m_canUpRouteServerNum = 0;
+	m_canDownRouteServerNum = 0;
 }
 
 loopMgr::~loopMgr()
@@ -455,11 +500,20 @@ int loopMgr::getAllLoopAndStart(serverNode* pBuff, int nBuffNum)
 {
 	auto pid = procId ();
 	int nRet = 0;
+	std::vector<loopHandleType>  upVec;
+	std::vector<loopHandleType>  downVec;
 	for (auto i = 0; i < LoopNum && nRet < nBuffNum; i++)
 	{
 		auto &p = m_loopS[i];
 		if (!p) {
 			continue;
+		}
+		auto sid = p->id ();
+		if (p->canUpRoute ()) {
+			upVec.push_back(sid);
+		}
+		if (p->canDownRoute ()) {
+			downVec.push_back(sid);
 		}
 		auto &node = pBuff[nRet++];
 		auto pNode = p->getServerNode ();
@@ -469,12 +523,87 @@ int loopMgr::getAllLoopAndStart(serverNode* pBuff, int nBuffNum)
 			node.listenerNum = 0;
 			node.connectorNum = 0;
 		}
-		auto sid = p->id ();
 		node.handle = sid;//toHandle (pid, id);
+		m_canUpRouteServerNum = upVec.size ();
+		m_canDownRouteServerNum = downVec.size ();
+		m_canRouteServerIdS = std::make_unique<loopHandleType[]> (m_canUpRouteServerNum + m_canDownRouteServerNum);
+		auto curI = 0;
+		for (auto it = upVec.begin (); it != upVec.end (); it++) {
+			m_canRouteServerIdS [curI++] = *it;
+		}
+		for (auto it = downVec.begin (); it != downVec.end (); it++) {
+			m_canRouteServerIdS [curI++] = *it;
+		}
 	}
 
 	mTrace ("at the end nRet = "<<nRet);
 	return nRet;
+}
+
+uword   loopMgr:: getAllCanRouteServerS (loopHandleType* pBuff, uword buffNum) // Thread safety
+{
+	auto nAll = m_canUpRouteServerNum + m_canDownRouteServerNum;
+	myAssert (buffNum > nAll);
+    uword  nRet = nAll;
+	if (nRet > buffNum	) {
+		nRet = buffNum;
+	}
+    do {
+		for (decltype (nRet) i = 0; i < nRet; i++) {
+			pBuff[i] = m_canRouteServerIdS[i];
+		}
+    } while (0);
+    return nRet;
+}
+
+uword    loopMgr::getAllCanUpServerS (loopHandleType* pBuff, uword buffNum)
+{
+	myAssert (buffNum > m_canUpRouteServerNum);
+	uword nRet = m_canUpRouteServerNum;
+	if (nRet > buffNum	) {
+		nRet = buffNum;
+	}
+	for (decltype (nRet) i = 0; i < nRet; i++) {
+		pBuff[i] = m_canRouteServerIdS[i];
+	}
+	return nRet;
+}
+
+uword   loopMgr::getAllCanDownServerS (loopHandleType* pBuff, uword buffNum)
+{
+	myAssert (buffNum > m_canDownRouteServerNum);
+	uword nRet = m_canDownRouteServerNum;
+	if (nRet > buffNum	) {
+		nRet = buffNum;
+	}
+	for (decltype (nRet) i = 0; i < nRet; i++) {
+		pBuff[i] = m_canRouteServerIdS[i + m_canUpRouteServerNum];
+	}
+	return nRet;
+}
+
+loopHandleType loopMgr:: getOnceUpServer ()
+{
+    loopHandleType    nRet = c_emptyLoopHandle;
+    do {
+		if (m_canUpRouteServerNum) {
+			auto i = rand () % m_canUpRouteServerNum;
+			nRet = m_canRouteServerIdS [i];
+		}
+    } while (0);
+    return nRet;
+}
+
+loopHandleType   loopMgr:: getOnceDownServer ()
+{
+    loopHandleType    nRet = c_emptyLoopHandle;
+    do {
+		if (m_canDownRouteServerNum) {
+			auto i = rand () % m_canDownRouteServerNum;
+			nRet = m_canRouteServerIdS [i +  m_canUpRouteServerNum];
+		}
+    } while (0);
+    return nRet;
 }
 
 PhyCallback&   loopMgr:: getPhyCallback()
@@ -517,14 +646,44 @@ serializePackFunType loopMgr :: toNetPack ()
     return m_toNetPack;
 }
 
-uword loopMgr :: upNum ()
+uword loopMgr :: canRouteNum ()
 {
-    return m_upNum;
+    return m_canUpRouteServerNum  + m_canDownRouteServerNum; // m_upNum;
 }
-
+/*
 void  loopMgr :: setUpNum (uword v)
 {
     m_upNum = v;
+}
+*/
+
+bool  loopMgr:: isRootApp ()
+{
+    bool   nRet = 0;
+    do {
+		nRet =  m_canDownRouteServerNum && !m_canUpRouteServerNum;
+    } while (0);
+    return nRet;
+}
+
+uword loopMgr:: canUpRouteServerNum ()
+{
+    return m_canUpRouteServerNum;
+}
+
+void loopMgr:: setCanUpRouteServerNum (uword v)
+{
+    m_canUpRouteServerNum = v;
+}
+
+uword  loopMgr:: canDownRouteServerNum ()
+{
+    return m_canDownRouteServerNum;
+}
+
+void  loopMgr:: setCanDownRouteServerNum (uword v)
+{
+    m_canDownRouteServerNum = v;
 }
 
 void loopMgr :: logicOnConnect(serverIdType fId, SessionIDType sessionId, uqword userData)

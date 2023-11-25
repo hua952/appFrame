@@ -31,9 +31,11 @@ public:
 	int processOncePack(packetHead* pPack);
 
 	int processLocalServerPack(packetHead* pPack);
+	int processOtherAppToMePack(ISession* session, packetHead* pPack);
 	int processOtherAppPack(packetHead* pPack);
 	int processAllGatePack(packetHead* pPack);
 	int procProx(packetHead* pPack);
+	int forward(packetHead* pPack);
     NetTokenType	nextToken ();
 	ServerIDType id();
 	cTimerMgr&    getTimerMgr();
@@ -50,14 +52,27 @@ public:
 	void onClose(ISession* session)override;
 	void onWritePack(ISession* session, packetHead* pack)override;
 	using serverSessionMap = std::map<ServerIDType, SessionIDType>;
+	using processSessionMap = std::set<uqword>;
 
 	serverSessionMap&  serverSessionS ();
 	ISession*  defSession ();
 	void  setDefSession (ISession* v);
+	ISession*  getSession(SessionIDType sid);
 	ISession*  getServerSession(ServerIDType sid);
 
+	static const auto c_userQuewordNum = 2;
 	int regRoute (ServerIDType objServer, SessionIDType sessionId, udword onlyId);
+	bool  canUpRoute ();
+	void  setCanUpRoute (bool v);
+	bool  canDownRoute ();
+	void  setCanDownRoute (bool v);
+	processSessionMap&  processSessionS ();
+	ISession*  getProcessSession(ServerIDType pid);
+	ISession*  getProcessSessionByFullServerId(ServerIDType fullId);
 private:
+	processSessionMap  m_processSessionS;
+	bool  m_canDownRoute;
+	bool  m_canUpRoute;
 	ISession*  m_defSession;
 	serverSessionMap  m_serverSessionS;
 	uqword    m_frameNum;

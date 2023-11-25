@@ -36,6 +36,8 @@ serverFile:: serverFile ()
 	m_autoRun = true;
 	m_serverInfo.listenerNum = 0;
 	m_serverInfo.connectorNum = 0;
+	m_rearEnd = true;
+	m_regRoute = false;
 }
 
 serverFile:: ~serverFile ()
@@ -246,5 +248,25 @@ bool  serverFile:: autoRun ()
 void  serverFile:: setAutoRun (bool v)
 {
     m_autoRun = v;
+}
+
+bool  serverFile:: rearEnd ()
+{
+    return m_rearEnd;
+}
+
+void  serverFile:: setRearEnd (bool v)
+{
+    m_rearEnd = v;
+}
+
+bool  serverFile:: regRoute ()
+{
+    return m_regRoute;
+}
+
+void  serverFile:: setRegRoute (bool v)
+{
+    m_regRoute = v;
 }
 

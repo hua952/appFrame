@@ -33,23 +33,36 @@ public:
 	udword  delSendPackTime ();
 	PhyCallback& getPhyCallback();
 	ForLogicFun&  getForLogicFun();
-	uword  upNum ();
-	void  setUpNum (uword v);
+	uword  canRouteNum ();
+	// void  setUpNum (uword v);
 	void onLoopBegin(ServerIDType fId);
 	void onLoopEnd(ServerIDType fId);
 	void logicOnConnect(serverIdType fId, SessionIDType sessionId, uqword userData);
 	void logicOnAccept(serverIdType	fId, SessionIDType sessionId, uqword userData);
 	serializePackFunType  fromNetPack ();
 	serializePackFunType  toNetPack ();
+	uword  canUpRouteServerNum ();
+	void  setCanUpRouteServerNum (uword v);
+	uword  canDownRouteServerNum ();
+	void  setCanDownRouteServerNum (uword v);
+	loopHandleType   getOnceUpServer ();
+	loopHandleType   getOnceDownServer ();
+	uword  getAllCanRouteServerS (loopHandleType* pBuff, uword buffNum); // Thread safety
+	uword  getAllCanUpServerS (loopHandleType* pBuff, uword buffNum); // Thread safety
+	uword  getAllCanDownServerS (loopHandleType* pBuff, uword buffNum); // Thread safety
+	bool   isRootApp ();
 private:	
+	uword  m_canDownRouteServerNum;
+	uword  m_canUpRouteServerNum;
 	serializePackFunType  m_toNetPack;
 	serializePackFunType  m_fromNetPack;
-	uword  m_upNum;
+	// uword  m_upNum;
     udword  m_delSendPackTime;
 	msgMgr		m_defMsgInfoMgr;
 	int			m_CurLoopNum;
 	loopHandleType	m_gropId;
 	std::unique_ptr<impLoop>	 m_loopS [LoopNum];
+	std::unique_ptr<loopHandleType[]>	 m_canRouteServerIdS;
 	typedef std::map<loopHandleType, std::string> tempLoopIdMap;
 	tempLoopIdMap	m_tempLoopIdMap;
 	PhyCallback  m_callbackS;

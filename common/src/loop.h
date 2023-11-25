@@ -26,6 +26,7 @@ typedef loopHandleType  ServerIDType;
 typedef uword MsgIdT;
 // #define c_emptyModelId 255
 #define c_emptyLoopHandle	((1<<(sizeof(serverIdType)*8))-1)
+#define c_emptyLocalServerId	(c_emptyLoopHandle&LoopMark)
 extern "C"
 {
 	//int regMsg(loopHandleType handle, uword uwMsgId, procPacketFunType pFun); // call by level 2

@@ -6,6 +6,7 @@
 
 struct endPoint
 {
+	// uqword userLogicData[4];	
 	char ip[16];
 	void* userData;	
 	ISession**   ppIConnector; // when connect rec the connector if no neet set it null

@@ -107,12 +107,14 @@ struct serverEndPointInfo
 	// void*             userData;
 	// udword            userDataLen;
 	uqword            userData;
+	uqword            logicData;
 	uword             port;
 	ServerIDType	  targetHandle; // use to reg route use on onConnect
 	udword            udwUnUse;
-	uword             unUse;  // 
+	ubyte			  unUse;  // 
 	bool              bDef;  // def route
-	bool              bRegHandle; // 几乎没用 
+	bool			  rearEnd; 
+	bool              regRoute;
 };
 /*
 typedef void (*logicOnAcceptSessionFT)(serverIdType fId, SessionIDType, uqword);
@@ -126,7 +128,7 @@ struct serverNode
 	ubyte					connectorNum;
 	ubyte                   listenerNum;
 	bool                    autoRun;
-	ubyte                   unUse[3];
+	ubyte                   unUse [3];
 	// logicOnAcceptSessionFT  fnOnAccept;
 	// logicOnConnectFT        fnOnConnect;
 	serverEndPointInfo		listenEndpoint [c_onceServerMaxListenNum];

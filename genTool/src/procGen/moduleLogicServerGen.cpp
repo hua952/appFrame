@@ -78,7 +78,7 @@ int   moduleLogicServerGen:: genMgrCpp (moduleGen& rMod)
 {
 	int   nRet = 0;
 	do {
-		auto& rEndPointS = tSingleton<toolServerEndPointInfoMgr>:: single().endPointS ();
+		// auto& rEndPointS = tSingleton<toolServerEndPointInfoMgr>:: single().endPointS ();
 		auto& rData = rMod.moduleData();
 		auto& rSS = rData.orderS ();
 		auto& rGloble = tSingleton<xmlGlobalLoad>::single ();
@@ -89,13 +89,6 @@ int   moduleLogicServerGen:: genMgrCpp (moduleGen& rMod)
 		auto pPmp = rGlobleFile.findMsgPmp ("defMsg");
 		auto serializePackFunStName = pPmp->serializePackFunStName ();
 
-		std::string protoSerOs;
-		/*
-		if (structBadyTime_proto == structBadyType ) {
-			protoSerOs = R"(int  setSerFunS (void* pFunS);
-			setSerFunS (pForLogic->pSerFunSPtr);)";
-		}
-		*/	
 		auto serverNum = rSS.size ();
 		auto genPath = rMod.genPath ();
 		std::string strFilename = genPath;
@@ -138,6 +131,8 @@ struct conEndPointT
 	uword       port;
 	uword       userData;
 	bool        bDef;
+	bool		rearEnd; 
+	bool        regRoute;
 };
 
 static int OnFrameCli (void* pArgS)
@@ -199,8 +194,6 @@ dword )"<<strMgrClassName<<R"(::afterLoad(int nArgC, char** argS, ForLogicFun* p
 {
 	dword nRet = 0;
 	do {
-		)"<<protoSerOs
-		<<R"(
 		m_pForLogicFun = pForLogic;
 		auto& rFunS = getForMsgModuleFunS();
 		rFunS = *pForLogic;
@@ -236,6 +229,8 @@ dword )"<<strMgrClassName<<R"(::afterLoad(int nArgC, char** argS, ForLogicFun* p
 	osLN<<R"(auto pLenEndPointS = std::make_unique<
 		std::unique_ptr<conEndPointT []>[]>(serverNum);
 	)";
+
+	auto& rENS = rGlobleFile.endPointGlobalS ();
 	for (decltype (serverNum) i = 0; i < serverNum; i++) {
 		auto pName = rSS[i]->serverName ();
 		auto pH = rSS[i]->strHandle();
@@ -263,14 +258,19 @@ dword )"<<strMgrClassName<<R"(::afterLoad(int nArgC, char** argS, ForLogicFun* p
 				(int)rSS[i]->serverInfo().listenerNum<<R"();
 	)";
 			for (decltype (rSS[i]->serverInfo().listenerNum) k = 0; k < rSS[i]->serverInfo().listenerNum; k++) {
-				osCN<<"auto& rEndP = pLenEndPointS["<<(int)i<<"]["<<(int)k<<R"(];
-	rEndP.port= )"<<
-			rSS[i]->serverInfo().listenEndpoint[k].port<<R"(;
-	rEndP.userData = )"<<
+				auto ite = rENS.find (rSS[i]->serverInfo().listenEndpoint[k].endPointName);
+				myAssert (rENS.end () != ite);
+				std::stringstream ss;
+				ss<<"rEndPL"<<(int)i<<(int)k;
+				std::string rEndPLK = ss.str();
+				osCN<<"auto& "<<rEndPLK<<" = pLenEndPointS["<<(int)i<<"]["<<(int)k<<R"(];
+	)"<<rEndPLK<<R"(.port= )"<<
+			/*rSS[i]->serverInfo().listenEndpoint[k].port*/ite->second<<R"(;
+	)"<<rEndPLK<<R"(.userData = )"<<
 			rSS[i]->serverInfo().listenEndpoint[k].userData<<R"(;
-	rEndP.bDef = )"<<
+	)"<<rEndPLK<<R"(.bDef = )"<<
 			rSS[i]->serverInfo().listenEndpoint[k].bDef<<R"(;
-	rEndP.strEndPointName = ")"<<rSS[i]->serverInfo().listenEndpoint[k].endPointName<<R"(";
+	)"<<rEndPLK<<R"(.strEndPointName = ")"<<rSS[i]->serverInfo().listenEndpoint[k].endPointName<<R"(";
 		)";
 			} // for
 		} // if
@@ -279,7 +279,23 @@ dword )"<<strMgrClassName<<R"(::afterLoad(int nArgC, char** argS, ForLogicFun* p
 			osCN<<"pConEndPointS ["<<(int)i<<"] = std::make_unique<conEndPointT []>("<<
 				(int)rSS[i]->serverInfo().connectorNum<<R"();
 	)";
+
+			auto sendReg = rSS[i]->rearEnd () ? true : rSS[i]->regRoute ();
+			std::string strTargetHandle = "EmptySessionID";
 			for (decltype (rSS[i]->serverInfo().connectorNum) k = 0; k < rSS[i]->serverInfo().connectorNum; k++) {
+				std::stringstream ss;
+				ss<<"rEndPC"<<(int)i<<(int)k;
+				std::string rEndPCK = ss.str();
+				auto pFS = rGloble.getServerByListenEndPointName (rSS[i]->serverInfo().connectEndpoint[k].targetEndPoint);
+				myAssert (pFS);
+				if (!pFS) {
+					rError(" can not getServerByListenEndPointName name = "<<rSS[i]->serverInfo().connectEndpoint[k].targetEndPoint);
+					break;
+				}
+				if (sendReg) {
+					strTargetHandle = pFS->strHandle ();
+				}
+				/*
 				auto itF = rEndPointS.find (rSS[i]->serverInfo().connectEndpoint[k].endPointName);
 				myAssert (itF != rEndPointS.end());
 				auto pFS = itF->second.first;
@@ -288,18 +304,23 @@ dword )"<<strMgrClassName<<R"(::afterLoad(int nArgC, char** argS, ForLogicFun* p
 					nRet = 3;
 					break;
 				}
-				osCN<<"auto& rEndP = pConEndPointS["<<(int)i<<"]["<<(int)k<<R"(];
+				*/
+				auto ite = rENS.find (rSS[i]->serverInfo().connectEndpoint[k].targetEndPoint);
+				myAssert (rENS.end () != ite);
+				osCN<<"auto& "<<rEndPCK<<" = pConEndPointS["<<(int)i<<"]["<<(int)k<<R"(];
 
-	rEndP.ip = ")"<<rSS[i]->serverInfo().connectEndpoint[k].ip<<
+	)"<<rEndPCK<<R"(.ip = ")"<<rSS[i]->serverInfo().connectEndpoint[k].ip<<
 				R"(";
-	rEndP.port = )"<<
-			rSS[i]->serverInfo().connectEndpoint[k].port<<R"(;
-	rEndP.bDef = )"<<
+	)"<<rEndPCK<<R"(.port = )"<<
+			/*rSS[i]->serverInfo().connectEndpoint[k].port*/ite->second<<R"(;
+	)"<<rEndPCK<<R"(.bDef = )"<<
 			rSS[i]->serverInfo().connectEndpoint[k].bDef<<R"(;
-	rEndP.userData = )"<<
+	)"<<rEndPCK<<R"(.userData = )"<<
 			rSS[i]->serverInfo().connectEndpoint[k].userData<<R"(;
-	rEndP.targetHandle = )"<<pFS->strHandle ()<<R"(;
-	rEndP.strEndPointName = ")"<<rSS[i]->serverInfo().connectEndpoint[k].endPointName<<R"(";
+	)"<<rEndPCK<<R"(.rearEnd = )"<<rSS[i]->rearEnd () <<R"(;
+	)"<<rEndPCK<<R"(.regRoute = )"<<rSS[i]->regRoute () <<R"(;
+	)"<<rEndPCK<<R"(.targetHandle = )"<<strTargetHandle<<R"(;
+	)"<<rEndPCK<<R"(.strEndPointName = ")"<<rSS[i]->serverInfo().connectEndpoint[k].endPointName<<R"(";
 		)";
 			} // for
 			if (nRet) {
@@ -355,7 +376,8 @@ dword )"<<strMgrClassName<<R"(::afterLoad(int nArgC, char** argS, ForLogicFun* p
 			auto& ep = rInfo.listenEndpoint [j];
 			strNCpy (ep.ip, sizeof(ep.ip), pLenEndPointS [i][j].ip.c_str());
 			ep.bDef = pLenEndPointS[i][j].bDef;
-			ep.userData = pLenEndPointS[i][j].userData;
+			ep.logicData = pLenEndPointS[i][j].userData;
+			ep.userData = (uqword)(&ep);
 			ep.port = pLenEndPointS[i][j].port;
 		}
 		for (decltype(rInfo.connectorNum) j = 0; j < rInfo.connectorNum; j++) {
@@ -363,10 +385,12 @@ dword )"<<strMgrClassName<<R"(::afterLoad(int nArgC, char** argS, ForLogicFun* p
 			auto& ep = rInfo.connectEndpoint [j];
 			strNCpy (ep.ip, sizeof(ep.ip), pConEndPointS [i][j].ip.c_str());
 			ep.port = pConEndPointS[i][j].port;
-			ep.userData = pConEndPointS[i][j].userData;
+			ep.logicData = pConEndPointS[i][j].userData;
+			ep.userData = (uqword)(&ep);
 			ep.bDef = pConEndPointS[i][j].bDef;
+			ep.rearEnd = pConEndPointS[i][j].rearEnd ;
+			ep.regRoute = pConEndPointS[i][j].regRoute;
 			ep.targetHandle = pConEndPointS[i][j].targetHandle;
-
 		}
 		fnCreateLoop (serverNameS[i], serverHS[i], &rInfo, OnFrameCli, &rServer);
 		rServer.onServerInitGen (pForLogic);
@@ -548,7 +572,22 @@ void )"<<pName<<R"(::onLoopEnd()
 			rError ("open file: "<<serverCppFile.c_str ()<<" error");
 			break;
 		}
-		osCpp<<R"(#include ")"<<pName<<R"(.h"
+		
+		std::stringstream strRegRoute;
+		/*
+		auto sendReg = rServer.rearEnd () ? true : rServer.regRoute ();
+		if (sendReg) {
+			strRegRoute<<R"(	regRouteAsk askMsg;
+	auto pN = askMsg.getPack ();
+	pN->ubySrcServId = )"<<strHandle ()<<R"(;
+	pN->ubyDesServId = (decltype(pN->ubyDesServId))userData;
+	sendMsg (askMsg);
+)";
+		}
+		*/
+		osCpp<<R"(#include "comMsgRpc.h"
+#include "gLog.h"
+#include ")"<<pName<<R"(.h"
 int )"<<pName<<R"(::onFrameFun ()
 {
 	return procPacketFunRetType_del;
@@ -560,6 +599,8 @@ void )"<<pName<<R"(::logicOnAcceptSession(SessionIDType sessionId, uqword userDa
 
 void )"<<pName<<R"(::logicOnConnect(SessionIDType sessionId, uqword userData)
 {
+	gInfo ("connect finish userData = "<<userData);
+)";osCpp<<R"(
 }
 
 int )"<<pName<<R"(::onAddChannelResult (udword token, udword result, channelKey& rKey)
@@ -721,11 +762,13 @@ static void   sOutSendToChannel (bool bAsk, std::ostream& ps)
 }
 static void   sOutRegRoute(bool bAsk, std::ostream& ps)
 {
+	/*
 	if (bAsk) {
 			ps<<R"(auto  fnReg =  getForMsgModuleFunS ().fnRegRoute;
 	fnReg (serverId(), srcSer, seId, rAsk.m_nolyId);)";
 		
 	}
+	*/
 }
 
 static void   sOutQuitChannel (bool bAsk, std::ostream& ps)
@@ -1182,15 +1225,6 @@ int )"<<pName<<R"( :: sendListenChannel (channelKey & chK)
 		auto pK = (channelKey*)(&pU->m_chKey[0]);
 		*pK = chK;
 		sendToAllGateServer (askMsg);
-		/*
-		auto rootServerNum = sizeof (s_RootSer) / sizeof (s_RootSer[0]);
-		auto nR = sendMsgToSomeServer (askMsg, s_RootSer, rootServerNum);
-		if (nR) {
-			nRet = 2;
-			gError("sendMsgToSomeServer error nR = "<<nR);
-			break;
-		}
-		*/
 	} while (0);
 	return nRet;
 }

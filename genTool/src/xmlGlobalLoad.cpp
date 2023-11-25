@@ -166,24 +166,12 @@ int  xmlGlobalLoad::xmlLoad (const char* szFile)
 			rGlobal.setProjectHome (szPath);
 		} else if(0 == strcmp(pName, "projectName")) {
 			rGlobal.setProjectName (szPath);
-		}/* else if(0 == strcmp(pName, "frameHome")) {
-			rGlobal.setFrameHome(szPath);
-		} else if(0 == strcmp(pName, "depIncludeHome")) {
-			rGlobal.setDepIncludeHome(szPath);
-		} else if(0 == strcmp(pName, "depLibHome")) {
-			rGlobal.setDepLibHome(szPath);
-		} else if(0 == strcmp(pName, "frameBinPath")) {
-			rGlobal.setFrameBinPath(szPath);
-		} else if(0 == strcmp(pName, "frameLibPath")) {
-			rGlobal.setFrameLibPath(szPath);
-		} else if(0 == strcmp(pName, "outPutPath")) {
-			rGlobal.setOutPutPath(szPath);
-		} else if(0 == strcmp(pName, "installPath")) {
-			rGlobal.setInstallPath(szPath);
-		} */else if(0 == strcmp(pName, "frameInstallPath")) {
+		} else if(0 == strcmp(pName, "frameInstallPath")) {
 			rGlobal.setFrameInstallPath(szPath);
 		} else if(0 == strcmp(pName, "thirdPartyDir")) {
 			rGlobal.setThirdPartyDir(szPath);
+		} else if(0 == strcmp(pName, "endPoint")) {
+			procEndPointS (pRpc);
 		} else if(0 == strcmp(pName, "defMsg")) {
 			auto pPmp = std::make_shared <msgPmpFile> ();
 			std::string pmpName = "defMsg";
@@ -261,6 +249,22 @@ int  xmlGlobalLoad::xmlLoad (const char* szFile)
 		}
 	} while (0);
 	return nRet;
+}
+
+int   xmlGlobalLoad:: procEndPointS (rapidxml::xml_node<char>* pEndPointS)
+{
+    int   nRet = 0;
+    do {
+		auto& rES = tSingleton<globalFile>::single ().endPointGlobalS ();
+		for (auto pC = pEndPointS->first_node (); pC; pC = pC->next_sibling ()) {
+			auto pPort = pC->first_attribute ("port");
+			myAssert (pPort);
+			auto port = (uword)(atoi (pPort->value()));
+			auto inRet = rES.insert(std::make_pair (pC->name (), port));
+			myAssert (inRet.second);
+		}
+    } while (0);
+    return nRet;
 }
 
 int   xmlGlobalLoad:: appSLoad (rapidxml::xml_node<char>* pAppS)
@@ -478,6 +482,26 @@ serverFile*     xmlGlobalLoad:: getServerByHandle(const char* szHandle)
     return nRet;
 }
 
+serverFile*  xmlGlobalLoad:: getServerByListenEndPointName(const char* szEnName)
+{
+    serverFile*     nRet = nullptr;
+	do {
+		auto& ssMap = allServer();
+		for (auto it = ssMap.begin(); ssMap.end() != it; ++it) {
+			auto pS = it->second.get();
+			auto& rNode = pS->serverInfo ();
+			for (decltype (rNode.listenerNum) i = 0; i < rNode.listenerNum; i++) {
+				auto& rE = rNode.listenEndpoint [i];
+				if (strcmp (rE.endPointName, szEnName) == 0) {
+					nRet = pS;
+					break;
+				}
+			}
+		}
+	} while (0);
+    return nRet;
+}
+
 int   xmlGlobalLoad:: serverSLoad (rapidxml::xml_node<char>* pServerS,
 		moduleFile& rM, appFile& rApp)
 {
@@ -561,15 +585,8 @@ static int procEndPoint (rapidxml::xml_node<char>* pXmlListen
 		, toolServerEndPointInfo& endPoint)
 {
 	int nRet = 0;
-	// auto pIp = pXmlListen->first_attribute("ip");
-	// myAssert (pIp);
+	auto& rGrobal = tSingleton<globalFile>::single ();
 	/*
-	auto ipL = strlen (pIp->value());
-	const auto c_maxIpLen = sizeof (endPoint.ip);
-	myAssert (ipL + 1 < c_maxIpLen);
-	strNCpy (endPoint.ip, c_maxIpLen, pIp->value());
-	*/
-
 	auto pPort = pXmlListen->first_attribute ("port");
 	if (pPort) {
 		endPoint.port = atoi (pPort->value ());
@@ -581,6 +598,7 @@ static int procEndPoint (rapidxml::xml_node<char>* pXmlListen
 	if (pEndPointName) {
 		strNCpy (endPoint.endPointName, sizeof (endPoint.endPointName), pEndPointName->value ());
 	}
+	*/
 	auto pDefR = pXmlListen->first_attribute("defRoute");
 	if (pDefR) {
 		endPoint.bDef = atoi (pDefR->value ());
@@ -593,7 +611,7 @@ static int procEndPoint (rapidxml::xml_node<char>* pXmlListen
 	} else {
 		endPoint.userData = 0;
 	}
-	auto& rEndPointS = tSingleton<toolServerEndPointInfoMgr>::single().endPointS ();
+	// auto& rEndPointS = tSingleton<toolServerEndPointInfoMgr>::single().endPointS ();
 	return nRet;
 }
 const char* szRootRpc[] = {"addChannel", "delChannel", "listenChannel"
@@ -615,7 +633,6 @@ int   xmlGlobalLoad:: onceServerLoad (rapidxml::xml_node<char>* pS,
     int   nRet = 0;
     do {
 		auto& rGrobal = tSingleton<globalFile>::single ();
-		// rInfo (" proc thServer : "<<pS->name ());
 		auto szServerName = pS->name ();
 		newServer->setServerName (szServerName);
 		std::string strH = pS->name ();
@@ -631,6 +648,16 @@ int   xmlGlobalLoad:: onceServerLoad (rapidxml::xml_node<char>* pS,
 			auto dwSetp = atoi (pSleepA->value());
 			newServer->setSleepSetp (dwSetp);
 		}
+		auto pRearEnd = pS->first_attribute("rearEnd");
+		if (pRearEnd) {
+			auto dwSetp = atoi (pRearEnd->value());
+			newServer->setRearEnd (dwSetp);
+		}
+		auto pRegRoute = pS->first_attribute("regRoute");
+		if (pRegRoute ) {
+			auto dwSetp = atoi (pRegRoute->value());
+			newServer->setRegRoute(dwSetp);
+		}
 		auto pAutoRun= pS->first_attribute("autoRun");
 		if (pAutoRun) {
 			auto autoRun = atoi (pAutoRun->value()) != 0;
@@ -643,19 +670,36 @@ int   xmlGlobalLoad:: onceServerLoad (rapidxml::xml_node<char>* pS,
 			}
 		}
 
-		auto& rEndPointS = tSingleton<toolServerEndPointInfoMgr>::single().endPointS ();
+		// auto& rEndPointS = tSingleton<toolServerEndPointInfoMgr>::single().endPointS ();
 		auto& rInfo = newServer->serverInfo ();
+		auto& rENS = rGrobal.endPointGlobalS ();
 		for(auto pXmlListen = pS->first_node (); pXmlListen;
 				pXmlListen = pXmlListen->next_sibling ()) {
 			auto pNodeName = pXmlListen->name ();
 			if (strcmp (pNodeName, "listen")) {
 				continue;
 			}
+			auto pEName = pXmlListen->first_attribute("name");
+			myAssert (pEName);
+			if (!pEName) {
+				rError ("listen endpoint hanve no name");
+				nRet = 1;
+				break;
+			}
+			auto it = rENS.find (pEName->value ());
+			myAssert (rENS.end () != it);
+			if ((rENS.end () == it)) {
+				rError ("endpoint hanve error name: "<<pEName->value());
+				nRet = 2;
+				break;
+			}
 			const auto c_MaxListen = sizeof(rInfo.listenEndpoint) / 
 				sizeof (rInfo.listenEndpoint[0]);
 			myAssert (rInfo.listenerNum < c_MaxListen );
 			auto& endPoint = rInfo.listenEndpoint[rInfo.listenerNum++];
 			procEndPoint (pXmlListen, endPoint);
+			endPoint.port = it->second;
+			strNCpy(endPoint.endPointName, sizeof (endPoint.endPointName), pEName->value ());
 			auto pXmlIp = pXmlListen->first_attribute ("ip");
 			if (pXmlIp) {
 				strNCpy (endPoint.ip, sizeof (endPoint.ip),
@@ -664,20 +708,11 @@ int   xmlGlobalLoad:: onceServerLoad (rapidxml::xml_node<char>* pS,
 				strNCpy (endPoint.ip, sizeof (endPoint.ip),
 						"0.0.0.0");
 			}
-			auto inRet = rEndPointS.insert (std::make_pair(endPoint.endPointName, std::make_pair(newServer.get(), &endPoint)));
-			myAssert (inRet.second);
-			/*
-			auto pDefR = pXmlListen->first_attribute("defRoute");
-			if (pDefR) {
-				endPoint.bDef = atoi (pDefR->value ());
-			}
-			auto pTeag = pXmlListen->first_attribute("teag");
-			if (pTeag) {
-				endPoint.userData = atoi (pTeag->value ());
-			} else {
-				endPoint.userData = 0;
-			}
-			*/
+			// auto inRet = rEndPointS.insert (std::make_pair(endPoint.endPointName, std::make_pair(newServer.get(), &endPoint)));
+			// myAssert (inRet.second);
+		}
+		if (nRet) {
+			break;
 		}
 		for (auto pXmlCon = pS->first_node (); pXmlCon;
 				pXmlCon = pXmlCon->next_sibling ()) {
@@ -690,23 +725,12 @@ int   xmlGlobalLoad:: onceServerLoad (rapidxml::xml_node<char>* pS,
 			myAssert (rInfo.connectorNum < c_MaxCon);
 			auto& endPoint = rInfo.connectEndpoint[rInfo.connectorNum++];
 			procEndPoint (pXmlCon, endPoint);
-			/*
-			auto pDefR = pXmlCon->first_attribute("defRoute");
-			if (pDefR) {
-				endPoint.bDef = atoi (pDefR->value ());
-			}
-			auto pXmlTarget = pXmlCon->first_attribute ("target");
-			if (pXmlTarget) {
-				strNCpy (endPoint.szTarget, sizeof (endPoint.szTarget),
-						pXmlTarget->value ());
-			}
-			*/
 			auto pXmlTarget = pXmlCon->first_attribute ("targetEndPoint");
 			if (pXmlTarget) {
 				strNCpy (endPoint.targetEndPoint, sizeof (endPoint.targetEndPoint),
 						pXmlTarget->value ());
+				strNCpy(endPoint.endPointName, sizeof (endPoint.endPointName), pXmlTarget->value ());
 			}
-
 			auto pXmlIp = pXmlCon->first_attribute ("ip");
 			if (pXmlIp) {
 				strNCpy (endPoint.ip, sizeof (endPoint.ip),
@@ -715,20 +739,8 @@ int   xmlGlobalLoad:: onceServerLoad (rapidxml::xml_node<char>* pS,
 				strNCpy (endPoint.ip, sizeof (endPoint.ip),
 						"127.0.0.1");
 			}
-			auto inRet = rEndPointS.insert (std::make_pair(endPoint.endPointName, std::make_pair(newServer.get(), &endPoint)));
-			myAssert (inRet.second);
-			/*
-			auto pXmlPort = pXmlCon->first_attribute ("port");
-			if (pXmlPort) {
-				endPoint.port = atoi (pXmlPort->value ());
-			}
-			auto pTeag = pXmlCon->first_attribute("teag");
-			if (pTeag) {
-				endPoint.userData = atoi (pTeag->value ());
-			} else {
-				endPoint.userData = 0;
-			}
-			*/
+			// auto inRet = rEndPointS.insert (std::make_pair(endPoint.endPointName, std::make_pair(newServer.get(), &endPoint)));
+			// myAssert (inRet.second);
 		} if (rInfo.connectorNum) {
 			if (1 == rInfo.connectorNum) {
 				auto& rEP = rInfo.connectEndpoint [0];

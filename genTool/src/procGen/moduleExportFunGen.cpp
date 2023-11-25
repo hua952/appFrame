@@ -92,6 +92,8 @@ int   moduleExportFunGen:: genCpp (moduleGen& rMod)
 #include "msg.h"
 #include "myAssert.h"
 #include "logicServer.h"
+#include "comMsgMsgId.h"
+#include "comMsgRpc.h"
 #include "tSingleton.h"
 #include "gLog.h"
 #include ")"<<strMgrClassName<<R"(.h"
@@ -109,7 +111,8 @@ void logicOnAccept(serverIdType	fId, SessionIDType sessionId, uqword userData)
 	auto &rMgr = tSingleton<)"<<strMgrClassName<<R"(>::single();
 	auto pS = rMgr.findServer(fId);
 	if (pS) {
-		pS->logicOnAcceptSession(sessionId, userData);
+		auto pEN = (serverEndPointInfo*)userData;
+		pS->logicOnAcceptSession(sessionId, pEN->logicData);
 	}
 }
 
@@ -136,7 +139,17 @@ void logicOnConnect(serverIdType fId, SessionIDType sessionId, uqword userData)
 	auto &rMgr = tSingleton<)"<<strMgrClassName<<R"(>::single();
 	auto pS = rMgr.findServer(fId);
 	if (pS) {
-		pS->logicOnConnect(sessionId, userData);
+		auto pEN = (serverEndPointInfo*)userData;
+		bool bSend = pEN->rearEnd?true:pEN->regRoute;
+		if (EmptySessionID != pEN->targetHandle && bSend) {
+			regRouteAskMsg askMsg;
+			auto p = askMsg.getPack ();
+			auto pN = P2NHead(p);
+			pN->ubySrcServId = fId;
+			pN->ubyDesServId = pEN->targetHandle;
+			pS->sendToServer (askMsg, pEN->targetHandle);
+		}
+		pS->logicOnConnect(sessionId, pEN->logicData);
 	}
 }
 
