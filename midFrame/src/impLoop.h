@@ -36,6 +36,8 @@ public:
 	int processAllGatePack(packetHead* pPack);
 	int procProx(packetHead* pPack);
 	int forward(packetHead* pPack);
+	int forwardForOtherServer(packetHead* pPack);
+	int sendPackToSomeSession(netPacketHead* pack, uqword* pSessS, udword sessionNum);
     NetTokenType	nextToken ();
 	ServerIDType id();
 	cTimerMgr&    getTimerMgr();

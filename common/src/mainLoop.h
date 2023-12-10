@@ -65,6 +65,7 @@ typedef  int    (*regRpcFT) (msgIdType askId, msgIdType retId, serverIdType	askD
 typedef  serverIdType (*getDefProcServerIdFT) (msgIdType msgId);
 
 typedef int (*regRouteFT)(loopHandleType myServerId, loopHandleType objServerId, SessionIDType sessionId, udword onlyId);
+typedef int (*sendPackToSomeSessionFT)(loopHandleType myServerId, netPacketHead* pN, uqword* pSessS, udword sessionNum);
 typedef struct _ForLogicFun
 {
 	allocPackFT		 fnAllocPack; // Thread safety
@@ -73,6 +74,7 @@ typedef struct _ForLogicFun
 	regMsgFT		 fnRegMsg;
 	sendPackToLoopFT fnSendPackToLoop;// Thread safety
 	sendPackToLoopFT fnSendPackToLoopForChannel;// Thread safety
+	sendPackToSomeSessionFT		fnSendPackToSomeSession; // Thread safety
 	logMsgFT		 fnLogMsg;
     addComTimerFT    fnAddComTimer;// Thread safety
 	nextTokenFT      fnNextToken;

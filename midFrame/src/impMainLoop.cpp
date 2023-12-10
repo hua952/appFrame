@@ -118,6 +118,20 @@ static bool sDelNetPack (void* pUP)
 	}
 	return false;
 }
+static int sSendPackToSomeSession(loopHandleType myServerId, netPacketHead* pN, uqword* pSessS, udword sessionNum)
+{
+	int nRet = 0;
+	auto& rMgr = tSingleton<loopMgr>::single ();
+	do {
+		auto pLoop = rMgr.getLoop(myServerId);
+		if (!pLoop) {
+			nRet = 1;
+			break;
+		}
+		nRet = pLoop->sendPackToSomeSession (pN, pSessS, sessionNum);
+	} while (0);
+	return nRet;
+}
 
 int midSendPackToLoopForChannelFun(packetHead* pack) /* 返回值貌似没用 */
 {
@@ -135,12 +149,8 @@ int midSendPackToLoopForChannelFun(packetHead* pack) /* 返回值貌似没用 */
 		}
 		auto objSer = pN->ubyDesServId;
 		if (bRand) {
-			/*
-			auto upN = rMgr.upNum ();
-			auto s = rand () % upN;
-			objSer = rMgr.getLoopByIndex (s)->id();
-			*/
-			objSer = rMgr.getOnceUpServer ();
+			objSer = rMgr.getOnceUpOrDownServer ();
+			myAssert (c_emptyLoopHandle != objSer);
 		}
 		fnPushPackToLoop (objSer, pack);
 	} while (0);
@@ -328,7 +338,7 @@ int loopMgr::init(int nArgC, char** argS, PhyCallback& info)
 	forLogic.fnRegMsg = sRegMsg;
 	forLogic.fnSendPackToLoop =  midSendPackToLoopFun;
 	forLogic.fnSendPackToLoopForChannel = midSendPackToLoopForChannelFun;
-
+	forLogic.fnSendPackToSomeSession = sSendPackToSomeSession;
 	forLogic.fnLogMsg = info.fnLogMsg;
 	forLogic.fnAddComTimer = sAddComTimer;//m_callbackS.fnAddComTimer;
 	forLogic.fnNextToken = info.fnNextToken;
@@ -602,6 +612,19 @@ loopHandleType   loopMgr:: getOnceDownServer ()
 			auto i = rand () % m_canDownRouteServerNum;
 			nRet = m_canRouteServerIdS [i +  m_canUpRouteServerNum];
 		}
+    } while (0);
+    return nRet;
+}
+
+loopHandleType   loopMgr::getOnceUpOrDownServer ()
+{
+    loopHandleType    nRet = 0;
+    do {
+		nRet = getOnceUpServer ();
+		if (c_emptyLoopHandle != nRet) {
+			break;
+		}
+		nRet = getOnceDownServer ();
     } while (0);
     return nRet;
 }

@@ -736,9 +736,10 @@ static void   sOutSendToChannel (bool bAsk, std::ostream& ps)
 			break;
 		}
 		auto& rSidS = it->second;
-		auto bodySize = rAsk.m_packNum - NetMsgLenSize;
-		myAssert (bodySize >= 0);
-		auto  fnSendPackToLoop =  getForMsgModuleFunS ().fnSendPackToLoopForChannel;
+		auto  fnSendPackToLoop =  getForMsgModuleFunS ().fnSendPackToSomeSession;
+		auto  ptrHandleS = std::make_unique<uqword[]> (rSidS.size());
+		auto  pHandleS = ptrHandleS.get();
+		udword   udwSeNum = 0;
 		for (auto it = rSidS.begin(); rSidS.end() != it; ++it) {
 			uqword uqwK = *it;
 			auto sessionId = (SessionIDType)(uqwK);
@@ -747,15 +748,13 @@ static void   sOutSendToChannel (bool bAsk, std::ostream& ps)
 			if (rAsk.m_excSender && toSid == srcSer && sessionId == seId ) {
 				continue;
 			}
-			auto p = allocPacket (bodySize);
-			auto pNN = P2NHead (p);
-			memcpy(pNN, rAsk.m_pack, rAsk.m_packNum);
-			pNN->ubySrcServId = srcSer;
-			pNN->ubyDesServId = toSid;
-			p->sessionID = sessionId;
-			p->pAsk = 0;
-			fnSendPackToLoop (p);
+			pHandleS [udwSeNum++] = *it;
 		}
+		auto bodySize = rAsk.m_packNum - NetMsgLenSize;
+		myAssert (bodySize >= 0);
+		auto pN = (netPacketHead*)(rAsk.m_pack);
+		myAssert (pN->udwLength = bodySize);
+		fnSendPackToLoop (serverId(), pN, pHandleS, udwSeNum);
 	} while (0);
 	)";
 		}
@@ -1018,6 +1017,7 @@ static int )"<<pPackFun<<
 #include "msg.h"
 #include "gLog.h"
 #include "myAssert.h"
+#include <memory>
 )";
 		auto bH = rGlobalFile.haveServer ();
 		if (bH) {
@@ -1277,7 +1277,7 @@ int )"<<pName<<R"( :: sendPackToChannel(packetHead* pack, channelKey& chK, bool 
 		}
 		*/
 		auto pSN = P2NHead(pack);
-		pSN->ubySrcServId = serverId ();
+		// pSN->ubySrcServId = serverId ();
 		auto sendSize = NetHeadSize + pSN->udwLength;
 		auto pT = (sendToChannelAsk*)(0);
 		auto uqwS = (uqword)&(pT->m_pack[0]);
