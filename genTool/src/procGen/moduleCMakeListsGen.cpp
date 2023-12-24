@@ -46,15 +46,22 @@ int   moduleCMakeListsGen:: startGen (moduleGen& rModel)
 			rError ("create file error file name is : "<<strFile.c_str ());
 			break;
 		}
-		os<<"SET(prjName "<<moduleName<<")"<<std::endl;
-		std::stringstream procPack;
+		os<<"SET(prjName "<<moduleName<<")"<<std::endl
+			<<R"(set(serSrcS))"<<std::endl;
+
 		std::string strPer = " src/procMsg/";
 		auto& rData = rMod;
 		auto& rSS = rData.orderS ();
+		std::stringstream incS;
+		std::stringstream cppS;
+
 		using groupSet = std::set<std::string>;
 		for (auto it = rSS.begin (); rSS.end () != it; ++it) {
 			auto pName = it->get()->serverName ();
+			incS<<"src/"<<pName<<"/gen"<<std::endl;
+			cppS<<"src/"<<pName<<"/gen/*.cpp"<<" "<<"src/"<<pName<<"/proc/*.cpp"<<" "<<"src/"<<pName<<"/userLogic/*.cpp ";
 			groupSet  groupS;
+			auto serverName = pName;
 			auto pServerF = rData.findServer (pName);
 			myAssert (pServerF);
 			auto& rMap = pServerF->procMsgS ();
@@ -68,15 +75,11 @@ int   moduleCMakeListsGen:: startGen (moduleGen& rModel)
 				groupS.insert (pGName);
 			}
 			for (auto ite = groupS.begin(); groupS.end() != ite; ++ite) {
-				procPack<<strPer;
-				procPack<<pName<<"/";
-				procPack<<*ite<<"/*.cpp ";
+				cppS<<"src/"<<serverName<<"/proc/"<<*ite<<"/*.cpp"<<std::endl;
 			}
 		}
-		const char* szCon = R"(set(genSrcS)
-file(GLOB genSrcS src/gen/*.cpp src/gen/msg/*.cpp src/procMsg/*.cpp
-	src/procMsg/frameFun/*.cpp )";
-const char* szCon2 = R"()
+		os<<R"(set(genSrcS)
+file(GLOB genSrcS src/gen/*.cpp src/userLogic/*.cpp )"<<cppS.str()<<R"()
 set(defS)
 set(libPath)
 set(libDep)
@@ -86,9 +89,9 @@ if (WIN32)
 	ADD_DEFINITIONS(/W1)
 	file(GLOB defS src/gen/win/*.def)
 
-	include_directories()";
+	include_directories(src/gen )";
 	auto depInc = rGlobalFile.depIncludeHome ();
-	os<<szCon<<procPack.str ()<<szCon2<<depInc<<")"<<std::endl;
+	os<<incS.str()<<depInc<<")"<<std::endl;
 	auto depLib = rGlobalFile.depLibHome ();
 
 	os<<"list(APPEND libDep "<<depLib<<")"<<std::endl;
@@ -96,7 +99,7 @@ if (WIN32)
 	include_directories(
 	src/gen)";
 	auto frameInPath = rGlobalFile.frameInstallPath ();
-	auto szGenFrame  = rModel.frameFunDir ();
+	// auto szGenFrame  = rModel.frameFunDir ();
 
 	os<<szC2<<std::endl
 	<<"    ${CMAKE_SOURCE_DIR}/defMsg/src"<<std::endl;
@@ -104,8 +107,8 @@ if (WIN32)
 	auto prjName = rGlobalFile.projectName ();
 	os<<frameInPath<<"include/"<<prjName<<std::endl;
 	
-	os<<"    "<<szGenFrame<<std::endl
-	<<")"<<std::endl;
+	// os<<"    "<<szGenFrame<<std::endl;
+	os<<")"<<std::endl;
 
 	auto libPath = rGlobalFile.frameLibPath ();
 

@@ -43,6 +43,7 @@ int   moduleGen:: startGen ()
 		src += "/src";
 		setSrcPath (src.c_str ());
 		nR = myMkdir (src.c_str ());
+
 		auto gen = src;
 		gen += "/gen";
 		setGenPath (gen.c_str ());
@@ -50,7 +51,10 @@ int   moduleGen:: startGen ()
 		auto win= gen;
 		win += "/win";
 		nR = myMkdir (win.c_str ());
-
+		auto userLogic = src;
+		userLogic += "/userLogic";
+		myMkdir (userLogic.c_str ());
+		/*
 		auto procMsg = src;
 		procMsg += "/procMsg";
 		setProcMsgPath (procMsg.c_str ());
@@ -59,6 +63,7 @@ int   moduleGen:: startGen ()
 		frameDir += "/frameFun";
 		setFrameFunDir (frameDir.c_str ());
 		myMkdir (frameDir.c_str());
+		*/
 		moduleCMakeListsGen cmakeGen;
 		nR = cmakeGen.startGen (*this);
 		if (nR) {
@@ -112,7 +117,7 @@ void  moduleGen:: setSrcPath (const char* v)
 {
     strCpy (v, m_srcPath);
 }
-
+/*
 const char*  moduleGen:: procMsgPath ()
 {
     return m_procMsgPath.get ();
@@ -122,7 +127,7 @@ void  moduleGen:: setProcMsgPath (const char* v)
 {
     strCpy (v, m_procMsgPath);
 }
-
+*/
 moduleFile& moduleGen:: moduleData ()
 {
     return m_moduleData;
@@ -137,7 +142,7 @@ void  moduleGen:: setThisRoot (const char* v)
 {
     strCpy (v, m_thisRoot);
 }
-
+/*
 const char*  moduleGen:: frameFunDir ()
 {
     return m_frameFunDir.get ();
@@ -147,4 +152,5 @@ void  moduleGen:: setFrameFunDir (const char* v)
 {
     strCpy (v, m_frameFunDir);
 }
+*/
 

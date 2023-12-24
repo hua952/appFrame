@@ -87,16 +87,21 @@ int defMsgGen::loopHandleSGen ()
 		sss<<"};";
 		auto& rGlobal = tSingleton<globalFile>::single ();
 		auto& rRootV = rGlobal.rootServerS ();
-		os<<R"(static serverIdType s_RootSer[] = {)";
-		for (auto it = rRootV.begin(); rRootV.end() != it; ++it) {
-			if (it != rRootV.begin()) {
-				os<<",";
+		if (rRootV.empty()) {
+			os<<R"(static serverIdType s_RootSer[] = {0};)";
+		} else {
+			os<<R"(static serverIdType s_RootSer[] = {)";
+			for (auto it = rRootV.begin(); rRootV.end() != it; ++it) {
+				if (it != rRootV.begin()) {
+					os<<",";
+				}
+				os<<*it;
 			}
-			os<<*it;
+			os<<"};"<<std::endl;
 		}
-		os<<"};"<<std::endl<<sss.str()<<std::endl;
+		os<<sss.str()<<std::endl;
 		os<<R"(#endif)";
-    } while (0);
+	} while (0);
     return nRet;
 }
 int  defMsgGen:: startGen ()
