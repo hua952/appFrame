@@ -58,7 +58,9 @@ int   moduleCMakeListsGen:: startGen (moduleGen& rModel)
 		using groupSet = std::set<std::string>;
 		for (auto it = rSS.begin (); rSS.end () != it; ++it) {
 			auto pName = it->get()->serverName ();
-			incS<<"src/"<<pName<<"/gen"<<std::endl;
+			incS
+				<<"src/"<<pName<<"/gen"<<std::endl
+				<<"src/"<<pName<<"/userLogic"<<std::endl;
 			cppS<<"src/"<<pName<<"/gen/*.cpp"<<" "<<"src/"<<pName<<"/proc/*.cpp"<<" "<<"src/"<<pName<<"/userLogic/*.cpp ";
 			groupSet  groupS;
 			auto serverName = pName;
@@ -89,9 +91,9 @@ if (WIN32)
 	ADD_DEFINITIONS(/W1)
 	file(GLOB defS src/gen/win/*.def)
 
-	include_directories(src/gen )";
+	include_directories( )";
 	auto depInc = rGlobalFile.depIncludeHome ();
-	os<<incS.str()<<depInc<<")"<<std::endl;
+	os<<depInc<<")"<<std::endl;
 	auto depLib = rGlobalFile.depLibHome ();
 
 	os<<"list(APPEND libDep "<<depLib<<")"<<std::endl;
@@ -101,9 +103,13 @@ if (WIN32)
 	auto frameInPath = rGlobalFile.frameInstallPath ();
 	// auto szGenFrame  = rModel.frameFunDir ();
 
+	std::string incPath = rGlobalFile.frameIncPath ();
+	incPath += "/appFrame";
 	os<<szC2<<std::endl
-	<<"    ${CMAKE_SOURCE_DIR}/defMsg/src"<<std::endl;
-
+	<<"    ${CMAKE_SOURCE_DIR}/defMsg/src"<<std::endl
+	<<"src/userLogic"<<std::endl
+	<<incPath<<std::endl
+	<<incS.str();
 	auto prjName = rGlobalFile.projectName ();
 	os<<frameInPath<<"include/"<<prjName<<std::endl;
 	

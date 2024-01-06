@@ -1,0 +1,90 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<servers>
+	<projectHome>C:/work/appFrameProject/project/chatTest/</projectHome>
+	<projectName>chatTest</projectName>
+	<thirdPartyDir>C:/work/</thirdPartyDir>
+	<frameInstallPath>C:/work/appFrameInstall/</frameInstallPath>
+	<defMsg file="cChess.xml"/>
+	<endPoint>
+		<en1 port="12000"/>
+		<en2 port="12001"/>
+	</endPoint>
+	<app>
+		<gate>
+			<appArg>detachServerS=1</appArg>
+			<module>
+				<gateM>
+					<server>
+						<gateTh1 sleepSetp="1" showFps="1" fpsSetp="40000">
+							<listen teag="1" defRoute="1" name="en1"/>
+						</gateTh1>
+						<gateTh2 sleepSetp="1" showFps="1" fpsSetp="40000">
+							<listen  teag="1" defRoute="1" name="en2"/>
+						</gateTh2>
+						<gateConTh autoRun="0" showFps="0">
+						</gateConTh >
+					</server>
+				</gateM>
+			</module>
+		</gate>
+		<server>
+			<appArg>detachServerS=1</appArg>
+			<module>
+				<appServerM>
+					<server>
+						<appServerTh1 sleepSetp="1" showFps="1" fpsSetp="40000">
+							<connect defRoute="1"  targetEndPoint="en1" teag="1"/>
+							<procRpc>
+								<move askType="ask"/>
+							</procRpc>
+						</appServerTh1>
+						<textSender sleepSetp="1" showFps="1" fpsSetp="40000">
+							<procRpc>
+								<roomChannel askType="ask"/>
+								<roomChatTxt askType="ask"/>
+							</procRpc>
+						</textSender>
+						<appServerConTh autoRun="0" showFps="0">
+						</appServerConTh>
+					</server>
+				</appServerM>
+			</module>
+		</server>
+		<client>
+			<appArg>detachServerS=1</appArg>
+			<module>
+				<appClientM2>
+					<server>
+						<appClientM2Th sleepSetp="1" rearEnd="0" regRoute="0" showFps="1" fpsSetp="40000">
+							<procRpc>
+								<regret askType="ask"/>
+							</procRpc>
+						</appClientM2Th>
+					</server>
+				</appClientM2>
+				<appClientM1>
+					<server>
+						<chatTh sleepSetp="1" showFps="1" fpsSetp="40000">
+							<procRpc>
+								<manualList askType="ret"/>
+								<regret askType="ret"/>
+								<move askType="ret"/>
+								<roomChannel askType="ret"/>
+								<roomChatTxt askType="ask"/>
+							</procRpc>
+						</chatTh>
+						<appClientM1Th2 rearEnd="0" regRoute="0" sleepSetp="1" showFps="1" fpsSetp="40000">
+							<connect defRoute="1"  targetEndPoint="en2" teag="1"/>
+							<procRpc>
+								<manualList askType="ask"/>
+							</procRpc>
+						</appClientM1Th2>
+						<appClientConTh3 autoRun="0">
+						</appClientConTh3 >
+					</server>
+				</appClientM1>
+			</module>
+		</client>
+	</app>
+</servers>
+

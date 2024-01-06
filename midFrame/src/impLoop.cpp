@@ -554,7 +554,7 @@ int  impLoop:: procProx(packetHead* pPack)
 		myAssert (sPId == myPId); /* 该函数只处理首站发出的ask包 */
 
 		auto toNetPack = tSingleton<loopMgr>::single().toNetPack ();
-		bool bSave = NNeetRet(pN);
+		// bool bSave = NNeetRet(pN);
 		ISession* pSe = nullptr;
 		myAssert (EmptySessionID == pPack->sessionID && c_emptyLoopHandle == pPack->loopId);    /*   纯测试,不确定会不会出现该情况   */
 		if (EmptySessionID == pPack->sessionID) {
@@ -571,20 +571,28 @@ int  impLoop:: procProx(packetHead* pPack)
 			auto toNetPack = tSingleton<loopMgr>::single().toNetPack ();
 			packetHead* pNew = nullptr;
 			toNetPack (pPack, pNew);
+			if (pNew) {
+				pSe->send (pNew);  /* 发压缩包 */
+				nRet = procPacketFunRetType_del;  /* 发压缩包不需保存原包 */
+			} else {
+				pSe->send (pPack);  /* 发原包,不能删 */
+			}
+			/*
 			if (bSave) {
 				if (!pNew) {
-					pNew =  sclonePack (pPack);  /*  由于要保存原包,克隆一份用于发送 */
+					pNew =  sclonePack (pPack);
 				}
 				pSe->send (pNew);
-				nRet = procPacketFunRetType_doNotDel; /* 此处是首发ask类消息, 不能删原包  */
+				nRet = procPacketFunRetType_doNotDel;
 			} else {
 				if (pNew) {
-					pSe->send (pNew);  /* 发压缩包 */
-					nRet = procPacketFunRetType_del;  /* 发压缩包不需保存原包 */
+					pSe->send (pNew);
+					nRet = procPacketFunRetType_del;
 				} else {
-					pSe->send (pPack);  /* 发原包,不能删 */
+					pSe->send (pPack);
 				}
 			}
+			*/
 		} else {
 			auto bMyCh = isMyChannelMsg (pN->uwMsgID);  /*  */
 			if (!bMyCh) {

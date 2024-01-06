@@ -763,13 +763,10 @@ static void   sOutSendToChannel (bool bAsk, std::ostream& ps)
 }
 static void   sOutRegRoute(bool bAsk, std::ostream& ps)
 {
-	/*
 	if (bAsk) {
-			ps<<R"(auto  fnReg =  getForMsgModuleFunS ().fnRegRoute;
-	fnReg (serverId(), srcSer, seId, rAsk.m_nolyId);)";
-		
-	}
-	*/
+			ps<<R"(auto fnRegRoute  =  getForMsgModuleFunS ().fnRegRoute;
+	fnRegRoute  (serverId(), srcSer, seId, 0);)";
+		}
 }
 
 static void   sOutQuitChannel (bool bAsk, std::ostream& ps)
@@ -825,23 +822,7 @@ static void   sOutAddChannel (bool bAsk, std::ostream& ps)
 		ps<<R"(
 	auto& rCh = *((channelKey*)rAsk.m_chKey);
 	rRet.m_result =createChannel (rCh, srcSer, seId);
-		/*
-		auto& rChS = channelS ();
-	channelValue sidS;
-	uqword uqwSe = srcSer;
-	uqwSe <<= 32;
-	uqwSe |= seId;
-	sidS.insert(uqwSe);
-	auto& rCh = *((channelKey*)rAsk.m_chKey);
-	auto inRet = rChS.insert(std::make_pair(rCh, sidS));
-	myAssert (inRet.second);
-	if (inRet.second) {
-		rRet.m_result = 0;
-	} else {
-		rRet.m_result = 1;
-	}
-	*/
-)";	
+		)";	
 	} else {
 		ps<<R"(auto rSendS = channelSendS ();
 	do {

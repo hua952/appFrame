@@ -20,6 +20,7 @@ public:
 	const char*  projectHome ();
 	void  setProjectHome (const char* v);
     const char*  frameLibPath ();
+    const char*  frameIncPath ();
 	msgFileV&  msgFileS ();
 	const char*  projectName ();
 	void  setProjectName (const char* v);
@@ -44,6 +45,7 @@ private:
     std::unique_ptr <char[]>  m_frameInstallPath;
 	std::unique_ptr <char[]>  m_projectName;
     std::unique_ptr <char[]>  m_frameLibPath;
+    std::unique_ptr <char[]>  m_frameIncPath;
 	std::unique_ptr <char[]>  m_projectHome;
 	std::unique_ptr <char[]>  m_frameHome;
 	std::unique_ptr <char[]>  m_depIncludeHome;

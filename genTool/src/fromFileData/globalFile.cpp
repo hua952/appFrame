@@ -152,6 +152,14 @@ void  globalFile:: setFrameInstallPath (const char* v)
 	std::string strT = v;
 	strT += "lib";
 	strCpy (strT.c_str (), m_frameLibPath);
+	strT = v;
+	strT += "include";
+	strCpy (strT.c_str (), m_frameIncPath);
+}
+
+const char*   globalFile:: frameIncPath ()
+{
+    return m_frameIncPath.get();
 }
 
 const char*  globalFile:: thirdPartyDir ()

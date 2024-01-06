@@ -224,7 +224,6 @@ int midSendPackToLoopFun(packetHead* pack) /* 返回值貌似没用 */
 				bNeetRet = true;
 			}
 		}
-
 		if (bNeetRet) {
 			NSetNeetRet(pN);
 		} else {
@@ -238,9 +237,12 @@ int midSendPackToLoopFun(packetHead* pack) /* 返回值貌似没用 */
 		auto objSer = rMgr.getOnceUpServer ();
 		myAssert (c_emptyLoopHandle != objSer);
 		if (bNeetRet) {
-			pack->pAsk = 1;  /* 告知发送线程需要保存原包 */
+			// pack->pAsk = 1;  /* 告知发送线程需要保存原包 */
 			iPackSave* pISave = pS->getIPackSave ();
-			pISave->netTokenPackInsert (pack);  /* 保存pack 因为该函数是通过网络发送的第一站,故在此保存   */
+
+			packetHead* sclonePack(packetHead* p);
+			auto pNew =  sclonePack (pack);  /*  由于要保存原包,克隆一份 */
+			pISave->netTokenPackInsert (pNew);  /* 保存pack 因为该函数是通过网络发送的第一站,故在此保存   */
 			std::pair<NetTokenType, impLoop*> pa;
 			pa.first = pN->dwToKen;
 			pa.second = pS;
