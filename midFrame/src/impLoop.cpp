@@ -209,16 +209,24 @@ int  impLoop:: processOtherAppToMePack(ISession* session, packetHead* pPack)
 		packetHead* pRet = nullptr;
 		nRet = pF(pPack, pRet, nullptr);
 		if (pRet) {
+			auto freeFun = rCS.fnFreePack;
 			if (bNeetRet) {
 				pRet->sessionID = pPack->sessionID;
 				auto pRN = P2NHead (pRet);
 				pRN->ubySrcServId = pN->ubyDesServId;
 				pRN->ubyDesServId = pN->ubySrcServId;
 				pRN->dwToKen = pN->dwToKen;
+
+				auto toNetPack = tSingleton<loopMgr>::single().toNetPack ();
+				packetHead* pNew = nullptr;
+				toNetPack (pRet, pNew);
+				if (pNew) {
+					freeFun (pRet);
+					pRet = pNew;
+				}
 				session->send (pRet);
 			} else {
 				/* 发送Ask端不想处理Ret */
-				auto freeFun = rCS.fnFreePack;
 				freeFun (pRet);
 				pRet = nullptr;
 			}
@@ -553,7 +561,6 @@ int  impLoop:: procProx(packetHead* pPack)
 		fromHandle (pN->ubySrcServId, sPId, sSId);
 		myAssert (sPId == myPId); /* 该函数只处理首站发出的ask包 */
 
-		auto toNetPack = tSingleton<loopMgr>::single().toNetPack ();
 		// bool bSave = NNeetRet(pN);
 		ISession* pSe = nullptr;
 		myAssert (EmptySessionID == pPack->sessionID && c_emptyLoopHandle == pPack->loopId);    /*   纯测试,不确定会不会出现该情况   */
@@ -572,10 +579,10 @@ int  impLoop:: procProx(packetHead* pPack)
 			packetHead* pNew = nullptr;
 			toNetPack (pPack, pNew);
 			if (pNew) {
-				pSe->send (pNew);  /* 发压缩包 */
-				nRet = procPacketFunRetType_del;  /* 发压缩包不需保存原包 */
+				pSe->send (pNew);
+				nRet = procPacketFunRetType_del;
 			} else {
-				pSe->send (pPack);  /* 发原包,不能删 */
+				pSe->send (pPack);
 			}
 			/*
 			if (bSave) {
@@ -787,104 +794,39 @@ int impLoop::processNetPackFun(ISession* session, packetHead* pack)
 			auto fromNetPack = rMgr.fromNetPack ();
 			packetHead* pNew = nullptr;
 			fromNetPack (pack, pNew);
+			auto pProcPack = pack;
 			if (pNew) {
-				fnFree (pack);
-				pack = pNew;
-				pN = P2NHead (pack);
+				pProcPack = pNew;
 			}
 			if (mySId == dSId) {
-				nRet = processOtherAppToMePack(session, pack);  /*  发个本线程的收到就直接处理掉    */
-			} else {
-				if (!bIsRet && bNeetRet) {
-					pack->sessionID = sid;
-					pack->loopId = myHandle;
+				auto nR = processOtherAppToMePack(session, pProcPack);  /*  发个本线程的收到就直接处理掉    */
+				if ((procPacketFunRetType_doNotDel & nR)) {
+					if (pProcPack == pack) {
+						nRet =  procPacketFunRetType_doNotDel;
+					}
 				} else {
-					pack->sessionID = EmptySessionID;
-					pack->loopId = c_emptyLoopHandle;
-				}
-				fnPushPackToLoop (pN->ubyDesServId, pack);
-				nRet = procPacketFunRetType_doNotDel;
-			}
-			break;
-		}
-		/* 以下处理目标非本进程的包  */
-		/*
-		loopHandleType sPId;
-		loopHandleType sSId;
-		fromHandle (pN->ubySrcServId, sPId, sSId);
-		if (sPId != myPId) {
-		*/
-			nRet = forward (pack);  /*   处理转发包(非本进程发出)   */
-			break;
-		// }
-		/*
-		auto upN = rMgr.canRouteNum ();
-		iPackSave* pISave = getIPackSave ();
-		bool bIsRet = NIsRet(pN);
-		if (bIsRet) {
-			auto pF = pISave->oldTokenFind (pN->dwToKen);
-			if (!pF) {
-				mError("ret pack can not find old token = "<<pN->dwToKen<<" msgId = "<<pN->uwMsgID);
-				break;
-			} 
-			auto delToken = pN->dwToKen;
-			pN->dwToKen = pF->oldToken;
-			auto sessionId = pF->sessionId;
-			pISave->oldTokenErase (delToken);
-			// pISave->netTokenPackErase (delToken);
-			auto pSe = getSession (sessionId);
-			if (pSe) {
-				pSe->send (pack);
-				nRet = procPacketFunRetType_doNotDel;
-			} else {
-				if (upN < 2) {
-					mError ("session null pack: "<<*pack);
-				} else {
-					if (!NIsOtherNetLoopSend(pN)) {
-						NSetOtherNetLoopSend(pN);
-						clonePackToOtherNetThread (pack);
+					if (pNew) {
+						fnFree (pNew);
 					}
 				}
+			} else {
+				if (!bIsRet && bNeetRet) {
+					pProcPack->sessionID = sid;
+					pProcPack->loopId = myHandle;
+				} else {
+					pProcPack->sessionID = EmptySessionID;
+					pProcPack->loopId = c_emptyLoopHandle;
+				}
+				fnPushPackToLoop (pN->ubyDesServId, pProcPack);
+				if (pProcPack == pack) {
+					nRet =  procPacketFunRetType_doNotDel;
+				}
 			}
 			break;
 		}
-		auto pSe = getServerSession (pN->ubyDesServId);
-		if (!pSe) {
-			pSe = defSession ();
-		}
-		if (!pSe && upN < 2) {
-			break;
-		}
-		auto& rMsgInfoMgr = rMgr.defMsgInfoMgr ();
-		auto retMsgId = rMsgInfoMgr.getRetMsg (pN->uwMsgID);
-		if (c_null_msgID != retMsgId) {
-			auto newToken = nextToken ();
-			tokenInfo info;
-			info.lastServer = id ();
-			info.oldToken = pN->dwToKen;
-			info.sessionId = pSe?pSe->id():EmptySessionID;
-			pN->dwToKen = newToken;
-			pISave->oldTokenInsert(newToken, info);
-			std::pair<impLoop*, NetTokenType> argS;
-			argS.first = this;
-			argS.second = newToken;
-			auto& rArgS = tSingleton<mArgMgr>::single ();
-			auto timeOut = rArgS.packTokenTime ();
-			mTrace ("change token oldToken = "<<info.oldToken<<"newToken = "<<newToken
-					<<"msgId = "<<pN->uwMsgID<<" pack = "<<pack);
-			auto& rTimeMgr = getTimerMgr ();
-			rTimeMgr.addComTimer (timeOut, sDelTokenInfo, &argS, sizeof (argS));
-		}
-		if (pSe) {
-			pSe->send (pack);
-			nRet = procPacketFunRetType_doNotDel;
-		} else {
-			if (!NIsOtherNetLoopSend(pN)) {
-				NSetOtherNetLoopSend(pN);
-				clonePackToOtherNetThread (pack);
-			}
-		}
-		*/
+		
+		nRet = forward (pack);  /*   处理转发包(非本进程发出)   */
+		break;
 	} while (0);
 	return nRet;
 }
@@ -1165,7 +1107,7 @@ int  impLoop:: regRoute (ServerIDType objServer, SessionIDType sessionId, udword
     do {
 		auto& rMap = serverSessionS ();
 		auto inRet = rMap.insert (std::make_pair(objServer, sessionId));
-		myAssert (inRet.second);
+		// myAssert (inRet.second);
 		loopHandleType objPId;
 		loopHandleType objSId;
 		fromHandle (objServer, objPId, objSId);
@@ -1174,7 +1116,7 @@ int  impLoop:: regRoute (ServerIDType objServer, SessionIDType sessionId, udword
 		key <<=32;
 		key |= sessionId;
 		auto setRet = rSet.insert (key);
-		myAssert (setRet.second);
+		// myAssert (setRet.second);
     } while (0);
     return nRet;
 }

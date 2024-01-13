@@ -479,6 +479,9 @@ static int sFromNetPack (packetHead* p, pPacketHead& pNew)
 				if (nR) {
 					nRet = 2;
 				}
+				if (pNew) {
+					pNew->pAsk = 0;
+				}
 			}
 		}
 	} while (0);
@@ -497,6 +500,9 @@ static int sToNetPack (packetHead* p, pPacketHead& pNew)
 			auto nR = fun (p, pNew);
 			if (nR) {
 				nRet = 2;
+			}
+			if (pNew) {
+				pNew->pAsk = 0;
 			}
 		}
 	} while (0);
