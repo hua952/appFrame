@@ -85,3 +85,4 @@ void  msgGroupFile:: setAddrType (packAddrType v)
 {
     m_addrType = v;
 }
+

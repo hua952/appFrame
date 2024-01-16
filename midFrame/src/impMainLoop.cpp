@@ -246,7 +246,7 @@ int midSendPackToLoopFun(packetHead* pack) /* 返回值貌似没用 */
 			std::pair<NetTokenType, impLoop*> pa;
 			pa.first = pN->dwToKen;
 			pa.second = pS;
-			auto delTime = 6180;
+			auto delTime = 61800;
 			auto& rTimeMgr = pS->getTimerMgr ();
 			rTimeMgr.addComTimer (delTime, sDelNetPack, &pa, sizeof (pa));
 		}

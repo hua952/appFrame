@@ -19,6 +19,7 @@ public:
 	{
 		int nCom;
 		std::string first;
+		std::string strMsgId;
 		std::pair<std::string, std::string> second;
 	};
 	// using strVecV = std::pair<std::string, std::pair<std::string, std::string>>;

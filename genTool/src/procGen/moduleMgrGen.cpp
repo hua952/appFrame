@@ -465,17 +465,17 @@ static pSerializePackFunType3* sGetNode (udword msgId)
 	return pRet;
 }
 
-static int sFromNetPack (packetHead* p, pPacketHead& pNew)
+static int sFromNetPack (netPacketHead* pN, pPacketHead& pNew)
 {
 	int nRet = 0;
 	do {
-		myAssert (p);
-		auto pN = P2NHead(p);
+		// myAssert (p);
+		// auto pN = P2NHead(p);
 		auto pF = sGetNode (pN->uwMsgID);
 		if (pF) {
 			auto fun = (*pF).f[1];
 			if (fun) {
-				auto nR = fun (p, pNew);
+				auto nR = fun (pN, pNew);
 				if (nR) {
 					nRet = 2;
 				}
@@ -488,16 +488,16 @@ static int sFromNetPack (packetHead* p, pPacketHead& pNew)
 	return nRet;
 }
 
-static int sToNetPack (packetHead* p, pPacketHead& pNew)
+static int sToNetPack (netPacketHead* pN, pPacketHead& pNew)
 {
 	int nRet = 0;
 	do {
-		myAssert (p);
-		auto pN = P2NHead(p);
+		// myAssert (p);
+		// auto pN = P2NHead(p);
 		auto pF = sGetNode (pN->uwMsgID);
 		if (pF) {
 			auto fun = (*pF).f[2];
-			auto nR = fun (p, pNew);
+			auto nR = fun (pN, pNew);
 			if (nR) {
 				nRet = 2;
 			}

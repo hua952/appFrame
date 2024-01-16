@@ -32,7 +32,10 @@ public:
 	void  setSerFunStuFromName (const char* v);
 	const char*  serFunStuToName ();
 	void  setSerFunStuToName (const char* v);
+	const char*  msgFullName ();
+	void  setMsgFullName (const char* v);
 private:
+	std::unique_ptr <char[]>  m_msgFullName;
 	std::unique_ptr <char[]>  m_serFunStuToName;
 	std::unique_ptr <char[]>  m_serFunStuFromName;
 	bool  m_neetSession;

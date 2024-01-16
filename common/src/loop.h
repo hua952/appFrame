@@ -19,7 +19,7 @@ typedef struct _procPacketArg
 typedef int (*frameFunType)(void* arg);
 //typedef void* loopHandleType;
 typedef int (*procPacketFunType)(packetHead*, procPacketArg*);
-typedef int (*serializePackFunType) (packetHead* pPack, pPacketHead& pNew);
+typedef int (*serializePackFunType) (netPacketHead* pN, pPacketHead& pNew);
 typedef serializePackFunType* pSerializePackFunType;
 typedef int (*procRpcPacketFunType)(pPacketHead,  pPacketHead&, procPacketArg*);
 typedef loopHandleType  ServerIDType;

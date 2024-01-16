@@ -7,7 +7,7 @@ mArgMgr:: mArgMgr ()
 	m_savePackTag = 0;
 	m_dumpMsg = false;
 	m_procId = c_emptyLoopHandle;
-	m_packTokenTime = 5000;
+	m_packTokenTime = 50000;
 }
 
 mArgMgr:: ~mArgMgr ()

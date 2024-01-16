@@ -53,6 +53,7 @@ typedef struct  _netPacketHead
 
 #define     NIsOtherNetLoopSend(p) ((p->uwTag&0x20))
 #define     NSetOtherNetLoopSend(p) ((p->uwTag|=0x20))
+#define     NSetNotOtherNetLoopSend(p) ((p->uwTag&=~0x20))
 
 #define     NNeetRet(p) ((p->uwTag&0x10))
 #define     NSetNeetRet(p) ((p->uwTag|=0x10))

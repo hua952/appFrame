@@ -150,3 +150,13 @@ void  msgFile:: setAddrType (packAddrType v)
     m_addrType = v;
 }
 
+const char*  msgFile:: msgFullName ()
+{
+    return m_msgFullName.get ();
+}
+
+void  msgFile:: setMsgFullName (const char* v)
+{
+    strCpy (v, m_msgFullName);
+}
+

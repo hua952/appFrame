@@ -130,6 +130,7 @@ packetHead*  libeventSessionCom:: afterReadBuff(udword nS)
 			pack = allFun(netHead.udwLength);
 			auto pN = P2NHead(pack);
 			*pN = netHead;
+			NSetNotOtherNetLoopSend(pN);
 			//nTrace (__FUNCTION__<<" read head msgId = "<<pN->uwMsgID<<" length = "<<pN->udwLength);
 			if (0 == netHead.udwLength) {
 				pRet = pack;

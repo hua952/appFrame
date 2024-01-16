@@ -291,7 +291,9 @@ int   xmlMsgFileLoad:: onceRpcGroupLoad (rapidxml::xml_node<char>* pGroup, msgPm
 			std::string strID = strIdSave;
 			strID += strAskName;
 			pAskMsg->setStrMsgId (strID.c_str());
-
+			std::stringstream ssFullMsgId;
+			ssFullMsgId<< strFull<<R"(()"<<strID<<")";
+			pAskMsg->setMsgFullName (ssFullMsgId.str().c_str());
 			bool bCExtPH = false;
 			nR = rXmlCommon.getBoolA (pAsk, "extPH", bCExtPH);
 			if (0 == nR) {
@@ -359,6 +361,10 @@ int   xmlMsgFileLoad:: onceRpcGroupLoad (rapidxml::xml_node<char>* pGroup, msgPm
 				std::string strID = strIdSave;
 				strID += strRetName;
 				pRetMsg->setStrMsgId (strID.c_str());
+
+				std::stringstream ssFullMsgId;
+				ssFullMsgId<< strFull<<R"(()"<<strID<<")";
+				pRetMsg->setMsgFullName (ssFullMsgId.str().c_str());
 
 				bool bCExtPH = false;
 				int nR = rXmlCommon.getBoolA (pRet, "extPH", bCExtPH);

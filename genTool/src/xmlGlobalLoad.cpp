@@ -121,7 +121,7 @@ static const char* s_comMsg = R"(<?xml version='1.0' encoding='utf-8' ?>
 				<ask neetSession="1">
 					<chKey dataType="ubyte" length="16" haveSize="0"/>
 					<excSender dataType="udword" commit="do not send ntf to me"/>
-					<pack dataType="ubyte" length="1100000" haveSize="1" commit=""> </pack>
+					<pack dataType="ubyte" length="110000" haveSize="1" commit=""> </pack>
 				</ask>
 				<ret>
 					<result dataType="udword" />

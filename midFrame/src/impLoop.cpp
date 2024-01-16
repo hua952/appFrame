@@ -142,10 +142,10 @@ int  impLoop:: processAllGatePack(packetHead* pPack)
 		if (pDS) {
 			packetHead* pNew = nullptr;
 			auto toNetPack = rMgr.toNetPack ();
-			toNetPack (pPack, pNew);
+			auto pN = P2NHead(pPack);
+			toNetPack (pN, pNew);
 			if (pNew) {
 				pDS->send (pNew);  /* 发压缩包 */
-				nRet = procPacketFunRetType_del;  /* 发压缩包不需保存原包 */
 			} else {
 				pDS->send (pPack);
 				nRet = procPacketFunRetType_doNotDel;  /* 发原包,不能删 */
@@ -191,6 +191,7 @@ int  impLoop:: processOtherAppToMePack(ISession* session, packetHead* pPack)
 					<<"myHandle = "<<(int)myHandle);
 			break;
 		}
+		pPack->sessionID = session->id ();
 		if (bIsRet) {
 			auto pIPackSave = getIPackSave ();
 			auto pAskPack = pIPackSave->netTokenPackFind (pN->dwToKen);
@@ -211,19 +212,18 @@ int  impLoop:: processOtherAppToMePack(ISession* session, packetHead* pPack)
 		if (pRet) {
 			auto freeFun = rCS.fnFreePack;
 			if (bNeetRet) {
+				auto toNetPack = tSingleton<loopMgr>::single().toNetPack ();
+				packetHead* pNew = nullptr;
+				toNetPack (P2NHead(pRet), pNew);
+				if (pNew) {
+					freeFun (pRet);
+					pRet = pNew;
+				}
 				pRet->sessionID = pPack->sessionID;
 				auto pRN = P2NHead (pRet);
 				pRN->ubySrcServId = pN->ubyDesServId;
 				pRN->ubyDesServId = pN->ubySrcServId;
 				pRN->dwToKen = pN->dwToKen;
-
-				auto toNetPack = tSingleton<loopMgr>::single().toNetPack ();
-				packetHead* pNew = nullptr;
-				toNetPack (pRet, pNew);
-				if (pNew) {
-					freeFun (pRet);
-					pRet = pNew;
-				}
 				session->send (pRet);
 			} else {
 				/* 发送Ask端不想处理Ret */
@@ -342,6 +342,14 @@ int  impLoop:: sendPackToSomeSession(netPacketHead* pN, uqword* pSessS, udword s
 {
     int  nRet = 0;
     do {
+
+		auto& rMgr =  tSingleton<loopMgr>::single();
+		auto toNetPack = rMgr.toNetPack ();
+		packetHead* pNew = nullptr;
+		toNetPack (pN, pNew);
+		if (pNew) {
+			pN = P2NHead(pNew);
+		}
 		for (decltype (sessionNum) i = 0; i < sessionNum; i++) {
 			auto uqw = pSessS[i];
 			auto seId = (SessionIDType)uqw;
@@ -355,6 +363,10 @@ int  impLoop:: sendPackToSomeSession(netPacketHead* pN, uqword* pSessS, udword s
 			auto pSN = P2NHead(pSend);
 			pSN->ubyDesServId = loopId;
 			pSe->send (pSend);
+		}
+		if (pNew) {
+			auto fnFreePack = rMgr.getForLogicFun().fnFreePack;
+			fnFreePack(pNew);
 		}
     } while (0);
     return nRet;
@@ -577,29 +589,13 @@ int  impLoop:: procProx(packetHead* pPack)
 		if (pSe) {
 			auto toNetPack = tSingleton<loopMgr>::single().toNetPack ();
 			packetHead* pNew = nullptr;
-			toNetPack (pPack, pNew);
+			toNetPack (pN, pNew);
 			if (pNew) {
 				pSe->send (pNew);
 				nRet = procPacketFunRetType_del;
 			} else {
 				pSe->send (pPack);
 			}
-			/*
-			if (bSave) {
-				if (!pNew) {
-					pNew =  sclonePack (pPack);
-				}
-				pSe->send (pNew);
-				nRet = procPacketFunRetType_doNotDel;
-			} else {
-				if (pNew) {
-					pSe->send (pNew);
-					nRet = procPacketFunRetType_del;
-				} else {
-					pSe->send (pPack);
-				}
-			}
-			*/
 		} else {
 			auto bMyCh = isMyChannelMsg (pN->uwMsgID);  /*  */
 			if (!bMyCh) {
@@ -659,8 +655,15 @@ int impLoop::processOncePack(packetHead* pPack)
 				auto pS = getSession (pPack->sessionID);
 				myAssert (pS);
 				if (pS) {
-					pS->send(pPack);
-					nRet = procPacketFunRetType_doNotDel;
+					auto toNetPack = tSingleton<loopMgr>::single().toNetPack ();
+					packetHead* pNew = nullptr;
+					toNetPack (pN, pNew);
+					if (pNew) {
+						pS->send(pNew);
+					} else {
+						pS->send(pPack);
+						nRet = procPacketFunRetType_doNotDel;
+					}
 				} else {
 					mError("can not find sesssion pack: "<<*pPack);
 				}
@@ -770,13 +773,25 @@ int impLoop::processNetPackFun(ISession* session, packetHead* pack)
 	int nRet = procPacketFunRetType_del;
 	do {
 		auto pN = P2NHead (pack);
+		auto& rMgr =  tSingleton<loopMgr>::single();
+		auto fnFree = rMgr.getForLogicFun().fnFreePack;
 		auto sid = session->id();
 		pack->sessionID = sid;
 		if (c_emptyLoopHandle == pN->ubyDesServId) {
-			nRet = processAllGatePack (pack);
+			auto fromNetPack = rMgr.fromNetPack ();
+			packetHead* pNew = nullptr;
+			fromNetPack (pN, pNew);
+			if (pNew) {
+				pNew->sessionID = sid;
+				auto nR = processAllGatePack (pNew);
+				if (!(nR & procPacketFunRetType_doNotDel)) {
+					fnFree (pNew);
+				}
+			} else {
+				nRet = processAllGatePack (pack);
+			}
 			break;
 		}
-		auto& rMgr =  tSingleton<loopMgr>::single();
 		auto fnPushPackToLoop = rMgr.getPhyCallback().fnPushPackToLoop;
 		auto myHandle = id ();
 		loopHandleType myPId;
@@ -786,16 +801,16 @@ int impLoop::processNetPackFun(ISession* session, packetHead* pack)
 		loopHandleType dPId;
 		loopHandleType dSId;
 		fromHandle (pN->ubyDesServId, dPId, dSId);
-		auto fnFree = rMgr.getForLogicFun().fnFreePack;
 
 		bool bIsRet = NIsRet(pN);
 		bool bNeetRet = NNeetRet(pN);
 		if (myPId == dPId) {
 			auto fromNetPack = rMgr.fromNetPack ();
 			packetHead* pNew = nullptr;
-			fromNetPack (pack, pNew);
+			fromNetPack (pN, pNew);
 			auto pProcPack = pack;
 			if (pNew) {
+				pNew->sessionID = sid;
 				pProcPack = pNew;
 			}
 			if (mySId == dSId) {
