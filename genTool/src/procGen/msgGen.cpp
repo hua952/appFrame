@@ -525,21 +525,26 @@ int   msgGen:: genOnceMsgClassCpp (msgGroupFile& rG, msgFile& rMsg, bool bRet, s
 
 		auto serFunStuFromName = rMsg.serFunStuFromName ();
 		auto serFunStuToName = rMsg.serFunStuToName ();
-		if (structBadyTime_com == bt) {
-			if (len) {
-				if (haveSize) {
+		std::string serPackToFunName = serFunStuToName;
 
-					ssP<<"static int "<<serFunStuToName<<R"( (netPacketHead* pN, pPacketHead& pNew)
+		if (structBadyTime_com != bt) {
+			serPackToFunName = serPackToFunName + "Before";
+		}
+		std::stringstream ssBeforSerTo;
+		if (len) {
+			if (haveSize) {
+
+				ssBeforSerTo<<"static int "<<serPackToFunName<<R"( (netPacketHead* pN, pPacketHead& pNew)
 {
     )";
 
-				ssP<<strN<<R"(* p = (()"<<strN<<R"++(*)(N2User(pN)));
+				ssBeforSerTo<<strN<<R"(* p = (()"<<strN<<R"++(*)(N2User(pN)));
 	)++";
-				ssP<<R"(myAssert (p->m_)"<<rDN<<R"(Num <= )"<<len<<R"();
+				ssBeforSerTo<<R"(myAssert (p->m_)"<<rDN<<R"(Num <= )"<<len<<R"();
 	bool bWZ = false;
 	)";
 				if (zeroEnd	) {
-					ssP<<R"(if(p->m_)"<<rDN<<R"(Num) {
+					ssBeforSerTo<<R"(if(p->m_)"<<rDN<<R"(Num) {
 	)"
 					<<R"(bWZ = )"<<R"(p->m_)"<<rDN<<R"([)"
 					<<R"(p->m_)"<<rDN<<R"(Num - 1] != 0;
@@ -551,30 +556,29 @@ int   msgGen:: genOnceMsgClassCpp (msgGroupFile& rG, msgFile& rMsg, bool bRet, s
 			}
 			)";
 				}
-				ssP<<R"(myAssert (p->m_)"<<rDN<<R"(Num <= )"<<len<<R"();
+				ssBeforSerTo<<R"(myAssert (p->m_)"<<rDN<<R"(Num <= )"<<len<<R"();
 	pN->udwLength = sizeof()"<<strN<<R"() - sizeof(p->m_)"
 				<<rDN<<R"([0]) * ()"<<len<<R"( - p->m_)"<<rDN<<R"(Num);
 	)";
 				if (zeroEnd) {
-					ssP<<R"(if(bWZ) { 
+					ssBeforSerTo<<R"(if(bWZ) { 
 			p->m_)"<<rDN<<R"([p->m_)"<<rDN<<R"(Num - 1] = 0;
 				}
 				)";
 				}
 
-				ssP<<R"( return 0;
+				ssBeforSerTo<<R"( return 0;
 }
 )";
 				}
-} // if (len > 1)
-		// strToPack += ssP.str();
-		// strSerializeOut += ssP.str();
+}
+		if (structBadyTime_com == bt) {
+			if (!ssBeforSerTo.str().empty()) {
+				ssP<<ssBeforSerTo.str();
+			}
 		} else if (structBadyTime_proto == bt) {
 			auto toPbFu = rMsg.toPbFuName ();
 			auto fromFuName = rMsg.fromPbFuName ();
-			// std::stringstream  fromOs;
-			// std::stringstream  toOs;
-
 
 			std::stringstream  fromSer;
 			std::stringstream  toSer;
@@ -589,17 +593,32 @@ int   msgGen:: genOnceMsgClassCpp (msgGroupFile& rG, msgFile& rMsg, bool bRet, s
 	auto pU = newC.pack ();
 	pNew = newC.pop ();
 	auto pNN = P2NHead(pNew);
-	auto newLen = pNN->udwLength;
+	// auto newLen = pNN->udwLength;
 	*pNN = *pN;
-	pNN->udwLength = newLen;
+	// pNN->udwLength = newLen;
+)";
+	fromSer<<R"(
 	)"<<fromFuName<<R"((*pU, msgPb);
+)";
+	if (haveSize) {
+		fromSer<<R"(	pN->udwLength = sizeof()"<<strN<<R"() - sizeof(pU->m_)"
+				<<rDN<<R"([0]) * ()"<<len<<R"( - pU->m_)"<<rDN<<R"(Num);)";
+	}
+fromSer<<R"(
 	return nRet;
 }
 )";
-
+	if (!ssBeforSerTo.str().empty()) {
+		toSer<<ssBeforSerTo.str();
+	}
 	toSer<<"static int "<<serFunStuToName<<R"( (netPacketHead* pN, pPacketHead& pNew)
 {
 	int nRet = 0;
+)";
+	if (!ssBeforSerTo.str().empty()) {
+		toSer<<serPackToFunName<<R"((pN, pNew);)";
+	}
+	toSer<<R"(
 	auto pU = ()"<<strN<<R"(*)(N2User(pN));
 	)"<<strN<<R"(Proto  msgPb;
 	)"<<toPbFu<<R"((*pU, msgPb);
@@ -765,6 +784,8 @@ int   msgGen:: genOnceData (structFile& rS, dataFile& rData, std::stringstream& 
 		sizeName += pDN;
 		sizeName += "Num";
 		auto& numName= sizeName;
+		auto& dataS = rS.dataS ();
+		bool lastData = dataS.rbegin()->first == pDN;
 		bool  haveSize  = rData.haveSize ();
 		if (haveSize) {
 			std::string strST = "udword";
@@ -786,11 +807,17 @@ int   msgGen:: genOnceData (structFile& rS, dataFile& rData, std::stringstream& 
 		auto& rStMap = rPmp.structFileS ().structS ();
 		auto len = rData.dataLength ();
 		if (len) {
+			fromOs<<"auto	"<<strDN<<"MaxLen = sizeof (rData."<<strDN<<")/sizeof (rData."<<strDN<<"[0]);"<<std::endl;
+			auto zeroEnd = rData.zeroEnd ();
+			if (zeroEnd) {
+				fromOs<<"	"<<strDN<<"MaxLen--;"<<std::endl;
+			}
 			ss<<" ["<<len<<"]";
 			auto  bString = true;
 			procDataCheck (pStructName, dDataName.c_str(), true);
 			if (0 == strcmp (pDT, "char")) {
-				protoStr<<"	string "<<pDN<<" = "<<nIndex<<";"<<std::endl;
+				// protoStr<<"	string "<<pDN<<" = "<<nIndex<<";"<<std::endl;
+				protoStr<<"	bytes "<<pDN<<" = "<<nIndex<<";"<<std::endl;
 			} else {
 				if (0 == strcmp (pDT, "ubyte")) {
 					protoStr<<"	bytes "<<pDN<<" = "<<nIndex<<";"<<std::endl;
@@ -807,22 +834,39 @@ int   msgGen:: genOnceData (structFile& rS, dataFile& rData, std::stringstream& 
 				}
 			}
 			if (bString) {
+				fromOs<<"	myAssert(rPb."<<lowerName<<"().size() <="<<strDN<<"MaxLen);"<<std::endl;
 				if (haveSize) {
 					fromOs<<"	rData."<<numName<<" = (decltype(rData."<<numName<<"))(rPb."<<lowerName<<"().size());"<<std::endl;
 				}
-				auto zeroEnd = rData.zeroEnd ();
 				if (zeroEnd) {
+					if (haveSize) {
+						fromOs<<"	rData."<<numName<<"++;"<<std::endl;
+					}
 					fromOs<<"	strNCpy (rData."<<strDN<<", sizeof (rData."<<strDN<<"), rPb."<<lowerName<<"().c_str());"<<std::endl;
-					toOs<<"	rPb.set_"<<lowerName<<" ((char*)(rData."<<strDN<<"));"<<std::endl;
+					toOs<<"	auto "<<strDN<<"StrLen = strlen("<<"rData."<<strDN<<");"<<std::endl;
+					toOs<<"	rPb.set_"<<lowerName<<" ((char*)(rData."<<strDN<<"), "<<strDN<<"StrLen);"<<std::endl;
+					/*
+					if (haveSize) {
+						// toOs<<"	rPb.set_"<<lowerName<<" ((char*)(rData."<<strDN<<"), rData."<<numName<<");"<<std::endl;
+						// fromOs<<"	rData."<<numName<<" = (decltype(rData."<<numName<<"))(rPb."<<lowerName<<"().size());"<<std::endl;
+						// fromOs<<"	rData."<<numName<<" = "<<strDN<<"StrLen + 1;"<<std::endl;
+					} else {
+						toOs<<"	rPb.set_"<<lowerName<<" ((char*)(rData."<<strDN<<"));"<<std::endl;
+					}*/
 				} else {
+					
 					fromOs<<"	memcpy (rData."<<strDN<<",  rPb."<<lowerName<<"().data(), rPb."<<lowerName<<"().size());"<<std::endl;
-					toOs<<"	rPb.set_"<<lowerName<<" ((char*)(rData."<<strDN<<"), sizeof(rData."<<strDN<<"));"<<std::endl;
+					if (haveSize && lastData ) {
+						toOs<<"	rPb.set_"<<lowerName<<" ((char*)(rData."<<strDN<<"), rData."<<numName<<");"<<std::endl;
+					} else {
+						toOs<<"	rPb.set_"<<lowerName<<" ((char*)(rData."<<strDN<<"), sizeof(rData."<<strDN<<"));"<<std::endl;
+					}
 				}
 			} else {
+				fromOs<<"	myAssert(rPb."<<lowerName<<"_size() <="<<strDN<<"MaxLen);"<<std::endl;
 				if (haveSize) {
 					fromOs<<"	rData."<<numName<<" = (decltype(rData."<<numName<<"))(rPb."<<lowerName<<"_size());"<<std::endl;
 				}
-
 				std::string strDT = pDT;
 				auto it = rPTS.find (pDT);
 				if (it == rPTS.end ()) {

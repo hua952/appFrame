@@ -362,6 +362,12 @@ int  impLoop:: sendPackToSomeSession(netPacketHead* pN, uqword* pSessS, udword s
 			auto pSend = sNClonePack(pN);
 			auto pSN = P2NHead(pSend);
 			pSN->ubyDesServId = loopId;
+			auto pB = (ubyte*)N2User(pSN);
+			std::stringstream ss;
+			for (decltype (pN->udwLength) i = 0; i < pN->udwLength; i++) {
+				ss<<std::hex<<(int)(pB[i])<<" ";
+			}
+			mInfo(" sendPackToSomeSession msgId = "<<pSN->uwMsgID<<" length = "<<pSN->udwLength<<" data = "<<ss.str().c_str());
 			pSe->send (pSend);
 		}
 		if (pNew) {
@@ -806,6 +812,12 @@ int impLoop::processNetPackFun(ISession* session, packetHead* pack)
 		bool bNeetRet = NNeetRet(pN);
 		if (myPId == dPId) {
 			auto fromNetPack = rMgr.fromNetPack ();
+			auto pB = (ubyte*)N2User(pN);
+			std::stringstream ss;
+			for (decltype (pN->udwLength) i = 0; i < pN->udwLength; i++) {
+				ss<<std::hex<<(int)(pB[i])<<" ";
+			}
+			mInfo(" NetPackBeforeUnzip msgId = "<<pN->uwMsgID<<" length = "<<pN->udwLength<<" data = "<<ss.str().c_str());
 			packetHead* pNew = nullptr;
 			fromNetPack (pN, pNew);
 			auto pProcPack = pack;
