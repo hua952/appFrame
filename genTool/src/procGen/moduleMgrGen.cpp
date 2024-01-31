@@ -101,9 +101,10 @@ int   moduleMgrGen:: writeCMakeLists (appFile& rApp)
 		auto& rConfig = tSingleton<configMgr>::single ();
 		auto structBadyType = rConfig.structBadyType ();
 		std::string strProtobufSer;
-		// if (structBadyTime_proto == structBadyType) {
+		auto bH = rGlobalFile.haveServer ();
+		if (bH) {
 			strProtobufSer = "protobufSer";
-		//}
+		}
 		std::string mgrName = rApp.appName ();
 		mgrName += "ModuleMgr";
 os<<"SET(prjName "<<mgrName<<")"<<std::endl;
@@ -153,7 +154,6 @@ elseif (WIN32)
 	logicCommon
 	cLog
 	)";
-	auto bH = rGlobalFile.haveServer ();
 	if (bH) {
 		os<<R"(defMsg
 		)";

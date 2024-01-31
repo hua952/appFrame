@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<servers>
+	<projectHome>C:/study/cpp/yuan1/</projectHome>
+	<projectName>yuan1</projectName>
+	<thirdPartyDir>C:/work/</thirdPartyDir>
+	<frameInstallPath>C:/work/appFrameInstall/</frameInstallPath>
+	<app>
+		<appYuan1>
+			<appArg>detachServerS=1</appArg>
+		</appYuan>
+	</app>
+</servers>
+

@@ -38,7 +38,7 @@ int   appCMakeListsGen:: startGen (appFile& rApp)
 			auto szPrjName = rGlobalFile.projectName ();
 			os<<R"(cmake_minimum_required(VERSION 3.16) 
 set(BUILD_USE_64BITS on)
-set(CMAKE_CXX_STANDARD 17) 
+set(CMAKE_CXX_STANDARD 20) 
 set(CMAKE_CXX_STANDARD_REQUIRED True))"<<std::endl;
 
 			auto& moduleS =  rApp.moduleFileNameS ();

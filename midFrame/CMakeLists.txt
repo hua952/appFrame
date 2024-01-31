@@ -3,6 +3,8 @@ set(srcS)
 file(GLOB srcS src/*.cpp)
 set(defS)
 set(osSrc)
+
+MESSAGE(STATUS "CMAKE_CXX_STANDARD = "${CMAKE_CXX_STANDARD})
 if (UNIX)
     MESSAGE(STATUS "unix")
 	file(GLOB osSrc src/unix/*.cpp)
