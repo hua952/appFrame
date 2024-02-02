@@ -598,6 +598,7 @@ int  impLoop:: procProx(packetHead* pPack)
 
 		pPack->pAsk = 0;
 		if (pSe) {
+			/*
 			auto toNetPack = tSingleton<loopMgr>::single().toNetPack ();
 			packetHead* pNew = nullptr;
 			toNetPack (pN, pNew);
@@ -607,6 +608,8 @@ int  impLoop:: procProx(packetHead* pPack)
 			} else {
 				pSe->send (pPack);
 			}
+			*/
+			pSe->send (pPack);
 		} else {
 			auto bMyCh = isMyChannelMsg (pN->uwMsgID);  /*  */
 			if (!bMyCh) {

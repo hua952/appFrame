@@ -236,20 +236,36 @@ int midSendPackToLoopFun(packetHead* pack) /* 返回值貌似没用 */
 		
 		auto objSer = rMgr.getOnceUpServer ();
 		myAssert (c_emptyLoopHandle != objSer);
+
+		auto toNetPack = tSingleton<loopMgr>::single().toNetPack ();
+		packetHead* pNew = nullptr;
+		toNetPack (pN, pNew);
+		
 		if (bNeetRet) {
 			// pack->pAsk = 1;  /* 告知发送线程需要保存原包 */
 			iPackSave* pISave = pS->getIPackSave ();
 
 			packetHead* sclonePack(packetHead* p);
-			auto pNew =  sclonePack (pack);  /*  由于要保存原包,克隆一份 */
-			pISave->netTokenPackInsert (pNew);  /* 保存pack 因为该函数是通过网络发送的第一站,故在此保存   */
+			if (!pNew) {
+				pNew =  sclonePack (pack);  /*  由于要保存原包,克隆一份 */
+			}
+
+			pISave->netTokenPackInsert (pack);  /* 保存pack 因为该函数是通过网络发送的第一站,故在此保存   */
 			std::pair<NetTokenType, impLoop*> pa;
 			pa.first = pN->dwToKen;
 			pa.second = pS;
 			auto delTime = 61800;
 			auto& rTimeMgr = pS->getTimerMgr ();
 			rTimeMgr.addComTimer (delTime, sDelNetPack, &pa, sizeof (pa));
+			pack = pNew;
+		} else {
+			if (pNew) {
+				freeFun (pack);
+				pack = pNew;
+			}
 		}
+		pack->sessionID = EmptySessionID;
+		pack->loopId = c_emptyLoopHandle;
 		fnPushPackToLoop (objSer, pack);
 	} while (0);
 	return nRet;
