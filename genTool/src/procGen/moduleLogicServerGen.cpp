@@ -435,9 +435,16 @@ int   moduleLogicServerGen:: genH (moduleGen& rMod)
 		for (decltype (serverNum) i = 0; i < serverNum; i++) {
 			auto& rServer = *rSS[i];
 			auto pName = rServer.serverName ();
+			auto arryLen = rServer.arryLen ();
+			std::string strLen;
+			if (arryLen > 1) {
+				std::stringstream ss;
+				ss<<"["<<arryLen<<"]";
+				strLen = ss.str();
+			}
 			serInc<<R"(#include ")"<<pName<<R"(.h"
 )";
-			serVar<<"    "<<pName<<R"(    m_)"<<pName<<R"(;
+			serVar<<"    "<<pName<<R"(    m_)"<<pName<<strLen<<R"(;
 )";
 		}
 		osMgrH<<R"(#ifndef )"<<pModName<<R"(ServerMgr_h__
@@ -861,11 +868,12 @@ static void   sOutAddChannel (bool bAsk, std::ostream& ps)
 	}
 }
 
-static int sProcMsgReg (const char* pModName, const char* serverName,
+static int sProcMsgReg (const char* pModName, serverFile* pServer,
 		const procRpcNode& rProcRpc, const char* strHandle, const char* szMsgDir,
 		std::ostream& os, std::ostream& ss)
 {
 	int nRet = 0;
+	auto serverName = pServer->serverName ();
 	bool bAsk = rProcRpc.bAsk;
 	auto& rGlobalFile = tSingleton<globalFile>::single ();
 	auto pPmp = rGlobalFile.findMsgPmp ("defMsg");
@@ -939,8 +947,20 @@ static int )"<<pPackFun<<
 		os<<R"(auto pN = P2NHead(pPack);
 	)";
 	}
-	os<<R"(tSingleton<)"<<strMgrClassName<<R"(>::single().m_)"
-		<<serverName<<R"(.)"<<msgProcFun <<R"(()";
+	std::string strArryLen;
+	std::string strAssert;
+	auto arryLen = pServer->arryLen ();
+	if (arryLen == 1) {
+		strAssert = R"(pArg->handle >= c_sinServerIdBegin)";
+	} else {
+		strAssert = R"(pArg->handle < c_sinServerIdBegin)";
+		std::stringstream ss;
+		ss<<"[pArg->handle%c_onceMutServerNum]";
+		strArryLen = ss.str();
+	}
+	os<<R"(	myAssert()"<<strAssert<<R"();
+	tSingleton<)"<<strMgrClassName<<R"(>::single().m_)"
+		<<serverName<<strArryLen<<R"(.)"<<msgProcFun <<R"(()";
 	auto askHasData = pAskMsg->hasData ();
 	if (askHasData) {
 		os<<R"(*ask.pack())";
@@ -1127,7 +1147,7 @@ int   moduleLogicServerGen:: genPackFun (moduleGen& rMod, const char* szServerNa
 			myMkdir (userLogic.c_str());
 			strCppDir += "/proc/";
 			strCppDir += pGName;
-			sProcMsgReg (pModuleName, szServerName, rProcRpc,
+			sProcMsgReg (pModuleName, pServerF, rProcRpc,
 					strHandle, strCppDir.c_str (), os, ss);
 		} // for
 		ss<<R"(    return nRet;

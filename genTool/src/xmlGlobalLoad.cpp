@@ -643,6 +643,12 @@ int   xmlGlobalLoad:: onceServerLoad (rapidxml::xml_node<char>* pS,
 			auto dwSetp = atoi (pFpsA->value());
 			newServer->setFpsSetp (dwSetp);
 		}
+		auto pArryLen = pS->first_attribute("arryLen");
+		if (pArryLen) {
+			auto dwSetp = atoi (pArryLen->value());
+			newServer->setArryLen ((uword)dwSetp);
+		}
+
 		auto pSleepA = pS->first_attribute("sleepSetp");
 		if (pSleepA) {
 			auto dwSetp = atoi (pSleepA->value());

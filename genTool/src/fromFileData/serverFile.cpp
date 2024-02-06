@@ -31,6 +31,7 @@ bool  cmpProcRpcNode::operator () (const procRpcNode& a, const procRpcNode& b) c
 
 serverFile:: serverFile ()
 {
+	m_arryLen = 1;
 	m_sleepSetp=10;
 	m_fpsSetp=0;
 	m_autoRun = true;
@@ -268,5 +269,15 @@ bool  serverFile:: regRoute ()
 void  serverFile:: setRegRoute (bool v)
 {
     m_regRoute = v;
+}
+
+uword  serverFile:: arryLen ()
+{
+    return m_arryLen;
+}
+
+void  serverFile:: setArryLen (uword v)
+{
+    m_arryLen = v;
 }
 

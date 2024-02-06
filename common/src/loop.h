@@ -25,8 +25,14 @@ typedef int (*procRpcPacketFunType)(pPacketHead,  pPacketHead&, procPacketArg*);
 typedef loopHandleType  ServerIDType;
 typedef uword MsgIdT;
 // #define c_emptyModelId 255
+
 #define c_emptyLoopHandle	((1<<(sizeof(serverIdType)*8))-1)
 #define c_emptyLocalServerId	(c_emptyLoopHandle&LoopMark)
+#define c_sinServerIdBegin  240
+#define c_onceMutServerNum  16
+#define c_maxMutServerNum  (c_sinServerIdBegin/c_onceMutServerNum)
+#define c_maxSinServerNum  15
+
 extern "C"
 {
 	//int regMsg(loopHandleType handle, uword uwMsgId, procPacketFunType pFun); // call by level 2

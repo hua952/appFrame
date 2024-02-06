@@ -83,7 +83,10 @@ public:
 	void  setRearEnd (bool v);
 	bool  regRoute ();
 	void  setRegRoute (bool v);
+	uword  arryLen ();
+	void  setArryLen (uword v);
 private:
+	uword  m_arryLen;
 	bool  m_regRoute;
 	bool  m_rearEnd;
 	bool  m_autoRun;

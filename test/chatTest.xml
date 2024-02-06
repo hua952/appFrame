@@ -64,7 +64,7 @@
 				</appClientM2>
 				<appClientM1>
 					<server>
-						<chatTh sleepSetp="1" showFps="1" fpsSetp="40000">
+						<chatTh sleepSetp="1" showFps="1" fpsSetp="40000" arryLen="1">
 							<procRpc>
 								<manualList askType="ret"/>
 								<regret askType="ret"/>

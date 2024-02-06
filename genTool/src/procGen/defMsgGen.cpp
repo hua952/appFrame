@@ -61,6 +61,8 @@ int defMsgGen::loopHandleSGen ()
 			int is = ip++ * LoopNum;
 			rApp.setProcId (is);
 			auto& rModNameS = rApp.moduleFileNameS ();
+			int mutI = 0;
+			int sinI = 0;
 			for (auto ite = rModNameS.begin ();
 					rModNameS.end () != ite; ++ite) {
 				auto& rMName = *ite;
@@ -74,7 +76,19 @@ int defMsgGen::loopHandleSGen ()
 						rSS.end () != iter; ++iter) {
 					auto pServer = iter->get (); // iter->second.get ();
 					auto pSName = pServer->strHandle ();
-					os<<R"(#define  )"<<pSName<<"  "<<is++<<std::endl;
+					auto arryLen = pServer->arryLen ();
+					auto serId = 0;
+					if (arryLen > 1) {
+						myAssert(mutI < c_maxMutServerNum);
+						serId = mutI * c_onceMutServerNum;
+						mutI++;
+					} else {
+						myAssert(sinI < c_maxSinServerNum);
+						serId = c_sinServerIdBegin  + sinI;
+						sinI++;
+					}
+					serId += is;
+					os<<R"(#define  )"<<pSName<<"  "<<serId<<std::endl;
 					if (sssFirst) {
 						sssFirst = false;
 					} else {

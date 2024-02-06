@@ -156,7 +156,9 @@ int  impLoop:: processAllGatePack(packetHead* pPack)
 			auto pF = findMsg(pN->uwMsgID);
 			if (pF) {
 				packetHead* pRet = nullptr;
-				nRet = pF(pPack, pRet, nullptr);
+				procPacketArg argP;
+				argP.handle = id ();
+				nRet = pF(pPack, pRet, &argP);
 				// myAssert(!pRet);
 				if (pRet) {
 					auto fnFree = rMgr.getForLogicFun().fnFreePack;
@@ -192,6 +194,8 @@ int  impLoop:: processOtherAppToMePack(ISession* session, packetHead* pPack)
 			break;
 		}
 		pPack->sessionID = session->id ();
+		procPacketArg argP;
+		argP.handle = id ();
 		if (bIsRet) {
 			auto pIPackSave = getIPackSave ();
 			auto pAskPack = pIPackSave->netTokenPackFind (pN->dwToKen);
@@ -202,13 +206,15 @@ int  impLoop:: processOtherAppToMePack(ISession* session, packetHead* pPack)
 			}
 			myAssert (pAskPack);
 			pPack->pAsk = (uqword)pAskPack;  // must for delete pAskPack
-			nRet = pF(pAskPack, pPack, nullptr);
+			nRet = pF(pAskPack, pPack, &argP);
 			pIPackSave->netTokenPackErase (pN->dwToKen);
 			break;
 		}
 		bool bNeetRet = NNeetRet(pN);
 		packetHead* pRet = nullptr;
-		nRet = pF(pPack, pRet, nullptr);
+
+		
+		nRet = pF(pPack, pRet, &argP);
 		if (pRet) {
 			auto freeFun = rCS.fnFreePack;
 			if (bNeetRet) {
@@ -242,6 +248,9 @@ int  impLoop:: processOtherAppPack(packetHead* pPack)
 	auto pN = P2NHead (pPack);
 	auto bIsRet = NIsRet (pN);
 	auto freeFun = rCS.fnFreePack;
+
+	procPacketArg argP;
+	argP.handle = id ();
 	do {
 		myAssert(c_emptyLoopHandle != pN->ubyDesServId);
 		auto myHandle = id();
@@ -259,7 +268,7 @@ int  impLoop:: processOtherAppPack(packetHead* pPack)
 			if (pAskPack) {
 				myAssert (pAskPack);
 				pPack->pAsk = (uqword)pAskPack;  // must for delete pAskPack
-				nRet = pF(pAskPack, pPack, nullptr);
+				nRet = pF(pAskPack, pPack, &argP);
 				pIPackSave->netTokenPackErase (pN->dwToKen);
 			} else {
 				mWarn ("send packet can not find by token: "<<pN->dwToKen<<" msgId = "<<pN->uwMsgID
@@ -268,8 +277,7 @@ int  impLoop:: processOtherAppPack(packetHead* pPack)
 			break;
 		} 
 		packetHead* pRet = nullptr;
-		nRet = pF(pPack, pRet, nullptr);
-
+		nRet = pF(pPack, pRet, &argP);
 		if (pRet) {
 			bool bNeetRet = NNeetRet(pN);
 			if (bNeetRet) {
@@ -732,13 +740,15 @@ int  impLoop:: processLocalServerPack(packetHead* pPack)
 			}
 			break;
 		}
+		procPacketArg argP;
+		argP.handle = id ();
 		if (bIsRet) { // pPack->pAsk put by other server
 			auto  pAsk = (pPacketHead)(pPack->pAsk);
 			pPack->pAsk = (decltype (pPack->pAsk))pAsk;
-			nRet = pF((pPacketHead)(pPack->pAsk), pPack, nullptr);
+			nRet = pF((pPacketHead)(pPack->pAsk), pPack, &argP);
 		} else {
 			packetHead* pRet = nullptr;
-			auto fRet = pF(pPack, pRet, nullptr);
+			auto fRet = pF(pPack, pRet, &argP);
 			if (pRet) {
 				pRet->pAsk = (uqword)pPack;
 				auto pRN = P2NHead (pRet);
