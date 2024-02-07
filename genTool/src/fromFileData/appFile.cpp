@@ -1,10 +1,12 @@
 #include "appFile.h"
 #include "strFun.h"
+#include "mainLoop.h"
 
 appFile:: appFile ()
 {
 	m_procId = 0x7fffffff;
 	m_detachServerS = false;
+	m_netType = appNetType_client;
 }
 
 appFile:: ~appFile ()
@@ -74,5 +76,15 @@ bool   appFile:: haveServer ()
 		nRet = !rMs.empty ();
     } while (0);
     return nRet;
+}
+
+ubyte  appFile:: netType ()
+{
+    return m_netType;
+}
+
+void  appFile:: setNetType (ubyte v)
+{
+    m_netType = v;
 }
 

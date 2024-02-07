@@ -101,6 +101,14 @@ typedef struct _ForRegMsg{
 	regMsgFT		 fnRegMsg;
 } ForRegMsg;
 */
+
+enum appNetType
+{
+	appNetType_client,
+	appNetType_gate,
+	appNetType_server,
+};
+
 #define c_onceServerMaxConnectNum    6
 #define c_onceServerMaxListenNum    3
 struct serverEndPointInfo

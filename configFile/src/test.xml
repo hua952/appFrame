@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<config className="configMgr">
+	<depInclude type="string">d:/pzh/include</depInclude>
+	<sendSetp type="udword">10000</sendSetp>
+	<clearTag type="bool">1</clearTag>
+</config>

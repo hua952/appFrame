@@ -10,7 +10,7 @@
 		<en2 port="12001"/>
 	</endPoint>
 	<app>
-		<gate>
+		<gate appNetType="1">
 			<appArg>detachServerS=1</appArg>
 			<module>
 				<gateM>
@@ -27,7 +27,7 @@
 				</gateM>
 			</module>
 		</gate>
-		<server>
+		<server appNetType="2">
 			<appArg>detachServerS=1</appArg>
 			<module>
 				<appServerM>

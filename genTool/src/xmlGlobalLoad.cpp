@@ -308,12 +308,15 @@ int   xmlGlobalLoad:: onceAppLoad (rapidxml::xml_node<char>* pApp, std::shared_p
 		auto pName = pApp->name ();
 		rInfo ("proc app name = "<<pName);
 		
-		
-
 		auto& rMap = tSingleton<appFileMgr>::single ().appS ();
 		auto pA = std::make_shared<appFile> ();
 		pA->setAppName (pName);
 		rApp = pA;
+		auto pRearEnd = pApp->first_attribute("appNetType");
+		if (pRearEnd) {
+			auto dwSetp = atoi (pRearEnd->value());
+			pA->setNetType((ubyte)dwSetp);
+		}
 		auto& rV = rApp->argS ();
 		for (auto pArg = pApp->first_node ("appArg");
 			pArg; pArg = pArg->next_sibling()) {
