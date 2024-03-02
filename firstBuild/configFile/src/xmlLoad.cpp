@@ -26,24 +26,33 @@ int  xmlLoad:: load (const char* szFileName)
 		if (pClassName) {
 			rMgr.setClassName (pClassName->value ());
 		}
+		auto pProjectDir = root->first_attribute("projectDir");
+		if (pProjectDir ) {
+			rMgr.setProjectDir(pProjectDir->value ());
+		}
+		auto pProjectName = root->first_attribute("projectName");
+		if (pProjectName) {
+			rMgr.setProjectName(pProjectName->value ());
+		}
 		for (auto pC = root->first_node (); pC; pC = pC->next_sibling ()) {
 			int nType = 0;
+			std::string strType = "int";
 			auto pType = pC->first_attribute("type");
 			auto pI = std::make_shared <item> ();
+
 			if (pType) {
-				std::string strType = pType->value ();
+				strType = pType->value ();
 				if (strType == "string") {
 					nType = 1;
 				} else if (strType == "bool") {
 					nType = 2;
 				}
-				pI->setItemType (pType->value ());
 			}
 			pI->setItemName (pC->name ());
+			pI->setItemType (strType.c_str());
 			pI->setItemValue (pC->value ());
 			pI->setDataType (nType);
-			std::string strItemName = pC->value ();
-			auto ret = rMap.insert (std::make_pair(strItemName, pI));
+			auto ret = rMap.insert (std::make_pair(pC->name(), pI));
 			if (!ret.second) {
 				continue;
 			}

@@ -3,7 +3,7 @@ set(srcS)
 file(GLOB srcS src/*.cpp)
 set(defS)
 set(osSrc)
-
+set(libDir ${firstBuildLib})
 MESSAGE(STATUS "CMAKE_CXX_STANDARD = "${CMAKE_CXX_STANDARD})
 if (UNIX)
     MESSAGE(STATUS "unix")
@@ -17,21 +17,15 @@ elseif (WIN32)
 	ADD_DEFINITIONS(/Od)
 	file(GLOB osSrc src/win/*.cpp)
 	file(GLOB defS src/win/*.def)
-	include_directories(
-		${CMAKE_SOURCE_DIR}/../include
-		)
-	link_directories(
-		${CMAKE_SOURCE_DIR}/../lib
-		)
 endif ()
 
+link_directories(
+		${libDir}
+		)
 add_library(${prjName} SHARED ${srcS} ${osSrc} ${defS})
 target_include_directories(${prjName} PUBLIC 
-							src
-							${CMAKE_SOURCE_DIR}/common/src
 							${CMAKE_SOURCE_DIR}/logicCommon/src
-							${CMAKE_SOURCE_DIR}/comTcpProNet/src
-							${CMAKE_SOURCE_DIR}/cLog/src
+							${firstBuildInc}
                            )
 
 target_link_libraries(${prjName} PUBLIC comTcpProNet logicCommon common)

@@ -1,6 +1,5 @@
-SET(prjName logicCommon)
+SET(prjName frameConfig)
 set(srcS)
-set(libDir ${firstBuildLib})
 file(GLOB srcS src/*.cpp)
 if (UNIX)
 	add_compile_options(-fPIC)
@@ -12,19 +11,15 @@ elseif (WIN32)
 	ADD_DEFINITIONS(/W1)
 endif ()
 
-link_directories(
-		${libDir}
-		)
-
 add_library(${prjName} ${srcS})
 target_include_directories(${prjName} PUBLIC 
-							${firstBuildInc} 
+							${firstBuildInc}
                            )
 
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 
 install(TARGETS ${prjName} ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
-set(incS src/gLog.h src/msg.h src/logicServer.h)
+set(incS src/frameConfig.h)
 
 install(FILES ${incS} DESTINATION include/${myProjectName})

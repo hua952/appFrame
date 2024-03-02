@@ -2,6 +2,7 @@ SET(prjName cppLevel0)
 set(srcS)
 file(GLOB srcS src/*.cpp)
 
+set(libDir ${firstBuildLib})
 set(libS common)
 set(osSrc)
 if (UNIX)
@@ -17,12 +18,15 @@ elseif (WIN32)
 	#aux_source_directory(src/win osSrc)
 endif ()
 
-add_executable (${prjName} ${srcS} ${osSrc})
-target_include_directories(${prjName} PUBLIC 
-							src
-							${CMAKE_SOURCE_DIR}/common/src
-                           )
 
+link_directories(
+		${libDir}
+		)
+add_executable (${prjName} ${srcS} ${osSrc})
+
+target_include_directories(${prjName} PUBLIC 
+							${firstBuildInc} 
+                           )
 target_link_libraries(${prjName} PUBLIC  ${libS})
 
 SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)

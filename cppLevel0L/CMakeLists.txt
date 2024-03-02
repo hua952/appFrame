@@ -1,5 +1,6 @@
 SET(prjName cppLevel0L)
 set(srcS)
+set(libDir ${firstBuildLib})
 file(GLOB srcS src/*.cpp)
 set(defS)
 set(osSrc)
@@ -16,20 +17,16 @@ elseif (WIN32)
 	#add_definitions(-w)
 	#add_definitions(-DWIN32_LEAN_AND_MEAN)
 	MESSAGE(STATUS "windows ${prjName} osSrc =  ${osSrc}")
-	include_directories(
-		${CMAKE_SOURCE_DIR}/../include
-		)
-	link_directories(
-		${CMAKE_SOURCE_DIR}/../lib
-		)
-	#list(APPEND libS ws2_32)
 endif ()
 
+link_directories(
+		${libDir}
+		)
+
 add_library(${prjName} SHARED ${srcS} ${defS} ${osSrc})
-target_include_directories(${prjName} PUBLIC 
-							${CMAKE_SOURCE_DIR}/common/src
-							${CMAKE_SOURCE_DIR}/cLog/src
+target_include_directories(${prjName} PUBLIC
 							src
+							${firstBuildInc}
                            )
 target_link_libraries(${prjName} PUBLIC  ${libS})
 

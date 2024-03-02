@@ -1,5 +1,6 @@
 SET(prjName libeventSession)
 set(srcS)
+set(libDir ${firstBuildLib})
 file(GLOB srcS src/*.cpp)
 set(defS)
 set(srcH)
@@ -20,19 +21,19 @@ elseif (WIN32)
 							${CMAKE_SOURCE_DIR}/../include
 							$ENV{depInclude}
 							)
-	link_directories(
-		${CMAKE_SOURCE_DIR}/../lib
-		$ENV{depLib}
-		)
+	list(APPEND libDir $ENV{depLib})
 	file(GLOB defS src/*.def)
 endif ()
+
+link_directories(
+		${libDir}
+		)
 
 add_library(${prjName} SHARED ${srcS} ${osSrc} ${defS})
 
 target_include_directories(${prjName} PUBLIC 
-							${CMAKE_SOURCE_DIR}/common/src
-							${CMAKE_SOURCE_DIR}/cLog/src
 							${srcH}
+							${firstBuildInc} 
                            )
 target_link_libraries(${prjName} PUBLIC  common event)
 

@@ -17,12 +17,10 @@ endif ()
 
 add_executable (${prjName} ${srcS} ${osSrc})
 target_include_directories(${prjName} PUBLIC 
-							src
 							${CMAKE_SOURCE_DIR}/common/src
-							${CMAKE_SOURCE_DIR}/cLog/src
                            )
 message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
-target_link_libraries(${prjName} PUBLIC  common cLog)
+target_link_libraries(${prjName} PUBLIC  common)
 SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 install(TARGETS ${prjName} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 

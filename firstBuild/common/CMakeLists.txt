@@ -14,8 +14,6 @@ elseif (WIN32)
 	file(GLOB osSrc src/win/*.cpp)
 	ADD_DEFINITIONS(/Zi)
 	ADD_DEFINITIONS(/W2)
-	# list(APPEND libS ws2_32)
-	# add_definitions(-DWIN32_LEAN_AND_MEAN)
 	MESSAGE(STATUS "windows osSrc = ${osSrc}")
 endif ()
 
@@ -41,6 +39,5 @@ SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 
 install(TARGETS ${prjName}
 	ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-	# PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${myProjectName}
 	)
 install(FILES ${incS} DESTINATION include/${myProjectName})

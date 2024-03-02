@@ -15,7 +15,12 @@ public:
 	void  setDataType (int v);
 	const char*  itemType ();
 	void  setItemType (const char* v);
+	const char*  wordItemName ();
+	const char*  memberItemName ();
+	void  setMemberItemName (const char* v);
 private:
+	std::unique_ptr <char[]>  m_memberItemName;
+	std::unique_ptr <char[]>  m_wordItemName;
 	std::unique_ptr <char[]>  m_itemType;
 	std::unique_ptr <char[]>  m_itemValue;
 	std::unique_ptr <char[]>  m_itemName;

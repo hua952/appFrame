@@ -1,0 +1,19 @@
+cmake_minimum_required(VERSION 3.16) 
+set(BUILD_USE_64BITS on)
+set(CMAKE_CXX_STANDARD 20) 
+set(CMAKE_CXX_STANDARD_REQUIRED True) 
+# set the project name 
+
+set (frameProjectName appFrame CACHE INTERNAL "Shared variable")
+set (myProjectName  configFile CACHE INTERNAL "Shared variable")
+project(${myProjectName})
+SET(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/../../${frameProjectName}Install)
+
+add_subdirectory (common)
+add_subdirectory (cLog)
+add_subdirectory (comTcpProNet)
+add_subdirectory (configFile)
+add_subdirectory (genTool)
+
+SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
+SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)

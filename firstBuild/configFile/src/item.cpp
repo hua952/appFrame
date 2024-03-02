@@ -19,6 +19,11 @@ const char*  item:: itemName ()
 void  item:: setItemName (const char* v)
 {
     strCpy (v, m_itemName);
+    strCpy (v, m_wordItemName);
+	toWord (m_wordItemName.get());
+	std::string str = "m_";
+	str += v;
+    strCpy (str.c_str(), m_memberItemName);
 }
 
 
@@ -50,5 +55,20 @@ const char*  item:: itemType ()
 void  item:: setItemType (const char* v)
 {
     strCpy (v, m_itemType);
+}
+
+const char*  item:: wordItemName ()
+{
+    return m_wordItemName.get ();
+}
+
+const char*  item:: memberItemName ()
+{
+    return m_memberItemName.get ();
+}
+
+void  item:: setMemberItemName (const char* v)
+{
+    strCpy (v, m_memberItemName);
 }
 
