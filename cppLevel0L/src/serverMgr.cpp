@@ -12,10 +12,8 @@
 #include <set>
 #include <string>
 #include "CModule.h"
-#include "impLoop.h"
 #include "myAssert.h"
 #include "mLog.h"
-#include "impLoop.h"
 #include "mArgMgr.h"
 #include <iostream>
 #include <cstdio>
