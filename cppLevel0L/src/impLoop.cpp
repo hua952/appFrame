@@ -1,3 +1,4 @@
+/*
 #include "tSingleton.h"
 #include "impLoop.h"
 #include "mainLoop.h"
@@ -156,13 +157,12 @@ int  impLoop:: processAllGatePack(packetHead* pPack)
 			auto pN = P2NHead(pPack);
 			toNetPack (pN, pNew);
 			if (pNew) {
-				pDS->send (pNew);  /* 发压缩包 */
+				pDS->send (pNew);
 			} else {
 				pDS->send (pPack);
-				nRet = procPacketFunRetType_doNotDel;  /* 发原包,不能删 */
+				nRet = procPacketFunRetType_doNotDel;
 			}
 		} else {
-			/*  本线程就是gate    */
 			auto pN = P2NHead(pPack);
 			auto pF = findMsg(pN->uwMsgID);
 			if (pF) {
@@ -246,7 +246,6 @@ int  impLoop:: processOtherAppToMePack(ISession* session, packetHead* pPack)
 				pRN->dwToKen = pN->dwToKen;
 				session->send (pRet);
 			} else {
-				/* 发送Ask端不想处理Ret */
 				// freeFun (pRet);
 				freePack (pRet);
 				pRet = nullptr;
@@ -389,23 +388,9 @@ int  impLoop:: sendPackToSomeSession(netPacketHead* pN, uqword* pSessS, udword s
 			auto pSN = P2NHead(pSend);
 			pSN->ubyDesServId = loopId;
 			auto pB = (ubyte*)N2User(pSN);
-			/*
-			std::stringstream ss;
-			std::unique_ptr<char[]> pOut;
-			for (decltype (pSN->udwLength) i = 0; i < pSN->udwLength; i++) {
-				ss<<std::hex<<(int)(pB[i])<<" ";
-			}
-			strCpy (ss.str().c_str(), pOut);
-			auto szOut = ss.get();
-			mInfo(" sendPackToSomeSession msgId = "<<pSN->uwMsgID<<" length = "<<pSN->udwLength<<" data = "<<szOut);
-			*/
 			pSe->send (pSend);
 		}
 		if (pNew) {
-			/*
-			auto fnFreePack = rMgr.getForLogicFun().fnFreePack;
-			fnFreePack(pNew);
-			*/
 			freePack (pNew);
 		}
     } while (0);
@@ -428,7 +413,7 @@ int  impLoop:: forwardForOtherServer(packetHead* pPack)
 		loopHandleType sPId;
 		loopHandleType sSId;
 		fromHandle (pN->ubySrcServId, sPId, sSId);
-		myAssert (sPId != myPId); /* 该函数只处理非首站发出 */
+		myAssert (sPId != myPId);
 		myAssert (NIsOtherNetLoopSend(pN));
 		myAssert (pN->inGateSerId!=c_emptyLoopHandle);
 		ISession* pSe = nullptr;
@@ -463,7 +448,7 @@ int  impLoop:: forwardForOtherServer(packetHead* pPack)
 			if (pSe) {
 				pSe->send (pPack);
 			} else {
-				nRet = procPacketFunRetType_del; /* 无法发送,删除包 */ 
+				nRet = procPacketFunRetType_del;
 			}
 			break;
 		}
@@ -486,7 +471,7 @@ int  impLoop:: forwardForOtherServer(packetHead* pPack)
 		if (pSe) {
 			pSe->send (pPack);
 		} else {
-			nRet = procPacketFunRetType_del; /* 无法发送,删除包 */ 
+			nRet = procPacketFunRetType_del;
 			break;
 		}
 		pISave->oldTokenInsert(newToken, info);
@@ -518,7 +503,7 @@ int  impLoop:: forward(packetHead* pPack)
 		loopHandleType sPId;
 		loopHandleType sSId;
 		fromHandle (pN->ubySrcServId, sPId, sSId);
-		myAssert (sPId != myPId); /* 该函数只处理非首站发出 */
+		myAssert (sPId != myPId);
 		myAssert (!NIsOtherNetLoopSend(pN));
 		ISession* pSe = nullptr;
 		if (NIsRet (pN)) {
@@ -591,7 +576,7 @@ int  impLoop:: forward(packetHead* pPack)
 			pSe->send (pPack);
 		} else {
 			NSetOtherNetLoopSend(pN);
-			pN->inGateSerId = mySId;  /*   请求其它线程代发,记录下本线程ID, 便于返回     */
+			pN->inGateSerId = mySId;
 			clonePackToOtherNetThread (pPack);
 		}
 		
@@ -615,11 +600,11 @@ int  impLoop:: procProx(packetHead* pPack)
 		loopHandleType sPId;
 		loopHandleType sSId;
 		fromHandle (pN->ubySrcServId, sPId, sSId);
-		myAssert (sPId == myPId); /* 该函数只处理首站发出的ask包 */
+		myAssert (sPId == myPId);
 
 		// bool bSave = NNeetRet(pN);
 		ISession* pSe = nullptr;
-		myAssert (EmptySessionID == pPack->sessionID && c_emptyLoopHandle == pPack->loopId);    /*   纯测试,不确定会不会出现该情况   */
+		myAssert (EmptySessionID == pPack->sessionID && c_emptyLoopHandle == pPack->loopId);
 		if (EmptySessionID == pPack->sessionID) {
 			pSe = getServerSession (pN->ubyDesServId);
 			if (!pSe) {
@@ -631,24 +616,13 @@ int  impLoop:: procProx(packetHead* pPack)
 
 		pPack->pAsk = 0;
 		if (pSe) {
-			/*
-			auto toNetPack = tSingleton<loopMgr>::single().toNetPack ();
-			packetHead* pNew = nullptr;
-			toNetPack (pN, pNew);
-			if (pNew) {
-				pSe->send (pNew);
-				nRet = procPacketFunRetType_del;
-			} else {
-				pSe->send (pPack);
-			}
-			*/
 			pSe->send (pPack);
 		} else {
-			auto bMyCh = isMyChannelMsg (pN->uwMsgID);  /*  */
+			auto bMyCh = isMyChannelMsg (pN->uwMsgID);
 			if (!bMyCh) {
 				mError ("procProx pSe null pack = "<<*pPack);
 			}
-			nRet = procPacketFunRetType_del; /* 无法发送,删除包 */
+			nRet = procPacketFunRetType_del;
 		}
     } while (0);
     return nRet;
@@ -676,7 +650,7 @@ int impLoop::processOncePack(packetHead* pPack)
 		auto bInOncePro = packInOnceProc(pPack);
 		if (bInOncePro) {
 			myAssert (myHandle == pN->ubyDesServId);
-			nRet = processLocalServerPack (pPack);    /*  一定是本进程其它线程发给本线程的 */
+			nRet = processLocalServerPack (pPack);
 			break;
 		}
 
@@ -691,13 +665,12 @@ int impLoop::processOncePack(packetHead* pPack)
 		loopHandleType mySId;
 		fromHandle (myHandle, myPId, mySId);
 		if (desPId == myPId) {
-			myAssert (myHandle == pN->ubyDesServId);  /* 如果不等在接到网络数据包时就转发了不会到这  */
-			nRet = processOtherAppPack (pPack);  /*   其它进程发给本线程处理的包(通过本进程的其它线程从网络将收再转交给本线程处理)    */
+			myAssert (myHandle == pN->ubyDesServId);
+			nRet = processOtherAppPack (pPack);
 			break;
 		}
 		if (srcPId == myPId) {
 			if (myHandle == pPack->loopId) {
-				/*    通过本线程从网络接下的Ask包交给其它线程处理后, 对应的ret包再通过本线程从网络发出          */
 				myAssert(bIsRet);
 				myAssert (EmptySessionID != pPack->sessionID && c_emptyLoopHandle != pPack->loopId);
 				auto pS = getSession (pPack->sessionID);
@@ -723,7 +696,7 @@ int impLoop::processOncePack(packetHead* pPack)
 		auto isOtherLoopSend = NIsOtherNetLoopSend(pN);
 		myAssert (isOtherLoopSend);
 		if (isOtherLoopSend) {
-			nRet = forwardForOtherServer (pPack); /*   本进程的其它线程在转发包时无法路由, 请求本线程尝试一下   */
+			nRet = forwardForOtherServer (pPack);
 		}
 	} while (0);
 	return nRet;
@@ -863,16 +836,7 @@ int impLoop::processNetPackFun(ISession* session, packetHead* pack)
 		if (myPId == dPId) {
 			auto fromNetPack = rMgr.fromNetPack ();
 			auto pB = (ubyte*)N2User(pN);
-			/*
-			std::stringstream ss;
-			std::unique_ptr<char[]> pOut;
-			for (decltype (pN->udwLength) i = 0; i < pN->udwLength; i++) {
-				ss<<std::hex<<(int)(pB[i])<<" ";
-			}
-			strCpy(ss.str().c_str(), pOut);
-			auto szOut = pOut.get();
-			mInfo(" NetPackBeforeUnzip msgId = "<<pN->uwMsgID<<" length = "<<pN->udwLength<<" data = "<<szOut);
-			*/
+			
 			packetHead* pNew = nullptr;
 			fromNetPack (pN, pNew);
 			auto pProcPack = pack;
@@ -881,7 +845,7 @@ int impLoop::processNetPackFun(ISession* session, packetHead* pack)
 				pProcPack = pNew;
 			}
 			if (mySId == dSId) {
-				auto nR = processOtherAppToMePack(session, pProcPack);  /*  发个本线程的收到就直接处理掉    */
+				auto nR = processOtherAppToMePack(session, pProcPack);
 				if ((procPacketFunRetType_doNotDel & nR)) {
 					if (pProcPack == pack) {
 						nRet =  procPacketFunRetType_doNotDel;
@@ -909,7 +873,7 @@ int impLoop::processNetPackFun(ISession* session, packetHead* pack)
 			break;
 		}
 		
-		nRet = forward (pack);  /*   处理转发包(非本进程发出)   */
+		nRet = forward (pack);
 		break;
 	} while (0);
 	return nRet;
@@ -951,37 +915,6 @@ void impLoop::onClose(ISession* session)
 void impLoop::onWritePack(ISession* session, packetHead* pack)
 {
 	freePack (pack); 
-	/*
-	auto pFree = tSingleton<loopMgr>::single().getPhyCallback().fnFreePack;
-	pFree (pack);
-	auto pPushPack = tSingleton<loopMgr>::single().getPhyCallback().fnPushPackToLoop;
-	auto pN = P2NHead (pack);
-	bool bIsRet = NIsRet (pN);
-	do {
-		if (bIsRet) {
-			pFree (pack);
-			break;
-		}
-		
-		auto myHandle = id();
-		loopHandleType myPId;
-		loopHandleType mySId;
-		fromHandle (myHandle, myPId, mySId);
-		loopHandleType sPId;
-		loopHandleType sSId;
-		fromHandle (pN->ubySrcServId, sPId, sSId);
-		if (myPId != sPId) {
-			pFree (pack);
-			break;
-		}
-		if (c_null_msgID == pack->sessionID) {
-			pFree (pack);
-			break;
-		}
-		NSetAskSave(pN);
-		pPushPack (pN->ubySrcServId, pack);
-	} while (0);
-	*/
 }
 
 int impLoop::init(const char* szName, ServerIDType id, serverNode* pNode,
@@ -1233,4 +1166,4 @@ void  impLoop:: setCanDownRoute (bool v)
 {
     m_canDownRoute = v;
 }
-
+*/

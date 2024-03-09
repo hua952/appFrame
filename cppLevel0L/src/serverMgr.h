@@ -7,7 +7,6 @@
 typedef server* pserver;
 packetHead* allocPack(udword udwSize);// Thread safety
 void	freePack(packetHead* pack);// Thread safety
-class impLoop;
 
 class serverMgr
 {
@@ -16,7 +15,7 @@ public:
 	~serverMgr();
 	int				initFun (int cArg, char** argS);
 	serverIdType	getServerNum();
-	pserver*		getServerS();
+	// pserver*		getServerS();
 	server*         getServer(loopHandleType handle);
 	PhyCallback&    getPhyCallback();
 	loopHandleType	procId();
@@ -39,8 +38,7 @@ public:
 	int pushPackToLoop (loopHandleType pThis, packetHead* pack);// Thread safety
 	// loopMgr&  loopS ();
 
-	impLoop*   getLoop(loopHandleType id);
-	impLoop*   getLoopByIndex(uword index);
+	server*   getLoop(loopHandleType id);
 	int createServer(const char* szName, loopHandleType serId,
 	serverNode* pNode, frameFunType funFrame, void* arg);
 	int             init(int nArgC, char** argS, PhyCallback& info);
@@ -83,8 +81,8 @@ private:
 	int procArgS(int nArgC, char** argS);
 	loopHandleType	m_procId;
 	loopHandleType	m_gropId;
-	std::unique_ptr<pserver[]>	 g_serverS;
-	std::unique_ptr<server[]>	m_pServerImpS;
+	// std::unique_ptr<pserver[]>	 g_serverS;
+	// std::unique_ptr<server[]>	m_pServerImpS;
 	std::unique_ptr<char[]>      m_netLibName;
 	uword			g_ServerNum;
 	PhyCallback m_PhyCallback;
@@ -96,7 +94,7 @@ private:
 	msgMgr		m_defMsgInfoMgr;
 	int			m_CurLoopNum;
 	// loopHandleType	m_gropId;
-	std::unique_ptr<impLoop>	 m_loopS [LoopNum];
+	std::unique_ptr<server>	 m_loopS [LoopNum];
 	std::unique_ptr<loopHandleType[]>	 m_canRouteServerIdS;
 	typedef std::map<loopHandleType, std::string> tempLoopIdMap;
 	tempLoopIdMap	m_tempLoopIdMap;

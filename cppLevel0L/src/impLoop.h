@@ -1,5 +1,6 @@
 #ifndef _impLoog_h_
 #define _impLoog_h_
+/*
 #include "loop.h"
 #include "arrayMap.h"
 #include "mainLoop.h"
@@ -90,5 +91,5 @@ private:
 	ServerIDType m_id;
 	std::unique_ptr<char[]>	 m_name;
 };
-
+*/
 #endif

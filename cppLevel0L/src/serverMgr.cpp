@@ -122,7 +122,7 @@ void serverMgr:: setPackSendInfoTime (udword  va)
 server*  serverMgr::getOutServer()
 {
 	auto n = rand () % m_outNum;
-	return g_serverS [n];
+	return m_loopS[n].get(); // g_serverS [n];
 }
 
 serverMgr::~serverMgr()
@@ -154,12 +154,12 @@ serverIdType 	serverMgr::getServerNum()
 {
 	return g_ServerNum;
 }
-
+/*
 pserver* serverMgr::getServerS()
 {
 	return g_serverS.get();
 }
-
+*/
 PhyCallback&  serverMgr::getPhyCallback()
 {
 	return m_PhyCallback;
@@ -239,10 +239,14 @@ server*   serverMgr:: getServer(loopHandleType handle)
 {
 	server* pRet = nullptr;
 	
-	for (auto i = 0; i < g_ServerNum; i++) {
-		auto curH = g_serverS[i]->myHandle ();
+	for (auto i = 0; i < LoopNum; i++) {
+		// auto curH = g_serverS[i]->myHandle ();
+		if (!m_loopS[i]) {
+			continue;
+		}
+		auto curH = m_loopS[i]->myHandle ();
 		if (curH == handle) {
-			pRet = g_serverS[i];
+			pRet = m_loopS[i].get(); // g_serverS[i];
 			break;
 		}
 	}
@@ -303,21 +307,26 @@ int serverMgr::initFun (int cArg, char** argS)
 		rInfo ("initFun proLoopNum = "<<proLoopNum);
 		if (proLoopNum > 0) {
 			g_ServerNum = proLoopNum;
+			/*
 			g_serverS = std::make_unique<pserver[]>(proLoopNum);
 			auto& pServerImpS =  m_pServerImpS;
 			pServerImpS =  std::make_unique<server[]>(proLoopNum);
-			auto pServerS = getServerS();
-			auto pImpS = pServerImpS.get();
+			*/
+			// auto pServerS = getServerS();
+			// auto pImpS = m_loopS.get(); // pServerImpS.get();
 			for (int i = 0; i < proLoopNum; i++ ) {
-				pServerS[i] = &pImpS[i];
-				auto p = pServerS [i];
-				p->init (&loopHandleS[i]);
+				// pServerS[i] = &pImpS[i];
+				// auto p = m_loopS[i].get(); // pServerS [i];
+				// p->init (&loopHandleS[i]);
 			}
 			auto detachServerS = rArgS.detachServerS ();
 			
 			if (detachServerS) {
-				for (int i = 0; i < proLoopNum; i++ ) {
-					auto p = pServerS[i];
+				for (int i = 0; i < LoopNum; i++ ) {
+					auto p = m_loopS[i].get();//pServerS[i];
+					if (!p) {
+						continue;
+					}
 					auto autoRun = p->autoRun ();
 					if (autoRun) {
 						p->start();
@@ -325,12 +334,18 @@ int serverMgr::initFun (int cArg, char** argS)
 					}
 				}
 			} else {
-				for (int i = 0; i < proLoopNum; i++ ) {
-					auto p = pServerS[i];
+				for (int i = 0; i < LoopNum; i++ ) {
+					auto p = m_loopS[i].get(); // pServerS[i];
+					if (!p) {
+						continue;
+					}
 					p->start();
 				}
-				for (int i = 0; i < proLoopNum; i++ ) {
-					auto p = pServerS[i];
+				for (int i = 0; i < LoopNum; i++ ) {
+					auto p = m_loopS[i].get(); // pServerS[i];
+					if (!p) {
+						continue;
+					}
 					p->join();
 				}
 				std::cout<<"All server End"<<std::endl;
@@ -370,12 +385,6 @@ void serverMgr::setUpNum (ubyte  va)
 {
     m_outNum = va;
 }
-/*
-loopMgr&  serverMgr:: loopS ()
-{
-    return m_loopS;
-}
-*/
 
 void         lv0PushToCallStack (const char* szTxt)
 {
@@ -485,7 +494,7 @@ static int sSendChMsg (packetHead* pack)
 
 static bool sDelNetPack (void* pUP)
 {
-	auto pArg = (std::pair<NetTokenType, impLoop*>*) pUP; 
+	auto pArg = (std::pair<NetTokenType, server*>*) pUP; 
 	auto pS = pArg->second;
 	auto pISavePack = pS->getIPackSave ();
 	auto pack = pISavePack->netTokenPackFind (pArg->first);
@@ -646,7 +655,7 @@ int midSendPackToLoopFun(packetHead* pack) /* 返回值貌似没用 */
 			}
 
 			pISave->netTokenPackInsert (pack);  /* 保存pack 因为该函数是通过网络发送的第一站,故在此保存   */
-			std::pair<NetTokenType, impLoop*> pa;
+			std::pair<NetTokenType, server*> pa;
 			pa.first = pN->dwToKen;
 			pa.second = pS;
 			auto delTime = 61800;
@@ -854,8 +863,8 @@ int serverMgr::createServer(const char* szName, loopHandleType serId,  serverNod
 	fromHandle (serId, pid, sid);
 	auto& p = m_loopS[sid];
 	myAssert (!p);
-	p = std::make_unique<impLoop> ();
-	p->init(szName, serId, pNode, funFrame, arg);
+	p = std::make_unique<server> ();
+	p->initMid(szName, serId, pNode, funFrame, arg);
 	m_CurLoopNum++;
 	mInfo ("createServer szName = "<<szName<<" pid = "<<pid<<" sid = "<<sid<<" m_CurLoopNum = "<<m_CurLoopNum);
 	pRet = serId;
@@ -882,21 +891,12 @@ void	serverMgr::setGropId(loopHandleType grop)
 	m_gropId = grop;
 }
 */
-impLoop* serverMgr::getLoop(loopHandleType id)
+server* serverMgr::getLoop(loopHandleType id)
 {
 	loopHandleType pid = 0;
 	loopHandleType lid = 0;
 	fromHandle (id, pid, lid);
 	return m_loopS[lid].get();
-}
-
-impLoop*   serverMgr:: getLoopByIndex(uword index)
-{
-    impLoop*    nRet = nullptr;
-    do {
-		nRet = m_loopS[index].get();
-    } while (0);
-    return nRet;
 }
 
 int regSysProcPacketFun (regMsgFT fnRegMsg, serverIdType handle);
