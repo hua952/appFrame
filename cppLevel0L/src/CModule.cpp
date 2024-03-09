@@ -48,7 +48,7 @@ int CModule::load(int nArgC, char** argS, ForLogicFun* pForLogic)
 	char* buff[c_BuffNum];
 	auto nR = strR(pBuff, '+', buff, c_BuffNum);
 	auto szName = buff[0];
-	auto& rPho =  tSingleton<loopMgr>::single ();
+	// auto& rPho =  tSingleton<loopMgr>::single ();
 	std::string strPath;
 	auto workDir = mArgS.workDir();
 	if (workDir) {

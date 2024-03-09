@@ -349,6 +349,11 @@ void serverMgr::setUpNum (ubyte  va)
     m_outNum = va;
 }
 
+loopMgr&  serverMgr:: loopS ()
+{
+    return m_loopS;
+}
+
 void         lv0PushToCallStack (const char* szTxt)
 {
 	sPushToCallStack (server::s_loopHandleLocalTh, szTxt);

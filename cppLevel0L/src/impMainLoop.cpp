@@ -32,8 +32,9 @@ int  InitMidFrame(int nArgC, char** argS, PhyCallback* pCallbackS)
 			mError ("rArgS.procArgS error nRet = "<<nRet);
 			break;
 		}
-		tSingleton<loopMgr>::createSingleton();
-		auto& rMgr = tSingleton<loopMgr>::single();
+		// tSingleton<loopMgr>::createSingleton();
+		// auto& rMgr = tSingleton<loopMgr>::single();
+		auto& rMgr = tSingleton<serverMgr>::single().loopS ();
 		nRet = rMgr.init(nArgC, argS, *pCallbackS);
 		if (nRet) {
 			mError("loopMgr init error nRet = "<<nRet);
@@ -46,14 +47,16 @@ int  InitMidFrame(int nArgC, char** argS, PhyCallback* pCallbackS)
 int getAllLoopAndStart(serverNode* pBuff, int nBuffNum)
 {
 	//mInfo (" At then begin of getAllLoopAndStart");
-	auto& rMgr = tSingleton<loopMgr>::single();
+	// auto& rMgr = tSingleton<loopMgr>::single();
+	auto& rMgr = tSingleton<serverMgr>::single().loopS ();
 	return rMgr.getAllLoopAndStart(pBuff, nBuffNum);
 }
 
 static int sRegMsg(loopHandleType handle, uword uwMsgId, procRpcPacketFunType pFun)
 {
 	int nRet = 0;
-	auto& rMgr = tSingleton<loopMgr>::single();
+	// auto& rMgr = tSingleton<loopMgr>::single();
+	auto& rMgr = tSingleton<serverMgr>::single().loopS ();
 	auto pLoop = rMgr.getLoop(handle);
 	do 
 	{
@@ -69,7 +72,8 @@ static int sRegMsg(loopHandleType handle, uword uwMsgId, procRpcPacketFunType pF
 static int sRemoveMsg(loopHandleType handle, uword uwMsgId)
 {
 	int nRet = 0;
-	auto& rMgr = tSingleton<loopMgr>::single();
+	// auto& rMgr = tSingleton<loopMgr>::single();
+	auto& rMgr = tSingleton<serverMgr>::single().loopS ();
 	auto pLoop = rMgr.getLoop(handle);
 	do 
 	{
@@ -88,7 +92,8 @@ static int sAddComTimer(loopHandleType pThis, udword firstSetp, udword udwSetp,
 	int nL = pThis;
 	//mTrace ("at then begin of sAddComTimer pThis = "<<nL);
 	int nRet = 0;
-	auto& rMgr = tSingleton<loopMgr>::single();
+	// auto& rMgr = tSingleton<loopMgr>::single();
+	auto& rMgr = tSingleton<serverMgr>::single().loopS ();
 	auto pTH = rMgr.getLoop(pThis);
 	//mTrace ("at then begin of sAddComTimer pTH = "<<pTH);
 	cTimerMgr&  rTimeMgr =    pTH->getTimerMgr();
@@ -123,7 +128,8 @@ static bool sDelNetPack (void* pUP)
 static int sSendPackToSomeSession(loopHandleType myServerId, netPacketHead* pN, uqword* pSessS, udword sessionNum)
 {
 	int nRet = 0;
-	auto& rMgr = tSingleton<loopMgr>::single ();
+	// auto& rMgr = tSingleton<loopMgr>::single ();
+	auto& rMgr = tSingleton<serverMgr>::single().loopS ();
 	do {
 		auto pLoop = rMgr.getLoop(myServerId);
 		if (!pLoop) {
@@ -141,7 +147,8 @@ int midSendPackToLoopForChannelFun(packetHead* pack) /* 返回值貌似没用 */
 	int nRet = 0; // procPacketFunRetType_del;
 	int nR = 0;
 	auto pN = P2NHead (pack);
-	auto& rMgr = tSingleton<loopMgr>::single ();
+	// auto& rMgr = tSingleton<loopMgr>::single ();
+	auto& rMgr = tSingleton<serverMgr>::single().loopS ();
 	auto& rSerMgr = tSingleton<serverMgr>::single ();
 	// auto fnPushPackToLoop = tSingleton<loopMgr>::single().getPhyCallback().fnPushPackToLoop;
 	pack->pAsk = 0;
@@ -167,7 +174,8 @@ int midSendPackToLoopFun(packetHead* pack) /* 返回值貌似没用 */
 	int nRet = 0; // procPacketFunRetType_del;
 	int nR = 0;
 	auto pN = P2NHead (pack);
-	auto& rMgr = tSingleton<loopMgr>::single ();
+	// auto& rMgr = tSingleton<loopMgr>::single ();
+	auto& rMgr = tSingleton<serverMgr>::single().loopS ();
 	auto& rSerMgr = tSingleton<serverMgr>::single ();
 
 	auto curHandleFun = rMgr.getPhyCallback().fnGetCurServerHandle;
@@ -228,7 +236,8 @@ int midSendPackToLoopFun(packetHead* pack) /* 返回值貌似没用 */
 		/*  以下处理ask类型消息的发送    */
 		myAssert(EmptySessionID == pack->sessionID);
 
-		auto& rMsgInfoMgr = tSingleton<loopMgr>::single ().defMsgInfoMgr ();
+		// auto& rMsgInfoMgr = tSingleton<loopMgr>::single ().defMsgInfoMgr ();
+		auto& rMsgInfoMgr = rMgr.defMsgInfoMgr ();
 		auto retMsgId = rMsgInfoMgr.getRetMsg (pN->uwMsgID);
 		if (c_null_msgID != retMsgId) {
 			auto pFun = pS->findMsg(retMsgId);
@@ -249,7 +258,8 @@ int midSendPackToLoopFun(packetHead* pack) /* 返回值貌似没用 */
 		auto objSer = rMgr.getOnceUpServer ();
 		myAssert (c_emptyLoopHandle != objSer);
 
-		auto toNetPack = tSingleton<loopMgr>::single().toNetPack ();
+		// auto toNetPack = tSingleton<loopMgr>::single().toNetPack ();
+		auto toNetPack = rMgr.toNetPack ();
 		packetHead* pNew = nullptr;
 		toNetPack (pN, pNew);
 		
@@ -295,13 +305,15 @@ static iRpcInfoMgr* sGetIRpcInfoMgr()
 static int    sRegRpc(msgIdType askId, msgIdType retId, serverIdType	askDefProcSer,
 			serverIdType	retDefProcSer)
 {
-	auto& rMgr = tSingleton<loopMgr>::single().defMsgInfoMgr();
+	// auto& rMgr = tSingleton<loopMgr>::single().defMsgInfoMgr();
+	auto& rMgr = tSingleton<serverMgr>::single().loopS ().defMsgInfoMgr();
 	return rMgr.regRpc (askId, retId, askDefProcSer, retDefProcSer);
 }
 
 serverIdType sGetDefProcServerId (msgIdType msgId)
 {
-	auto& rMgr = tSingleton<loopMgr>::single().defMsgInfoMgr();
+	// auto& rMgr = tSingleton<loopMgr>::single().defMsgInfoMgr();
+	auto& rMgr = tSingleton<serverMgr>::single().loopS ().defMsgInfoMgr();
 	return rMgr.getDefProcServerId (msgId);
 }
 
@@ -323,7 +335,8 @@ static void sFreePack (packetHead* pack)
 static int sCreateServer (const char* szName, loopHandleType serId, 
 		serverNode* pNode, frameFunType funFrame, void* arg)
 {
-	return tSingleton<loopMgr>::single().createServer(szName, serId,
+	auto& rMgr = tSingleton<serverMgr>::single().loopS ();
+	return rMgr.createServer(szName, serId,
 			pNode, funFrame, arg);
 }
 
@@ -331,7 +344,8 @@ static int sRegRouteFun(loopHandleType myServerId, loopHandleType objServerId, S
 {
 	int nRet = 0;
 	do {
-		auto pS = tSingleton<loopMgr>::single().getLoop(myServerId);
+		auto& rMgr = tSingleton<serverMgr>::single().loopS ();
+		auto pS = rMgr.getLoop(myServerId);
 		myAssert (pS);
 		if (!pS) {
 			nRet = 1;

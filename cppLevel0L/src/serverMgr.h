@@ -1,6 +1,7 @@
 #ifndef serverMgr_h__
 #define serverMgr_h__
 #include "server.h"
+#include "impMainLoop.h"
 
 typedef server* pserver;
 packetHead* allocPack(udword udwSize);// Thread safety
@@ -33,7 +34,9 @@ public:
     void  setDelSendPackTime (udword va);
 
 	int pushPackToLoop (loopHandleType pThis, packetHead* pack);// Thread safety
+	loopMgr&  loopS ();
 private:
+	loopMgr  m_loopS;
     udword  m_delSendPackTime;
     udword  m_packSendInfoTime;
     delTcpServerFT  m_delTcpServerFn;

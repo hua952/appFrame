@@ -15,7 +15,8 @@
 
 packetHead* sallocPacket(udword udwS)
 {
-	auto & mgr = tSingleton<loopMgr>::single().getForLogicFun();
+	auto& rMgr = tSingleton<serverMgr>::single().loopS ();
+	auto & mgr = rMgr.getForLogicFun();
 	// packetHead* pRet = (packetHead*)(mgr.fnAllocPack(AllPacketHeadSize + udwS));
 	packetHead* pRet = (packetHead*)(allocPack(AllPacketHeadSize + udwS));
 	
@@ -61,7 +62,8 @@ packetHead* sclonePack(packetHead* p)
 
 int onMidLoopBegin(loopHandleType pThis)
 {
-	auto& rMgr = tSingleton<loopMgr>::single();
+	// auto& rMgr = tSingleton<loopMgr>::single();
+	auto& rMgr = tSingleton<serverMgr>::single().loopS ();
 	auto pTH = rMgr.getLoop (pThis);
 	auto nRet = pTH->onLoopBegin();
 	rMgr.onLoopBegin(pThis);
@@ -70,7 +72,8 @@ int onMidLoopBegin(loopHandleType pThis)
 
 int onMidLoopEnd(loopHandleType pThis)
 {
-	auto& rMgr = tSingleton<loopMgr>::single();
+	// auto& rMgr = tSingleton<loopMgr>::single();
+	auto& rMgr = tSingleton<serverMgr>::single().loopS ();
 	auto pTH = rMgr.getLoop (pThis);
 	auto nRet = pTH->onLoopEnd();
 	rMgr.onLoopEnd(pThis);
@@ -79,7 +82,8 @@ int onMidLoopEnd(loopHandleType pThis)
 
 int onLoopFrame(loopHandleType pThis)
 {
-	auto& rMgr = tSingleton<loopMgr>::single();
+	// auto& rMgr = tSingleton<loopMgr>::single();
+	auto& rMgr = tSingleton<serverMgr>::single().loopS ();
 	auto pTH = rMgr.getLoop (pThis);
 	auto nRet = pTH->onLoopFrame();
 	return nRet;
@@ -87,7 +91,8 @@ int onLoopFrame(loopHandleType pThis)
 
 int processOncePack(loopHandleType pThis, packetHead* pPack)
 {
-	auto& rMgr = tSingleton<loopMgr>::single();
+	// auto& rMgr = tSingleton<loopMgr>::single();
+	auto& rMgr = tSingleton<serverMgr>::single().loopS ();
 	auto pTH = rMgr.getLoop (pThis);
 	auto nRet = pTH->processOncePack(pPack);
 	return nRet;
@@ -117,7 +122,8 @@ int  impLoop:: clonePackToOtherNetThread (packetHead* pack)
 {
     int 	 nRet = 0;
     do {
-		auto& rMgr =  tSingleton<loopMgr>::single();
+		// auto& rMgr =  tSingleton<loopMgr>::single();
+		auto& rMgr = tSingleton<serverMgr>::single().loopS ();
 		// auto& rCS = rMgr.getPhyCallback();
 		const auto c_Max = 16;
 		loopHandleType buf[c_Max];
@@ -144,7 +150,8 @@ int  impLoop:: processAllGatePack(packetHead* pPack)
 	int  nRet = procPacketFunRetType_del;
 	do {
 		auto pDS =   defSession ();
-		auto& rMgr =  tSingleton<loopMgr>::single();
+		// auto& rMgr =  tSingleton<loopMgr>::single();
+		auto& rMgr = tSingleton<serverMgr>::single().loopS ();
 		if (pDS) {
 			packetHead* pNew = nullptr;
 			auto toNetPack = rMgr.toNetPack ();
@@ -187,7 +194,8 @@ int  impLoop:: processOtherAppToMePack(ISession* session, packetHead* pPack)
 {
     int  nRet = procPacketFunRetType_del;
     do {
-		auto& rMgr =  tSingleton<loopMgr>::single();
+		// auto& rMgr =  tSingleton<loopMgr>::single();
+		auto& rMgr = tSingleton<serverMgr>::single().loopS ();
 		auto& rCS = rMgr.getPhyCallback();
 		auto pN = P2NHead (pPack);
 		auto bIsRet = NIsRet (pN);
@@ -225,7 +233,7 @@ int  impLoop:: processOtherAppToMePack(ISession* session, packetHead* pPack)
 		if (pRet) {
 			// auto freeFun = rCS.fnFreePack;
 			if (bNeetRet) {
-				auto toNetPack = tSingleton<loopMgr>::single().toNetPack ();
+				auto toNetPack = rMgr.toNetPack ();
 				packetHead* pNew = nullptr;
 				toNetPack (P2NHead(pRet), pNew);
 				if (pNew) {
@@ -253,7 +261,7 @@ int  impLoop:: processOtherAppToMePack(ISession* session, packetHead* pPack)
 int  impLoop:: processOtherAppPack(packetHead* pPack)
 {
 	int  nRet = procPacketFunRetType_del;
-	auto& rCS = tSingleton<loopMgr>::single().getPhyCallback();
+	// auto& rCS = tSingleton<loopMgr>::single().getPhyCallback();
 	auto& rSerMgr = tSingleton<serverMgr>::single ();
 	auto pN = P2NHead (pPack);
 	auto bIsRet = NIsRet (pN);
@@ -362,8 +370,8 @@ int  impLoop:: sendPackToSomeSession(netPacketHead* pN, uqword* pSessS, udword s
 {
     int  nRet = 0;
     do {
-
-		auto& rMgr =  tSingleton<loopMgr>::single();
+		// auto& rMgr =  tSingleton<loopMgr>::single();
+		auto& rMgr = tSingleton<serverMgr>::single().loopS ();
 		auto toNetPack = rMgr.toNetPack ();
 		packetHead* pNew = nullptr;
 		toNetPack (pN, pNew);
@@ -410,7 +418,8 @@ int  impLoop:: forwardForOtherServer(packetHead* pPack)
 {
     int  nRet = procPacketFunRetType_doNotDel;
     do {
-		auto& rMgr = tSingleton<loopMgr>::single ();
+		// auto& rMgr = tSingleton<loopMgr>::single ();
+		auto& rMgr = tSingleton<serverMgr>::single().loopS ();
 		iPackSave* pISave = getIPackSave ();
 		auto pN = P2NHead (pPack);
 		myAssert(c_emptyLoopHandle != pN->ubyDesServId);
@@ -498,8 +507,9 @@ int  impLoop:: forward(packetHead* pPack)
 {
     int  nRet = procPacketFunRetType_doNotDel;
     do {
-		auto& rMgr = tSingleton<loopMgr>::single ();
+		// auto& rMgr = tSingleton<loopMgr>::single ();
 		auto& rSerMgr = tSingleton<serverMgr>::single ();
+		auto& rMgr = tSingleton<serverMgr>::single().loopS ();
 		iPackSave* pISave = getIPackSave ();
 		auto pN = P2NHead (pPack);
 		myAssert(c_emptyLoopHandle != pN->ubyDesServId);
@@ -649,8 +659,9 @@ int  impLoop:: procProx(packetHead* pPack)
 int impLoop::processOncePack(packetHead* pPack)
 {
 	int nRet = procPacketFunRetType_del;
-	auto& rPho = tSingleton<loopMgr>::single();
-	auto& rCS = rPho.getPhyCallback();
+	auto& rMgr = tSingleton<serverMgr>::single().loopS ();
+	// auto& rPho = tSingleton<loopMgr>::single();
+	// auto& rCS = rPho.getPhyCallback();
 	auto pN = P2NHead(pPack);
 	bool bIsRet = NIsRet(pN);
 	// auto getCurServerHandleFun = rCS.fnGetCurServerHandle;
@@ -694,7 +705,7 @@ int impLoop::processOncePack(packetHead* pPack)
 				auto pS = getSession (pPack->sessionID);
 				myAssert (pS);
 				if (pS) {
-					auto toNetPack = tSingleton<loopMgr>::single().toNetPack ();
+					auto toNetPack = rMgr.toNetPack ();
 					packetHead* pNew = nullptr;
 					toNetPack (pN, pNew);
 					if (pNew) {
@@ -739,7 +750,7 @@ int  impLoop:: processLocalServerPack(packetHead* pPack)
 {
 	int  nRet = procPacketFunRetType_del;
 	do {
-		auto& rCS = tSingleton<loopMgr>::single().getPhyCallback();
+		// auto& rCS = tSingleton<loopMgr>::single().getPhyCallback();
 		auto& rSerMgr = tSingleton<serverMgr>::single ();
 		// auto sendFun = rCS.fnPushPackToLoop;
 		auto pN = P2NHead(pPack);
@@ -817,8 +828,9 @@ int impLoop::processNetPackFun(ISession* session, packetHead* pack)
 	int nRet = procPacketFunRetType_del;
 	do {
 		auto pN = P2NHead (pack);
-		auto& rMgr =  tSingleton<loopMgr>::single();
+		// auto& rMgr =  tSingleton<loopMgr>::single();
 		auto& rSerMgr = tSingleton<serverMgr>::single ();
+		auto& rMgr =  rSerMgr.loopS ();
 		// auto fnFree = rMgr.getForLogicFun().fnFreePack;
 		auto sid = session->id();
 		pack->sessionID = sid;
@@ -907,7 +919,8 @@ int impLoop::processNetPackFun(ISession* session, packetHead* pack)
 
 void impLoop::onAcceptSession(ISession* session, void* userData)
 {
-	auto& rMgr = tSingleton<loopMgr>::single();
+	// auto& rMgr = tSingleton<loopMgr>::single();
+	auto& rMgr = tSingleton<serverMgr>::single().loopS ();
 	rMgr.logicOnAccept (id(), session->id(), *((uqword*)userData));
 }
 
@@ -928,7 +941,8 @@ void impLoop::onConnect(ISession* session, void* userData)
 		myAssert (inRet.second);
 	}
 
-	auto& rMgr = tSingleton<loopMgr>::single();
+	// auto& rMgr = tSingleton<loopMgr>::single();
+	auto& rMgr = tSingleton<serverMgr>::single().loopS ();
 	rMgr.logicOnConnect (id(), sid, *(pBuff + 2));
 }
 
@@ -1170,7 +1184,8 @@ NetTokenType	 impLoop:: nextToken ()
 {
     NetTokenType	 nRet = 0;
     do {
-		auto pF = tSingleton<loopMgr>::single().getPhyCallback().fnNextToken;
+		auto& rMgr = tSingleton<serverMgr>::single().loopS ();
+		auto pF = rMgr.getPhyCallback().fnNextToken;
 		nRet = pF(id());
     } while (0);
     return nRet;
