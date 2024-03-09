@@ -3,16 +3,6 @@
 #include"packet.h"
 #include"mainLoop.h"
 #include "comFun.h"
-/*
-typedef struct _ForMsgModuleFunS
-{
-	sendPackToLoopFT fnSendPackToLoop;// Thread safety
-	allocPackFT		 fnAllocPack; // Thread safety
-	freePackFT		 fnFreePack; // Thread safety
-	logMsgFT		 fnLogMsg;
-	getIRpcInfoMgrFT fnGetIRpcInfoMgr;
-} ForMsgModuleFunS;
-*/
 
 typedef ForLogicFun ForMsgModuleFunS;
 

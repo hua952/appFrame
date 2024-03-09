@@ -40,18 +40,16 @@ typedef void (*logCallStackFT) (loopHandleType pThis, int nL);
 
 typedef struct _PhyCallback
 {
-	// sendPackToLoopFT fnSendPackToLoop; // Thread safety
-	pushPackToLoopFT fnPushPackToLoop; // Thread safety
-	stopLoopSFT      fnStopLoopS;
-	allocPackFT		 fnAllocPack; // Thread safety
-	freePackFT		 fnFreePack; // Thread safety
-	logMsgFT		 fnLogMsg;// Thread safety
-    //addComTimerFT    fnAddComTimer;// Thread safety
+	// pushPackToLoopFT fnPushPackToLoop; // Thread safety
+	// stopLoopSFT      fnStopLoopS;
+	// allocPackFT		 fnAllocPack; // Thread safety
+	// freePackFT		 fnFreePack; // Thread safety
+	// logMsgFT		 fnLogMsg;// Thread safety
 	nextTokenFT      fnNextToken;
-	getCurServerHandleFT   fnGetCurServerHandle; // Thread safety
-	pushToCallStackFT      fnPushToCallStack;
-	popFromCallStackFT     fnPopFromCallStack;
-	logCallStackFT         fnLogCallStack;
+	// getCurServerHandleFT   fnGetCurServerHandle; // Thread safety
+	// pushToCallStackFT      fnPushToCallStack;
+	// popFromCallStackFT     fnPopFromCallStack;
+	// logCallStackFT         fnLogCallStack;
 } PhyCallback;
 
 struct  serverNode;
@@ -79,9 +77,9 @@ typedef struct _ForLogicFun
     addComTimerFT    fnAddComTimer;// Thread safety
 	nextTokenFT      fnNextToken;
 	// getIRpcInfoMgrFT fnGetIRpcInfoMgr;
-	pushToCallStackFT      fnPushToCallStack;
-	popFromCallStackFT     fnPopFromCallStack;
-	logCallStackFT         fnLogCallStack;
+	// pushToCallStackFT      fnPushToCallStack;
+	// popFromCallStackFT     fnPopFromCallStack;
+	// logCallStackFT         fnLogCallStack;
 	regRpcFT               fnRegRpc;
     getDefProcServerIdFT   fnGetDefProcServerId;
 	regRouteFT             fnRegRoute;

@@ -3,6 +3,8 @@
 #include "server.h"
 
 typedef server* pserver;
+packetHead* allocPack(udword udwSize);// Thread safety
+void	freePack(packetHead* pack);// Thread safety
 class serverMgr
 {
 public:
@@ -29,6 +31,8 @@ public:
     void  setPackSendInfoTime (udword va);
     udword    delSendPackTime ();
     void  setDelSendPackTime (udword va);
+
+	int pushPackToLoop (loopHandleType pThis, packetHead* pack);// Thread safety
 private:
     udword  m_delSendPackTime;
     udword  m_packSendInfoTime;

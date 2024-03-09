@@ -18,6 +18,7 @@
 #include "modelLoder.h"
 #include "comMsgMsgId.h"
 #include <vector>
+#include "serverMgr.h"
 
 int  InitMidFrame(int nArgC, char** argS, PhyCallback* pCallbackS)
 {
@@ -112,9 +113,10 @@ static bool sDelNetPack (void* pUP)
 	auto pack = pISavePack->netTokenPackFind (pArg->first);
 	if (pack) {
 		mWarn ("pack delete by timer"<<*pack);
-		auto fnFree = tSingleton<loopMgr>::single ().getPhyCallback().fnFreePack;
+		// auto fnFree = tSingleton<loopMgr>::single ().getPhyCallback().fnFreePack;
 		pISavePack->netTokenPackErase (pArg->first);
-		fnFree (pack);
+		// fnFree (pack);
+		freePack (pack);
 	}
 	return false;
 }
@@ -140,7 +142,8 @@ int midSendPackToLoopForChannelFun(packetHead* pack) /* 返回值貌似没用 */
 	int nR = 0;
 	auto pN = P2NHead (pack);
 	auto& rMgr = tSingleton<loopMgr>::single ();
-	auto fnPushPackToLoop = tSingleton<loopMgr>::single().getPhyCallback().fnPushPackToLoop;
+	auto& rSerMgr = tSingleton<serverMgr>::single ();
+	// auto fnPushPackToLoop = tSingleton<loopMgr>::single().getPhyCallback().fnPushPackToLoop;
 	pack->pAsk = 0;
 	do {
 		bool bRand = true;
@@ -152,7 +155,8 @@ int midSendPackToLoopForChannelFun(packetHead* pack) /* 返回值貌似没用 */
 			objSer = rMgr.getOnceUpOrDownServer ();
 			myAssert (c_emptyLoopHandle != objSer);
 		}
-		fnPushPackToLoop (objSer, pack);
+		// fnPushPackToLoop (objSer, pack);
+		rSerMgr.pushPackToLoop  (objSer, pack);
 	} while (0);
 	return nRet;
 }
@@ -164,14 +168,17 @@ int midSendPackToLoopFun(packetHead* pack) /* 返回值貌似没用 */
 	int nR = 0;
 	auto pN = P2NHead (pack);
 	auto& rMgr = tSingleton<loopMgr>::single ();
+	auto& rSerMgr = tSingleton<serverMgr>::single ();
 
 	auto curHandleFun = rMgr.getPhyCallback().fnGetCurServerHandle;
-	auto freeFun = rMgr.getForLogicFun().fnFreePack;
+	// auto freeFun = rMgr.getForLogicFun().fnFreePack;
+	/*
 	auto curHandle = curHandleFun ();
 	if (curHandle !=  pN->ubySrcServId) {
 		mTrace ("curHandle = "<<curHandle<<"pN->ubySrcServId = "<<pN->ubySrcServId);
 	}
 	myAssert (pN->ubySrcServId == curHandle);
+	*/
 	auto pS = rMgr.getLoop(pN->ubySrcServId);
 	myAssert (pS);
 	bool bIsRet = NIsRet(pN);
@@ -182,12 +189,14 @@ int midSendPackToLoopFun(packetHead* pack) /* 返回值貌似没用 */
 		myAssert(pN->ubyDesServId != c_emptyLoopHandle);
 		if (pN->ubyDesServId == c_emptyLoopHandle) {
 			mError ("ubyDesServId == c_emptyLoopHandle pack = "<<*pack);
-			freeFun (pack);
+			// freeFun (pack);
+			freePack (pack);
 			break;
 		}
-		auto fnPushPackToLoop = rMgr.getPhyCallback().fnPushPackToLoop;
+		// auto fnPushPackToLoop = rMgr.getPhyCallback().fnPushPackToLoop;
 		if (bInOnceProc) {
-			fnPushPackToLoop (pN->ubyDesServId, pack);
+			// fnPushPackToLoop (pN->ubyDesServId, pack);
+			rSerMgr.pushPackToLoop (pN->ubyDesServId, pack);
 			break;
 		}
 		if (bIsRet) {
@@ -196,9 +205,11 @@ int midSendPackToLoopFun(packetHead* pack) /* 返回值貌似没用 */
 				myAssert (c_emptyLoopHandle != objSe);
 				if (c_emptyLoopHandle == objSe) {       /*     由于本函数是处理首站发出, 不可能会出现这种情况        */
 					mError(" can not find net server whith pack pack is : "<<*pack);
-					freeFun (pack);
+					// freeFun (pack);
+					freePack (pack);
 				} else {
-					fnPushPackToLoop (objSe, pack);
+					// fnPushPackToLoop (objSe, pack);
+					rSerMgr.pushPackToLoop (objSe, pack);
 				}
 			} else {
 				auto pSess = pS->getSession (pack->sessionID);
@@ -207,7 +218,8 @@ int midSendPackToLoopFun(packetHead* pack) /* 返回值貌似没用 */
 					pSess->send (pack);
 				} else {
 					mError(" can not find sesssion whith pack pack is : "<<*pack);
-					freeFun (pack);
+					// freeFun (pack);
+					freePack (pack);
 				}
 			}
 			break;
@@ -260,13 +272,15 @@ int midSendPackToLoopFun(packetHead* pack) /* 返回值貌似没用 */
 			pack = pNew;
 		} else {
 			if (pNew) {
-				freeFun (pack);
+				// freeFun (pack);
+				freePack (pack);
 				pack = pNew;
 			}
 		}
 		pack->sessionID = EmptySessionID;
 		pack->loopId = c_emptyLoopHandle;
-		fnPushPackToLoop (objSer, pack);
+		// fnPushPackToLoop (objSer, pack);
+		rSerMgr.pushPackToLoop (objSer, pack);
 	} while (0);
 	return nRet;
 }
@@ -347,8 +361,8 @@ int loopMgr::init(int nArgC, char** argS, PhyCallback& info)
 	m_toNetPack = nullptr;
 	m_callbackS = info;
 	auto& forLogic = getForLogicFun();
-	g_allocPackFun = info.fnAllocPack;
-	g_freePackFun = info.fnFreePack;
+	g_allocPackFun = allocPack; // info.fnAllocPack;
+	g_freePackFun = freePack; // info.fnFreePack;
 	// g_sendPackToLoopFun = info.fnSendPackToLoop;
 	forLogic.fnCreateLoop = sCreateServer;
 	forLogic.fnAllocPack = sAllocPack; // info.fnAllocPack;
@@ -357,13 +371,13 @@ int loopMgr::init(int nArgC, char** argS, PhyCallback& info)
 	forLogic.fnSendPackToLoop =  midSendPackToLoopFun;
 	forLogic.fnSendPackToLoopForChannel = midSendPackToLoopForChannelFun;
 	forLogic.fnSendPackToSomeSession = sSendPackToSomeSession;
-	forLogic.fnLogMsg = info.fnLogMsg;
+	forLogic.fnLogMsg = logMsg; // info.fnLogMsg;
 	forLogic.fnAddComTimer = sAddComTimer;//m_callbackS.fnAddComTimer;
 	forLogic.fnNextToken = info.fnNextToken;
 	// forLogic.fnGetIRpcInfoMgr = sGetIRpcInfoMgr;
-	forLogic.fnPushToCallStack = info.fnPushToCallStack;
-	forLogic.fnPopFromCallStack = info.fnPopFromCallStack;
-	forLogic.fnLogCallStack = info.fnLogCallStack;
+	// forLogic.fnPushToCallStack = info.fnPushToCallStack;
+	// forLogic.fnPopFromCallStack = info.fnPopFromCallStack;
+	// forLogic.fnLogCallStack = info.fnLogCallStack;
 	forLogic.fnRegRpc = sRegRpc;
 	forLogic.fnGetDefProcServerId = sGetDefProcServerId;
 	forLogic.fnRegRoute = sRegRouteFun;
@@ -669,10 +683,9 @@ int    loopMgr:: initNetServer ()
 		getMidDllPath (binH);
 		std::string strPath = binH.get (); 
 		strPath += midNetLibName;
-		// strPath += "/";
 		strPath += dllExtName ();
-		auto& rC = getPhyCallback();
-		nRet = initComTcpNet (strPath.c_str(), rC.fnAllocPack, rC.fnFreePack, rC.fnLogMsg);
+		// auto& rC = getPhyCallback();
+		nRet = initComTcpNet (strPath.c_str(), allocPack /*rC.fnAllocPack*/, freePack /*rC.fnFreePack*/, logMsg /*rC.fnLogMsg*/);
 		if (nRet) {
 			mError ("initComTcpNet error nRet = "<<nRet<<" strPath = "
 					<<strPath.c_str());

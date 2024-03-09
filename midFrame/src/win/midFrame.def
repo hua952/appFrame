@@ -1,8 +1,0 @@
-LIBRARY
-EXPORTS
-	InitMidFrame	@1
-	getAllLoopAndStart   @2
-	onLoopFrame    @3
-	processOncePack  @4
-	onMidLoopBegin    @5
-	onMidLoopEnd      @6

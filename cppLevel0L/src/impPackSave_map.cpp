@@ -3,6 +3,7 @@
 #include "impMainLoop.h"
 #include "myAssert.h"
 #include "tSingleton.h"
+#include "serverMgr.h"
 
 impPackSave_map:: impPackSave_map ()
 {
@@ -64,10 +65,11 @@ packetHead*  impPackSave_map:: netTokenPackFind (NetTokenType token)
 
 void impPackSave_map::clean ()
 {
-	auto fnFreePack = tSingleton<loopMgr>::single().getPhyCallback().fnFreePack;
+	// auto fnFreePack = tSingleton<loopMgr>::single().getPhyCallback().fnFreePack;
 	auto& rAskS = netAskPackS ();
 	for (auto it = rAskS.begin(); rAskS.end() != it; ++it) {
-		fnFreePack (it->second);
+		// fnFreePack (it->second);
+		freePack (it->second);
 	}
 	rAskS.clear();
 }

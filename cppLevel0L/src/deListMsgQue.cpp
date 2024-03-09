@@ -14,7 +14,6 @@ deListMsgQue::deListMsgQue()
 
  deListMsgQue::~deListMsgQue()
 {
-	//auto& rMgr = tSingleton<serverMgr>::single().getPhyCallback();
 	packetHead* d = nullptr;
 	{
 		std::lock_guard<std::mutex> lock(m_mtx);
@@ -24,7 +23,7 @@ deListMsgQue::deListMsgQue()
 		{
 			d = p;
 			p = p->pNext;
-			freePack (d); //rMgr.fnFreePack(d);
+			freePack (d);
 		}
 	}
 }

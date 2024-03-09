@@ -35,36 +35,8 @@ void	freePack(packetHead* pack)
 	delete [] ((char*)(pack));
 	POP_FUN_CALL
 }
-/*
-static int sendPackToLoop(packetHead* pack)
-{
-	int nRet = 0;
-	auto pNH = P2NHead(pack);
-	serverIdType ubySp;
-	serverIdType ubySl;
-	serverIdType ubyDp;
-	serverIdType ubyDl;
-	fromHandle (pNH->ubySrcServId, ubySp, ubySl);
-	fromHandle (pNH->ubyDesServId, ubyDp, ubyDl);
 
-	auto& rMgr = tSingleton<serverMgr>::single();
-	server* pS = nullptr;
-	rTrace (__FUNCTION__<<*pack);
-	if (ubySp == ubyDp) {
-		pS = rMgr.getServer (pNH->ubyDesServId); // pServerS[ubyDl];
-		rTrace ("send pack did = "<<(int)ubyDl<<" pS = "<<pS);
-	} else {
-		pS = rMgr.getOutServer ();
-		auto hs = pS->myHandle ();
-		rTrace ("will send by up pS = "<<pS<<" handle = "<<(int)hs);
-	}
-	if (pS) {
-		pS->pushPack (pack);
-	}
-	return nRet;
-}
-*/
-static int sPushPackToLoop (loopHandleType pThis, packetHead* pack)
+int sPushPackToLoop (loopHandleType pThis, packetHead* pack)
 {
 	int nRet = 0;
 	auto& rMgr = tSingleton<serverMgr>::single();
@@ -89,6 +61,22 @@ serverMgr::serverMgr()
 	m_createTcpServerFn = nullptr;
 	m_delTcpServerFn = nullptr;
 	m_packSendInfoTime = 5000;
+}
+
+int  serverMgr:: pushPackToLoop (loopHandleType pThis, packetHead* pack)
+{
+	int  nRet = 0;
+	do {
+		server* pS = nullptr;
+		pS = getServer (pThis);
+		if (pS) {
+			pS->pushPack (pack);
+		} else {
+			nRet = 1;
+			rError ("can not find server handle = "<<pThis);
+		}
+	} while (0);
+	return nRet;
 }
 
 udword  serverMgr::  delSendPackTime ()
@@ -251,16 +239,16 @@ int serverMgr::initFun (int cArg, char** argS)
 	rArgS.procArgS (cArg, argS);
 	procArgS (cArg, argS);
 	auto& rMgr = getPhyCallback();
-	rMgr.fnPushPackToLoop = sPushPackToLoop;
-	rMgr.fnStopLoopS = stopLoopS;
-	rMgr.fnAllocPack = allocPack;
-	rMgr.fnFreePack = freePack;
-	rMgr.fnLogMsg = logMsg;
+	// rMgr.fnPushPackToLoop = sPushPackToLoop;
+	// rMgr.fnStopLoopS = stopLoopS;
+	// rMgr.fnAllocPack = allocPack;
+	// rMgr.fnFreePack = freePack;
+	// rMgr.fnLogMsg = logMsg;
 	rMgr.fnNextToken = sNextToken;
-	rMgr.fnGetCurServerHandle = getCurServerHandle; // Thread safety
-	rMgr.fnPushToCallStack = sPushToCallStack;
-	rMgr.fnPopFromCallStack = sPopFromCallStack;
-	rMgr.fnLogCallStack = sLogCallStack;
+	// rMgr.fnGetCurServerHandle = getCurServerHandle; // Thread safety
+	// rMgr.fnPushToCallStack = sPushToCallStack;
+	// rMgr.fnPopFromCallStack = sPopFromCallStack;
+	// rMgr.fnLogCallStack = sLogCallStack;
 	do {
 		auto logLevel = rArgS.logLevel ();
 		auto pWorkDir = rArgS.workDir ();
