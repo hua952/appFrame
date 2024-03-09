@@ -1,6 +1,14 @@
 #ifndef _item_h__
 #define _item_h__
 #include <memory>
+#include <sstream>
+
+enum BigDataType
+{
+	BigDataType_int = 0,
+	BigDataType_string = 1,
+	BigDataType_bool = 2,
+};
 
 class item
 {
@@ -18,6 +26,7 @@ public:
 	const char*  wordItemName ();
 	const char*  memberItemName ();
 	void  setMemberItemName (const char* v);
+	// int   writeProcArg (const char* szArg, std::ostream& os);
 private:
 	std::unique_ptr <char[]>  m_memberItemName;
 	std::unique_ptr <char[]>  m_wordItemName;

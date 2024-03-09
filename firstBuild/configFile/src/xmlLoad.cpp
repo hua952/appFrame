@@ -3,6 +3,7 @@
 #include "item.h"
 #include "itemMgr.h"
 #include <string>
+#include "myAssert.h"
 
 xmlLoad:: xmlLoad ()
 {
@@ -35,7 +36,7 @@ int  xmlLoad:: load (const char* szFileName)
 			rMgr.setProjectName(pProjectName->value ());
 		}
 		for (auto pC = root->first_node (); pC; pC = pC->next_sibling ()) {
-			int nType = 0;
+			int nType = BigDataType_int;
 			std::string strType = "int";
 			auto pType = pC->first_attribute("type");
 			auto pI = std::make_shared <item> ();
@@ -43,9 +44,13 @@ int  xmlLoad:: load (const char* szFileName)
 			if (pType) {
 				strType = pType->value ();
 				if (strType == "string") {
-					nType = 1;
+					nType = BigDataType_string;
 				} else if (strType == "bool") {
-					nType = 2;
+					nType = BigDataType_bool;
+					std::string strV;
+					std::stringstream ss(pC->value ());
+					ss>>strV;
+					myAssert(strV == "true" || strV == "false");
 				}
 			}
 			pI->setItemName (pC->name ());

@@ -5,7 +5,9 @@
 #include <memory>
 class frameConfig
 {
-		public:
+public:
+	frameConfig ();
+	int  procCmdArgS (int nArg, char** argS);
 		  bool  clearTag ();
   void  setClearTag (bool v);
   const char*  depInclude ();

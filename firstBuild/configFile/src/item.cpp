@@ -71,4 +71,33 @@ void  item:: setMemberItemName (const char* v)
 {
     strCpy (v, m_memberItemName);
 }
-
+/*
+int item:: writeProcArg (const char* szArg, std::ostream& os)
+{
+    int nRet = 0;
+    do {
+		std::unique_ptr<char[]> pArg;
+		strCpy (szArg, pArg);
+		char* retS[3];
+		auto pBuf = pArg.get ();
+		auto nR = strR (pBuf, '=', retS, 3);
+		if (2 != nR) {
+			nRet = 1;
+			break;
+		}
+		std::string strKey;
+		std::string strVal;
+		std::stringstream ss (pBuf);
+		ss>>strKey>>strVal;
+		if (strKey.empty ()) {
+			nRet = 2;
+			break;
+		}
+		auto nDataType = dataType ();
+		if (2 == nDataType) {
+			break;
+		}
+    } while (0);
+    return nRet;
+}
+*/

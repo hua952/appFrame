@@ -81,7 +81,9 @@ int  configSrcGen:: writeClassH ()
 #include <memory>)"<<std::endl
 		<<"class "<<pClassName<<std::endl
 		<<R"({
-		public:
+public:
+	)"<<pClassName<<R"( ();
+	int  procCmdArgS (int nArg, char** argS);
 		)";
 		std::stringstream ssF;
 		std::stringstream ssM;
@@ -185,38 +187,125 @@ int  configSrcGen:: writeClassCpp ()
 		std::stringstream initOs;
 		std::stringstream readFileOs;
 		std::stringstream ssM;
+		std::stringstream ssProcCmdArgS;
+		std::stringstream ssInit;
 
 		os<<R"(#include ")"<<pConfigFileName<<R"(.h"
 #include <memory>
+#include "strFun.h"
 )";
 
 		for (auto it = rMap.begin (); rMap.end () != it; ++it) {
 			auto pItem = it->second;
 			auto itemName = it->first;
-			auto dataType = pItem->dataType ();
+			auto dataType = (BigDataType)(pItem->dataType ());
 			auto writeDataType = pItem->itemType ();
 			auto memberItemName = pItem->memberItemName ();
-			if (1 == dataType) {
+			auto itemType = pItem->itemType ();
+			auto itemValue = pItem->itemValue ();
+			auto pWordName = pItem->wordItemName();
+
+			if (BigDataType_string == dataType) {
 				writeDataType = "const char*";
 			}
 			funOs<<writeDataType<<"  "<<pClassName<<"::"<<itemName<<" ()"<<std::endl
 				<<"{"<<std::endl
 				<<"    return "<<memberItemName;
-			if (1 == dataType) {
+			if (BigDataType_string == dataType) {
 				funOs<<".get()";
 			}
 			funOs<<";"<<std::endl
 				<<"}"<<std::endl<<std::endl;
-
-			funOs<<"void  "<<pClassName<<"::set"<<itemName<<" ("<<writeDataType<<" v)"<<std::endl
+			
+			funOs<<"void  "<<pClassName<<"::set"<<pWordName<<" ("<<writeDataType<<" v)"<<std::endl
 				<<"{"<<std::endl;
-			if (1 == dataType) {
-				funOs<<"strCpy(v, "<<memberItemName<<");"<<std::endl;
+			if (BigDataType_string == dataType) {
+				funOs<<"strCpy(v, "<<memberItemName<<")"<<std::endl;
 			} else {
-				funOs<<"	"<<memberItemName<<" = v;"<<std::endl;
+				funOs<<"	"<<memberItemName<<" = v"<<std::endl;
 			}
+			funOs<<";"<<std::endl
+				<<"}"<<std::endl<<std::endl;
+			std::stringstream& ssVR = ssProcCmdArgS;
+			ssVR<<R"(			if (strKey == ")"<<itemName<<R"(") {
+				)";
+			if (BigDataType_int == dataType) {
+					std::string strV = "0";
+					if (itemValue) {
+						strV = itemValue;
+					}
+					ssInit<<memberItemName<<R"( = )"<<strV<<R"(;
+				)";
+
+				if (strcmp (itemType, "ubyte") == 0) {
+					ssVR<<memberItemName<<R"( = (ubyte)(atoi(retS[1]));)";
+				} else {
+					ssVR<<R"(ssV>>)"<<memberItemName<<";";
+					std::string strV = "0";
+					if (itemValue) {
+						std::stringstream ssV;
+						ssV<<R"((ubyte)(atoi()"<<itemValue<<R"()))";
+						strV = ssV.str();
+					}
+				}
+			} else if (BigDataType_bool == dataType) {
+				ssVR<<memberItemName<<R"( = strVal == "true";)";
+
+				std::string strV = "false";
+				if (itemValue) {
+					strV = itemValue;
+				}
+				ssInit<<memberItemName<<R"( = )"<<strV<<R"(;
+				)";
+			} else {
+				ssVR<<R"(strCpy(strVal.c_str(), )"<<memberItemName<<");";
+				std::string strV = "";
+				if (itemValue) {
+					strV = itemValue;
+				}
+
+				ssInit<<R"(strCpy(")"<<strV<<R"(", )"<<memberItemName<<R"();
+				)";
+			}
+			ssVR<<R"(
+				continue;
+			}
+		)";
 		}
-		os<<funOs.str()<<std::endl;
+
+		os<<pClassName<<"::"<<pClassName<<R"( ()
+{
+	)"<<ssInit.str()<<R"(
+}
+)"
+<<funOs.str()<<std::endl<<R"(
+int  )"<<pClassName<<R"(:: procCmdArgS (int nArg, char** argS)
+{
+	int nRet = 0;
+	do {
+		for (decltype (nArg) i = 1; i < nArg; i++) {
+			std::unique_ptr<char[]> pArg;
+			strCpy (argS[i], pArg);
+			char* retS[3];
+			auto pBuf = pArg.get ();
+			auto nR = strR (pBuf, '=', retS, 3);
+			if (2 != nR) {
+				nRet = 1;
+				break;
+			}
+			std::string strKey;
+			std::string strVal;
+			std::stringstream ssK (retS[0]);
+			ssK>>strKey;
+			std::stringstream ssV (retS[1]);
+			ssV>>strVal;
+)"<<ssProcCmdArgS.str()<<R"(
+		}
+	} while (0);
+	return nRet;
+}
+)";
+
     } while (0);
     return nRet;
 }

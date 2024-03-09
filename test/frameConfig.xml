@@ -5,5 +5,5 @@
 	<sendNum type="int">10000</sendSetp>
 	<sendCount type="word">10000</sendSetp>
 	<sendMember type="ubyte">10000</sendSetp>
-	<clearTag type="bool">1</clearTag>
+	<clearTag type="bool">false</clearTag>
 </config>
