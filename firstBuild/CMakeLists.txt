@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 # set the project name 
 
 set (frameProjectName appFrame CACHE INTERNAL "Shared variable")
-set (myProjectName  configFile CACHE INTERNAL "Shared variable")
+set (myProjectName  appFrame CACHE INTERNAL "Shared variable")
 project(${myProjectName})
 SET(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/../../${frameProjectName}Install)
 

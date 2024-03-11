@@ -1,9 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <config className="frameConfig" projectDir="C:\work\appFrame"  projectName="frameConfig">
-	<depInclude type="string">d:/pzh/include</depInclude>
-	<sendSetp type="udword">10000</sendSetp>
-	<sendNum type="int">10000</sendSetp>
-	<sendCount type="word">10000</sendSetp>
-	<sendMember type="ubyte">10000</sendSetp>
+	<workDir type="string">C:/work/appFrameProject/project/chatTestInstall</workDir>
+	<logFile type="string"></logFile>
+	<logicModel type="string"></logicModel>
+	<endPoint type="string"></endPoint>
+	<level0 type="string">cppLevel0L</level0>
+	<netLib type="string">libeventSession</netLib>
+	<addLogic type="string">libeventSession</addLogic>
+	<procId type="uword">0</procId>
+	<logLevel type="word">0</logLevel>
+	<detachServerS type="ubyte">1</detachServerS>
 	<clearTag type="bool">false</clearTag>
 </config>

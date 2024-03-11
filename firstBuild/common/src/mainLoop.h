@@ -37,7 +37,7 @@ typedef loopHandleType      (*getCurServerHandleFT) ();
 typedef void (*pushToCallStackFT)(loopHandleType pThis, const char* szTxt);
 typedef void (*popFromCallStackFT)(loopHandleType pThis);
 typedef void (*logCallStackFT) (loopHandleType pThis, int nL);
-
+/*
 typedef struct _PhyCallback
 {
 	// pushPackToLoopFT fnPushPackToLoop; // Thread safety
@@ -51,7 +51,7 @@ typedef struct _PhyCallback
 	// popFromCallStackFT     fnPopFromCallStack;
 	// logCallStackFT         fnLogCallStack;
 } PhyCallback;
-
+*/
 struct  serverNode;
 typedef int (*createLoopFT)(const char* szName, loopHandleType serId, serverNode* pNode, frameFunType funFrame, void* arg);
 typedef  int (*regMsgFT)(loopHandleType serverId, uword uwMsgId, procRpcPacketFunType pFun); // call by level 2
@@ -145,7 +145,7 @@ struct serverNode
 
 extern "C"
 {
-	int InitMidFrame(int nArgC, char** argS, PhyCallback* pCallbackS); // call by level 0
+	int InitMidFrame(int nArgC, char** argS/*, PhyCallback* pCallbackS*/); // call by level 0
 	int getAllLoopAndStart(serverNode* pBuff, int nBuffNum); // call by level 0
 	//void loopStartResult(loopHandleType pLoop, int res, ServerIDType id); // call by level 0
 }

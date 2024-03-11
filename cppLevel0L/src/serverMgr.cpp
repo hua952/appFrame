@@ -22,6 +22,7 @@
 #include "modelLoder.h"
 #include "comMsgMsgId.h"
 #include <vector>
+#include "argConfig.h"
 
 packetHead* allocPack(udword udwSize)
 {
@@ -157,12 +158,11 @@ pserver* serverMgr::getServerS()
 {
 	return g_serverS.get();
 }
-*/
 PhyCallback&  serverMgr::getPhyCallback()
 {
 	return m_PhyCallback;
 }
-
+*/
 
 int serverMgr::procArgS(int nArgC, char** argS)
 {
@@ -262,24 +262,23 @@ int serverMgr::initFun (int cArg, char** argS)
 	auto& rArgS = tSingleton<cArgMgr>::single ();
 	rArgS.procArgS (cArg, argS);
 	procArgS (cArg, argS);
-	auto& rMgr = getPhyCallback();
-	// rMgr.fnPushPackToLoop = sPushPackToLoop;
-	// rMgr.fnStopLoopS = stopLoopS;
-	// rMgr.fnAllocPack = allocPack;
-	// rMgr.fnFreePack = freePack;
-	// rMgr.fnLogMsg = logMsg;
-	rMgr.fnNextToken = sNextToken;
-	// rMgr.fnGetCurServerHandle = getCurServerHandle; // Thread safety
-	// rMgr.fnPushToCallStack = sPushToCallStack;
-	// rMgr.fnPopFromCallStack = sPopFromCallStack;
-	// rMgr.fnLogCallStack = sLogCallStack;
+	
+	tSingleton <argConfig>::createSingleton ();
+	auto& rConfig = tSingleton<argConfig>::single ();
 	do {
-		auto logLevel = rArgS.logLevel ();
-		auto pWorkDir = rArgS.workDir ();
+		auto nR = rConfig.procCmdArgS (cArg, argS);
+		if (nR) {
+			nRet = 1;
+			mError("rConfig.procCmdArgS error nR = "<<nR);
+			break;
+		}
+		auto logLevel = rConfig.logLevel ();
+		auto pWorkDir = rConfig.workDir ();
 		myAssert (pWorkDir);
 		std::string strFile = pWorkDir;
-		strFile += "logs/";
-		auto pLogFile = rArgS.logFile();
+		strFile += "/logs";
+		myMkdir (strFile.c_str());
+		auto pLogFile = rConfig.logFile();
 		strFile += pLogFile;
 		initLogGlobal ();
 		auto nInitLog = initLog ("appFrame", strFile.c_str(), logLevel);
@@ -288,7 +287,7 @@ int serverMgr::initFun (int cArg, char** argS)
 			break;
 		}
 		rInfo ("Loger init OK");
-		auto nInitMidFrame = InitMidFrame(cArg, argS, &rMgr);
+		auto nInitMidFrame = InitMidFrame(cArg, argS/*, &rMgr*/);
 		auto dumpMsg = rArgS.dumpMsg ();
 		if (dumpMsg) {
 			rInfo ("dupmMsg end plese check");
@@ -305,18 +304,7 @@ int serverMgr::initFun (int cArg, char** argS)
 		rInfo ("initFun proLoopNum = "<<proLoopNum);
 		if (proLoopNum > 0) {
 			g_ServerNum = proLoopNum;
-			/*
-			g_serverS = std::make_unique<pserver[]>(proLoopNum);
-			auto& pServerImpS =  m_pServerImpS;
-			pServerImpS =  std::make_unique<server[]>(proLoopNum);
-			*/
-			// auto pServerS = getServerS();
-			// auto pImpS = m_loopS.get(); // pServerImpS.get();
-			for (int i = 0; i < proLoopNum; i++ ) {
-				// pServerS[i] = &pImpS[i];
-				// auto p = m_loopS[i].get(); // pServerS [i];
-				// p->init (&loopHandleS[i]);
-			}
+			
 			auto detachServerS = rArgS.detachServerS ();
 			
 			if (detachServerS) {
@@ -400,7 +388,7 @@ void         lv0LogCallStack (int nL)
 }
 
 
-int  InitMidFrame(int nArgC, char** argS, PhyCallback* pCallbackS)
+int  InitMidFrame(int nArgC, char** argS/*, PhyCallback* pCallbackS*/)
 {
 	int nRet = 0;
 	do {
@@ -415,7 +403,7 @@ int  InitMidFrame(int nArgC, char** argS, PhyCallback* pCallbackS)
 		// tSingleton<loopMgr>::createSingleton();
 		// auto& rMgr = tSingleton<loopMgr>::single();
 		auto& rMgr = tSingleton<serverMgr>::single();
-		nRet = rMgr.init(nArgC, argS, *pCallbackS);
+		nRet = rMgr.init(nArgC, argS/*, *pCallbackS*/);
 		if (nRet) {
 			mError("loopMgr init error nRet = "<<nRet);
 			break;
@@ -558,9 +546,9 @@ int midSendPackToLoopFun(packetHead* pack) /* 返回值貌似没用 */
 	auto& rMgr = tSingleton<serverMgr>::single();
 	auto& rSerMgr = rMgr; // tSingleton<serverMgr>::single ();
 
+	/*
 	auto curHandleFun = rMgr.getPhyCallback().fnGetCurServerHandle;
 	// auto freeFun = rMgr.getForLogicFun().fnFreePack;
-	/*
 	auto curHandle = curHandleFun ();
 	if (curHandle !=  pN->ubySrcServId) {
 		mTrace ("curHandle = "<<curHandle<<"pN->ubySrcServId = "<<pN->ubySrcServId);
@@ -742,7 +730,7 @@ serializePackFunType  serverMgr:: fromNetPack ()
     return m_fromNetPack;
 }
 
-int serverMgr::init(int nArgC, char** argS, PhyCallback& info)
+int serverMgr::init(int nArgC, char** argS/*, PhyCallback& info*/)
 {
 	m_fromNetPack = nullptr;
 	m_toNetPack = nullptr;
@@ -760,7 +748,7 @@ int serverMgr::init(int nArgC, char** argS, PhyCallback& info)
 	forLogic.fnSendPackToSomeSession = sSendPackToSomeSession;
 	forLogic.fnLogMsg = logMsg; // info.fnLogMsg;
 	forLogic.fnAddComTimer = sAddComTimer;//m_callbackS.fnAddComTimer;
-	forLogic.fnNextToken = info.fnNextToken;
+	forLogic.fnNextToken = sNextToken; //info.fnNextToken;
 	// forLogic.fnGetIRpcInfoMgr = sGetIRpcInfoMgr;
 	// forLogic.fnPushToCallStack = info.fnPushToCallStack;
 	// forLogic.fnPopFromCallStack = info.fnPopFromCallStack;

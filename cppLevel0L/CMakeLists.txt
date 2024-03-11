@@ -4,7 +4,7 @@ set(libDir ${firstBuildLib})
 file(GLOB srcS src/*.cpp)
 set(defS)
 set(osSrc)
-set(libS cLog comTcpProNet logicCommon common)
+set(libS cLog comTcpProNet logicCommon common frameConfig)
 
 if (UNIX)
     MESSAGE(STATUS "unix")
@@ -27,6 +27,7 @@ link_directories(
 add_library(${prjName} SHARED ${srcS} ${defS} ${osSrc})
 target_include_directories(${prjName} PUBLIC
 							${CMAKE_SOURCE_DIR}/logicCommon/src
+							${CMAKE_SOURCE_DIR}/frameConfig/src
 							${firstBuildInc}
                            )
 target_link_libraries(${prjName} PUBLIC  ${libS})

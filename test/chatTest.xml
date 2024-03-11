@@ -7,7 +7,6 @@
 	<defMsg file="cChess.xml"/>
 	<endPoint>
 		<en1 port="12000"/>
-		<en2 port="12001"/>
 	</endPoint>
 	<app>
 		<gate appNetType="1">
@@ -15,12 +14,9 @@
 			<module>
 				<gateM>
 					<server>
-						<gateTh1 sleepSetp="1" showFps="1" fpsSetp="40000">
+						<gateTh1 sleepSetp="1" showFps="1" fpsSetp="40000" openNum="1" startPort="12000" route="1">
 							<listen teag="1" defRoute="1" name="en1"/>
 						</gateTh1>
-						<gateTh2 sleepSetp="1" showFps="1" fpsSetp="40000">
-							<listen  teag="1" defRoute="1" name="en2"/>
-						</gateTh2>
 						<gateConTh autoRun="0" showFps="0">
 						</gateConTh >
 					</server>
@@ -74,7 +70,7 @@
 							</procRpc>
 						</chatTh>
 						<appClientM1Th2 rearEnd="0" regRoute="0" sleepSetp="1" showFps="1" fpsSetp="40000">
-							<connect defRoute="1"  targetEndPoint="en2" teag="1"/>
+							<connect defRoute="1"  targetEndPoint="en1" teag="1"/>
 							<procRpc>
 								<manualList askType="ask"/>
 							</procRpc>

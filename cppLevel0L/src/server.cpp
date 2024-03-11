@@ -22,12 +22,13 @@ int processOncePack(loopHandleType pThis, packetHead* pPack);
 
 server::server()
 {
-	m_loopHandle = c_emptyLoopHandle;
+	// m_loopHandle = c_emptyLoopHandle;
 	m_nextToken  = 0;
 	m_curCallNum = 0;
 	m_sleepSetp = 10;
 	m_autoRun = true;
 
+	m_id = c_emptyLoopHandle;
 	m_funOnFrame = nullptr;
 	m_pArg = nullptr;
 	m_packSave = nullptr;
@@ -59,14 +60,15 @@ void server::ThreadFun(server* pS)
 
 loopHandleType  server::myHandle ()
 {
-	return m_loopHandle;
+	return m_id; // m_loopHandle;
 }
 
 loopHandleType server:: myProId ()
 {
 	loopHandleType  proId;
 	loopHandleType  serId;
-	fromHandle (m_loopHandle, proId, serId);
+	auto myId = id ();
+	fromHandle (myId, proId, serId);
 	return proId;
 }
 
@@ -74,7 +76,8 @@ loopHandleType server:: myLoopId ()
 {
 	loopHandleType  proId;
 	loopHandleType  serId;
-	fromHandle (m_loopHandle, proId, serId);
+	auto myId = id ();
+	fromHandle (myId, proId, serId);
 	return serId;
 }
 
@@ -92,7 +95,7 @@ int server::init(serverNode* pMyNode)
 			break;
 		}
 		auto handle = pMyNode->handle;
-		m_loopHandle = handle;
+		// m_loopHandle = handle;
 		setSleepSetp (pMyNode->sleepSetp);
 		setAutoRun (pMyNode->autoRun);
 	} while (0);
@@ -102,7 +105,8 @@ int server::init(serverNode* pMyNode)
 thread_local  loopHandleType  server::s_loopHandleLocalTh = c_emptyLoopHandle;
 bool server::start()
 {
-	rTrace("startThread handle = "<<m_loopHandle<<" this = "<<this);
+	// rTrace("startThread handle = "<<m_loopHandle<<" this = "<<this);
+	rTrace("startThread handle = "<<m_id<<" this = "<<this);
 	m_pTh =std::make_unique<std::thread>(server::ThreadFun, this);
 	return true;
 }
@@ -121,8 +125,8 @@ void server::detach ()
 
 void server::run()
 {
-	s_loopHandleLocalTh = m_loopHandle;
-	onMidLoopBegin(m_loopHandle);
+	s_loopHandleLocalTh = m_id;// m_loopHandle;
+	onMidLoopBegin(m_id);
 	while(true)
 	{
 		auto bExit = onFrame();
@@ -132,9 +136,10 @@ void server::run()
 		}
 		
 	}
-	onMidLoopEnd(m_loopHandle);
+	onMidLoopEnd(m_id);
 	auto& os = std::cout;
-	os<<"Loop "<<(int)(m_loopHandle)<<" exit"<<std::endl;
+	// os<<"Loop "<<(int)(m_loopHandle)<<" exit"<<std::endl;
+	os<<"Loop "<<(int)(m_id)<<" exit"<<std::endl;
 }
 
 bool server::pushPack (packetHead* pack)
@@ -148,7 +153,7 @@ bool server::onFrame()
 	bool bExit = false;
 	m_timerMgr.onFrame ();
 	
-	auto myHandle = m_loopHandle;
+	auto myHandle = m_id; // m_loopHandle;
 	auto nQuit = ::onLoopFrame(myHandle); // call by level 0
 	if (procPacketFunRetType_exitNow & nQuit) {
 		bExit = true;
@@ -160,14 +165,14 @@ bool server::onFrame()
 		auto pH = &head;
 		m_slistMsgQue.getMsgS(pH);
 		auto n = pH->pNext;
-		auto& rMgr = tSingleton<serverMgr>::single().getPhyCallback();
+		// auto& rMgr = tSingleton<serverMgr>::single().getPhyCallback();
 		while (n != pH) {
 			auto d = n;
 			n = n->pNext;
 			auto p = d->pPer;
 			int nRet =  procPacketFunRetType_del;
 			auto pN = P2NHead (d);
-			nRet = ::processOncePack(m_loopHandle, d);// call by level 0
+			nRet = ::processOncePack(m_id, d);// call by level 0
 			if (procPacketFunRetType_doNotDel & nRet) {
 				p->pNext = n;
 				n->pPer = p;
@@ -408,7 +413,7 @@ int server:: processOtherAppToMePack(ISession* session, packetHead* pPack)
     do {
 		// auto& rMgr =  tSingleton<loopMgr>::single();
 		auto& rMgr = tSingleton<serverMgr>::single();
-		auto& rCS = rMgr.getPhyCallback();
+		// auto& rCS = rMgr.getPhyCallback();
 		auto pN = P2NHead (pPack);
 		auto bIsRet = NIsRet (pN);
 		auto pF = findMsg(pN->uwMsgID);
@@ -752,7 +757,7 @@ int server:: forward(packetHead* pPack)
 					nRet = procPacketFunRetType_del;
 				}
 			} else {
-				auto& rCS = rMgr.getPhyCallback();
+				// auto& rCS = rMgr.getPhyCallback();
 				auto realSer = toHandle (myPId, pInfo->inGateSerId);
 				NSetOtherNetLoopSend(pN);
 				// rCS.fnPushPackToLoop (realSer, pPack);

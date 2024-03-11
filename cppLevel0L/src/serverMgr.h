@@ -17,7 +17,7 @@ public:
 	serverIdType	getServerNum();
 	// pserver*		getServerS();
 	server*         getServer(loopHandleType handle);
-	PhyCallback&    getPhyCallback();
+	// PhyCallback&    getPhyCallback();
 	loopHandleType	procId();
 	loopHandleType	gropId();
 	void			setProcId(loopHandleType proc);
@@ -41,7 +41,7 @@ public:
 	server*   getLoop(loopHandleType id);
 	int createServer(const char* szName, loopHandleType serId,
 	serverNode* pNode, frameFunType funFrame, void* arg);
-	int             init(int nArgC, char** argS, PhyCallback& info);
+	int             init(int nArgC, char** argS/*, PhyCallback& info*/);
 	int   initNetServer ();
 	int procArgSMid(int nArgC, char** argS);
 	// loopHandleType  procId();
@@ -85,7 +85,7 @@ private:
 	// std::unique_ptr<server[]>	m_pServerImpS;
 	std::unique_ptr<char[]>      m_netLibName;
 	uword			g_ServerNum;
-	PhyCallback m_PhyCallback;
+	// PhyCallback m_PhyCallback;
 
 	uword  m_canDownRouteServerNum;
 	uword  m_canUpRouteServerNum;

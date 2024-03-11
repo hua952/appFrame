@@ -57,7 +57,7 @@ private:
 	static void ThreadFun(server* pS);
 	std::unique_ptr<std::thread> m_pTh;
 	deListMsgQue	m_slistMsgQue;
-	loopHandleType  m_loopHandle;
+	// loopHandleType  m_loopHandle;
 	netMsgMap       m_netMsgMap;
 
 public:

@@ -84,6 +84,7 @@ int  configSrcGen:: writeClassH ()
 public:
 	)"<<pClassName<<R"( ();
 	int  procCmdArgS (int nArg, char** argS);
+	int  loadConfig (const char* szFile);
 		)";
 		std::stringstream ssF;
 		std::stringstream ssM;
@@ -192,7 +193,11 @@ int  configSrcGen:: writeClassCpp ()
 
 		os<<R"(#include ")"<<pConfigFileName<<R"(.h"
 #include <memory>
+#include <sstream>
+#include <fstream>
+#include <vector>
 #include "strFun.h"
+
 )";
 
 		for (auto it = rMap.begin (); rMap.end () != it; ++it) {
@@ -220,9 +225,9 @@ int  configSrcGen:: writeClassCpp ()
 			funOs<<"void  "<<pClassName<<"::set"<<pWordName<<" ("<<writeDataType<<" v)"<<std::endl
 				<<"{"<<std::endl;
 			if (BigDataType_string == dataType) {
-				funOs<<"strCpy(v, "<<memberItemName<<")"<<std::endl;
+				funOs<<"	strCpy(v, "<<memberItemName<<")";
 			} else {
-				funOs<<"	"<<memberItemName<<" = v"<<std::endl;
+				funOs<<"	"<<memberItemName<<" = v";
 			}
 			funOs<<";"<<std::endl
 				<<"}"<<std::endl<<std::endl;
@@ -235,7 +240,7 @@ int  configSrcGen:: writeClassCpp ()
 						strV = itemValue;
 					}
 					ssInit<<memberItemName<<R"( = )"<<strV<<R"(;
-				)";
+	)";
 
 				if (strcmp (itemType, "ubyte") == 0) {
 					ssVR<<memberItemName<<R"( = (ubyte)(atoi(retS[1]));)";
@@ -256,7 +261,7 @@ int  configSrcGen:: writeClassCpp ()
 					strV = itemValue;
 				}
 				ssInit<<memberItemName<<R"( = )"<<strV<<R"(;
-				)";
+	)";
 			} else {
 				ssVR<<R"(strCpy(strVal.c_str(), )"<<memberItemName<<");";
 				std::string strV = "";
@@ -265,7 +270,7 @@ int  configSrcGen:: writeClassCpp ()
 				}
 
 				ssInit<<R"(strCpy(")"<<strV<<R"(", )"<<memberItemName<<R"();
-				)";
+	)";
 			}
 			ssVR<<R"(
 				continue;
@@ -279,19 +284,52 @@ int  configSrcGen:: writeClassCpp ()
 }
 )"
 <<funOs.str()<<std::endl<<R"(
+
+int  )"<<pClassName<<R"(:: loadConfig (const char* szFile)
+{
+	int nRet = 0;
+	do {
+		std::ifstream ifs (szFile);
+		if (!ifs) {
+			nRet = 1;
+			break;
+		}
+		std::stringstream ss;
+		std::string strLine;
+		std::vector <std::string> vecT;
+		while(getline(ifs, strLine)) {
+			auto nf = strLine.find ("//");
+			if (nf != strLine.npos) {
+				strLine = strLine.substr(0, nf);
+			}
+			vecT.push_back (strLine);
+		}
+		auto argS = std::make_unique<std::unique_ptr<char[]>[]> (vecT.size());
+		auto ppArgS = std::make_unique<char*[]> (vecT.size());
+		auto n = 0;
+		for (auto it = vecT.begin (); it != vecT.end (); it++) {
+			auto& arg = argS[n];
+			strCpy (it->c_str(), arg);
+			ppArgS[n] = arg.get();
+			n++;
+		}
+		nRet = procCmdArgS (n, ppArgS.get());
+	} while (0);
+	return nRet;
+}
+
 int  )"<<pClassName<<R"(:: procCmdArgS (int nArg, char** argS)
 {
 	int nRet = 0;
 	do {
-		for (decltype (nArg) i = 1; i < nArg; i++) {
+		for (decltype (nArg) i = 0; i < nArg; i++) {
 			std::unique_ptr<char[]> pArg;
 			strCpy (argS[i], pArg);
 			char* retS[3];
 			auto pBuf = pArg.get ();
 			auto nR = strR (pBuf, '=', retS, 3);
 			if (2 != nR) {
-				nRet = 1;
-				break;
+				continue;
 			}
 			std::string strKey;
 			std::string strVal;
