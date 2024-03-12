@@ -166,6 +166,13 @@ int  appGen:: batFileGen (appFile& rApp)
 			os<<" "<<*it;
 			rMainArgS.push_back(*it);
 		}
+		{
+			auto& rV = rGlobalFile.argS ();
+			for (auto it = rV.begin(); rV.end() != it; ++it) {
+				os<<" "<<*it;
+				rMainArgS.push_back(*it);
+			}
+		}
     } while (0);
     return nRet;
 }

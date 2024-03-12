@@ -83,7 +83,7 @@ typedef struct _ForLogicFun
 	regRpcFT               fnRegRpc;
     getDefProcServerIdFT   fnGetDefProcServerId;
 	regRouteFT             fnRegRoute;
-	void*                  pSerFunSPtr;
+	// void*                  pSerFunSPtr;
 	serializePackFunType   fromNetPack;   // rec
 	serializePackFunType   toNetPack;   // rec
 } ForLogicFun;

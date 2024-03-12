@@ -298,7 +298,7 @@ int  )"<<pClassName<<R"(:: loadConfig (const char* szFile)
 		std::string strLine;
 		std::vector <std::string> vecT;
 		while(getline(ifs, strLine)) {
-			auto nf = strLine.find ("//");
+			auto nf = strLine.find ("##");
 			if (nf != strLine.npos) {
 				strLine = strLine.substr(0, nf);
 			}

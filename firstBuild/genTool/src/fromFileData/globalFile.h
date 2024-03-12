@@ -15,10 +15,11 @@ public:
 	using endPointGlobalMap = std::map<std::string, uword>;
 	using msgFileV = std::map<std::string, std::shared_ptr<msgPmpFile>>;
 	using protoDataTypeMap = std::map<std::string, std::string>;
+	using  argV = std::vector<std::string>;
 	const char*  depLibHome ();
 	const char*  depIncludeHome ();
 	const char*  projectHome ();
-	void  setProjectHome (const char* v);
+	// void  setProjectHome (const char* v);
     const char*  frameLibPath ();
     const char*  frameIncPath ();
 	msgFileV&  msgFileS ();
@@ -37,7 +38,18 @@ public:
 	const char*  projectInstallDir ();
 	void  setProjectInstallDir (const char* v);
 	endPointGlobalMap&  endPointGlobalS ();
+	const char*  configDef ();
+	void  setConfigDef (const char* v);
+	const char*  configFile ();
+	void  setConfigFile (const char* v);
+	const char*  projectDir ();
+	void  setProjectDir (const char* v);
+	argV&  argS ();
 private:
+	argV  m_argS;
+	std::unique_ptr <char[]>  m_projectDir;
+	std::unique_ptr <char[]>  m_configFile;
+	std::unique_ptr <char[]>  m_configDef;
 	endPointGlobalMap  m_endPointGlobalS;
 	std::unique_ptr <char[]>  m_projectInstallDir;
     std::unique_ptr <char[]>  m_thirdPartyDir;

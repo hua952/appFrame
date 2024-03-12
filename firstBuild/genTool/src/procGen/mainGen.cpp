@@ -248,12 +248,14 @@ int main(int cArg, char** argS)
 				vArgS.push_back(*it);
 			}
 		}
+		procArgS.clear();
 		for (auto it = kvMap.begin(); kvMap.end() != it; ++it) {
 			std::string str = it->first;
 			str+="=";
 			str+=it->second;
 			vArgS.push_back (str);
 		}
+		kvMap.clear();
 		auto argBufSize = 0;
 		for (auto it = vArgS.begin(); vArgS.end() != it; ++it) {
 			argBufSize += it->length();
@@ -270,6 +272,7 @@ int main(int cArg, char** argS)
 			reArgS[reArgNum++] = pArgBuf;
 			pArgBuf += (nL + 1);
 		}
+		vArgS.clear();
 		std::string strFrameHome;
 		for (decltype (reArgNum) i = 1; i < reArgNum; i++) {
 			auto pArg = reArgS[i];

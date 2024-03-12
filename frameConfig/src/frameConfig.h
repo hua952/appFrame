@@ -25,10 +25,14 @@ public:
   void  setLogLevel (word v);
   const char*  logicModel ();
   void  setLogicModel (const char* v);
+  const char*  modelS ();
+  void  setModelS (const char* v);
   const char*  netLib ();
   void  setNetLib (const char* v);
   uword  procId ();
   void  setProcId (uword v);
+  const char*  serializePackLib ();
+  void  setSerializePackLib (const char* v);
   const char*  workDir ();
   void  setWorkDir (const char* v);
 private:
@@ -40,8 +44,10 @@ private:
   std::unique_ptr <char[]>  m_logFile;
   word  m_logLevel;
   std::unique_ptr <char[]>  m_logicModel;
+  std::unique_ptr <char[]>  m_modelS;
   std::unique_ptr <char[]>  m_netLib;
   uword  m_procId;
+  std::unique_ptr <char[]>  m_serializePackLib;
   std::unique_ptr <char[]>  m_workDir;
 };
 #endif

@@ -21,10 +21,15 @@ int   projectCMakeListGen:: startGen ()
 	do {
 		auto& rGlobalFile = tSingleton<globalFile>::single ();
 		auto& rConfig = tSingleton<configMgr>::single ();
+		auto szPrjName = rGlobalFile.projectName ();
 		auto structBadyType = rConfig.structBadyType ();
 		std::string strAddProSer;
+		std::stringstream ssAdd;
 		// if (structBadyTime_proto == structBadyType) {
-			strAddProSer = R"(add_subdirectory (protobufSer))";
+			ssAdd<< R"(add_subdirectory (protobufSer)
+add_subdirectory ()"<<szPrjName<<R"(Config)
+ )";
+		strAddProSer = ssAdd.str();
 		//}
 		auto bH = rGlobalFile.haveServer ();
 		auto& rAppS = tSingleton<appFileMgr>::single ().appS ();
@@ -38,8 +43,10 @@ int   projectCMakeListGen:: startGen ()
 				break;
 			}
 
-			auto szPrjName = rGlobalFile.projectName ();
+// set (firstBuildInc ${CMAKE_INSTALL_PREFIX}/include/appFrame  CACHE INTERNAL "Shared variable")
+// set (firstBuildLib ${CMAKE_INSTALL_PREFIX}/lib  CACHE INTERNAL "Shared variable")
 			std::string strInstall = rGlobalFile.projectInstallDir ();
+			auto frameInstallDir = rGlobalFile.frameInstallPath ();
 			// rGlobalFile.getRealInstallPath (strInstall);
 			os<<R"(cmake_minimum_required(VERSION 3.16) 
 set(BUILD_USE_64BITS on)
@@ -47,6 +54,8 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True) 
 set (myProjectName )"<<szPrjName <<R"()
 project(${myProjectName})
+set (firstBuildInc )"<<frameInstallDir<<R"(include/appFrame  CACHE INTERNAL "Shared variable")
+set (firstBuildLib )"<<frameInstallDir<<R"(lib  CACHE INTERNAL "Shared variable")
 SET(CMAKE_INSTALL_PREFIX )"<<strInstall<<R"()
 )";
 if (bH) {

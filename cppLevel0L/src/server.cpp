@@ -741,8 +741,6 @@ int server:: forward(packetHead* pPack)
 		myAssert (!NIsOtherNetLoopSend(pN));
 		ISession* pSe = nullptr;
 		if (NIsRet (pN)) {
-			// auto sessionId = pPack->sessionID;
-			// pSe = getSession (sessionId);
 			auto recToken = pN->dwToKen;
 			auto pInfo = pISave->oldTokenFind (recToken);
 			myAssert(pInfo);
@@ -757,10 +755,8 @@ int server:: forward(packetHead* pPack)
 					nRet = procPacketFunRetType_del;
 				}
 			} else {
-				// auto& rCS = rMgr.getPhyCallback();
 				auto realSer = toHandle (myPId, pInfo->inGateSerId);
 				NSetOtherNetLoopSend(pN);
-				// rCS.fnPushPackToLoop (realSer, pPack);
 				rSerMgr.pushPackToLoop(realSer, pPack);
 			}
 			pISave->oldTokenErase(recToken);
@@ -836,7 +832,6 @@ int  server:: procProx(packetHead* pPack)
 		fromHandle (pN->ubySrcServId, sPId, sSId);
 		myAssert (sPId == myPId); /* 该函数只处理首站发出的ask包 */
 
-		// bool bSave = NNeetRet(pN);
 		ISession* pSe = nullptr;
 		myAssert (EmptySessionID == pPack->sessionID && c_emptyLoopHandle == pPack->loopId);    /*   纯测试,不确定会不会出现该情况   */
 		if (EmptySessionID == pPack->sessionID) {
@@ -850,17 +845,6 @@ int  server:: procProx(packetHead* pPack)
 
 		pPack->pAsk = 0;
 		if (pSe) {
-			/*
-			auto toNetPack = tSingleton<loopMgr>::single().toNetPack ();
-			packetHead* pNew = nullptr;
-			toNetPack (pN, pNew);
-			if (pNew) {
-				pSe->send (pNew);
-				nRet = procPacketFunRetType_del;
-			} else {
-				pSe->send (pPack);
-			}
-			*/
 			pSe->send (pPack);
 		} else {
 			auto bMyCh = isMyChannelMsg (pN->uwMsgID);  /*  */
@@ -877,14 +861,9 @@ int server::processOncePack(packetHead* pPack)
 {
 	int nRet = procPacketFunRetType_del;
 	auto& rMgr = tSingleton<serverMgr>::single();
-	// auto& rPho = tSingleton<loopMgr>::single();
-	// auto& rCS = rPho.getPhyCallback();
 	auto pN = P2NHead(pPack);
 	bool bIsRet = NIsRet(pN);
-	// auto getCurServerHandleFun = rCS.fnGetCurServerHandle;
-	// auto cHandle = getCurServerHandleFun ();
 	auto myHandle = id ();
-	// myAssert (cHandle == myHandle);
 	do {
 		procPacketArg argP;
 		argP.handle = id ();
@@ -967,9 +946,7 @@ int  server:: processLocalServerPack(packetHead* pPack)
 {
 	int  nRet = procPacketFunRetType_del;
 	do {
-		// auto& rCS = tSingleton<loopMgr>::single().getPhyCallback();
 		auto& rSerMgr = tSingleton<serverMgr>::single ();
-		// auto sendFun = rCS.fnPushPackToLoop;
 		auto pN = P2NHead(pPack);
 		myAssert(c_emptyLoopHandle != pN->ubyDesServId);
 		auto fromId = pN->ubySrcServId;
@@ -1008,7 +985,6 @@ int  server:: processLocalServerPack(packetHead* pPack)
 				}
 
 				rSerMgr.pushPackToLoop (pRN->ubyDesServId, pRet);
-				// sendFun (pRN->ubyDesServId, pRet);
 			}
 		}
 	} while (0);

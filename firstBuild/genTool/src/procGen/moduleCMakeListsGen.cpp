@@ -31,6 +31,7 @@ int   moduleCMakeListsGen:: startGen (moduleGen& rModel)
 		auto appName = rMod.appName ();
 
 		std::string strFile = rGlobalFile.projectHome ();
+		strFile += "/";
 		strFile += appName;
 		strFile += "/";
 		strFile += moduleName;

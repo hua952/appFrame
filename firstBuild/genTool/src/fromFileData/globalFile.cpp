@@ -54,18 +54,18 @@ void  globalFile::setFrameHome (const char* v)
 {
     strCpy (v, m_frameHome);
 }
-*/
-const char* globalFile:: projectHome ()
-{
-    return m_projectHome.get ();
-}
 
 void  globalFile::setProjectHome (const char* v)
 {
     strCpy (v, m_projectHome);
 	reSetProjectInstallDir ();
 }
+*/
 
+const char* globalFile:: projectHome ()
+{
+    return m_projectHome.get ();
+}
 const char*   globalFile:: frameLibPath ()
 {
     return m_frameLibPath.get();
@@ -126,9 +126,16 @@ void  globalFile:: setProjectName (const char* v)
 void  globalFile:: reSetProjectInstallDir ()
 {
     do {
-		auto dirN = projectHome ();
+		//auto dirN = projectHome ();
+		auto dirN = projectDir();
 		auto nameN = projectName ();
 		if (dirN && nameN) {
+			std::string strH = dirN;
+			strH += "/";
+			strH += nameN;
+			strH += "/";
+			strCpy (strH.c_str(), m_projectHome);
+			/*
 			std::unique_ptr<char[]> pUp;
 			strCpy (dirN, pUp);
 			auto bUp = upDir (pUp.get());
@@ -138,6 +145,9 @@ void  globalFile:: reSetProjectInstallDir ()
 			str += nameN;
 			str += "Install";
 			setProjectInstallDir (str.c_str());
+			*/
+			strH += "Install";
+			setProjectInstallDir (strH.c_str());
 		}
     } while (0);
 }
@@ -257,5 +267,41 @@ void   globalFile:: initProtoDataTypeS ()
 globalFile::endPointGlobalMap&  globalFile:: endPointGlobalS ()
 {
     return m_endPointGlobalS;
+}
+
+const char*  globalFile:: configDef ()
+{
+    return m_configDef.get ();
+}
+
+void  globalFile:: setConfigDef (const char* v)
+{
+    strCpy (v, m_configDef);
+}
+
+const char*  globalFile:: configFile ()
+{
+    return m_configFile.get ();
+}
+
+void  globalFile:: setConfigFile (const char* v)
+{
+    strCpy (v, m_configFile);
+}
+
+const char*  globalFile:: projectDir ()
+{
+    return m_projectDir.get ();
+}
+
+void  globalFile:: setProjectDir (const char* v)
+{
+    strCpy (v, m_projectDir);
+	reSetProjectInstallDir ();
+}
+
+globalFile::argV&  globalFile:: argS ()
+{
+    return m_argS;
 }
 

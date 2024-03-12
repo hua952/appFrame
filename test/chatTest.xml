@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8' ?>
 <servers>
-	<projectHome>C:/work/appFrameProject/project/chatTest/</projectHome>
+	<projectDir>C:/work/appFrameProject/project</projectDir>
 	<projectName>chatTest</projectName>
 	<thirdPartyDir>C:/work/</thirdPartyDir>
 	<frameInstallPath>C:/work/appFrameInstall/</frameInstallPath>
@@ -8,6 +8,7 @@
 	<endPoint>
 		<en1 port="12000"/>
 	</endPoint>
+	<appArg>serializePackLib=protobufSer</appArg>
 	<app>
 		<gate appNetType="1">
 			<appArg>detachServerS=1</appArg>

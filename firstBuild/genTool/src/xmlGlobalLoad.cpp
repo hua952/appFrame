@@ -158,14 +158,23 @@ int  xmlGlobalLoad::xmlLoad (const char* szFile)
 	rapidxml::xml_node<> *root = doc.first_node();
 	auto& rGlobal = tSingleton<globalFile>::single ();
 	auto& rMsgFileS =  rGlobal.msgFileS ();
+	auto& rV = rGlobal.argS ();
+	for (auto pArg = root->first_node ("appArg");
+		pArg; pArg = root->next_sibling()) {
+		rV.push_back (pArg->value ());
+	}
 	rapidxml::xml_node<char> * pAppS = nullptr;
 	for(rapidxml::xml_node<char> * pRpc = root->first_node();  NULL != pRpc; pRpc = pRpc->next_sibling()) {
 		auto pName = pRpc->name ();
 		auto szPath = pRpc->value ();
-		if(0 == strcmp(pName, "projectHome")) {
-			rGlobal.setProjectHome (szPath);
+		if(0 == strcmp(pName, "projectDir")) {
+			rGlobal.setProjectDir (szPath);
 		} else if(0 == strcmp(pName, "projectName")) {
 			rGlobal.setProjectName (szPath);
+		} else if(0 == strcmp(pName, "configDef")) {
+			rGlobal.setConfigDef(szPath);
+		}  else if(0 == strcmp(pName, "configFile")) {
+			rGlobal.setConfigFile(szPath);
 		} else if(0 == strcmp(pName, "frameInstallPath")) {
 			rGlobal.setFrameInstallPath(szPath);
 		} else if(0 == strcmp(pName, "thirdPartyDir")) {

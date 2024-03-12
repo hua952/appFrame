@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<config className="frameConfig" projectDir="C:\work\appFrame"  projectName="frameConfig">
+<config className="chatTestConfig">
 	<workDir type="string">C:/work/appFrameProject/project/chatTestInstall</workDir>
 	<logFile type="string"></logFile>
-	<serializePackLib type="string"></serializePackLib>
 	<logicModel type="string"></logicModel>
+	<modelS type="string"></modelS>
 	<endPoint type="string"></endPoint>
 	<level0 type="string">cppLevel0L</level0>
 	<netLib type="string">libeventSession</netLib>

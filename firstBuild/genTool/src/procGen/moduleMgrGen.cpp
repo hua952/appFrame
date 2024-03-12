@@ -150,7 +150,7 @@ elseif (WIN32)
 	add_library(${prjName} SHARED ${genSrcS} ${defS} ${osSrc})
 	target_link_libraries(${prjName} PUBLIC
 	common
-	)"<<strProtobufSer<<R"(
+	)"/*<<strProtobufSer*/<<R"(
 	logicCommon
 	cLog
 	)";
@@ -394,14 +394,14 @@ int   moduleMgrGen:: writeLogicServerCpp ()
 		}
 		auto& rConfig = tSingleton<configMgr>::single ();
 		auto structBadyType = rConfig.structBadyType ();
-		std::stringstream strProtobufSerSS;
 		std::string strProtoSerInc;
-
+		// std::stringstream strProtobufSerSS;
 		auto bH = rGlobal.haveServer ();
 		if (bH) {
 			strProtoSerInc = R"(#include ")";
 			strProtoSerInc += serializePackFunStName;
 			strProtoSerInc += R"(.h")";
+			/*
 			strProtobufSerSS<<R"(	static )"<<serializePackFunStName<<R"(   s_FunS;
 			int  getSerializeFunS ()"<<serializePackFunStName<<R"(* pFunS, ForLogicFun* pForLogic);
 			getSerializeFunS (&s_FunS, pForLogic);
@@ -412,7 +412,7 @@ int   moduleMgrGen:: writeLogicServerCpp ()
 			m_ForLogicFun.pSerFunSPtr = &s_FunS;
 			pForLogic->fromNetPack = sFromNetPack;
 			pForLogic->toNetPack = sToNetPack;
-	)";
+	)";*/
 		}
 
 		os<<R"(#include <iostream>
@@ -438,7 +438,7 @@ os<<R"(
 #include <sstream>
 #include <vector>
 
-// typedef serializePackFunType pSerializePackFunType3[3];
+/*
 struct pSerializePackFunType3
 {
 	serializePackFunType f[3];
@@ -508,7 +508,7 @@ static int sToNetPack (netPacketHead* pN, pPacketHead& pNew)
 	} while (0);
 	return nRet;
 }
-
+*/
 void getModelS (int nArgC, char** argS, std::vector<std::string>& vModelS,
 	std::string& strWorkDir, bool& dumpMsg, std::unique_ptr<char[]>& checkMsg)
 {
@@ -580,7 +580,7 @@ dword allLogicServerMgr::afterLoad(int nArgC, char** argS, ForLogicFun* pForLogi
 {
 	dword nRet = 0;
 	m_ForLogicFun = *pForLogic;
-	)"<<strProtobufSerSS.str()<<R"(
+	)"<</*strProtobufSerSS.str()<<*/R"(
 	auto pForMsg = pForLogic; // &m_ForLogicFun;
 	// auto& rFunS = getForMsgModuleFunS();
 	// rFunS = *pForLogic;

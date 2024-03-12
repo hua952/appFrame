@@ -15,8 +15,10 @@ frameConfig::frameConfig ()
 	strCpy("", m_logFile);
 	m_logLevel = 0;
 	strCpy("", m_logicModel);
+	strCpy("", m_modelS);
 	strCpy("libeventSession", m_netLib);
 	m_procId = 0;
+	strCpy("", m_serializePackLib);
 	strCpy("C:/work/appFrameProject/project/chatTestInstall", m_workDir);
 	
 }
@@ -100,6 +102,16 @@ void  frameConfig::setLogicModel (const char* v)
 	strCpy(v, m_logicModel);
 }
 
+const char*  frameConfig::modelS ()
+{
+    return m_modelS.get();
+}
+
+void  frameConfig::setModelS (const char* v)
+{
+	strCpy(v, m_modelS);
+}
+
 const char*  frameConfig::netLib ()
 {
     return m_netLib.get();
@@ -118,6 +130,16 @@ uword  frameConfig::procId ()
 void  frameConfig::setProcId (uword v)
 {
 	m_procId = v;
+}
+
+const char*  frameConfig::serializePackLib ()
+{
+    return m_serializePackLib.get();
+}
+
+void  frameConfig::setSerializePackLib (const char* v)
+{
+	strCpy(v, m_serializePackLib);
 }
 
 const char*  frameConfig::workDir ()
@@ -146,7 +168,7 @@ int  frameConfig:: loadConfig (const char* szFile)
 		std::string strLine;
 		std::vector <std::string> vecT;
 		while(getline(ifs, strLine)) {
-			auto nf = strLine.find ("//");
+			auto nf = strLine.find ("##");
 			if (nf != strLine.npos) {
 				strLine = strLine.substr(0, nf);
 			}
@@ -217,12 +239,20 @@ int  frameConfig:: procCmdArgS (int nArg, char** argS)
 				strCpy(strVal.c_str(), m_logicModel);
 				continue;
 			}
+					if (strKey == "modelS") {
+				strCpy(strVal.c_str(), m_modelS);
+				continue;
+			}
 					if (strKey == "netLib") {
 				strCpy(strVal.c_str(), m_netLib);
 				continue;
 			}
 					if (strKey == "procId") {
 				ssV>>m_procId;
+				continue;
+			}
+					if (strKey == "serializePackLib") {
+				strCpy(strVal.c_str(), m_serializePackLib);
 				continue;
 			}
 					if (strKey == "workDir") {

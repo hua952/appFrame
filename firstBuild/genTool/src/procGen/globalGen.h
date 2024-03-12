@@ -9,6 +9,7 @@ public:
     ~globalGen ();
 	int  startGen ();
 	int  secondGen ();
+	int  configLibGen ();
 private:
 	int  makePath ();
 };
