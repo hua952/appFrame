@@ -11,9 +11,10 @@ frameConfig::frameConfig ()
 	m_clearTag = false;
 	m_detachServerS = 1;
 	strCpy("", m_endPoint);
+	strCpy("", m_frameConfigFile);
 	strCpy("cppLevel0L", m_level0);
 	strCpy("", m_logFile);
-	m_logLevel = 0;
+	m_logLevel = 2;
 	strCpy("", m_logicModel);
 	strCpy("", m_modelS);
 	strCpy("libeventSession", m_netLib);
@@ -60,6 +61,16 @@ const char*  frameConfig::endPoint ()
 void  frameConfig::setEndPoint (const char* v)
 {
 	strCpy(v, m_endPoint);
+}
+
+const char*  frameConfig::frameConfigFile ()
+{
+    return m_frameConfigFile.get();
+}
+
+void  frameConfig::setFrameConfigFile (const char* v)
+{
+	strCpy(v, m_frameConfigFile);
 }
 
 const char*  frameConfig::level0 ()
@@ -206,57 +217,70 @@ int  frameConfig:: procCmdArgS (int nArg, char** argS)
 			std::stringstream ssK (retS[0]);
 			ssK>>strKey;
 			std::stringstream ssV (retS[1]);
-			ssV>>strVal;
-			if (strKey == "addLogic") {
-				strCpy(strVal.c_str(), m_addLogic);
+		if (strKey == "addLogic") {
+				ssV>>strVal;
+	strCpy(strVal.c_str(), m_addLogic);
 				continue;
 			}
-					if (strKey == "clearTag") {
+				if (strKey == "clearTag") {
 				m_clearTag = strVal == "true";
 				continue;
 			}
-					if (strKey == "detachServerS") {
+				if (strKey == "detachServerS") {
 				m_detachServerS = (ubyte)(atoi(retS[1]));
 				continue;
 			}
-					if (strKey == "endPoint") {
-				strCpy(strVal.c_str(), m_endPoint);
+				if (strKey == "endPoint") {
+				ssV>>strVal;
+	strCpy(strVal.c_str(), m_endPoint);
 				continue;
 			}
-					if (strKey == "level0") {
-				strCpy(strVal.c_str(), m_level0);
+				if (strKey == "frameConfigFile") {
+				ssV>>strVal;
+	strCpy(strVal.c_str(), m_frameConfigFile);
 				continue;
 			}
-					if (strKey == "logFile") {
-				strCpy(strVal.c_str(), m_logFile);
+				if (strKey == "level0") {
+				ssV>>strVal;
+	strCpy(strVal.c_str(), m_level0);
 				continue;
 			}
-					if (strKey == "logLevel") {
+				if (strKey == "logFile") {
+				ssV>>strVal;
+	strCpy(strVal.c_str(), m_logFile);
+				continue;
+			}
+				if (strKey == "logLevel") {
 				ssV>>m_logLevel;
 				continue;
 			}
-					if (strKey == "logicModel") {
-				strCpy(strVal.c_str(), m_logicModel);
+				if (strKey == "logicModel") {
+				ssV>>strVal;
+	strCpy(strVal.c_str(), m_logicModel);
 				continue;
 			}
-					if (strKey == "modelS") {
-				strCpy(strVal.c_str(), m_modelS);
+				if (strKey == "modelS") {
+				ssV>>strVal;
+	strCpy(strVal.c_str(), m_modelS);
 				continue;
 			}
-					if (strKey == "netLib") {
-				strCpy(strVal.c_str(), m_netLib);
+				if (strKey == "netLib") {
+				ssV>>strVal;
+	strCpy(strVal.c_str(), m_netLib);
 				continue;
 			}
-					if (strKey == "procId") {
+				if (strKey == "procId") {
 				ssV>>m_procId;
 				continue;
 			}
-					if (strKey == "serializePackLib") {
-				strCpy(strVal.c_str(), m_serializePackLib);
+				if (strKey == "serializePackLib") {
+				ssV>>strVal;
+	strCpy(strVal.c_str(), m_serializePackLib);
 				continue;
 			}
-					if (strKey == "workDir") {
-				strCpy(strVal.c_str(), m_workDir);
+				if (strKey == "workDir") {
+				ssV>>strVal;
+	strCpy(strVal.c_str(), m_workDir);
 				continue;
 			}
 		

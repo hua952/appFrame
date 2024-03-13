@@ -232,7 +232,7 @@ int  configSrcGen:: writeClassCpp ()
 			funOs<<";"<<std::endl
 				<<"}"<<std::endl<<std::endl;
 			std::stringstream& ssVR = ssProcCmdArgS;
-			ssVR<<R"(			if (strKey == ")"<<itemName<<R"(") {
+			ssVR<<R"(		if (strKey == ")"<<itemName<<R"(") {
 				)";
 			if (BigDataType_int == dataType) {
 					std::string strV = "0";
@@ -263,7 +263,10 @@ int  configSrcGen:: writeClassCpp ()
 				ssInit<<memberItemName<<R"( = )"<<strV<<R"(;
 	)";
 			} else {
-				ssVR<<R"(strCpy(strVal.c_str(), )"<<memberItemName<<");";
+
+				ssVR<<R"(ssV>>strVal;
+	strCpy(strVal.c_str(), )"<<memberItemName<<");";
+			
 				std::string strV = "";
 				if (itemValue) {
 					strV = itemValue;
@@ -336,7 +339,6 @@ int  )"<<pClassName<<R"(:: procCmdArgS (int nArg, char** argS)
 			std::stringstream ssK (retS[0]);
 			ssK>>strKey;
 			std::stringstream ssV (retS[1]);
-			ssV>>strVal;
 )"<<ssProcCmdArgS.str()<<R"(
 		}
 	} while (0);

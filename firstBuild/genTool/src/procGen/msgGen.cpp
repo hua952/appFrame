@@ -219,14 +219,16 @@ packetHead* allocPacketExt(udword udwS, udword ExtNum);
 			ofPro<<incOs.str()<<R"(#include ")"<<serializePackFunStName<<R"(.h"
 
 )"<<strSerializeOut.str()<<R"(
-int  getSerializeFunS ()"<<serializePackFunStName<<R"(* pFunS, ForLogicFun* pForLogic)
+int  getSerializeFunS (serializePackFunType* pFunS, int maxNum, ForLogicFun* pForLogic)
 {
 	int nRet = 0;
+	myAssert ((maxNum % 3) == 0);
 	setForMsgModuleFunS (pForLogic);
+	do {
 )";
 	for (auto it = serFunStuOs.begin (); it != serFunStuOs.end (); it++) {
-		ofPro<<R"(	pFunS->)"<<it->strMsgId<<R"( = (serializePackFunType)()"<<it->first<<R"();
-)"<<R"(	pFunS->)"<<it->second.first<<R"( = )";
+		ofPro<<R"(	pFunS[nRet++] = (serializePackFunType)()"<<it->first<<R"();
+)"<<R"(	pFunS[nRet++] = )";
 
 	if (it->nCom == structBadyTime_com ) {
 		ofPro<<"nullptr";
@@ -236,10 +238,14 @@ int  getSerializeFunS ()"<<serializePackFunStName<<R"(* pFunS, ForLogicFun* pFor
 		myAssert (0);
 	}
 	ofPro<<R"(;
-)"<<R"(	pFunS->)"<<it->second.second<<R"( = )"<<it->second.second<<R"(;
+)"<<R"(	pFunS[nRet++] = )"<<it->second.second<<R"(;
+	if (nRet >= maxNum) {
+		break;
+	}
 )";
 	}
-	ofPro<<R"(	return nRet;
+	ofPro<<R"(	} while (0);
+	return nRet;
 })";
 		// } // if
     } while (0);

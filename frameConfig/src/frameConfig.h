@@ -17,6 +17,8 @@ public:
   void  setDetachServerS (ubyte v);
   const char*  endPoint ();
   void  setEndPoint (const char* v);
+  const char*  frameConfigFile ();
+  void  setFrameConfigFile (const char* v);
   const char*  level0 ();
   void  setLevel0 (const char* v);
   const char*  logFile ();
@@ -40,6 +42,7 @@ private:
   bool  m_clearTag;
   ubyte  m_detachServerS;
   std::unique_ptr <char[]>  m_endPoint;
+  std::unique_ptr <char[]>  m_frameConfigFile;
   std::unique_ptr <char[]>  m_level0;
   std::unique_ptr <char[]>  m_logFile;
   word  m_logLevel;

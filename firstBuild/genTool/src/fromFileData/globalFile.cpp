@@ -133,6 +133,7 @@ void  globalFile:: reSetProjectInstallDir ()
 			std::string strH = dirN;
 			strH += "/";
 			strH += nameN;
+			std::string strI = strH;
 			strH += "/";
 			strCpy (strH.c_str(), m_projectHome);
 			/*
@@ -146,8 +147,9 @@ void  globalFile:: reSetProjectInstallDir ()
 			str += "Install";
 			setProjectInstallDir (str.c_str());
 			*/
-			strH += "Install";
-			setProjectInstallDir (strH.c_str());
+			
+			strI += "Install";
+			setProjectInstallDir (strI.c_str());
 		}
     } while (0);
 }

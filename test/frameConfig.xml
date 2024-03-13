@@ -8,8 +8,9 @@
 	<level0 type="string">cppLevel0L</level0>
 	<netLib type="string">libeventSession</netLib>
 	<addLogic type="string">libeventSession</addLogic>
+	<frameConfigFile type="string"></frameConfigFile>
 	<procId type="uword">0</procId>
-	<logLevel type="word">0</logLevel>
+	<logLevel type="word">2</logLevel>
 	<detachServerS type="ubyte">1</detachServerS>
 	<clearTag type="bool">false</clearTag>
 </config>

@@ -12,6 +12,7 @@
 	<app>
 		<gate appNetType="1">
 			<appArg>detachServerS=1</appArg>
+			<appArg>frameConfigFile=gateFrame.txt</appArg>
 			<module>
 				<gateM>
 					<server>
@@ -26,6 +27,7 @@
 		</gate>
 		<server appNetType="2">
 			<appArg>detachServerS=1</appArg>
+			<appArg>frameConfigFile=serverFrame.txt</appArg>
 			<module>
 				<appServerM>
 					<server>
@@ -49,6 +51,7 @@
 		</server>
 		<client>
 			<appArg>detachServerS=1</appArg>
+			<appArg>frameConfigFile=clientFrame.txt</appArg>
 			<module>
 				<appClientM2>
 					<server>

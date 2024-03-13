@@ -326,6 +326,7 @@ static loopHandleType      getCurServerHandle ()
 
 int serverMgr::initFun (int cArg, char** argS)
 {
+	// std::this_thread::sleep_for(std::chrono::microseconds (20000000));
 	int nRet = 0;
 	tSingleton <cArgMgr>::createSingleton ();
 	auto& rArgS = tSingleton<cArgMgr>::single ();
@@ -335,17 +336,26 @@ int serverMgr::initFun (int cArg, char** argS)
 	tSingleton <argConfig>::createSingleton ();
 	auto& rConfig = tSingleton<argConfig>::single ();
 	do {
-		auto nR = rConfig.procCmdArgS (cArg, argS);
+		auto nR = rConfig.procCmdArgS (cArg, argS);   /* 下一步用到参数里的文件名,所以要先解析一遍命令行参数  */
 		if (nR) {
 			nRet = 1;
-			mError("rConfig.procCmdArgS error nR = "<<nR);
 			break;
 		}
+		{
+			auto pWorkDir = rConfig.workDir ();
+			myAssert (pWorkDir);
+			std::string strFile = pWorkDir;
+			auto frameConfig = rConfig.frameConfigFile ();
+			strFile += "/config/";
+			strFile += frameConfig;
+			rConfig.loadConfig (strFile.c_str());
+		}
+		
 		auto logLevel = rConfig.logLevel ();
 		auto pWorkDir = rConfig.workDir ();
 		myAssert (pWorkDir);
 		std::string strFile = pWorkDir;
-		strFile += "/logs";
+		strFile += "/logs/";
 		myMkdir (strFile.c_str());
 		auto pLogFile = rConfig.logFile();
 		strFile += pLogFile;
@@ -356,6 +366,20 @@ int serverMgr::initFun (int cArg, char** argS)
 			break;
 		}
 		rInfo ("Loger init OK");
+
+		nR = rConfig.procCmdArgS (cArg, argS);   /* 再次解析一遍命令行参数, 覆盖配置文件里的项,确保命令行参数的优先级最高  */
+		if (nR) {
+			nRet = 1;
+			mError("rConfig.procCmdArgS error nR = "<<nR);
+			break;
+		}
+
+		nR = rConfig.afterAllArgProc ();
+		if (nR) {
+			nRet = 2;
+			mError("rConfig.afterAllArgProc error nR = "<<nR);
+			break;
+		}
 		auto nInitMidFrame = InitMidFrame(cArg, argS/*, &rMgr*/);
 		auto dumpMsg = rArgS.dumpMsg ();
 		if (dumpMsg) {
@@ -363,7 +387,7 @@ int serverMgr::initFun (int cArg, char** argS)
 			break;
 		}
 		if (0 != nInitMidFrame) {
-			nRet = 1;
+			nRet = 3;
 			rError ("InitMidFrame error nRet =  "<<nInitMidFrame);
 			break;
 		}
@@ -373,9 +397,7 @@ int serverMgr::initFun (int cArg, char** argS)
 		rInfo ("initFun proLoopNum = "<<proLoopNum);
 		if (proLoopNum > 0) {
 			g_ServerNum = proLoopNum;
-			
 			auto detachServerS = rArgS.detachServerS ();
-			
 			if (detachServerS) {
 				for (int i = 0; i < LoopNum; i++ ) {
 					auto p = m_loopS[i].get();//pServerS[i];
@@ -792,7 +814,7 @@ int serverMgr::init(int nArgC, char** argS/*, PhyCallback& info*/)
 
 	int nR = 0;
 	int nRet = 0;
-	rConfig = tSingleton<frameConfig>::single ();
+	auto& rConfig = tSingleton<argConfig>::single ();
 	nR= procArgSMid(nArgC, argS);
 	do
 	{
@@ -802,6 +824,7 @@ int serverMgr::init(int nArgC, char** argS/*, PhyCallback& info*/)
 			break;
 		}
 		auto workDir = rConfig.workDir();
+		std::string strPath;
 		if (workDir) {
 			strPath = workDir;
 		} else {
@@ -809,19 +832,24 @@ int serverMgr::init(int nArgC, char** argS/*, PhyCallback& info*/)
 			getCurModelPath (t);
 			strPath = t.get();
 		}
+		auto serializePackLib = rConfig.serializePackLib ();
 		strPath += "/bin/";
-		strPath += szName;
+		strPath += serializePackLib;
 		strPath += dllExtName();
 		auto hdll = loadDll (strPath.c_str());
 		if (hdll) {
-			typedef int  (*getSerializeFunSFT) (defMsgSerializePackFunS* pFunS, ForLogicFun* pForLogic);
+			typedef int  (*getSerializeFunSFT) (serializePackFunType* pFunS, int nNum, ForLogicFun* pForLogic);
 			auto funGetSerializeFunS = (getSerializeFunSFT)(getFun (hdll, "getSerializeFunS"));
 			if (funGetSerializeFunS) {
-				static defMsgSerializePackFunS   s_FunS;
-				funGetSerializeFunS(&s_FunS, &forLogic);
-				auto serNum = sizeof (s_FunS) / sizeof (pSerializePackFunType3);
+
+				const auto cNum = 512;
+				const auto c_bufNUm = cNum * 3;
+				auto pBuf = std::make_unique<serializePackFunType[]>(c_bufNUm);
+				auto funNum = funGetSerializeFunS(pBuf.get(), c_bufNUm, &forLogic);
+				myAssert (funNum < cNum);
+				auto serNum = funNum / 3;
 				if (serNum) {
-					s_SerFunSet.init ((pSerializePackFunType3*)(&s_FunS), serNum);
+					s_SerFunSet.init ((pSerializePackFunType3*)(pBuf.get()), serNum);
 				}
 				// forLogic.pSerFunSPtr = &s_FunS;
 				forLogic.fromNetPack = sFromNetPack;

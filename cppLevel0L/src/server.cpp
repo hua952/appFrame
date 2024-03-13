@@ -88,7 +88,7 @@ server::netMsgMap&  server::netMsgProcMap()
 
 int server::init(serverNode* pMyNode)
 {
-	int nRet = 1;
+	int nRet = 0;
 	do {
 		if (!pMyNode) {
 			nRet = 1;
@@ -165,7 +165,6 @@ bool server::onFrame()
 		auto pH = &head;
 		m_slistMsgQue.getMsgS(pH);
 		auto n = pH->pNext;
-		// auto& rMgr = tSingleton<serverMgr>::single().getPhyCallback();
 		while (n != pH) {
 			auto d = n;
 			n = n->pNext;
@@ -1146,37 +1145,6 @@ void server::onClose(ISession* session)
 void server::onWritePack(ISession* session, packetHead* pack)
 {
 	freePack (pack); 
-	/*
-	auto pFree = tSingleton<loopMgr>::single().getPhyCallback().fnFreePack;
-	pFree (pack);
-	auto pPushPack = tSingleton<loopMgr>::single().getPhyCallback().fnPushPackToLoop;
-	auto pN = P2NHead (pack);
-	bool bIsRet = NIsRet (pN);
-	do {
-		if (bIsRet) {
-			pFree (pack);
-			break;
-		}
-		
-		auto myHandle = id();
-		loopHandleType myPId;
-		loopHandleType mySId;
-		fromHandle (myHandle, myPId, mySId);
-		loopHandleType sPId;
-		loopHandleType sSId;
-		fromHandle (pN->ubySrcServId, sPId, sSId);
-		if (myPId != sPId) {
-			pFree (pack);
-			break;
-		}
-		if (c_null_msgID == pack->sessionID) {
-			pFree (pack);
-			break;
-		}
-		NSetAskSave(pN);
-		pPushPack (pN->ubySrcServId, pack);
-	} while (0);
-	*/
 }
 
 int server::initMid(const char* szName, ServerIDType id, serverNode* pNode,
@@ -1188,6 +1156,7 @@ int server::initMid(const char* szName, ServerIDType id, serverNode* pNode,
 		if (nR) {
 			nRet = 2;
 			mError ("init return error nR = "<<nR);
+			break;
 		}
 		auto nL = strlen(szName);
 		auto pN = std::make_unique<char[]>(nL + 1);
