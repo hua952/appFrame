@@ -8,8 +8,10 @@ class argConfig:public frameConfig
 public:
 	struct stServer 
 	{
-		std::unique_ptr<char[]>  serverName;
+		// std::unique_ptr<char[]>  serverName;
+		serverIdType	         serverTmpId;
 		serverIdType	         openNum;
+		bool                     autoRun;
 	};
 	struct stModel
 	{
@@ -22,7 +24,10 @@ public:
 	int afterAllArgProc ();
 	stModel* allModelS ();
 	serverIdType  modelNum ();
+	const char*  modelMgrName ();
+	void  setModelMgrName (const char* v);
 private:
+	std::unique_ptr<char[]>  m_modelMgrName;
 	serverIdType  m_modelNum;
 	std::unique_ptr<stModel[]>  m_modelS;
 };

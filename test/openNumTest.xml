@@ -7,10 +7,18 @@
 	<defMsg file="cChess.xml"/>
 	<appArg>serializePackLib=protobufSer</appArg>
 	<app>
-		<openWorkDir appNetType="0">
+		<client appNetType="0">
 			<appArg>detachServerS=1</appArg>
 			<appArg>frameConfigFile=gateFrame.txt</appArg>
-		</openWorkDir>
+			<module>
+				<clientM>
+					<server>
+						<clientConTh autoRun="0" showFps="0">
+						</clientConTh>
+					</server>
+				</clientM>
+			</module>
+		</client>
 	</app>
 </servers>
 

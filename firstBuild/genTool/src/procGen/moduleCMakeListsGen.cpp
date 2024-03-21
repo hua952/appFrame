@@ -102,17 +102,17 @@ if (WIN32)
 	include_directories(
 	src/gen)";
 	auto frameInPath = rGlobalFile.frameInstallPath ();
-	// auto szGenFrame  = rModel.frameFunDir ();
-
+	auto configClassName = rGlobalFile.configClassName ();
 	std::string incPath = rGlobalFile.frameIncPath ();
 	incPath += "/appFrame";
 	os<<szC2<<std::endl
 	<<"    ${CMAKE_SOURCE_DIR}/defMsg/src"<<std::endl
+	<<"	${CMAKE_SOURCE_DIR}/"<<configClassName<<"/src"<<std::endl
 	<<"src/userLogic"<<std::endl
 	<<incPath<<std::endl
 	<<incS.str();
 	auto prjName = rGlobalFile.projectName ();
-	os<<frameInPath<<"include/"<<prjName<<std::endl;
+	// os<<frameInPath<<"include/"<<prjName<<std::endl;
 	
 	// os<<"    "<<szGenFrame<<std::endl;
 	os<<")"<<std::endl;
@@ -124,6 +124,7 @@ if (WIN32)
 	add_library(${prjName} SHARED ${genSrcS} ${defS})
 target_link_libraries(${prjName} PUBLIC
 	common
+	)"<<configClassName<<R"(
 	logicCommon
 	cLog
 )";

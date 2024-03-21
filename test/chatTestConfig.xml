@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<config className="chatTestConfig">
+<config>
 	<workDir type="string">C:/work/appFrameProject/project/chatTestInstall</workDir>
 	<logFile type="string"></logFile>
 	<logicModel type="string"></logicModel>
@@ -10,6 +10,6 @@
 	<addLogic type="string">libeventSession</addLogic>
 	<procId type="uword">0</procId>
 	<logLevel type="word">0</logLevel>
+	<logicConfigFile type="string"></frameConfigFile>
 	<detachServerS type="ubyte">1</detachServerS>
-	<clearTag type="bool">false</clearTag>
 </config>

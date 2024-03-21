@@ -4,6 +4,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include "typeDef.h"
 
 class serverFile;
 class moduleFile
@@ -16,6 +17,7 @@ public:
 	const char*  moduleName ();
 	void  setModuleName (const char* v);
 	serverFile*  findServer (const char* szName);
+	serverFile*  findServerByTmpNum (uword num);
 	serverMap&  serverS ();
 	const char*  appName ();
 	void  setAppName (const char* v);

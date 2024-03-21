@@ -36,7 +36,9 @@ EXPORTS
 	logicOnConnect  @3
 	onLoopBegin		@4
 	onLoopEnd		@5
-	beforeUnload	@6)";
+	beforeUnload	@6
+	onFrameLogic	@7
+	)";
 		os<<szCon;
     } while (0);
     return nRet;

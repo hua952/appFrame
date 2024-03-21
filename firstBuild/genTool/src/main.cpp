@@ -14,6 +14,10 @@
 #include "configMgr.h"
 #include "myAssert.h"
 #include "procGen/globalGen.h"
+#include <sstream>
+#include<filesystem>
+using namespace std;
+using namespace std::filesystem;
 
 int main (int argNum, char* argS[])
 {
@@ -52,6 +56,11 @@ int main (int argNum, char* argS[])
 			rError ("xmlLoad return error nR = "<<nR);
 			nRet = 5;
 			break;
+		}
+		auto projectName = rGlobalFile.projectName ();
+		if (!projectName) {
+			path entry(defFile);
+			rGlobalFile.setProjectName (entry.stem().string().c_str());
 		}
 		auto& rGlobalGen = tSingleton <globalGen>::single ();
 		nR = rGlobalGen.startGen ();

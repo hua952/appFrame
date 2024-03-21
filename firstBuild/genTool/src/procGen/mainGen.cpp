@@ -332,14 +332,17 @@ int main(int cArg, char** argS)
 				auto bDet = rApp.detachServerS ();
 				if (bDet) {
 					auto mainLoopServer = rApp.mainLoopServer();
-					if (!mainLoopServer) {
-						auto& rMS = rApp.moduleFileNameS ();
-						if (!rMS.empty()) {
-							auto pM = tSingleton<moduleFileMgr>::single().findModule (rMS.begin()->c_str());
-							if (!pM) {
-								auto& pO = pM->orderS ();
-								if (!pO.empty()) {
-									mainLoopServer = pO[0]->strHandle();
+					if (bHave ) {
+						myAssert(mainLoopServer);
+						if (!mainLoopServer) {
+							auto& rMS = rApp.moduleFileNameS ();
+							if (!rMS.empty()) {
+								auto pM = tSingleton<moduleFileMgr>::single().findModule (rMS.begin()->c_str());
+								if (!pM) {
+									auto& pO = pM->orderS ();
+									if (!pO.empty()) {
+										mainLoopServer = pO[0]->strHandle();
+									}
 								}
 							}
 						}

@@ -29,6 +29,9 @@ void  logicServer::setServerName (const char* v)
 logicServerMgr::logicServerMgr ()
 {
 	m_pForLogicFun = nullptr;
+	for (decltype (c_serverLevelNum) i = 0; i < c_serverLevelNum; i++) {
+		m_muServerPairS[i].second = 0;
+	}
 }
 
 logicServerMgr::~logicServerMgr ()
@@ -49,12 +52,12 @@ void   logicServerMgr::setServerNum (ubyte ubyNum)
 {
 	m_serverNum = ubyNum;
 }
-
+/*
 logicServer**  logicServerMgr:: serverS ()
 {
 	return m_serverS.get ();
 }
-
+*/
 static int OnFrameCli(void* pArgS)
 {
 	auto pS = (logicServer*)pArgS;
@@ -70,6 +73,7 @@ int  logicServerMgr:: procArgS (int nArgC, char** argS)
 logicServer::logicServer ()
 {
 	m_willExit = false;
+	m_serverId = c_emptyLoopHandle;
 }
 
 int logicServer::onServerInitGen(ForLogicFun* pForLogic)
@@ -115,6 +119,7 @@ int logicServer:: sendPack (packetHead* pack)
 		auto fnGetDefProcServerId =  getForMsgModuleFunS ().fnGetDefProcServerId;
 		auto pN = P2NHead (pack);
 		auto handle = fnGetDefProcServerId (pN->uwMsgID);
+		myAssert (c_emptyLoopHandle != handle);
 		nRet = sendPackToServer (pack, handle);
     } while (0);
     return nRet;
@@ -122,11 +127,12 @@ int logicServer:: sendPack (packetHead* pack)
 
 serverIdType   logicServer:: serverId ()
 {
-    serverIdType   nRet = 0;
-    do {
-		nRet = serverInfo ().handle;
-    } while (0);
-    return nRet;
+	return m_serverId;
+}
+
+void  logicServer:: setServerId (serverIdType nId)
+{
+	m_serverId = nId;
 }
 
 int logicServer:: sendPackToServer (packetHead* pack, loopHandleType handle)
@@ -338,13 +344,17 @@ logicServer*   logicServerMgr:: findServer(serverIdType	fId)
 {
     logicServer*   nRet = nullptr;
     do {
-		for (decltype (m_serverNum) i = 0; i < m_serverNum; i++) {
-			auto sid = m_serverS[i]->serverId();
-			if (sid == fId) {
-				nRet = m_serverS[i];
-				break;
-			}
+		decltype(fId) ubyLv, onceLv, onceIndex;
+		getLvevlFromSerId (fId, ubyLv, onceLv, onceIndex);
+		auto& rBigLv = m_muServerPairS[ubyLv];
+		if (onceLv >= rBigLv.second) {
+			break;
 		}
+		auto& rSA = rBigLv.first[onceLv];
+		if (onceIndex >= rSA.second) {
+			break;
+		}
+		nRet = rSA.first[onceIndex]; 
     } while (0);
     return nRet;
 }
@@ -398,5 +408,10 @@ bool  logicServer:: willExit ()
 void  logicServer:: setWillExit (bool v)
 {
     m_willExit = v;
+}
+
+logicServerMgr::logicMuServerPairS*  logicServerMgr :: logicMuServerPairSPtr ()
+{
+    return m_muServerPairS;
 }
 

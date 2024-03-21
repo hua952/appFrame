@@ -23,6 +23,11 @@
 #define netPackInOnceProc(n) (getProcFromHandle(n->ubySrcServId)==getProcFromHandle(n->ubyDesServId))
 #define packInOnceProc(p) (netPackInOnceProc(P2NHead(p)))
 
+
+#define c_serverLevelNum	4
+extern ServerIDType		c_levelMaxOpenNum[c_serverLevelNum];
+#define c_onceServerLevelNum  (256/c_serverLevelNum)
+
 typedef int (*sendPackToLoopFT)(packetHead*);
 typedef int (*pushPackToLoopFT)(loopHandleType pThis, packetHead*);
 typedef void (*stopLoopSFT)();
@@ -37,21 +42,7 @@ typedef loopHandleType      (*getCurServerHandleFT) ();
 typedef void (*pushToCallStackFT)(loopHandleType pThis, const char* szTxt);
 typedef void (*popFromCallStackFT)(loopHandleType pThis);
 typedef void (*logCallStackFT) (loopHandleType pThis, int nL);
-/*
-typedef struct _PhyCallback
-{
-	// pushPackToLoopFT fnPushPackToLoop; // Thread safety
-	// stopLoopSFT      fnStopLoopS;
-	// allocPackFT		 fnAllocPack; // Thread safety
-	// freePackFT		 fnFreePack; // Thread safety
-	// logMsgFT		 fnLogMsg;// Thread safety
-	nextTokenFT      fnNextToken;
-	// getCurServerHandleFT   fnGetCurServerHandle; // Thread safety
-	// pushToCallStackFT      fnPushToCallStack;
-	// popFromCallStackFT     fnPopFromCallStack;
-	// logCallStackFT         fnLogCallStack;
-} PhyCallback;
-*/
+
 struct  serverNode;
 typedef int (*createLoopFT)(const char* szName, loopHandleType serId, serverNode* pNode, frameFunType funFrame, void* arg);
 typedef  int (*regMsgFT)(loopHandleType serverId, uword uwMsgId, procRpcPacketFunType pFun); // call by level 2
@@ -93,6 +84,7 @@ typedef void (*beforeUnloadFT)();
 typedef void (*logicOnAcceptFT)(serverIdType	fId, SessionIDType sessionId, uqword userData);
 typedef void (*logicOnConnectFT)(serverIdType fId, SessionIDType sessionId, uqword userData);
 typedef void (*onLoopBeginFT)(serverIdType	fId);
+typedef int (*onFrameLagicFT)(serverIdType	fId);
 typedef void (*onLoopEndFT)(serverIdType	fId);
 /*
 typedef struct _ForRegMsg{
@@ -146,7 +138,7 @@ struct serverNode
 extern "C"
 {
 	int InitMidFrame(int nArgC, char** argS/*, PhyCallback* pCallbackS*/); // call by level 0
-	int getAllLoopAndStart(serverNode* pBuff, int nBuffNum); // call by level 0
+	// int getAllLoopAndStart(serverNode* pBuff, int nBuffNum); // call by level 0
 	//void loopStartResult(loopHandleType pLoop, int res, ServerIDType id); // call by level 0
 }
 #endif

@@ -7,6 +7,7 @@
 #include "fromFileData/appFileMgr.h"
 #include "fromFileData/msgFileMgr.h"
 #include "fromFileData/msgFile.h"
+#include "fromFileData/appFile.h"
 #include "fromFileData/moduleFileMgr.h"
 #include "fromFileData/msgPmpFile.h"
 #include "fromFileData/toolServerEndPointInfoMgr.h"
@@ -212,7 +213,7 @@ int  xmlGlobalLoad::xmlLoad (const char* szFile)
 			nRet = 3;
 			break;
 		}
-
+		rGlobal.setXmlDir (dirBuf.get());
 		auto pPmpT = rMsgFileS.find ("defMsg");
 		if (pPmpT == rMsgFileS.end()) {
 			auto pT = std::make_shared <msgPmpFile> ();
@@ -355,6 +356,22 @@ int   xmlGlobalLoad:: onceAppLoad (rapidxml::xml_node<char>* pApp, std::shared_p
 			rError ("moduleSLoad  error nR = "<<nR<<" app name: "<<pName);
 			nRet = 2;
 			break;
+		}
+
+		auto pM = rApp->mainLoopServer ();
+		if (!pM) {
+			auto& rMS = rApp->moduleFileNameS ();
+			if (!rMS.empty()) {
+				auto pM = tSingleton<moduleFileMgr>::single().findModule (rMS.begin()->c_str());
+				if (!pM) {
+					auto& pO = pM->orderS ();
+					if (!pO.empty()) {
+						auto mainLoopServer = pO[0]->strHandle();
+						rApp->setMainLoopServer (mainLoopServer);
+						pO[0]->setAutoRun(false);
+					}
+				}
+			}
 		}
     } while (0);
     return nRet;
@@ -549,7 +566,7 @@ int   xmlGlobalLoad:: serverSLoad (rapidxml::xml_node<char>* pServerS,
 			rS->setRegPackFunName (strFun.c_str ());
 			std::string strFunName = R"(int )";
 			strFunName += strFun;
-			strFunName +=R"( (regMsgFT fnRegMsg))";
+			strFunName +=R"( (regMsgFT fnRegMsg, ServerIDType serId))";
 			rS->setRegPackFunDec (strFunName.c_str ());
 			if (!pRet.second) {
 				rError ("server have then same name in once module name = "<<pS->name ());
@@ -648,12 +665,21 @@ int   xmlGlobalLoad:: onceServerLoad (rapidxml::xml_node<char>* pS,
 		auto szServerName = pS->name ();
 		newServer->setServerName (szServerName);
 		std::string strH = pS->name ();
+		std::string strTmpHandle = pS->name ();
 		strH += "Handle";
 		newServer->setStrHandle (strH.c_str());
+		strTmpHandle += "Tmp";
+		strTmpHandle += "Handle";
+		newServer->setStrTmpHandle (strTmpHandle.c_str());
 		auto pFpsA = pS->first_attribute("fpsSetp");
 		if (pFpsA) {
 			auto dwSetp = atoi (pFpsA->value());
 			newServer->setFpsSetp (dwSetp);
+		}
+		auto pOpenNum = pS->first_attribute("openNum");
+		if (pOpenNum) {
+			auto dwSetp = atoi (pOpenNum->value());
+			newServer->setOpenNum(dwSetp);
 		}
 		auto pArryLen = pS->first_attribute("arryLen");
 		if (pArryLen) {
@@ -726,8 +752,6 @@ int   xmlGlobalLoad:: onceServerLoad (rapidxml::xml_node<char>* pS,
 				strNCpy (endPoint.ip, sizeof (endPoint.ip),
 						"0.0.0.0");
 			}
-			// auto inRet = rEndPointS.insert (std::make_pair(endPoint.endPointName, std::make_pair(newServer.get(), &endPoint)));
-			// myAssert (inRet.second);
 		}
 		if (nRet) {
 			break;
@@ -757,8 +781,6 @@ int   xmlGlobalLoad:: onceServerLoad (rapidxml::xml_node<char>* pS,
 				strNCpy (endPoint.ip, sizeof (endPoint.ip),
 						"127.0.0.1");
 			}
-			// auto inRet = rEndPointS.insert (std::make_pair(endPoint.endPointName, std::make_pair(newServer.get(), &endPoint)));
-			// myAssert (inRet.second);
 		} if (rInfo.connectorNum) {
 			if (1 == rInfo.connectorNum) {
 				auto& rEP = rInfo.connectEndpoint [0];
@@ -829,6 +851,9 @@ int   xmlGlobalLoad:: onceServerLoad (rapidxml::xml_node<char>* pS,
 					auto pHandle = newServer->strHandle ();
 					myAssert (pHandle);
 					pMsg->setDefProServerId (pHandle);
+					auto pTmpHandle = newServer->strTmpHandle();
+					myAssert (pTmpHandle);
+					pMsg->setDefProServerTmpId (pTmpHandle);
 				}
 			}
 		}

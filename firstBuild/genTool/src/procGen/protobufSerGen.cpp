@@ -103,7 +103,9 @@ int   protobufSerGen:: defFileGen ()
 		}
 		const char* szCon = R"(LIBRARY
 EXPORTS
-	getSerializeFunS @1)";
+	getSerializeFunS @1
+	getMsgPairS @2)";
+
 		os<<szCon;
     } while (0);
     return nRet;

@@ -1,5 +1,6 @@
 #include "moduleFile.h"
 #include "strFun.h"
+#include "serverFile.h"
 
 moduleFile:: moduleFile ()
 {
@@ -42,6 +43,22 @@ serverFile*   moduleFile:: findServer (const char* szName)
 		auto it = rSS.find (szName);
 		if (rSS.end () != it) {
 			nRet = it->second.get ();
+		}
+    } while (0);
+    return nRet;
+}
+
+serverFile*   moduleFile:: findServerByTmpNum (uword num)
+{
+    serverFile*   nRet = 0;
+    do {
+		auto& rSS = serverS ();
+		for (auto it = rSS.begin (); it != rSS.end (); it++) {
+			auto p = it->second.get ();
+			if (p->tmpNum () == num) {
+				nRet = it->second.get ();
+				break;
+			}
 		}
     } while (0);
     return nRet;

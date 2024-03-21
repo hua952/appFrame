@@ -2,6 +2,7 @@
 <servers>
 	<projectDir>C:/work/appFrameProject/project</projectDir>
 	<projectName>chatTest</projectName>
+	<configDef>chatTestConfig.xml<configDef/>
 	<thirdPartyDir>C:/work/</thirdPartyDir>
 	<frameInstallPath>C:/work/appFrameInstall/</frameInstallPath>
 	<defMsg file="cChess.xml"/>

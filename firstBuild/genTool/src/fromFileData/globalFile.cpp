@@ -121,6 +121,9 @@ void  globalFile:: setProjectName (const char* v)
 {
     strCpy (v, m_projectName);
 	reSetProjectInstallDir ();
+	std::string strConfig = v;
+	strConfig += "Config";
+	setConfigClassName (strConfig.c_str());
 }
 
 void  globalFile:: reSetProjectInstallDir ()
@@ -305,5 +308,25 @@ void  globalFile:: setProjectDir (const char* v)
 globalFile::argV&  globalFile:: argS ()
 {
     return m_argS;
+}
+
+const char*  globalFile:: configClassName ()
+{
+    return m_configClassName.get ();
+}
+
+void  globalFile:: setConfigClassName (const char* v)
+{
+    strCpy (v, m_configClassName);
+}
+
+const char*  globalFile:: xmlDir ()
+{
+    return m_xmlDir.get ();
+}
+
+void  globalFile:: setXmlDir (const char* v)
+{
+    strCpy (v, m_xmlDir);
 }
 

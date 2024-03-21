@@ -19,7 +19,6 @@ public:
 	const char*  depLibHome ();
 	const char*  depIncludeHome ();
 	const char*  projectHome ();
-	// void  setProjectHome (const char* v);
     const char*  frameLibPath ();
     const char*  frameIncPath ();
 	msgFileV&  msgFileS ();
@@ -27,7 +26,6 @@ public:
 	void  setProjectName (const char* v);
     const char*  frameInstallPath ();
     void  setFrameInstallPath (const char* v);
-    // void  getRealInstallPath (std::string& strPath);
 	msgPmpFile* findMsgPmp (const char* szPmpName);
 	std::vector<std::string>&  rootServerS ();
 	bool haveServer (); 
@@ -45,8 +43,13 @@ public:
 	const char*  projectDir ();
 	void  setProjectDir (const char* v);
 	argV&  argS ();
+	const char*  configClassName ();
+	void  setConfigClassName (const char* v);
+	const char*  xmlDir ();
+	void  setXmlDir (const char* v);
 private:
-	argV  m_argS;
+	std::unique_ptr <char[]>  m_xmlDir;
+	std::unique_ptr <char[]>  m_configClassName;
 	std::unique_ptr <char[]>  m_projectDir;
 	std::unique_ptr <char[]>  m_configFile;
 	std::unique_ptr <char[]>  m_configDef;
@@ -66,5 +69,6 @@ private:
 	msgFileV  m_msgFileS;
 	std::vector<std::string>  m_rootServerS;
 	void reSetProjectInstallDir ();
+	argV  m_argS;
 };
 #endif

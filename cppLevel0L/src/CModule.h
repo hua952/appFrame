@@ -21,7 +21,9 @@ public:
 	afterLoadFunT  fnAfterLoad ();
 	onLoopBeginFT  fnOnLoopBegin ();
 	onLoopEndFT    fnOnLoopEnd ();
+	onFrameLagicFT  fnOnFrameLogic ();
 private:
+	onFrameLagicFT  m_fnOnFrameLogic;
 	onLoopEndFT  m_fnOnLoopEnd;
 	onLoopBeginFT  m_fnOnLoopBegin;
 	afterLoadFunT  m_fnAfterLoad;

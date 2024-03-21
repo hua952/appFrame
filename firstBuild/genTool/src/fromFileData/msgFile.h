@@ -34,7 +34,10 @@ public:
 	void  setSerFunStuToName (const char* v);
 	const char*  msgFullName ();
 	void  setMsgFullName (const char* v);
+	const char*  defProServerTmpId ();
+	void  setDefProServerTmpId (const char* v);
 private:
+	std::unique_ptr <char[]>  m_defProServerTmpId;
 	std::unique_ptr <char[]>  m_msgFullName;
 	std::unique_ptr <char[]>  m_serFunStuToName;
 	std::unique_ptr <char[]>  m_serFunStuFromName;

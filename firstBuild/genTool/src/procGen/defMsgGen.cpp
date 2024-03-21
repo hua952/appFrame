@@ -53,9 +53,11 @@ int defMsgGen::loopHandleSGen ()
 		auto& rAppS = tSingleton<appFileMgr>::single ().appS ();
 		auto& rModMgr = tSingleton<moduleFileMgr>::single ();
 		int ip = 0;
+		std::stringstream ssTem;
 		std::stringstream sss;
 		sss<<R"(static serverIdType s_allSer[] = {)";
 		bool sssFirst = true;
+		// const auto onceLevelNum = 256 / c_serverLevelNum;
 		for (auto it = rAppS.begin (); rAppS.end () != it; ++it) {
 			auto& rApp = *(it->second.get ());
 			int is = ip++ * LoopNum;
@@ -63,21 +65,25 @@ int defMsgGen::loopHandleSGen ()
 			auto& rModNameS = rApp.moduleFileNameS ();
 			int mutI = 0;
 			int sinI = 0;
+			int lvI[c_serverLevelNum];
+			for (int i = 0; i < c_serverLevelNum; i++) {
+				lvI[i] = 0;
+			}
 			for (auto ite = rModNameS.begin ();
 					rModNameS.end () != ite; ++ite) {
 				auto& rMName = *ite;
 				auto pMod = rModMgr.findModule (rMName.c_str ());
 				myAssert (pMod);
-
-				// auto& rSS = pMod->serverS ();
 				auto& rSS = pMod->orderS ();
-
+				auto tmpId = 0;
 				for (auto iter = rSS.begin ();
 						rSS.end () != iter; ++iter) {
 					auto pServer = iter->get (); // iter->second.get ();
 					auto pSName = pServer->strHandle ();
+					auto pTmpHandle = pServer->strTmpHandle ();
 					auto arryLen = pServer->arryLen ();
-					auto serId = 0;
+					/*
+					auto serId = c_levelMaxOpenNum [nLevel] * lvI[nLevel]++;
 					if (arryLen > 1) {
 						myAssert(mutI < c_maxMutServerNum);
 						serId = mutI * c_onceMutServerNum;
@@ -87,14 +93,30 @@ int defMsgGen::loopHandleSGen ()
 						serId = c_sinServerIdBegin  + sinI;
 						sinI++;
 					}
+					*/
+					auto openNum = pServer->openNum ();
+					serverIdType nLevel = 0xffff;
+					for (serverIdType i = 0; i < c_serverLevelNum; i++) {
+						if (openNum <= c_levelMaxOpenNum[i]) {
+							nLevel = i;
+							break;
+						}
+					}
+					myAssert (nLevel < c_serverLevelNum);
+
+					auto serId = nLevel * c_onceServerLevelNum + c_levelMaxOpenNum [nLevel] * lvI[nLevel]++;
 					serId += is;
+					decltype (nLevel) tmpNum = serId;
+					pServer->setTmpNum (tmpNum);
 					os<<R"(#define  )"<<pSName<<"  "<<serId<<std::endl;
+					ssTem<<R"(#define  )"<<pTmpHandle<<" "<<serId<<std::endl;
 					if (sssFirst) {
 						sssFirst = false;
 					} else {
 						sss<<",";
 					}
 					sss<<pSName;
+					tmpId++;
 				}
 			}
 		}
@@ -114,10 +136,12 @@ int defMsgGen::loopHandleSGen ()
 			os<<"};"<<std::endl;
 		}
 		os<<sss.str()<<std::endl;
+		os<<ssTem.str()<<std::endl;
 		os<<R"(#endif)";
 	} while (0);
     return nRet;
 }
+
 int  defMsgGen:: startGen ()
 {
     int  nRet = 0;
@@ -135,7 +159,6 @@ int  defMsgGen:: startGen ()
 			nRet = 1;
 			break;
 		}
-		
 		nR = loopHandleSGen ();
 		if (nR) {
 			nRet = 7;

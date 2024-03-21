@@ -160,3 +160,13 @@ void  msgFile:: setMsgFullName (const char* v)
     strCpy (v, m_msgFullName);
 }
 
+const char*  msgFile:: defProServerTmpId ()
+{
+    return m_defProServerTmpId.get ();
+}
+
+void  msgFile:: setDefProServerTmpId (const char* v)
+{
+    strCpy (v, m_defProServerTmpId);
+}
+

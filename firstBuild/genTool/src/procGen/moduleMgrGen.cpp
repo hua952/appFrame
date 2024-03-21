@@ -196,7 +196,9 @@ EXPORTS
 	logicOnConnect  @3
 	onLoopBegin		@4
 	onLoopEnd		@5
-	beforeUnload	@6)";
+	beforeUnload	@6
+	onFrameLogic	@7
+	)";
     } while (0);
     return nRet;
 }
@@ -224,6 +226,7 @@ extern "C"
 
 	void onLoopBegin	(serverIdType	fId);
 	void onLoopEnd	(serverIdType	fId);
+	int onFrameLogic	(serverIdType	fId);
 	void logicOnAccept(serverIdType	fId, SessionIDType sessionId, uqword userData);
 	void logicOnConnect(serverIdType fId, SessionIDType sessionId, uqword userData);
 }
@@ -272,25 +275,31 @@ dword afterLoad(int nArgC, char** argS, ForLogicFun* pForLogic)
 void logicOnAccept(serverIdType	fId, SessionIDType sessionId, uqword userData)
 {
 	auto &rMgr = tSingleton<allLogicServerMgr>::single();
-	return rMgr.logicOnAccept(fId, sessionId, userData);
+	rMgr.logicOnAccept(fId, sessionId, userData);
+}
+
+int onFrameLogic	(serverIdType	fId)
+{
+	auto &rMgr = tSingleton<allLogicServerMgr>::single();
+	return rMgr.onFrameLogic(fId);
 }
 
 void logicOnConnect(serverIdType fId, SessionIDType sessionId, uqword userData)
 {
 	auto &rMgr = tSingleton<allLogicServerMgr>::single();
-	return rMgr.logicOnConnect(fId, sessionId, userData);
+	rMgr.logicOnConnect(fId, sessionId, userData);
 }
 
 void onLoopBegin	(serverIdType	fId)
 {
 	auto &rMgr = tSingleton<allLogicServerMgr>::single();
-	return rMgr.onLoopBegin	(fId);
+	rMgr.onLoopBegin	(fId);
 }
 
 void onLoopEnd	(serverIdType	fId)
 {
 	auto &rMgr = tSingleton<allLogicServerMgr>::single();
-	return rMgr.onLoopEnd(fId);
+	rMgr.onLoopEnd(fId);
 }
 
 void  beforeUnload()
@@ -342,6 +351,7 @@ public:
 		logicOnConnectFT  fnLogicOnConnect;
 		beforeUnloadFT fnBeforeUnload;
 		onLoopBeginFT  fnOnLoopBegin;
+		onFrameLagicFT  fnOnFrameLagic;
 		onLoopEndFT  fnOnLoopEnd;
 	};
 	using moduleMap = std::map<std::string, moduleInfo>;
@@ -349,7 +359,7 @@ public:
 	moduleMap&  moduleS ();
 	void logicOnAccept(serverIdType	fId, SessionIDType sessionId, uqword userData);
 	void logicOnConnect(serverIdType fId, SessionIDType sessionId, uqword userData);
-
+	int onFrameLogic	(serverIdType	fId);
 	void onLoopBegin	(serverIdType	fId);
 	void onLoopEnd	(serverIdType	fId);
 private:
@@ -560,6 +570,21 @@ void allLogicServerMgr::logicOnConnect(serverIdType fId, SessionIDType sessionId
 	}
 }
 
+int allLogicServerMgr::onFrameLogic (serverIdType	fId)
+{
+
+	int nRet = procPacketFunRetType_del;
+	auto& modS = moduleS ();
+	for (auto it = modS.begin(); modS.end() != it; ++it) {
+		auto nR = it->second.fnOnFrameLagic(fId);
+		if (procPacketFunRetType_exitNow & nR) {
+			nRet = nR;
+			break;
+		}
+	}
+	return nRet;
+}
+
 void allLogicServerMgr::onLoopBegin	(serverIdType	fId)
 {
 	auto& modS = moduleS ();
@@ -586,7 +611,7 @@ dword allLogicServerMgr::afterLoad(int nArgC, char** argS, ForLogicFun* pForLogi
 	// rFunS = *pForLogic;
 )";
 	if (bH) {
-		os<<R"(regRpcS (pForLogic);
+		os<<R"(// regRpcS (pForLogic);
 )";
 	}
 os<<R"(
@@ -664,10 +689,16 @@ os<<R"(
 				nRet = 7;
 				break;
 			}
+			info.fnOnFrameLagic = (onFrameLagicFT)(getFun(info.handle, "onFrameLagic"));
+			if (!info.fnOnFrameLagic) {
+				gWarn ("fun onFrameLagic empty error is");
+				nRet = 8;
+				break;
+			}
 			info.fnOnLoopEnd = (onLoopEndFT)(getFun(info.handle, "onLoopEnd"));
 			if (!info.fnOnLoopEnd) {
 				gWarn ("fun onLoopEnd empty error is");
-				nRet = 8;
+				nRet = 9;
 				break;
 			}
 			gInfo ("befor call onLoad");

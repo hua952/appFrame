@@ -85,6 +85,8 @@ typedef  bool (*ComTimerFun)(void*);
 
 loopHandleType  toHandle (loopHandleType  p, loopHandleType l);
 bool            fromHandle (loopHandleType handle, loopHandleType &p, loopHandleType& l);
+void getLvevlFromSerId (loopHandleType	serId, loopHandleType& level, loopHandleType& onceLv, loopHandleType& onceIndex);
+
 bool            isPathExit (const char* szPath);
 int             myMkdir (const char* szPath);
 int             getCurModelPath (std::unique_ptr<char[]>& pathBuf);

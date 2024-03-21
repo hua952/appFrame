@@ -32,6 +32,7 @@ bool  cmpProcRpcNode::operator () (const procRpcNode& a, const procRpcNode& b) c
 serverFile:: serverFile ()
 {
 	m_arryLen = 1;
+	m_openNum = 1;
 	m_sleepSetp=10;
 	m_fpsSetp=0;
 	m_autoRun = true;
@@ -279,5 +280,35 @@ uword  serverFile:: arryLen ()
 void  serverFile:: setArryLen (uword v)
 {
     m_arryLen = v;
+}
+
+const char*  serverFile:: strTmpHandle ()
+{
+    return m_strTmpHandle.get ();
+}
+
+void  serverFile:: setStrTmpHandle (const char* v)
+{
+    strCpy (v, m_strTmpHandle);
+}
+
+uword  serverFile:: openNum ()
+{
+    return m_openNum;
+}
+
+void  serverFile:: setOpenNum (uword v)
+{
+    m_openNum = v;
+}
+
+uword  serverFile:: tmpNum ()
+{
+    return m_tmpNum;
+}
+
+void  serverFile:: setTmpNum (uword v)
+{
+    m_tmpNum = v;
 }
 

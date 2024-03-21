@@ -13,6 +13,8 @@
 #include "moduleGen.h"
 #include "moduleMgrGen.h"
 #include "mainGen.h"
+#include "fromFileData/moduleFile.h"
+#include "fromFileData/serverFile.h"
 
 appGen:: appGen ()
 {
@@ -96,11 +98,9 @@ int  appGen:: batFileGen (appFile& rApp)
 {
     int  nRet = 0;
     do {
-		// bin\Debug\cppLevel0.exe level0=cppLevel0L.dll addLogic=logicModelMgr.dll logicModel=testLogic.dll logicModel=testLogicB.dll procId=0 netLib=libeventSession.dll
 		auto szAppName = rApp.appName ();
 		auto& rGlobalFile = tSingleton<globalFile>::single ();
 		std::string strInsHome = rGlobalFile.projectInstallDir ();
-		// rGlobalFile.getRealInstallPath (strInsHome);
 		std::string strInstall = strInsHome;
 		myMkdir (strInstall.c_str ());
 		strInstall += "/run_";
@@ -120,7 +120,8 @@ int  appGen:: batFileGen (appFile& rApp)
 		if (rMap.size () > 1) {
 			rMainArgS.push_back("netLib=libeventSession");
 		}
-		{
+		auto haveServer = rGlobalFile.haveServer ();
+		if (haveServer) {
 			std::stringstream ts;
 			ts<<"procId="<<procId;
 			rMainArgS.push_back(ts.str());
@@ -128,7 +129,7 @@ int  appGen:: batFileGen (appFile& rApp)
 		{
 			std::stringstream ts;
 			ts<<"addLogic="<<szAppName<<"ModuleMgr";
-			rMainArgS.push_back(ts.str());
+			// rMainArgS.push_back(ts.str());
 		}
 		{
 			std::stringstream ts;
@@ -148,19 +149,34 @@ int  appGen:: batFileGen (appFile& rApp)
 		os<<"cppLevel0.exe ";
 		os<<strLogFull<<" "<<frameHomeFull;
 		rMainArgS.push_back(frameHomeFull);
-		
+	/*	
 		os<<" addLogic="
 			<<szAppName<<"ModuleMgr procId="<<procId
 			<<" logFile="<<strLogFile
 			<<" workDir="<<strInsHome;
+			*/
+		os<<"procId="<<procId
+			<<" logFile="<<strLogFile
+			<<" workDir="<<strInsHome;
+		std::stringstream ssModelS;
+		ssModelS<<"modelS="<<szAppName<<"ModuleMgr";
 		auto& rModules = rApp.moduleFileNameS ();
 		auto& rModMgr = tSingleton <moduleFileMgr>::single ();
 		for (auto it = rModules.begin (); rModules.end () != it; ++it) {
 			std::stringstream ts;
 			ts<<" logicModel="<<*it;
 			os<<ts.str();
-			rMainArgS.push_back(ts.str());
+			ssModelS<<"*"<<*it;
+			auto pM = rModMgr.findModule (it->c_str());
+			myAssert (pM);
+			auto& rSS = pM->orderS ();
+			for (auto ite = rSS.begin (); ite != rSS.end (); ite++) {
+				auto& pS = *ite;
+				ssModelS<<"+"<<pS->tmpNum ()<<"-"<<pS->openNum ()<<"-"<<pS->autoRun ()?1:0;
+			}
+			// rMainArgS.push_back(ts.str());
 		}
+		rMainArgS.push_back(ssModelS.str());
 		auto& rV = rApp.argS ();
 		for (auto it = rV.begin(); rV.end() != it; ++it) {
 			os<<" "<<*it;

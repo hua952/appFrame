@@ -105,3 +105,15 @@ bool  upDir (char* szPath)
 	}
 	return bRet;
 }
+
+extern serverIdType  c_levelMaxOpenNum[] = {1, 8, 16, 64};
+
+void getLvevlFromSerId (loopHandleType	serId, loopHandleType& level, loopHandleType& onceLv, loopHandleType& onceIndex)
+{
+	auto ubySerTmp = (ubyte)(serId);
+	level = ubySerTmp/c_onceServerLevelNum;
+	auto ubyOnce = ubySerTmp%c_onceServerLevelNum;
+	onceLv = ubyOnce/c_levelMaxOpenNum[level];
+	onceIndex = ubyOnce%c_levelMaxOpenNum[level];
+}
+

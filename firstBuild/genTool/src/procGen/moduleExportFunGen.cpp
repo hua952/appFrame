@@ -56,6 +56,7 @@ extern "C"
 {
 	dword afterLoad(int nArgC, char** argS, ForLogicFun* pForLogic);
 	void onLoopBegin	(serverIdType	fId);
+	int onFrameLogic	(serverIdType	fId);
 	void onLoopEnd	(serverIdType	fId);
 	void logicOnAccept(serverIdType	fId, SessionIDType sessionId, uqword userData);
 	void logicOnConnect(serverIdType fId, SessionIDType sessionId, uqword userData);
@@ -123,6 +124,21 @@ void onLoopBegin	(serverIdType	fId)
 	if (pS) {
 		pS->onLoopBegin	();
 	}
+}
+
+int onFrameLogic	(serverIdType	fId)
+{
+	int nRet = procPacketFunRetType_del;
+	auto &rMgr = tSingleton<)"<<strMgrClassName<<R"(>::single();
+	auto pS = rMgr.findServer(fId);
+	if (pS) {
+		if (pS->willExit()) {
+			nRet = procPacketFunRetType_exitNow;
+		} else {
+			nRet = pS->onFrameFun();
+		}
+	}
+	return nRet;
 }
 
 void onLoopEnd	(serverIdType	fId)

@@ -26,6 +26,7 @@ public:
     serverNode&   serverInfo ();
 	const char*   serverName ();
 	serverIdType  serverId ();
+	void          setServerId (serverIdType nId);
 	channelMap&  channelS ();
 	void          setServerName (const char* v);
 	virtual int onFrameFun ();
@@ -58,6 +59,7 @@ public:
 	void  setWillExit (bool v);
 	int   createChannel (channelKey& rCh, serverIdType srcSer, SessionIDType seId);
 private:
+	serverIdType  m_serverId;
 	bool  m_willExit;
 	exitHandleSet  m_exitHandleS;
 	channelSendMap  m_channelSendS;
@@ -68,6 +70,8 @@ private:
 class logicServerMgr
 {
 public:
+	using  logicServerPair = std::pair<std::unique_ptr< logicServer* []>, loopHandleType>;
+	using  logicMuServerPairS = std::pair<std::unique_ptr<logicServerPair []>, loopHandleType>;
     logicServerMgr ();
     ~logicServerMgr ();
 	virtual dword afterLoad(int nArgC, char** argS, ForLogicFun* pForLogic);
@@ -75,12 +79,15 @@ public:
 	ubyte  serverNum ();
 	void   setServerNum (ubyte ubyNum);
 	logicServer*  findServer(serverIdType	serverId);
-	logicServer**   serverS ();
+	// logicServer**   serverS ();
 
 	ForLogicFun&     forLogicFunSt ();
+	logicMuServerPairS*  logicMuServerPairSPtr ();
 protected:
+	logicMuServerPairS m_muServerPairS[c_serverLevelNum];
+	std::unique_ptr<char[]>    m_modelName;
 	ForLogicFun*     m_pForLogicFun;
 	ubyte  m_serverNum;
-	std::unique_ptr <logicServer* []>  m_serverS;
+	// std::unique_ptr <logicServer* []>  m_serverS;
 };
 #endif

@@ -4,6 +4,9 @@
 #include <set>
 #include <string>
 #include "myAssert.h"
+#include "mainLoop.h"
+#include "serverMgr.h"
+#include "tSingleton.h"
 
 argConfig:: argConfig ()
 {
@@ -18,7 +21,7 @@ int  argConfig:: afterAllArgProc ()
 {
     int  nRet = 0;
 	do {
-		using tempServerS = std::map<std::string, serverIdType>;
+		using tempServerS = std::map<serverIdType, std::pair<serverIdType, bool>>;
 		std::map<std::string, tempServerS> modMap;
 		auto szModelS = modelS ();
 		std::unique_ptr<char[]> buf;
@@ -33,7 +36,11 @@ int  argConfig:: afterAllArgProc ()
 			nRet = 1;
 			break;
 		}
-		for (decltype (nR) i = 0; i < nR; i++) {
+		myAssert (nR);
+		if (nR) {
+			setModelMgrName (pRetS[0]);
+		}
+		for (decltype (nR) i = 1; i < nR; i++) {
 			auto c_retSerMaxNum = 64;
 			auto retSerS = std::make_unique<char* []>(c_retSerMaxNum);
 			auto pRetSerS = retSerS.get();
@@ -65,15 +72,21 @@ int  argConfig:: afterAllArgProc ()
 					nRet = 4;
 					break;
 				}
-
-				auto insRet = serverS.insert(std::make_pair(retArgS[0], 1));
+				auto thTmpId = (ubyte)(atoi(retArgS[0]));
+				auto nLevel = thTmpId / c_onceServerLevelNum;
+				ServerIDType openNum = 1;
+				bool autoRun = true;
+				if (nRArgS > 1) {
+					openNum  = (decltype (thTmpId)) (atoi(retArgS[1]));
+				} else if (nRArgS > 2) {
+					autoRun = atoi(retArgS[2]);
+				}
+				myAssert (openNum <= c_levelMaxOpenNum[nLevel]);
+				auto insRet = serverS.insert(std::make_pair((serverIdType)(atoi(retArgS[0])), std::make_pair(openNum, autoRun)));
 				myAssert (insRet.second);
 				if (!insRet.second) {
 					nRet = 5;
 					break;
-				}
-				if (nRArgS > 1) {
-					insRet.first->second = (decltype (insRet.first->second)) (atoi(retArgS[1]));
 				}
 			}
 			if (nRet) {
@@ -83,9 +96,9 @@ int  argConfig:: afterAllArgProc ()
 		if (nRet) {
 			break;
 		}
-		m_modelNum = (decltype(m_modelNum))(modMap.size());
-		m_modelS = std::make_unique<stModel []>(m_modelNum);
-		decltype(m_modelNum) cur = 0;
+		auto& rMgr = tSingleton<serverMgr>::single ();
+		auto muServerPairS = rMgr.muServerPairSPtr ();
+		auto cur = 0;
 		for (auto it = modMap.begin (); it != modMap.end (); it++) {
 			auto& rMod = m_modelS[cur++];
 			strCpy (it->first.c_str(), rMod.modelName);
@@ -95,8 +108,9 @@ int  argConfig:: afterAllArgProc ()
 			decltype(rMod.serverTemNum) n = 0;
 			for (auto ite = rServerS.begin (); ite != rServerS.end (); ite++) {
 				auto& rS = rMod.serverS[n++];
-				strCpy(ite->first.c_str(), rS.serverName);
-				rS.openNum = ite->second;
+				rS.serverTmpId = ite->first;
+				rS.openNum = ite->second.first;
+				rS.autoRun = ite->second.second;
 			}
 		}
     } while (0);
@@ -111,5 +125,15 @@ argConfig::stModel*  argConfig:: allModelS ()
 serverIdType   argConfig:: modelNum ()
 {
     return m_modelNum;
+}
+
+const char*  argConfig:: modelMgrName ()
+{
+    return m_modelMgrName.get ();
+}
+
+void  argConfig:: setModelMgrName (const char* v)
+{
+    strCpy (v, m_modelMgrName);
 }
 

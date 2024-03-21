@@ -85,12 +85,21 @@ public:
 	void  setRegRoute (bool v);
 	uword  arryLen ();
 	void  setArryLen (uword v);
+	const char*  strTmpHandle ();
+	void  setStrTmpHandle (const char* v);
+	uword  openNum ();
+	void  setOpenNum (uword v);
+	uword  tmpNum ();
+	void  setTmpNum (uword v);
 private:
+	uword  m_tmpNum;
+	uword  m_openNum;
 	uword  m_arryLen;
 	bool  m_regRoute;
 	bool  m_rearEnd;
 	bool  m_autoRun;
 	std::unique_ptr <char[]>  m_frameFunDec;
+	std::unique_ptr <char[]>  m_strTmpHandle;
 	std::unique_ptr <char[]>  m_frameFunName;
 	std::unique_ptr <char[]>  m_initFunName;
 	std::unique_ptr <char[]>  m_initFunDec;

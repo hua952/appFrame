@@ -319,9 +319,21 @@ int onMidLoopEnd(loopHandleType pThis)
 int onLoopFrame(loopHandleType pThis)
 {
 	// auto& rMgr = tSingleton<loopMgr>::single();
+	int nRet = procPacketFunRetType_del;
 	auto& rMgr = tSingleton<serverMgr>::single();
+	auto& rMod = rMgr.ModuleMgr ();
+	auto fn = rMod.fnOnFrameLogic ();
+	int logicRet = procPacketFunRetType_del;
+	if (fn) {
+		logicRet = fn (pThis);
+	}
 	auto pTH = rMgr.getLoop (pThis);
-	auto nRet = pTH->onLoopFrame();
+	auto frameRet = pTH->onLoopFrame();
+	if (procPacketFunRetType_exitNow & logicRet || procPacketFunRetType_exitNow & frameRet ) {
+		nRet = procPacketFunRetType_exitNow;
+	} else if (procPacketFunRetType_exitAfterLoop & logicRet || procPacketFunRetType_exitAfterLoop & frameRet ) {
+		nRet =procPacketFunRetType_exitAfterLoop;
+	}
 	return nRet;
 }
 
@@ -1287,14 +1299,16 @@ int server:: onLoopEnd()
 int server::onLoopFrame()
 {
 	int nRet = 0;
-	m_timerMgr.onFrame ();
+	// m_timerMgr.onFrame ();
 	do {
+		/*
 	if (m_funOnFrame) {
 		nRet = m_funOnFrame(m_pArg);
 		if (procPacketFunRetType_exitNow == nRet || procPacketFunRetType_exitAfterLoop == nRet) {
 			break;
 		}
 	}
+	*/
 	auto pNet = tcpServer ();
 	if (pNet) {
 		pNet->onLoopFrame ();

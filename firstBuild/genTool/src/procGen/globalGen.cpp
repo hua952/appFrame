@@ -43,14 +43,13 @@ int   globalGen:: startGen ()
 		nR = 0;
 		auto &rGlobal = tSingleton<globalFile>::single();
 		auto bH = rGlobal.haveServer ();
-		
 		std::vector <std::shared_ptr<msgGen>> gv;
 		if (bH) {
 			protobufSerGen  protoGen;
 			nR = protoGen.startGen ();
 			if (nR) {
 				rError ("projectGen.startGen error nR = "<<nR);
-				nRet = 3;
+				nRet = 4;
 				break;
 			}
 			auto &rPmpS = rGlobal.msgFileS ();
@@ -65,7 +64,7 @@ int   globalGen:: startGen ()
 				}
 			}
 			if (nR) {
-				nRet = 4;
+				nRet = 5;
 				rError ("msg gen error nRet = "<<nR);
 				break;
 			}
@@ -73,7 +72,7 @@ int   globalGen:: startGen ()
 			nR = msgGenD.startGen ();
 			if (nR) {
 				rError ("defMsg gen error nR = "<<nR);
-				nRet = 5;
+				nRet = 6;
 				break;
 			}
 		}
@@ -86,7 +85,7 @@ int   globalGen:: startGen ()
 			// rInfo ("will proc app: "<<it->second->appName ());
 			nR = gen.startGen (rApp);
 			if (nR) {
-				nRet = 2;
+				nRet = 7;
 				rError ("appGen error nR = "<<nR<<" appName = "<<it->first.c_str());
 				break;
 			}
@@ -116,15 +115,17 @@ int   globalGen:: configLibGen ()
     do {
 		auto& rGlobalFile = tSingleton<globalFile>::single ();
 		auto configDef = rGlobalFile.configDef ();
+		std::string strFile = rGlobalFile.xmlDir ();
+		strFile += "/";
 		std::stringstream cmdOs;
 		cmdOs<<"configFile ";
 		if (configDef) {
-			cmdOs<<"file="<<configDef<<" ";
+			strFile += configDef;
+			cmdOs<<"file="<<strFile<<" ";
 		}
 		auto projectDir = rGlobalFile.projectHome ();
-		auto projectName = rGlobalFile.projectName ();
-		std::string strPrjConfig = projectName;
-		strPrjConfig += "Config";
+		// auto projectName = rGlobalFile.projectName ();
+		auto  strPrjConfig = rGlobalFile.configClassName ();
 		cmdOs<<"projectDir="<<projectDir<<" projectName="<<strPrjConfig<<" className="<<strPrjConfig;
 		system (cmdOs.str().c_str());
     } while (0);

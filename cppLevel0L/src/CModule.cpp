@@ -100,9 +100,15 @@ int CModule::load(int nArgC, char** argS, ForLogicFun* pForLogic)
 			nRet = 6;
 			break;
 		}
+		m_fnOnFrameLogic = (onFrameLagicFT)(getFun(hdll, "onFrameLogic"));
+		if (!m_fnOnFrameLogic) {
+			mWarn ("fun onLoopBegin empty error is");
+			nRet = 6;
+			break;
+		}
 		m_fnOnLoopEnd = (onLoopEndFT)(getFun(hdll, "onLoopEnd"));
 		if (!m_fnOnLoopEnd) {
-			mWarn ("fun onLoopEnd empty error is");
+			mWarn ("fun fnOnFrameLogic empty error is");
 			nRet = 6;
 			break;
 		}
@@ -143,5 +149,10 @@ logicOnConnectFT  CModule:: fnLogicOnConnect ()
 afterLoadFunT  CModule:: fnAfterLoad ()
 {
     return m_fnAfterLoad;
+}
+
+onFrameLagicFT  CModule::fnOnFrameLogic ()
+{
+	return m_fnOnFrameLogic;
 }
 
