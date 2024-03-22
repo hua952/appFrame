@@ -54,9 +54,11 @@ int defMsgGen::loopHandleSGen ()
 		auto& rModMgr = tSingleton<moduleFileMgr>::single ();
 		int ip = 0;
 		std::stringstream ssTem;
+		/*
 		std::stringstream sss;
 		sss<<R"(static serverIdType s_allSer[] = {)";
 		bool sssFirst = true;
+		*/
 		// const auto onceLevelNum = 256 / c_serverLevelNum;
 		for (auto it = rAppS.begin (); rAppS.end () != it; ++it) {
 			auto& rApp = *(it->second.get ());
@@ -108,20 +110,23 @@ int defMsgGen::loopHandleSGen ()
 					serId += is;
 					decltype (nLevel) tmpNum = serId;
 					pServer->setTmpNum (tmpNum);
-					os<<R"(#define  )"<<pSName<<"  "<<serId<<std::endl;
+					// os<<R"(#define  )"<<pSName<<"  "<<serId<<std::endl;
 					ssTem<<R"(#define  )"<<pTmpHandle<<" "<<serId<<std::endl;
+					/*
 					if (sssFirst) {
 						sssFirst = false;
 					} else {
 						sss<<",";
 					}
 					sss<<pSName;
+					*/
 					tmpId++;
 				}
 			}
 		}
-		sss<<"};";
+		// sss<<"};";
 		auto& rGlobal = tSingleton<globalFile>::single ();
+		/*
 		auto& rRootV = rGlobal.rootServerS ();
 		if (rRootV.empty()) {
 			os<<R"(static serverIdType s_RootSer[] = {0};)";
@@ -135,7 +140,8 @@ int defMsgGen::loopHandleSGen ()
 			}
 			os<<"};"<<std::endl;
 		}
-		os<<sss.str()<<std::endl;
+		*/
+		// os<<sss.str()<<std::endl;
 		os<<ssTem.str()<<std::endl;
 		os<<R"(#endif)";
 	} while (0);

@@ -11,6 +11,8 @@ public:
 	int  loadConfig (const char* szFile);
 		  const char*  addLogic ();
   void  setAddLogic (const char* v);
+  word  appNetType ();
+  void  setAppNetType (word v);
   bool  clearTag ();
   void  setClearTag (bool v);
   ubyte  detachServerS ();
@@ -39,6 +41,7 @@ public:
   void  setWorkDir (const char* v);
 private:
   std::unique_ptr <char[]>  m_addLogic;
+  word  m_appNetType;
   bool  m_clearTag;
   ubyte  m_detachServerS;
   std::unique_ptr <char[]>  m_endPoint;

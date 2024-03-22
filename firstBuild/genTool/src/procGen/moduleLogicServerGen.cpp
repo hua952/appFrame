@@ -846,6 +846,7 @@ static void   sOutAddChannel (bool bAsk, std::ostream& ps)
 {
 	if (bAsk) {
 		ps<<R"(
+	auto &rMgr = tSingleton<clientMServerMgr>::single();
 	auto& rCh = *((channelKey*)rAsk.m_chKey);
 	rRet.m_result =createChannel (rCh, srcSer, seId);
 		)";	
@@ -877,7 +878,8 @@ static void   sOutAddChannel (bool bAsk, std::ostream& ps)
 		rSendS.erase (it);
 		break;
 	}
-	auto rootNum = sizeof(s_RootSer) / sizeof(s_RootSer[0]);
+	uword rootNum = 0;
+	auto pNetS = getNetServerS (rootNum);
 	if (rSidS.size() == rootNum) {
 		onAddChannelResult (rAsk.m_token, 0, rCh);
 		rSendS.erase (it);

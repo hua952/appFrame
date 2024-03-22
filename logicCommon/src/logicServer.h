@@ -53,7 +53,7 @@ public:
 	virtual void logicOnAcceptSession(SessionIDType sessionId, uqword userData);
 	virtual void logicOnConnect(SessionIDType sessionId, uqword userData);
 	static void sLogicOnAcceptSession(serverIdType	fId, SessionIDType sessionId, uqword userData);
-	static void sLogicOnConnect(serverIdType fId, SessionIDType sessionId, uqword userData);
+	// static void sLogicOnConnect(serverIdType fId, SessionIDType sessionId, uqword userData);
 	exitHandleSet&  exitHandleS ();
 	bool  willExit ();
 	void  setWillExit (bool v);
@@ -83,7 +83,10 @@ public:
 
 	ForLogicFun&     forLogicFunSt ();
 	logicMuServerPairS*  logicMuServerPairSPtr ();
+	serverIdType  netServerTmp ();
+	logicServer**       getNetServerS (uword& num);
 protected:
+	serverIdType  m_netServerTmp;
 	logicMuServerPairS m_muServerPairS[c_serverLevelNum];
 	std::unique_ptr<char[]>    m_modelName;
 	ForLogicFun*     m_pForLogicFun;

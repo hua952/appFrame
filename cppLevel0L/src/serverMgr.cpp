@@ -144,13 +144,14 @@ serverMgr::serverMgr()
 	}
 	// m_lastServer.second = 0;
 	// m_mutServerS1.second = 0;
+	m_netServerTmp = c_emptyLoopHandle;
 	m_serverNum = 0;
 	m_outNum = 1;
 	m_createTcpServerFn = nullptr;
 	m_delTcpServerFn = nullptr;
 	m_packSendInfoTime = 5000;
 
-	m_CurLoopNum = 0;
+	// m_CurLoopNum = 0;
 	m_gropId = 0;
     m_delSendPackTime = 5000;
 	m_canUpRouteServerNum = 0;
@@ -618,12 +619,29 @@ int midSendPackToLoopForChannelFun(packetHead* pack) /* 返回值貌似没用 */
 		if (pN->ubyDesServId != c_emptyLoopHandle) {
 			bRand = !packInOnceProc(pack);
 		}
+		
+		NSetUnRet(pN);
+		uword netNum = 0;
+		server* pA = rMgr.getNetServerS (netNum);
+		if (pA) {
+			myAssert(netNum);
+			if (netNum > 1) {
+				auto nI = rand()%netNum;
+				pA += nI;
+			}
+			pA->pushPack (pack);
+		} else {
+			mError(" no net server pack is : "<<*pack);
+			freePack (pack);
+		}
+		/*
 		auto objSer = pN->ubyDesServId;
 		if (bRand) {
 			objSer = rMgr.getOnceUpOrDownServer ();
 			myAssert (c_emptyLoopHandle != objSer);
 		}
 		rSerMgr.pushPackToLoop  (objSer, pack);
+		*/
 	} while (0);
 	return nRet;
 }
@@ -641,7 +659,6 @@ int midSendPackToLoopFun(packetHead* pack) /* 返回值貌似没用 */
 	auto pS = rMgr.getLoop(pN->ubySrcServId);
 	myAssert (pS);
 	bool bIsRet = NIsRet(pN);
-	bool  bNeetRet = false;
 	auto bInOnceProc =  packInOnceProc(pack);
 
 	do {
@@ -680,6 +697,8 @@ int midSendPackToLoopFun(packetHead* pack) /* 返回值貌似没用 */
 		
 		/*  以下处理ask类型消息的发送    */
 		myAssert(EmptySessionID == pack->sessionID);
+
+		bool  bNeetRet = false;
 
 		// auto& rMsgInfoMgr = tSingleton<loopMgr>::single ().defMsgInfoMgr ();
 		auto& rMsgInfoMgr = rMgr.defMsgInfoMgr ();
@@ -750,6 +769,7 @@ serverIdType sGetDefProcServerId (msgIdType msgId)
 	// auto& rMgr = tSingleton<loopMgr>::single().defMsgInfoMgr();
 	serverIdType nRet = c_emptyLoopHandle;
 	auto& rMgr = tSingleton<serverMgr>::single().defMsgInfoMgr();
+	// return rMgr.getDefProcServerId (msgId);
 	auto nR = rMgr.getDefProcServerId (msgId);
 	do {
 		if (c_emptyLoopHandle == nR) {
@@ -763,7 +783,7 @@ serverIdType sGetDefProcServerId (msgIdType msgId)
 			break;
 		}
 		auto& rOnce = rMu.first[onceLv];
-		if (onceIndex != 1) {
+		if (rOnce.second != 1) {
 			break;
 		}
 		nRet = nR;
@@ -919,17 +939,14 @@ int serverMgr::init(int nArgC, char** argS/*, PhyCallback& info*/)
 			}
 		}
 
-		auto szModelMgrName = rConfig.modelMgrName ();
-		auto& rMM = ModuleMgr ();
-		rMM.init (szModelMgrName);
-		nR = rMM.load (nArgC, argS, &forLogic);
+		
 		auto modelNum = rConfig.modelNum ();
 		auto pAllMod = rConfig.allModelS ();
 
 		auto* pSerA = muServerPairSPtr ();
 		for (decltype (modelNum) i = 0; i < modelNum; i++) {
 			auto& rMod = pAllMod[i];
-			for (decltype (rMod.serverTemNum) j = 0; j < rMod.serverTemNum; i++) {
+			for (decltype (rMod.serverTemNum) j = 0; j < rMod.serverTemNum; j++) {
 				auto& rS = rMod.serverS[j];
 				loopHandleType ubyLv,  onceLv, onceIndex ;
 				getLvevlFromSerId (rS.serverTmpId, ubyLv, onceLv, onceIndex);
@@ -945,7 +962,7 @@ int serverMgr::init(int nArgC, char** argS/*, PhyCallback& info*/)
 		}
 		for (decltype (modelNum) i = 0; i < modelNum; i++) {
 			auto& rMod = pAllMod[i];
-			for (decltype (rMod.serverTemNum) j = 0; j < rMod.serverTemNum; i++) {
+			for (decltype (rMod.serverTemNum) j = 0; j < rMod.serverTemNum; j++) {
 				auto& rS = rMod.serverS[j];
 				loopHandleType ubyLv,  onceLv, onceIndex ;
 				getLvevlFromSerId (rS.serverTmpId, ubyLv, onceLv, onceIndex);
@@ -953,7 +970,7 @@ int serverMgr::init(int nArgC, char** argS/*, PhyCallback& info*/)
 				auto& rPa = rMu.first[onceLv];
 				rPa.second = rS.openNum;
 				rPa.first = std::make_unique<server[]>(rPa.second);
-				for (decltype (rPa.second) k = 0; k < rPa.second; i++) {
+				for (decltype (rPa.second) k = 0; k < rPa.second; k++) {
 					auto& rServer = rPa.first[k];
 					auto serId = rS.serverTmpId + k;
 					serverNode node;
@@ -965,6 +982,25 @@ int serverMgr::init(int nArgC, char** argS/*, PhyCallback& info*/)
 					node.listenerNum = 0;
 					// int initMid(const char* szName, ServerIDType id, serverNode* pNode, frameFunType funOnFrame = nullptr, void* argS = nullptr);
 					rServer.initMid ("", serId, &node);
+					
+				}
+			}
+		}
+		auto szModelMgrName = rConfig.modelMgrName ();
+		auto& rMM = ModuleMgr ();
+		rMM.init (szModelMgrName);
+		nR = rMM.load (nArgC, argS, &forLogic);
+		if (nR) {
+			mError("rMM.load error nR = "<<nR);
+			nRet = 3;
+			break;
+		}
+		for (int i = 0; i < c_serverLevelNum; i++) {
+			auto& rMu = pSerA[i];
+			for (decltype (rMu.second) j = 0; j < rMu.second; j++) {
+				auto& rPa = rMu.first[j];
+				for (decltype (rPa.second) k = 0; k < rPa.second; k++) {
+					auto& rServer = rPa.first[k];
 					auto autoRun = rServer.autoRun ();
 					if (autoRun) {
 						rServer.start();
@@ -1366,5 +1402,34 @@ serverMgr::serverPair&  serverMgr:: mutServerS2 ()
 serverMgr::muServerPairS* serverMgr:: muServerPairSPtr ()
 {
 	return m_muServerPairS;
+}
+
+serverIdType  serverMgr:: netServerTmp ()
+{
+    return m_netServerTmp;
+}
+
+server*   serverMgr:: getNetServerS (uword& num)
+{
+    server*        nRet = nullptr;
+	do {
+		auto tmpId = netServerTmp ();
+		if (c_emptyLoopHandle == tmpId) {
+			break;
+		}
+		loopHandleType ubyLv,  onceLv, onceIndex ;
+		getLvevlFromSerId (tmpId, ubyLv, onceLv, onceIndex);
+		muServerPairS* pAS = muServerPairSPtr ();
+		auto& rMu = pAS[ubyLv];
+		if (onceLv >= rMu.second) {
+			break;	
+		}
+		auto& rS = rMu.first[onceLv];
+		if (rS.second) {
+			nRet = rS.first.get ();
+			num = rS.second;
+		}
+	} while (0);
+    return nRet;
 }
 

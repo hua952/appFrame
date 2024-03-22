@@ -68,24 +68,13 @@ public:
 	uword  getAllCanUpServerS (loopHandleType* pBuff, uword buffNum); // Thread safety
 	uword  getAllCanDownServerS (loopHandleType* pBuff, uword buffNum); // Thread safety
 	bool   isRootApp ();
-	// uword  serverNum ();
-	// void  setServerNum (uword v);
 	CModule&  ModuleMgr ();
-	/*
-	serverPair&  sinServerS ();
-	serverPair&  lastServer ();
-	serverPair&  mutServerS1 ();
-	serverPair&  mutServerS2 ();
-	*/
 	muServerPairS*  muServerPairSPtr ();
+	serverIdType  netServerTmp ();
+	server*       getNetServerS (uword& num);
 private:
+	serverIdType  m_netServerTmp;
 	muServerPairS  m_muServerPairS[c_serverLevelNum];
-	/*
-	serverPair  m_mutServerS2;
-	serverPair  m_mutServerS1;
-	serverPair  m_lastServer;
-	serverPair  m_sinServerS;
-	*/
 	CModule  m_ModuleMgr;
 	uword  m_serverNum;
     udword  m_delSendPackTime;
@@ -97,22 +86,18 @@ private:
 	loopHandleType	m_procId;
 	loopHandleType	m_gropId;
 	std::unique_ptr<char[]>      m_netLibName;
-	// uword			g_ServerNum;
 
 	uword  m_canDownRouteServerNum;
 	uword  m_canUpRouteServerNum;
 	serializePackFunType  m_toNetPack;
 	serializePackFunType  m_fromNetPack;
 	msgMgr		m_defMsgInfoMgr;
-	int			m_CurLoopNum;
-	std::unique_ptr<server[]>	 m_loopS;
+	// int			m_CurLoopNum;
+	// std::unique_ptr<server[]>	 m_loopS;
 	std::unique_ptr<loopHandleType[]>	 m_canRouteServerIdS;
-	typedef std::map<loopHandleType, std::string> tempLoopIdMap;
-	tempLoopIdMap	m_tempLoopIdMap;
+	// typedef std::map<loopHandleType, std::string> tempLoopIdMap;
+	// tempLoopIdMap	m_tempLoopIdMap;
 	ForLogicFun m_forLogic;
-
-	// std::unique_ptr<CModule[]>	 m_ModuleS;
-	// uword			m_ModuleNum;
 };
 
 packetHead* allocPack(udword udwSize);

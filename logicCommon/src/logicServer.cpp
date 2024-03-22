@@ -28,6 +28,7 @@ void  logicServer::setServerName (const char* v)
 
 logicServerMgr::logicServerMgr ()
 {
+	m_netServerTmp = c_emptyLoopHandle;
 	m_pForLogicFun = nullptr;
 	for (decltype (c_serverLevelNum) i = 0; i < c_serverLevelNum; i++) {
 		m_muServerPairS[i].second = 0;
@@ -389,17 +390,14 @@ void logicServer:: onLoopBegin()
 void logicServer:: onLoopEnd()
 {
 }
-
+/*
 void logicServer:: sLogicOnConnect(serverIdType	fId, SessionIDType sessionId, uqword userData)
 {
     do {
-		/*
-		auto pThis = logicServer::findServer(fId);
-		pThis->logicOnConnect(sessionId, userData);
-		*/
+		
     } while (0);
 }
-
+*/
 bool  logicServer:: willExit ()
 {
     return m_willExit;
@@ -413,5 +411,34 @@ void  logicServer:: setWillExit (bool v)
 logicServerMgr::logicMuServerPairS*  logicServerMgr :: logicMuServerPairSPtr ()
 {
     return m_muServerPairS;
+}
+
+serverIdType logicServerMgr:: netServerTmp ()
+{
+    return m_netServerTmp;
+}
+
+logicServer**  logicServerMgr :: getNetServerS (uword& num)
+{
+	logicServer**  pRet = nullptr;
+	do {
+		auto tmpId = netServerTmp ();
+		if (c_emptyLoopHandle == tmpId) {
+			break;
+		}
+		loopHandleType ubyLv,  onceLv, onceIndex ;
+		getLvevlFromSerId (tmpId, ubyLv, onceLv, onceIndex);
+		auto pAS = logicMuServerPairSPtr ();
+		auto& rMu = pAS[ubyLv];
+		if (onceLv >= rMu.second) {
+			break;	
+		}
+		auto& rS = rMu.first[onceLv];
+		if (rS.second) {
+			pRet = rS.first.get ();
+			num = rS.second;
+		}
+	} while (0);
+    return pRet;
 }
 

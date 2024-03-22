@@ -448,87 +448,14 @@ os<<R"(
 #include <sstream>
 #include <vector>
 
-/*
-struct pSerializePackFunType3
-{
-	serializePackFunType f[3];
-};
-
-class pSerializePackFunType3Cmp 
-{
-public:
-	bool operator () (const pSerializePackFunType3& a, const pSerializePackFunType3& b) const
-	{
-		return a.f[0] < b.f[0];
-	}
-};
-
-using  msgSerFunSet = arraySet<pSerializePackFunType3, pSerializePackFunType3Cmp>;
-static msgSerFunSet s_SerFunSet;
-
-static pSerializePackFunType3* sGetNode (udword msgId)
-{
-	auto & rArr = s_SerFunSet;
-	pSerializePackFunType3 temp;
-	temp.f[0] = (serializePackFunType)msgId;
-	auto pRet = rArr.GetNode (temp);
-	return pRet;
-}
-
-static int sFromNetPack (netPacketHead* pN, pPacketHead& pNew)
-{
-	int nRet = 0;
-	do {
-		// myAssert (p);
-		// auto pN = P2NHead(p);
-		auto pF = sGetNode (pN->uwMsgID);
-		if (pF) {
-			auto fun = (*pF).f[1];
-			if (fun) {
-				auto nR = fun (pN, pNew);
-				if (nR) {
-					nRet = 2;
-				}
-				if (pNew) {
-					pNew->pAsk = 0;
-				}
-			}
-		}
-	} while (0);
-	return nRet;
-}
-
-static int sToNetPack (netPacketHead* pN, pPacketHead& pNew)
-{
-	int nRet = 0;
-	do {
-		// myAssert (p);
-		// auto pN = P2NHead(p);
-		auto pF = sGetNode (pN->uwMsgID);
-		if (pF) {
-			auto fun = (*pF).f[2];
-			auto nR = fun (pN, pNew);
-			if (nR) {
-				nRet = 2;
-			}
-			if (pNew) {
-				pNew->pAsk = 0;
-			}
-		}
-	} while (0);
-	return nRet;
-}
-*/
 void getModelS (int nArgC, char** argS, std::vector<std::string>& vModelS,
 	std::string& strWorkDir, bool& dumpMsg, std::unique_ptr<char[]>& checkMsg)
 {
 	char* pRetBuf[3];
 	for (int i = 1; i < nArgC; i++) {
-		auto pa = argS [i];
-		auto nL = strlen (pa);
-		auto pB = std::make_unique<char[]> (nL + 1);
+		std::unique_ptr<char[]> pB;
+		strCpy(argS [i], pB);
 		auto pBuf = pB.get ();
-		strNCpy (pBuf, nL + 1, pa);
 		auto nNum = strR(pBuf, '=', pRetBuf, 3);
 		if (2 != nNum) {
 			gWarn("arg num error"<< "2 != nNum = " << nNum);
@@ -537,8 +464,21 @@ void getModelS (int nArgC, char** argS, std::vector<std::string>& vModelS,
 		std::stringstream ssKey (pRetBuf[0]);
 		std::string strKey;
 		ssKey>>strKey;
-		if (strKey == "logicModel") {
-			vModelS.push_back (pRetBuf[1]);
+		if (strKey == "modelS") {
+			const auto c_retMaxNum = 64;
+			auto retS = std::make_unique<char* []>(c_retMaxNum);
+			auto pRetS = retS.get();
+			auto nR = strR (pRetBuf[1], '*', pRetS, c_retMaxNum);
+			myAssert (nR < c_retMaxNum);
+			for (decltype (nR) i = 1; i < nR; i++) {
+				auto c_retSerMaxNum = 64;
+				auto retSerS = std::make_unique<char* []>(c_retSerMaxNum);
+				auto pRetSerS = retSerS.get();
+				auto pM = pRetS[i];
+				auto nSerR = strR(pM, '+', pRetSerS, c_retSerMaxNum);
+				myAssert (nSerR < c_retSerMaxNum);
+				vModelS.push_back (pRetSerS[0]);
+			}
 		} else if (strKey == "workDir") {
 			strWorkDir = pRetBuf[1];
 		} else if (strKey == "dumpMsg") {
@@ -689,7 +629,7 @@ os<<R"(
 				nRet = 7;
 				break;
 			}
-			info.fnOnFrameLagic = (onFrameLagicFT)(getFun(info.handle, "onFrameLagic"));
+			info.fnOnFrameLagic = (onFrameLagicFT)(getFun(info.handle, "onFrameLogic"));
 			if (!info.fnOnFrameLagic) {
 				gWarn ("fun onFrameLagic empty error is");
 				nRet = 8;

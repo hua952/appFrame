@@ -62,13 +62,13 @@ int  argConfig:: afterAllArgProc ()
 			}
 			auto& serverS = mapRet.first->second;
 
-			for (decltype (nSerR) j = 1; j < nSerR; i++) {
+			for (decltype (nSerR) j = 1; j < nSerR; j++) {
 				auto pA = pRetSerS[j];
 				const auto c_argMaxRetNum = 4;
 				char* retArgS[c_argMaxRetNum];
 				auto nRArgS = strR(pA, '-', retArgS, c_argMaxRetNum);
 				myAssert (nRArgS < c_argMaxRetNum);
-				if (nRArgS = c_argMaxRetNum) {
+				if (nRArgS >= c_argMaxRetNum) {
 					nRet = 4;
 					break;
 				}
@@ -99,6 +99,8 @@ int  argConfig:: afterAllArgProc ()
 		auto& rMgr = tSingleton<serverMgr>::single ();
 		auto muServerPairS = rMgr.muServerPairSPtr ();
 		auto cur = 0;
+		m_modelNum = (decltype(m_modelNum ))(modMap.size());
+		m_modelS = std::make_unique<stModel[]>(m_modelNum);
 		for (auto it = modMap.begin (); it != modMap.end (); it++) {
 			auto& rMod = m_modelS[cur++];
 			strCpy (it->first.c_str(), rMod.modelName);

@@ -11,6 +11,7 @@
 	<frameConfigFile type="string"></frameConfigFile>
 	<procId type="uword">0</procId>
 	<logLevel type="word">2</logLevel>
+	<appNetType type="word">0</appNetType>
 	<detachServerS type="ubyte">1</detachServerS>
 	<clearTag type="bool">false</clearTag>
 </config>

@@ -90,33 +90,21 @@ static const char* s_comMsg = R"(<?xml version='1.0' encoding='utf-8' ?>
 					<chKey dataType="ubyte" length="16" haveSize="0"/>
 					<token dataType="udword" />
 				</ask>
-				<ret neetSession="1">
-					<result dataType="udword" />
-				</ret>
 			</addChannel>
 			<delChannel>
 				<ask>
 					<chKey dataType="ubyte" length="16" haveSize="0"/>
 				</ask>
-				<ret>
-					<result dataType="udword" />
-				</ret>
 			</delChannel>
 			<listenChannel>
 				<ask neetSession="1">
 					<chKey dataType="ubyte" length="16" haveSize="0"/>
 				</ask>
-				<ret>
-					<result dataType="udword" />
-				</ret>
 			</listenChannel>
 			<quitChannel>
 				<ask neetSession="1">
 					<chKey dataType="ubyte" length="16" haveSize="0"/>
 				</ask>
-				<ret>
-					<result dataType="udword" />
-				</ret>
 			</quitChannel>
 			<sendToChannel>
 				<ask neetSession="1">
@@ -124,9 +112,6 @@ static const char* s_comMsg = R"(<?xml version='1.0' encoding='utf-8' ?>
 					<excSender dataType="udword" commit="do not send ntf to me"/>
 					<pack dataType="ubyte" length="110000" haveSize="1" commit=""> </pack>
 				</ask>
-				<ret>
-					<result dataType="udword" />
-				</ret>
 			</sendToChannel>
 			<ntfExit>
 				<ask>
@@ -141,9 +126,6 @@ static const char* s_comMsg = R"(<?xml version='1.0' encoding='utf-8' ?>
 					<nolyId dataType="udword" />
 					<signature dataType="ubyte" length="256" haveSize="1" commit="" />
 				</ask>
-				<ret>
-					<result dataType="udword" />
-				</ret>
 			</regRoute>
 		</comMsg >
 	</rpc>
@@ -360,17 +342,29 @@ int   xmlGlobalLoad:: onceAppLoad (rapidxml::xml_node<char>* pApp, std::shared_p
 
 		auto pM = rApp->mainLoopServer ();
 		if (!pM) {
+			const char* szMain = nullptr;
 			auto& rMS = rApp->moduleFileNameS ();
 			if (!rMS.empty()) {
-				auto pM = tSingleton<moduleFileMgr>::single().findModule (rMS.begin()->c_str());
-				if (!pM) {
-					auto& pO = pM->orderS ();
-					if (!pO.empty()) {
-						auto mainLoopServer = pO[0]->strHandle();
-						rApp->setMainLoopServer (mainLoopServer);
-						pO[0]->setAutoRun(false);
+				for (auto it = rMS.begin (); it != rMS.end (); it++) {
+					auto pM = tSingleton<moduleFileMgr>::single().findModule (it->c_str());
+					if (!pM) {
+						auto& pO = pM->orderS ();
+						for (auto ite = pO.begin (); ite != pO.end (); ite++) {
+							auto rIte = ite->get();
+							auto openNum = rIte->openNum ();
+							if (1 == openNum) {
+								szMain = rIte->strTmpHandle ();
+								rApp->setMainLoopServer (szMain);
+								rIte->setAutoRun(false);
+								break;
+							}
+						}
+					}
+					if (szMain) {
+						break;
 					}
 				}
+				
 			}
 		}
     } while (0);
@@ -644,7 +638,7 @@ static int procEndPoint (rapidxml::xml_node<char>* pXmlListen
 	return nRet;
 }
 const char* szRootRpc[] = {"addChannel", "delChannel", "listenChannel"
-			,"quitChannel", "sendToChannel", "regRoute"};
+			,"quitChannel", "sendToChannel"/*, "regRoute"*/};
 const char** getRpptRpc (int &num)
 {
 	num = sizeof (szRootRpc) / sizeof (szRootRpc[0]);
@@ -709,7 +703,7 @@ int   xmlGlobalLoad:: onceServerLoad (rapidxml::xml_node<char>* pS,
 			if (!autoRun) {
 				auto pM = rApp.mainLoopServer();
 				if (!pM) {
-					rApp.setMainLoopServer (newServer->strHandle());
+					rApp.setMainLoopServer (newServer->strTmpHandle ());
 				}
 			}
 		}
@@ -857,19 +851,31 @@ int   xmlGlobalLoad:: onceServerLoad (rapidxml::xml_node<char>* pS,
 				}
 			}
 		}
-		bool bIsRoot = newServer->isRoot ();
-		int rootRpcNum = 0;
-		auto ppRpc = getRpptRpc (rootRpcNum);
-		for (decltype (rootRpcNum) i = 0; i < rootRpcNum; i++) {
-			procRpcNode node;
-			node.retValue = "procPacketFunRetType_del";
-			node.bAsk = bIsRoot;
-			node.rpcName = ppRpc[i];
-			auto inRet = rProcS.insert (node);
-			myAssert (inRet.second);
-		}
 		if (nRet) {
 			break;
+		}
+		ubyte  netType = rApp.netType ();
+		// bool bIsRoot = newServer->isRoot ();
+		if (appNetType_gate == netType ) {
+			int rootRpcNum = 0;
+			auto ppRpc = getRpptRpc (rootRpcNum);
+			for (decltype (rootRpcNum) i = 0; i < rootRpcNum; i++) {
+				procRpcNode node;
+				node.retValue = "procPacketFunRetType_del";
+				node.bAsk = true;
+				node.rpcName = ppRpc[i];
+				auto inRet = rProcS.insert (node);
+				myAssert (inRet.second);
+			}
+		}
+		
+		if (appNetType_gate == netType || appNetType_server == netType) {
+			procRpcNode node;
+			node.retValue = "procPacketFunRetType_del"; /* 特殊情况单独处理 */
+			node.bAsk = appNetType_gate == netType;
+			node.rpcName = "regRoute";
+			auto inRet = rProcS.insert (node);
+			myAssert (inRet.second);
 		}
 		{
 			procRpcNode node;

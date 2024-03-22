@@ -8,6 +8,7 @@
 frameConfig::frameConfig ()
 {
 	strCpy("libeventSession", m_addLogic);
+	m_appNetType = 0;
 	m_clearTag = false;
 	m_detachServerS = 1;
 	strCpy("", m_endPoint);
@@ -31,6 +32,16 @@ const char*  frameConfig::addLogic ()
 void  frameConfig::setAddLogic (const char* v)
 {
 	strCpy(v, m_addLogic);
+}
+
+word  frameConfig::appNetType ()
+{
+    return m_appNetType;
+}
+
+void  frameConfig::setAppNetType (word v)
+{
+	m_appNetType = v;
 }
 
 bool  frameConfig::clearTag ()
@@ -220,6 +231,10 @@ int  frameConfig:: procCmdArgS (int nArg, char** argS)
 		if (strKey == "addLogic") {
 				ssV>>strVal;
 	strCpy(strVal.c_str(), m_addLogic);
+				continue;
+			}
+				if (strKey == "appNetType") {
+				ssV>>m_appNetType;
 				continue;
 			}
 				if (strKey == "clearTag") {

@@ -136,6 +136,12 @@ int  appGen:: batFileGen (appFile& rApp)
 			ts<<"workDir="<<strInsHome;
 			rMainArgS.push_back(ts.str());
 		}
+		{
+			std::stringstream ts;
+			uword uwT = appNetType ();
+			ts<<"appNetType="<<uwT;
+			rMainArgS.push_back(ts.str());
+		}
 		std::string strLogFile = szAppName;
 		strLogFile += ".log";
 		std::string strLogFull = R"(logFile=)";

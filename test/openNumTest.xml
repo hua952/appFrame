@@ -9,14 +9,38 @@
 	<app>
 		<client appNetType="0">
 			<appArg>detachServerS=1</appArg>
-			<appArg>frameConfigFile=gateFrame.txt</appArg>
+			<appArg>frameConfigFile=clientFrame.txt</appArg>
 			<module>
-				<clientM>
+				<appClientM2>
 					<server>
-						<clientConTh autoRun="0" showFps="0">
-						</clientConTh>
+						<muTh sleepSetp="1" rearEnd="0" openNum="2" regRoute="0" showFps="1" fpsSetp="40000">
+							<procRpc>
+								<regret askType="ask"/>
+							</procRpc>
+						</muTh>
 					</server>
-				</clientM>
+				</appClientM2>
+				<appClientM1>
+					<server>
+						<chatTh sleepSetp="1" showFps="1" fpsSetp="40000" arryLen="1">
+							<procRpc>
+								<manualList askType="ret"/>
+								<regret askType="ret"/>
+								<move askType="ret"/>
+								<roomChannel askType="ret"/>
+								<roomChatTxt askType="ask"/>
+							</procRpc>
+						</chatTh>
+						<netTh rearEnd="0" regRoute="0" sleepSetp="1" showFps="1" fpsSetp="40000">
+							<connect defRoute="1"  targetEndPoint="en1" teag="1"/>
+							<procRpc>
+								<manualList askType="ask"/>
+							</procRpc>
+						</netTh>
+						<appClientConTh3 autoRun="0">
+						</appClientConTh3 >
+					</server>
+				</appClientM1>
 			</module>
 		</client>
 	</app>
