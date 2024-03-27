@@ -93,6 +93,7 @@ int   moduleExportFunGen:: genCpp (moduleGen& rMod)
 #include "msg.h"
 #include "myAssert.h"
 #include "logicServer.h"
+#include "logicServerMgr.h"
 #include "comMsgMsgId.h"
 #include "comMsgRpc.h"
 #include "tSingleton.h"

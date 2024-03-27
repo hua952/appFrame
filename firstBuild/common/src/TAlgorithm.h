@@ -2,8 +2,9 @@
 #define __T_Algorithm___h_
 
 #include "typeDef.h"
+#include "comFun.h"
 
-template<class ValueVectorType, class ValueType, class LessFunType>
+template<class ValueVectorType, class ValueType, class LessFunType=LessComp<ValueType>>
 class TQuickSort
 {
 public:
@@ -46,7 +47,7 @@ private:
 	qword			m_nBuffNum;
 };
 
-template<class ValueType, class LessFunType  >
+template<class ValueType, class LessFunType=LessComp<ValueType>>
 class TBinarySearch
 {
 public:
@@ -77,9 +78,33 @@ public:
 		}
 		return qwRet;
 	}
+	ValueType*  getBuff()
+	{
+		return m_pBuff;
+	}
 private:
 	ValueType*		m_pBuff;
 	qword			m_nBuffNum;
 };
+
+template<class ValueType, class LessFunType=LessComp<ValueType>>
+class TGetLine
+{
+public:
+	using binarySearchT =  TBinarySearch<ValueType, LessFunType>;
+	TGetLine(ValueType* pointS, qword pointNum):m_binary(pointS, pointNum)
+	{
+	}
+	qword	search(const ValueType& fv)
+	{
+		auto nR = m_binary.Search (fv);
+		auto pBuf = m_binary.getBuff ();
+		LessFunType fun;
+		return fun (fv, pBuf[nR]) ? nR : nR + 1;
+	}
+private:
+	binarySearchT   m_binary;
+};
+
 
 #endif//__T_Algorithm___h_

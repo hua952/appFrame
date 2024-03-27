@@ -4,6 +4,7 @@
 #include "strFun.h"
 #include <map>
 #include "msg.h"
+#include "logicServerMgr.h"
 
 serverNode&  logicServer:: serverInfo ()
 {
@@ -17,7 +18,6 @@ const char*  logicServer:: serverName ()
 
 int logicServer::onFrameFun ()
 {
-	// return willExit()?procPacketFunRetType_exitNow : procPacketFunRetType_del;
 	return procPacketFunRetType_del;
 }
 
@@ -26,49 +26,10 @@ void  logicServer::setServerName (const char* v)
 	strCpy (v, m_serverName);
 }
 
-logicServerMgr::logicServerMgr ()
-{
-	m_netServerTmp = c_emptyLoopHandle;
-	m_pForLogicFun = nullptr;
-	for (decltype (c_serverLevelNum) i = 0; i < c_serverLevelNum; i++) {
-		m_muServerPairS[i].second = 0;
-	}
-}
-
-logicServerMgr::~logicServerMgr ()
-{
-}
-
-ForLogicFun& logicServerMgr:: forLogicFunSt ()
-{
-    return *m_pForLogicFun;
-}
-
-ubyte  logicServerMgr::serverNum ()
-{
-	return  m_serverNum;
-}
-
-void   logicServerMgr::setServerNum (ubyte ubyNum)
-{
-	m_serverNum = ubyNum;
-}
-/*
-logicServer**  logicServerMgr:: serverS ()
-{
-	return m_serverS.get ();
-}
-*/
 static int OnFrameCli(void* pArgS)
 {
 	auto pS = (logicServer*)pArgS;
 	return pS->onFrameFun ();
-}
- 
-int  logicServerMgr:: procArgS (int nArgC, char** argS)
-{
-	int nRet;
-	return nRet;
 }
 
 logicServer::logicServer ()
@@ -87,8 +48,6 @@ int logicServer:: sendMsg (CMsgBase& rMsg)
 {
     int  nRet = 0;
     do {
-		//rMsg.zip();
-		// rMsg.toPack();
 		auto pack = rMsg.getPack();
 		auto nR = sendPack (pack);
 		if (!nR) {
@@ -102,8 +61,6 @@ int logicServer:: sendToServer (CMsgBase& rMsg, loopHandleType handle)
 {
     int  nRet = 0;
     do {
-		// rMsg.zip();
-		// rMsg.toPack();
 		auto pack = rMsg.getPack();
 		auto nR = sendPackToServer  (pack, handle);
 		if (!nR) {
@@ -119,12 +76,64 @@ int logicServer:: sendPack (packetHead* pack)
     do {
 		auto fnGetDefProcServerId =  getForMsgModuleFunS ().fnGetDefProcServerId;
 		auto pN = P2NHead (pack);
-		auto handle = fnGetDefProcServerId (pN->uwMsgID);
+		auto& rMgr = logicServerMgr::getMgr();
+		// auto handle = fnGetDefProcServerId (pN->uwMsgID);
+		auto handle = rMgr.getMsgDefProcTmp (pN->uwMsgID);
+		auto fnFree =  getForMsgModuleFunS ().fnFreePack;
 		myAssert (c_emptyLoopHandle != handle);
+		if ((c_emptyLoopHandle == handle)) {
+			fnFree (pack);
+			pack = nullptr;
+			break;
+		}
+
+		loopHandleType level,  onceLv, onceIndex;
+		getLvevlFromSerId (handle, level, onceLv, onceIndex);
+		if (c_levelMaxOpenNum[level] > 1) {
+			auto pAS = rMgr.logicMuServerPairSPtr ();
+			auto& rBig = pAS[level];
+			if (!rBig.second) {
+				fnFree (pack);
+				pack = nullptr;
+				break;
+			}
+			auto& rOnce = rBig.first[onceLv];
+			if (!rOnce.second) {
+				fnFree (pack);
+				pack = nullptr;
+				break;
+			}
+			if (rOnce.second > 1) {
+				handle += rand()%rOnce.second;
+			}
+		}
+		// auto pA = getServerArray 
 		nRet = sendPackToServer (pack, handle);
     } while (0);
     return nRet;
 }
+/*
+int          logicServer:: sendPackToOnceOfTmp (packetHead* pack)
+{
+	int          nRet = 0;
+	do {
+		auto fnGetDefProcServerId =  getForMsgModuleFunS ().fnGetDefProcServerId;
+		auto pN = P2NHead (pack);
+		auto& rMgr = logicServerMgr::getMgr();
+		auto handle = rMgr.getMsgDefProcTmp (pN->uwMsgID);
+		myAssert (c_emptyLoopHandle != handle);
+		if ((c_emptyLoopHandle == handle)) {
+			auto fnFree =  getForMsgModuleFunS ().fnFreePack;
+			fnFree (pack);
+			pack = nullptr;
+		} else {
+
+			nRet = sendPackToServer (pack, handle);
+		}
+	} while (0);
+	return nRet;
+}
+*/
 
 serverIdType   logicServer:: serverId ()
 {
@@ -336,30 +345,6 @@ bool logicServer::cmpChannelKey::operator ()(const channelKey& k1,const channelK
 	return k1.key<k2.key?true:k2.key<k1.key?false:k1.value<k2.value;
 }
 
-dword logicServerMgr::afterLoad(int nArgC, char** argS, ForLogicFun* pForLogic)
-{
-	return 0;
-}
-
-logicServer*   logicServerMgr:: findServer(serverIdType	fId)
-{
-    logicServer*   nRet = nullptr;
-    do {
-		decltype(fId) ubyLv, onceLv, onceIndex;
-		getLvevlFromSerId (fId, ubyLv, onceLv, onceIndex);
-		auto& rBigLv = m_muServerPairS[ubyLv];
-		if (onceLv >= rBigLv.second) {
-			break;
-		}
-		auto& rSA = rBigLv.first[onceLv];
-		if (onceIndex >= rSA.second) {
-			break;
-		}
-		nRet = rSA.first[onceIndex]; 
-    } while (0);
-    return nRet;
-}
-
 void  logicServer:: logicOnAcceptSession(SessionIDType sessionId, uqword userData)
 {
     do {
@@ -390,14 +375,7 @@ void logicServer:: onLoopBegin()
 void logicServer:: onLoopEnd()
 {
 }
-/*
-void logicServer:: sLogicOnConnect(serverIdType	fId, SessionIDType sessionId, uqword userData)
-{
-    do {
-		
-    } while (0);
-}
-*/
+
 bool  logicServer:: willExit ()
 {
     return m_willExit;
@@ -406,39 +384,5 @@ bool  logicServer:: willExit ()
 void  logicServer:: setWillExit (bool v)
 {
     m_willExit = v;
-}
-
-logicServerMgr::logicMuServerPairS*  logicServerMgr :: logicMuServerPairSPtr ()
-{
-    return m_muServerPairS;
-}
-
-serverIdType logicServerMgr:: netServerTmp ()
-{
-    return m_netServerTmp;
-}
-
-logicServer**  logicServerMgr :: getNetServerS (uword& num)
-{
-	logicServer**  pRet = nullptr;
-	do {
-		auto tmpId = netServerTmp ();
-		if (c_emptyLoopHandle == tmpId) {
-			break;
-		}
-		loopHandleType ubyLv,  onceLv, onceIndex ;
-		getLvevlFromSerId (tmpId, ubyLv, onceLv, onceIndex);
-		auto pAS = logicMuServerPairSPtr ();
-		auto& rMu = pAS[ubyLv];
-		if (onceLv >= rMu.second) {
-			break;	
-		}
-		auto& rS = rMu.first[onceLv];
-		if (rS.second) {
-			pRet = rS.first.get ();
-			num = rS.second;
-		}
-	} while (0);
-    return pRet;
 }
 

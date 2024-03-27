@@ -5,7 +5,7 @@
 #include <set>
 #include <map>
 #include "ISession.h"
-
+#include "staticArrayMap.h"
 
 class CMsgBase;
 class logicServer
@@ -38,6 +38,7 @@ public:
 	int         sendToServer (CMsgBase& rMsg, loopHandleType handle);
 	int         sendToAllGateServer (CMsgBase& rMsg);
 	int         sendPack (packetHead* pack);
+	// int         sendPackToOnceOfTmp (packetHead* pack);
 	int         sendPackToServer (packetHead* pack, loopHandleType handle);
 	int         sendPackToSomeServer(packetHead* pack, serverIdType* pSerS, udword serverNum);
 	int         sendMsgToSomeServer(CMsgBase& rMsg, serverIdType* pSerS, udword serverNum);
@@ -67,30 +68,5 @@ private:
 	serverNode   m_serverInfo;
 	std::unique_ptr <char[]>  m_serverName;
 };
-class logicServerMgr
-{
-public:
-	using  logicServerPair = std::pair<std::unique_ptr< logicServer* []>, loopHandleType>;
-	using  logicMuServerPairS = std::pair<std::unique_ptr<logicServerPair []>, loopHandleType>;
-    logicServerMgr ();
-    ~logicServerMgr ();
-	virtual dword afterLoad(int nArgC, char** argS, ForLogicFun* pForLogic);
-	int   procArgS (int nArgC, char** argS);
-	ubyte  serverNum ();
-	void   setServerNum (ubyte ubyNum);
-	logicServer*  findServer(serverIdType	serverId);
-	// logicServer**   serverS ();
 
-	ForLogicFun&     forLogicFunSt ();
-	logicMuServerPairS*  logicMuServerPairSPtr ();
-	serverIdType  netServerTmp ();
-	logicServer**       getNetServerS (uword& num);
-protected:
-	serverIdType  m_netServerTmp;
-	logicMuServerPairS m_muServerPairS[c_serverLevelNum];
-	std::unique_ptr<char[]>    m_modelName;
-	ForLogicFun*     m_pForLogicFun;
-	ubyte  m_serverNum;
-	// std::unique_ptr <logicServer* []>  m_serverS;
-};
 #endif

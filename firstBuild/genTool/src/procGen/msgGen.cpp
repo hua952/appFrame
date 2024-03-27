@@ -264,8 +264,8 @@ int  msgGen:: rpcInfoCppGen ()
 			break;
 		}
 		// std::ofstream os(strFile);
-		std::stringstream os(strFile);
-		
+		std::stringstream os;
+		std::stringstream defProcOs;
 		std::string regFile = protobufSerSrcDir ();
 		regFile += "/regRpcPair.cpp";
 		std::ofstream regOs (regFile.c_str());
@@ -335,9 +335,17 @@ int  checkStructS (const char* szFile)
 }
 
 )";
+	defProcOs<<R"(int getDefProc (loopHandleType* pBuff, int buffNum)
+{
+	int nRet = 0;
+	do {
+		if (nRet >= buffNum) {
+			break;
+		}
+		)";
 	regOs<<R"(int getMsgPairS (uword* pBuff, int buffNum)
 {
-	myAssert(buffNum%4==0);
+	myAssert(buffNum%2==0);
 	int nRet = 0;
 	do {
 		if (nRet >= buffNum) {
@@ -357,28 +365,68 @@ int  checkStructS (const char* szFile)
 		std::string retId = "c_null_msgID";
 		std::string trySId = *it;
 		trySId += "Ret";
+
+		auto pFull = rG.fullChangName ();
+		std::string askFullId = pFull;
+		askFullId += R"(()";
+		askFullId += pAsk->strMsgId ();
+		askFullId += ")";
 		auto pAskDefPro = pAsk->defProServerTmpId (); // defProServerId ();
+		/*
 		if (!pAskDefPro) {
 			pAskDefPro = "c_emptyLoopHandle";
 		}
+		*/
+		if (pAskDefPro) {
+			defProcOs<<R"(pBuff[nRet++] = )"<<askFullId <<R"(;
+		if (nRet >= buffNum) {
+			break;
+		}
+		pBuff[nRet++] = )"<<pAskDefPro<<R"(;
+		if (nRet >= buffNum) {
+			break;
+		}
+		)";
+		}
 		const char* pRetDefPro = "c_emptyLoopHandle";
 		auto pRet = rMsgMgr.findMsg (trySId.c_str ());
-		auto pFull = rG.fullChangName ();
+		
 		if (pRet) {
 			pRetDefPro = pRet->defProServerTmpId (); //defProServerId ();
+			/*
 			if (!pRetDefPro) {
 				pRetDefPro = "c_emptyLoopHandle";
 			}
+			*/
 			retId = pFull;
 			retId += R"(()";
 			retId += pRet->strMsgId ();
 			retId += ")";
+			if (pRetDefPro) {
+		defProcOs<<R"(pBuff[nRet++] = )"<<retId<<R"(;
+		if (nRet >= buffNum) {
+			break;
+		}
+		pBuff[nRet++] = )"<<pRetDefPro<<R"(;
+		if (nRet >= buffNum) {
+			break;
+		}
+		)";
+			}
+			
 		} 
-		
+	/*	
 		regOs<<R"(    pBuff[nRet++] = )"<<pFull<<R"(()"<<askId<<R"();
 		pBuff[nRet++] = )"<<retId<<R"(;
 		pBuff[nRet++] = )"<<pAskDefPro<<R"(;
 		pBuff[nRet++] = )"<<pRetDefPro<<R"(;
+		if (nRet >= buffNum) {
+			break;
+		}
+		)";
+		*/
+		regOs<<R"(    pBuff[nRet++] = )"<<askFullId<<R"(;
+		pBuff[nRet++] = )"<<retId<<R"(;
 		if (nRet >= buffNum) {
 			break;
 		}
@@ -390,7 +438,13 @@ int  checkStructS (const char* szFile)
 	} while (0);
 	return nRet;
 })";
-	infoFileOs<<incOs.str()<<std::endl<<os.str();
+
+defProcOs<<R"(
+	} while (0);
+	return nRet;
+})";
+
+	infoFileOs<<incOs.str()<<std::endl<<os.str()<<defProcOs.str();
 	regOs<<os.str();
     } while (0);
     return nRet;
@@ -419,7 +473,8 @@ int  msgGen:: rpcInfoHGen ()
 
 void dumpStructS ();
 int  checkStructS (const char* szFile);
-void regRpcS (const ForMsgModuleFunS* pForLogic);
+// void regRpcS (const ForMsgModuleFunS* pForLogic);
+int getDefProc (uword* pBuff, int buffNum);
 
 #endif)";
     } while (0);

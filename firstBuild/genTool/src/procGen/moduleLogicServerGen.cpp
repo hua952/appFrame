@@ -175,7 +175,7 @@ struct conEndPointT
 	strCpy(")"<<pModName<<R"(", m_modelName);)"<<R"(
 }
 
-dword )"<<strMgrClassName<<R"(::afterLoad(int nArgC, char** argS, ForLogicFun* pForLogic)
+dword )"<<strMgrClassName<<R"(::afterLoad (int nArgC, char** argS, ForLogicFun* pForLogic)
 {
 	dword nRet = 0;
 	do {
@@ -209,70 +209,77 @@ dword )"<<strMgrClassName<<R"(::afterLoad(int nArgC, char** argS, ForLogicFun* p
 			loopHandleType  first;
 			loopHandleType  second;
 		};
-		{
-			auto szModelS = rConfig.modelS ();
-			std::unique_ptr<char[]> modelSBuf;
-			strCpy(szModelS, modelSBuf);
-			auto pModelSBuf = modelSBuf.get();
-			const auto c_retMaxNum = 64;
-			auto retS = std::make_unique<char* []>(c_retMaxNum);
-			auto pRetS = retS.get();
-			auto nR = strR (pModelSBuf, '*', pRetS, c_retMaxNum);
-			myAssert (nR < c_retMaxNum);
-			if (nR >= c_retMaxNum) {
-				nRet = 1;
-				break;
-			}
-			for (decltype (nR) i = 0; i < nR; i++) {
-				const auto c_retSerMaxNum = 64;
-				auto retSerS = std::make_unique<char* []>(c_retSerMaxNum);
-				auto pRetSerS = retSerS.get();
-				auto nRS = strR (pRetS[i], '+', pRetSerS, c_retSerMaxNum);
-				if (nRS > 1) {
-					auto nCmp = strcmp (m_modelName.get(), pRetSerS[0]);
-					if (0 == nCmp) {
-						auto serverN = (loopHandleType)(nRS - 1);
-						auto pSerNum = std::make_unique<tempServerInfo []>(serverN);
-						for (decltype (nRS) j = 1; j < nRS; j++) {
-							const auto c_retSerMaxNum = 6;
-							char* onceRet[c_retSerMaxNum];
-							auto onceR = strR (pRetSerS[j], '-', onceRet, c_retSerMaxNum);
-							auto& rSerN = pSerNum [j - 1];
-							rSerN.first = (loopHandleType)(atoi(onceRet[0]));
-							if (onceR > 1) {
-								rSerN.second = atoi (onceRet[1]);
-							} else {
-								rSerN.second = 1;
-							}
-							loopHandleType level,  onceLv, onceIndex;
-							getLvevlFromSerId (rSerN.first, level, onceLv, onceIndex);
-							auto& bigLv = m_muServerPairS[level];
-							bigLv.second++;
+		auto szModelS = rConfig.modelS ();
+		std::unique_ptr<char[]> modelSBuf;
+		strCpy(szModelS, modelSBuf);
+		auto pModelSBuf = modelSBuf.get();
+		const auto c_retMaxNum = 64;
+		auto retS = std::make_unique<char* []>(c_retMaxNum);
+		auto pRetS = retS.get();
+		nR = strR (pModelSBuf, '*', pRetS, c_retMaxNum);
+		myAssert (nR < c_retMaxNum);
+		if (nR >= c_retMaxNum) {
+			nRet = 3;
+			break;
+		}
+		for (decltype (nR) i = 0; i < nR; i++) {
+			const auto c_retSerMaxNum = 64;
+			auto retSerS = std::make_unique<char* []>(c_retSerMaxNum);
+			auto pRetSerS = retSerS.get();
+			auto nRS = strR (pRetS[i], '+', pRetSerS, c_retSerMaxNum);
+			if (nRS > 1) {
+				auto nCmp = strcmp (m_modelName.get(), pRetSerS[0]);
+				if (0 == nCmp) {
+					auto serverN = (loopHandleType)(nRS - 1);
+					auto pSerNum = std::make_unique<tempServerInfo []>(serverN);
+					for (decltype (nRS) j = 1; j < nRS; j++) {
+						const auto c_retSerMaxNum = 6;
+						char* onceRet[c_retSerMaxNum];
+						auto onceR = strR (pRetSerS[j], '-', onceRet, c_retSerMaxNum);
+						auto& rSerN = pSerNum [j - 1];
+						rSerN.first = (loopHandleType)(atoi(onceRet[0]));
+						if (onceR > 1) {
+							rSerN.second = atoi (onceRet[1]);
+						} else {
+							rSerN.second = 1;
 						}
-						for (decltype (serverN) j = 0; j < serverN; j++) {
-							auto& rSerN = pSerNum [j];
-							loopHandleType level,  onceLv, onceIndex;
-							getLvevlFromSerId (rSerN.first, level, onceLv, onceIndex);
-							auto& bigLv = m_muServerPairS[level];
-							if (!bigLv.first) {
-								bigLv.first = std::make_unique<logicServerPair[]>(bigLv.second);
-								for (decltype (bigLv.second) k = 0; k < bigLv.second; k++) {
-									bigLv.first[k].second = 0;
-								}
-							}
-							auto& rOnceA = bigLv.first[onceLv];
-							rOnceA.second = rSerN.second;
-							rOnceA.first = std::make_unique<logicServer*[]>(rOnceA.second);
-						}
-						for (decltype (serverN) j = 0; j < serverN; j++) {
-							auto& rSerN = pSerNum [j];
-							)"<<ssNew.str()<<R"(
-						}
-						break;
+						loopHandleType level,  onceLv, onceIndex;
+						getLvevlFromSerId (rSerN.first, level, onceLv, onceIndex);
+						auto& bigLv = m_muServerPairS[level];
+						bigLv.second++;
 					}
-					
+					for (decltype (serverN) j = 0; j < serverN; j++) {
+						auto& rSerN = pSerNum [j];
+						loopHandleType level,  onceLv, onceIndex;
+						getLvevlFromSerId (rSerN.first, level, onceLv, onceIndex);
+						auto& bigLv = m_muServerPairS[level];
+						if (!bigLv.first) {
+							bigLv.first = std::make_unique<logicServerPair[]>(bigLv.second);
+							for (decltype (bigLv.second) k = 0; k < bigLv.second; k++) {
+								bigLv.first[k].second = 0;
+							}
+						}
+						auto& rOnceA = bigLv.first[onceLv];
+						rOnceA.second = rSerN.second;
+						rOnceA.first = std::make_unique<logicServer*[]>(rOnceA.second);
+					}
+					for (decltype (serverN) j = 0; j < serverN; j++) {
+						auto& rSerN = pSerNum [j];
+						)"<<ssNew.str()<<R"(
+					}
+					break;
 				}
 			}
+		}
+		const auto c_defProcBufSize = 512 * 2;
+		auto defProcBuf = std::make_unique<loopHandleType[]>(c_defProcBufSize);
+		auto pDefProc = defProcBuf.get();
+		auto defProcNum = getDefProc (pDefProc, c_defProcBufSize);
+		myAssert (defProcNum < c_defProcBufSize);
+		nR = initMsgDefProc (pDefProc, defProcNum);
+		if (!nR) {
+			nRet = 5;
+			break;
 		}
 	)"
 	<<R"(
@@ -468,12 +475,13 @@ int   moduleLogicServerGen:: genH (moduleGen& rMod)
 		osMgrH<<R"(#ifndef )"<<pModName<<R"(ServerMgr_h__
 #define )"<<pModName<<R"(ServerMgr_h__
 #include "logicServer.h"
+#include "logicServerMgr.h"
 )"<<serInc.str()<<R"(
 class )"<<strMgrClassName<<R"( : public logicServerMgr
 {
 public:
 	)"<<strMgrClassName<<R"(();
-	virtual dword afterLoad(int nArgC, char** argS, ForLogicFun* pForLogic);
+	dword afterLoad (int nArgC, char** argS, ForLogicFun* pForLogic) override;
 )"<<serVar.str()<<R"(
 };
 #endif
@@ -515,6 +523,7 @@ public:
 		osH<<R"(#ifndef )"<<pName<<R"(_h__
 #define )"<<pName<<R"(_h__
 #include "logicServer.h"
+#include "logicServerMgr.h"
 )";
 		for (auto iter = procMsgSet.begin(); procMsgSet.end() != iter; ++iter) {
 			osH<<R"(#include ")"<<iter->c_str()<<R"(Rpc.h")"<<std::endl;
@@ -705,6 +714,7 @@ int   moduleLogicServerGen:: genOnFrameFun (moduleGen& rMod, const char* szServe
 #include "gLog.h"
 #include "msg.h"
 #include "logicServer.h"
+#include "logicServerMgr.h"
 #include "tSingleton.h"
 
 )"<<pFrameDec<<R"(
@@ -1044,6 +1054,7 @@ static int )"<<pPackFun<<
 		}
 
 ps<<R"(#include "logicServer.h"
+#include "logicServerMgr.h"
 #include ")"<<strMgrClassName<<R"(.h")"<<std::endl<<R"(
 #include ")"<<pGSrcName<<R"(.h")"<<std::endl<<std::endl
 		<<strDec<<R"(

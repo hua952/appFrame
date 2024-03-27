@@ -25,6 +25,6 @@ SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 
 install(TARGETS ${prjName} ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
-set(incS src/gLog.h src/msg.h src/logicServer.h)
+set(incS src/gLog.h src/msg.h src/logicServer.h src/logicServerMgr.h)
 
 install(FILES ${incS} DESTINATION include/${myProjectName})

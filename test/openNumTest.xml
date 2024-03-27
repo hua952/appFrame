@@ -11,15 +11,6 @@
 			<appArg>detachServerS=1</appArg>
 			<appArg>frameConfigFile=clientFrame.txt</appArg>
 			<module>
-				<appClientM2>
-					<server>
-						<muTh sleepSetp="1" rearEnd="0" openNum="2" regRoute="0" showFps="1" fpsSetp="40000">
-							<procRpc>
-								<regret askType="ask"/>
-							</procRpc>
-						</muTh>
-					</server>
-				</appClientM2>
 				<appClientM1>
 					<server>
 						<chatTh sleepSetp="1" showFps="1" fpsSetp="40000" arryLen="1">
@@ -37,6 +28,11 @@
 								<manualList askType="ask"/>
 							</procRpc>
 						</netTh>
+						<muTh sleepSetp="1" rearEnd="0" openNum="2" regRoute="0" showFps="1" fpsSetp="40000">
+							<procRpc>
+								<regret askType="ask"/>
+							</procRpc>
+						</muTh>
 						<appClientConTh3 autoRun="0">
 						</appClientConTh3 >
 					</server>

@@ -83,7 +83,7 @@
 				<ask>
 					<trackLen dataType="uword" />
 				</ask>
-				<ret>
+				<ret neetSession="1">
 					<result dataType="udword" />
 				</ret>
 			</regret>

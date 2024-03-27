@@ -860,8 +860,8 @@ int serverMgr::init(int nArgC, char** argS/*, PhyCallback& info*/)
 	forLogic.fnLogMsg = logMsg; // info.fnLogMsg;
 	forLogic.fnAddComTimer = sAddComTimer;//m_callbackS.fnAddComTimer;
 	forLogic.fnNextToken = sNextToken; //info.fnNextToken;
-	forLogic.fnRegRpc = sRegRpc;
-	forLogic.fnGetDefProcServerId = sGetDefProcServerId;
+	forLogic.fnRegRpc = nullptr; // sRegRpc;
+	forLogic.fnGetDefProcServerId = nullptr; // sGetDefProcServerId;
 	forLogic.fnRegRoute = sRegRouteFun;
 	forLogic.fromNetPack = nullptr;
 	forLogic.toNetPack = nullptr;
@@ -869,16 +869,8 @@ int serverMgr::init(int nArgC, char** argS/*, PhyCallback& info*/)
 	int nR = 0;
 	int nRet = 0;
 	auto& rConfig = tSingleton<argConfig>::single ();
-	// nR= procArgSMid(nArgC, argS);
 	do
 	{
-		/*
-		if(0 != nRet) {
-			mError(" procArgSMid error nR = "<<nR);
-			nRet = 1;
-			break;
-		}
-		*/
 		auto workDir = rConfig.workDir();
 		std::string strPath;
 		if (workDir) {
@@ -907,7 +899,6 @@ int serverMgr::init(int nArgC, char** argS/*, PhyCallback& info*/)
 				if (serNum) {
 					s_SerFunSet.init ((pSerializePackFunType3*)(pBuf.get()), serNum);
 				}
-				// forLogic.pSerFunSPtr = &s_FunS;
 				forLogic.fromNetPack = sFromNetPack;
 				forLogic.toNetPack = sToNetPack;
 			}
@@ -916,15 +907,15 @@ int serverMgr::init(int nArgC, char** argS/*, PhyCallback& info*/)
 			auto fnGetMsgPairS = (getMsgPairSFT)(getFun (hdll, "getMsgPairS"));
 			if (fnGetMsgPairS) {
 				const auto cNum = 512;
-				const auto c_bufNum = cNum * 4;
+				const auto c_bufNum = cNum * 2;
 				auto pBuf = std::make_unique<uword[]>(c_bufNum);
 				auto pB = pBuf.get();
 				auto rpcNum = fnGetMsgPairS (pB, c_bufNum);
 				myAssert (rpcNum < cNum);
-				auto reNum = rpcNum / 4;
+				auto reNum = rpcNum / 2;
 				for (decltype (reNum) i = 0; i < reNum; i++) {
-					auto j = i * 4;
-					sRegRpc (pB[j], pB[j + 1], pB[j + 2], pB[j + 3]);
+					auto j = i * 2;
+					sRegRpc (pB[j], pB[j + 1], c_emptyLoopHandle, c_emptyLoopHandle);
 				}
 			}
 		}
@@ -939,7 +930,6 @@ int serverMgr::init(int nArgC, char** argS/*, PhyCallback& info*/)
 			}
 		}
 
-		
 		auto modelNum = rConfig.modelNum ();
 		auto pAllMod = rConfig.allModelS ();
 
@@ -980,9 +970,7 @@ int serverMgr::init(int nArgC, char** argS/*, PhyCallback& info*/)
 					node.autoRun = rS.autoRun;
 					node.connectorNum = 0;
 					node.listenerNum = 0;
-					// int initMid(const char* szName, ServerIDType id, serverNode* pNode, frameFunType funOnFrame = nullptr, void* argS = nullptr);
 					rServer.initMid ("", serId, &node);
-					
 				}
 			}
 		}
@@ -1012,140 +1000,24 @@ int serverMgr::init(int nArgC, char** argS/*, PhyCallback& info*/)
 	} while(0);
 	return nRet;
 }
-/*
-int serverMgr::procArgSMid(int nArgC, char** argS)
-{
-	using tempModuleInfo = std::set<std::string>;
-	tempModuleInfo moduleS;
-	for(int i = 1; i < nArgC; i++)
-	{
-		auto pC = argS[i];
-		auto nL = strlen(pC);
-		std::unique_ptr<char[]>	 name = std::make_unique<char[]>(nL + 1);
-		strcpy(name.get(), pC);
-		const int c_BuffNum = 3;
-		char* buff[c_BuffNum];
-		auto nR = strR(name.get(), '=', buff, c_BuffNum);
-		if(2 == nR)
-		{
-			if(0 == strcmp(buff[0], "addLogic")) {
-				auto bI = moduleS.insert(buff[1]);
-				myAssert (bI.second);
-			}
-		}
-	}
-	auto nS = moduleS.size();
-	m_ModuleNum = nS;
-	m_ModuleS = std::make_unique<CModule[]>(nS);
-	auto i = 0;
-	auto& forLogic = getForLogicFun();
-	for(auto it = moduleS.begin(); moduleS.end() != it; ++it)
-	{
-		auto& rM = m_ModuleS[i++];
-		rM.init(it->c_str());
-	}
-	return 0;
-}
-*/
+
 int serverMgr::createServerS()
 {
 	int nRet = 0;
 	
 	return nRet;
 }
-/*
-int serverMgr::createServer(const char* szName, loopHandleType serId,  serverNode* pNode, frameFunType funFrame, void* arg)
-{
-	loopHandleType pRet = c_emptyLoopHandle;
-	loopHandleType pid = 0;
-	loopHandleType sid = 0;
-	fromHandle (serId, pid, sid);
-	auto& p = m_loopS[sid];
-	myAssert (!p);
-	p = std::make_unique<server> ();
-	p->initMid(szName, serId, pNode, funFrame, arg);
-	m_CurLoopNum++;
-	mInfo ("createServer szName = "<<szName<<" pid = "<<pid<<" sid = "<<sid<<" m_CurLoopNum = "<<m_CurLoopNum);
-	pRet = serId;
-	return pRet;
-}
-*/
+
 msgMgr& serverMgr::defMsgInfoMgr ()
 {
 	return m_defMsgInfoMgr;
 }
 
-/*
-loopHandleType	serverMgr::procId()
-{
-	return tSingleton<mArgMgr>::single().procId();
-}
-loopHandleType	serverMgr::gropId()
-{
-	return m_gropId;
-}
-
-void	serverMgr::setGropId(loopHandleType grop)
-{
-	m_gropId = grop;
-}
-*/
 server* serverMgr::getLoop(loopHandleType id)
 {
-	/*
-	loopHandleType pid = 0;
-	loopHandleType lid = 0;
-	fromHandle (id, pid, lid);
-	return m_loopS[lid].get();
-	*/
 	return getServer (id);
 }
-/*
-int regSysProcPacketFun (regMsgFT fnRegMsg, serverIdType handle);
-int serverMgr::getAllLoopAndStart(serverNode* pBuff, int nBuffNum)
-{
-	auto pid = procId ();
-	int nRet = 0;
-	std::vector<loopHandleType>  upVec;
-	std::vector<loopHandleType>  downVec;
-	for (auto i = 0; i < LoopNum && nRet < nBuffNum; i++)
-	{
-		auto &p = m_loopS[i];
-		if (!p) {
-			continue;
-		}
-		auto sid = p->id ();
-		if (p->canUpRoute ()) {
-			upVec.push_back(sid);
-		}
-		if (p->canDownRoute ()) {
-			downVec.push_back(sid);
-		}
-		auto &node = pBuff[nRet++];
-		auto pNode = p->getServerNode ();
-		if (pNode) {
-			node = *pNode;
-		} else {
-			node.listenerNum = 0;
-			node.connectorNum = 0;
-		}
-		node.handle = sid;//toHandle (pid, id);
-		m_canUpRouteServerNum = upVec.size ();
-		m_canDownRouteServerNum = downVec.size ();
-		m_canRouteServerIdS = std::make_unique<loopHandleType[]> (m_canUpRouteServerNum + m_canDownRouteServerNum);
-		auto curI = 0;
-		for (auto it = upVec.begin (); it != upVec.end (); it++) {
-			m_canRouteServerIdS [curI++] = *it;
-		}
-		for (auto it = downVec.begin (); it != downVec.end (); it++) {
-			m_canRouteServerIdS [curI++] = *it;
-		}
-	}
 
-	mTrace ("at the end nRet = "<<nRet);
-	return nRet;
-}
-*/
 uword  serverMgr:: getAllCanRouteServerS (loopHandleType* pBuff, uword buffNum) // Thread safety
 {
 	auto nAll = m_canUpRouteServerNum + m_canDownRouteServerNum;
@@ -1224,12 +1096,7 @@ loopHandleType serverMgr::getOnceUpOrDownServer ()
     } while (0);
     return nRet;
 }
-/*
-PhyCallback&   serverMgr:: getPhyCallback()
-{
-	return m_callbackS;
-}
-*/
+
 ForLogicFun&  serverMgr::getForLogicFun()
 {
 	return  m_forLogic;
@@ -1248,7 +1115,6 @@ int   serverMgr :: initNetServer ()
 		std::string strPath = binH.get (); 
 		strPath += midNetLibName;
 		strPath += dllExtName ();
-		// auto& rC = getPhyCallback();
 		nRet = initComTcpNet (strPath.c_str(), allocPack /*rC.fnAllocPack*/, freePack /*rC.fnFreePack*/, logMsg /*rC.fnLogMsg*/);
 		if (nRet) {
 			mError ("initComTcpNet error nRet = "<<nRet<<" strPath = "
