@@ -21,7 +21,13 @@ int  argConfig:: afterAllArgProc ()
 {
     int  nRet = 0;
 	do {
-		using tempServerS = std::map<serverIdType, std::pair<serverIdType, bool>>;
+		struct tempInfo
+		{
+			serverIdType first;
+			bool second;
+			bool route;
+		};
+		using tempServerS = std::map<serverIdType, tempInfo>;
 		std::map<std::string, tempServerS> modMap;
 		auto szModelS = modelS ();
 		std::unique_ptr<char[]> buf;
@@ -64,7 +70,7 @@ int  argConfig:: afterAllArgProc ()
 
 			for (decltype (nSerR) j = 1; j < nSerR; j++) {
 				auto pA = pRetSerS[j];
-				const auto c_argMaxRetNum = 4;
+				const auto c_argMaxRetNum = 8;
 				char* retArgS[c_argMaxRetNum];
 				auto nRArgS = strR(pA, '-', retArgS, c_argMaxRetNum);
 				myAssert (nRArgS < c_argMaxRetNum);
@@ -72,17 +78,26 @@ int  argConfig:: afterAllArgProc ()
 					nRet = 4;
 					break;
 				}
+				tempInfo info;
 				auto thTmpId = (ubyte)(atoi(retArgS[0]));
 				auto nLevel = thTmpId / c_onceServerLevelNum;
+				/*
 				ServerIDType openNum = 1;
 				bool autoRun = true;
+				bool route = false;
+				*/
+				info.first = 1;
+				info.second = true;
+				info.route = false;
 				if (nRArgS > 1) {
-					openNum  = (decltype (thTmpId)) (atoi(retArgS[1]));
+					info.first = (decltype (thTmpId)) (atoi(retArgS[1]));
 				} else if (nRArgS > 2) {
-					autoRun = atoi(retArgS[2]);
+					info.second = atoi(retArgS[2]);
+				} if (nRArgS > 3) {
+					info.route = atoi(retArgS[3]);
 				}
-				myAssert (openNum <= c_levelMaxOpenNum[nLevel]);
-				auto insRet = serverS.insert(std::make_pair((serverIdType)(atoi(retArgS[0])), std::make_pair(openNum, autoRun)));
+				myAssert (info.first <= c_levelMaxOpenNum[nLevel]);
+				auto insRet = serverS.insert(std::make_pair((serverIdType)(atoi(retArgS[0])), info));
 				myAssert (insRet.second);
 				if (!insRet.second) {
 					nRet = 5;
@@ -113,6 +128,7 @@ int  argConfig:: afterAllArgProc ()
 				rS.serverTmpId = ite->first;
 				rS.openNum = ite->second.first;
 				rS.autoRun = ite->second.second;
+				rS.route = ite->second.route;
 			}
 		}
     } while (0);

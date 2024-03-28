@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <config className="frameConfig" projectDir="C:\work\appFrame"  projectName="frameConfig">
 	<workDir type="string">C:/work/appFrameProject/project/chatTestInstall</workDir>
+	<ip type="string">127.0.0.1</ip>
+	<startPort type="uword">12000</startPort>
 	<logFile type="string"></logFile>
 	<serializePackLib type="string"></serializePackLib>
 	<logicModel type="string"></logicModel>

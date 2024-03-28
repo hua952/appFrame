@@ -23,10 +23,11 @@ public:
 	ubyte  serverNum ();
 	void   setServerNum (ubyte ubyNum);
 	logicServer*  findServer(serverIdType	serverId);
-	// int    initModelS (const char* szModelS);
+	int    initModelS (const char* szModelS);
 	ForLogicFun&     forLogicFunSt ();
 	logicMuServerPairS*  logicMuServerPairSPtr ();
 	serverIdType  netServerTmp ();
+	void          setNetServerTmp (serverIdType serverId);
 	logicServer**       getNetServerS (uword& num);
 	loopHandleType  getMsgDefProcTmp (msgIdType msgId);
 	logicServerPair*  getServerArray (serverIdType	serverId);

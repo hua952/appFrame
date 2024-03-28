@@ -126,10 +126,10 @@ int  appGen:: batFileGen (appFile& rApp)
 			ts<<"procId="<<procId;
 			rMainArgS.push_back(ts.str());
 		}
-		{
-			std::stringstream ts;
-			ts<<"addLogic="<<szAppName<<"ModuleMgr";
-			// rMainArgS.push_back(ts.str());
+
+		auto netType = rApp.netType ();
+		if (appNetType_gate == netType) {
+			rMainArgS.push_back("ip=0.0.0.0");
 		}
 		{
 			std::stringstream ts;
@@ -138,7 +138,7 @@ int  appGen:: batFileGen (appFile& rApp)
 		}
 		{
 			std::stringstream ts;
-			uword uwT = appNetType ();
+			uword uwT = rApp.netType ();
 			ts<<"appNetType="<<uwT;
 			rMainArgS.push_back(ts.str());
 		}
@@ -155,12 +155,7 @@ int  appGen:: batFileGen (appFile& rApp)
 		os<<"cppLevel0.exe ";
 		os<<strLogFull<<" "<<frameHomeFull;
 		rMainArgS.push_back(frameHomeFull);
-	/*	
-		os<<" addLogic="
-			<<szAppName<<"ModuleMgr procId="<<procId
-			<<" logFile="<<strLogFile
-			<<" workDir="<<strInsHome;
-			*/
+	
 		os<<"procId="<<procId
 			<<" logFile="<<strLogFile
 			<<" workDir="<<strInsHome;
@@ -178,9 +173,10 @@ int  appGen:: batFileGen (appFile& rApp)
 			auto& rSS = pM->orderS ();
 			for (auto ite = rSS.begin (); ite != rSS.end (); ite++) {
 				auto& pS = *ite;
-				ssModelS<<"+"<<pS->tmpNum ()<<"-"<<pS->openNum ()<<"-"<<pS->autoRun ()?1:0;
+				auto autoRun = (int)(pS->autoRun());
+				auto route = (int)(pS->route());
+				ssModelS<<"+"<<pS->tmpNum ()<<"-"<<pS->openNum ()<<"-"<<autoRun<<"-"<<route;
 			}
-			// rMainArgS.push_back(ts.str());
 		}
 		rMainArgS.push_back(ssModelS.str());
 		auto& rV = rApp.argS ();

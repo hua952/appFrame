@@ -9,6 +9,8 @@ typedef server* pserver;
 packetHead* allocPack(udword udwSize);// Thread safety
 void	freePack(packetHead* pack);// Thread safety
 
+int fromNetPack (netPacketHead* pN, pPacketHead& pNew);// Thread safety
+int toNetPack (netPacketHead* pN, pPacketHead& pNew);// Thread safety
 class serverMgr
 {
 public:
@@ -17,7 +19,6 @@ public:
 	serverMgr();
 	~serverMgr();
 	int				initFun (int cArg, char** argS);
-	// serverIdType	getServerNum();
 	server*         getServer(loopHandleType handle);
 	loopHandleType	procId();
 	loopHandleType	gropId();
@@ -29,7 +30,6 @@ public:
     void  setCreateTcpServerFn (createTcpServerFT va);
     delTcpServerFT    delTcpServerFn ();
     void  setDelTcpServerFn (delTcpServerFT va);
-	// server*         getOutServer();
     udword    packSendInfoTime ();
     void  setPackSendInfoTime (udword va);
     udword    delSendPackTime ();
@@ -38,13 +38,8 @@ public:
 	int pushPackToLoop (loopHandleType pThis, packetHead* pack);// Thread safety
 
 	server*   getLoop(loopHandleType id);
-	/*
-	int createServer(const char* szName, loopHandleType serId,
-	serverNode* pNode, frameFunType funFrame, void* arg);
-	*/
 	int             init(int nArgC, char** argS/*, PhyCallback& info*/);
 	int   initNetServer ();
-	// int procArgSMid(int nArgC, char** argS);
 	
 	int             createServerS();
 	int getAllLoopAndStart(serverNode* pBuff, int nBuffNum);
@@ -55,15 +50,15 @@ public:
 	void onLoopEnd(ServerIDType fId);
 	void logicOnConnect(serverIdType fId, SessionIDType sessionId, uqword userData);
 	void logicOnAccept(serverIdType fId, SessionIDType sessionId, uqword userData);
-	serializePackFunType  fromNetPack ();
-	serializePackFunType  toNetPack ();
+	// serializePackFunType  fromNetPack ();
+	// serializePackFunType  toNetPack ();
 	uword  canUpRouteServerNum ();
 	void  setCanUpRouteServerNum (uword v);
 	uword  canDownRouteServerNum ();
 	void  setCanDownRouteServerNum (uword v);
-	loopHandleType   getOnceUpServer ();
-	loopHandleType   getOnceDownServer ();
-	loopHandleType   getOnceUpOrDownServer ();
+	// loopHandleType   getOnceUpServer ();
+	// loopHandleType   getOnceDownServer ();
+	// loopHandleType   getOnceUpOrDownServer ();
 	uword  getAllCanRouteServerS (loopHandleType* pBuff, uword buffNum); // Thread safety
 	uword  getAllCanUpServerS (loopHandleType* pBuff, uword buffNum); // Thread safety
 	uword  getAllCanDownServerS (loopHandleType* pBuff, uword buffNum); // Thread safety
@@ -71,7 +66,9 @@ public:
 	CModule&  ModuleMgr ();
 	muServerPairS*  muServerPairSPtr ();
 	serverIdType  netServerTmp ();
+	void          setNetServerTmp (serverIdType serverId);
 	server*       getNetServerS (uword& num);
+	server*       getOnceNetServer ();
 private:
 	serverIdType  m_netServerTmp;
 	muServerPairS  m_muServerPairS[c_serverLevelNum];
@@ -89,14 +86,10 @@ private:
 
 	uword  m_canDownRouteServerNum;
 	uword  m_canUpRouteServerNum;
-	serializePackFunType  m_toNetPack;
-	serializePackFunType  m_fromNetPack;
+	// serializePackFunType  m_toNetPack;
+	// serializePackFunType  m_fromNetPack;
 	msgMgr		m_defMsgInfoMgr;
-	// int			m_CurLoopNum;
-	// std::unique_ptr<server[]>	 m_loopS;
 	std::unique_ptr<loopHandleType[]>	 m_canRouteServerIdS;
-	// typedef std::map<loopHandleType, std::string> tempLoopIdMap;
-	// tempLoopIdMap	m_tempLoopIdMap;
 	ForLogicFun m_forLogic;
 };
 

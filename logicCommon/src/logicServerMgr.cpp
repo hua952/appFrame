@@ -9,7 +9,12 @@ dword logicServerMgr::afterLoad(int nArgC, char** argS, ForLogicFun* pForLogic)
 	} while (0);
 	return nRet;
 }
-/*
+
+void           logicServerMgr:: setNetServerTmp (serverIdType serverId)
+{
+    m_netServerTmp = serverId;
+}
+
 int     logicServerMgr:: initModelS (const char* szModelS)
 {
     int     nRet = 0;
@@ -30,10 +35,9 @@ int     logicServerMgr:: initModelS (const char* szModelS)
 		auto szServerS = pRetS[1];
 
 		const auto c_serRetMaxNum = 64;
-		char*  serRetS[c_serRetMaxNum];
-		auto retBuf = std::make_unique<char[]>(c_serRetMaxNum);
-		auto pRetBuf = retBuf.get();
-		nR = strR(szServerS, '+', pRetBuf, c_serRetMaxNum);
+		auto retBuf = std::make_unique<char* []>(c_serRetMaxNum);
+		auto serRetS = retBuf.get();
+		nR = strR(szServerS, '+', serRetS, c_serRetMaxNum);
 		myAssert (nR);
 		struct tempSerInfo
 		{
@@ -43,20 +47,20 @@ int     logicServerMgr:: initModelS (const char* szModelS)
 		using  tempSerInfoMap = std::map<loopHandleType, tempSerInfo>;
 		tempSerInfoMap  tempMap;
 		for (decltype (nR) i = 1; i < nR; i++) {
-			auto serS = pRetBuf[i];
+			auto serS = serRetS [i];
 			const auto c_argMaxRet = 6;
-			auto argBuf = std::make_unique<char[]>(c_argMaxRet);
+			auto argBuf = std::make_unique<char* []>(c_argMaxRet);
 			auto pArgS = argBuf.get();
 			auto nRR = strR(serS, '-', pArgS, c_argMaxRet);
 			myAssert (nRR < c_argMaxRet);
 			auto tmpId = (loopHandleType)(atoi(pArgS[0]));
 			auto inRet = tempMap.insert(std::make_pair(tmpId, tempSerInfo()));
-			myAssert(inRet.first);
-			if (!inRet.first) {
+			myAssert(inRet.second);
+			if (!inRet.second) {
 				nRet = 3;
 				break;
 			}
-			auto& info = inRet.second;
+			auto& info = inRet.first->second;
 			info.open = (loopHandleType)(atoi(pArgS[1]));
 			info.autoRun= (bool)(atoi(pArgS[2]));
 		}
@@ -85,7 +89,7 @@ int     logicServerMgr:: initModelS (const char* szModelS)
     } while (0);
     return nRet;
 }
-*/
+
 logicServerMgr::logicServerPair*  logicServerMgr:: getServerArray (serverIdType	serverId)
 {
 	logicServerPair*   nRet = 0;

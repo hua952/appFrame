@@ -6,14 +6,14 @@
 	<configDef>chatTestConfig.xml</configDef>
 	<defMsg file="cChess.xml"/>
 	<appArg>serializePackLib=protobufSer</appArg>
-	<app>
+	<app netNum="4">
 		<client appNetType="0">
 			<appArg>detachServerS=1</appArg>
 			<appArg>frameConfigFile=clientFrame.txt</appArg>
 			<module>
 				<appClientM1>
 					<server>
-						<chatTh sleepSetp="1" showFps="1" fpsSetp="40000" arryLen="1">
+						<chatTh sleepSetp="1" showFps="1" fpsSetp="40000">
 							<procRpc>
 								<manualList askType="ret"/>
 								<regret askType="ret"/>
@@ -22,8 +22,7 @@
 								<roomChatTxt askType="ask"/>
 							</procRpc>
 						</chatTh>
-						<netTh rearEnd="0" regRoute="0" sleepSetp="1" showFps="1" fpsSetp="40000">
-							<connect defRoute="1"  targetEndPoint="en1" teag="1"/>
+						<netTh sleepSetp="1" showFps="1" fpsSetp="40000" route="1">
 							<procRpc>
 								<manualList askType="ask"/>
 							</procRpc>
@@ -39,6 +38,23 @@
 				</appClientM1>
 			</module>
 		</client>
+		<gate appNetType="1">
+			<appArg>detachServerS=1</appArg>
+			<appArg>frameConfigFile=gateFrame.txt</appArg>
+			<module>
+				<gateM>
+					<server>
+						<gateLogicTh sleepSetp="1" showFps="1" fpsSetp="40000">
+							<procRpc>
+								<move askType="ask"/>
+							</procRpc>
+						</gateLogicTh >
+						<gateConTh autoRun="0" showFps="0">
+						</gateConTh >
+					</server>
+				</gateM>
+			</module>
+		</gate>
 	</app>
 </servers>
 

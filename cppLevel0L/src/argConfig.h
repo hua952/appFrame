@@ -12,6 +12,7 @@ public:
 		serverIdType	         serverTmpId;
 		serverIdType	         openNum;
 		bool                     autoRun;
+		bool                     route;
 	};
 	struct stModel
 	{

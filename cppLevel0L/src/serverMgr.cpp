@@ -95,7 +95,7 @@ static pSerializePackFunType3* sGetNode (udword msgId)
 	return pRet;
 }
 
-static int sFromNetPack (netPacketHead* pN, pPacketHead& pNew)
+int fromNetPack (netPacketHead* pN, pPacketHead& pNew)
 {
 	int nRet = 0;
 	do {
@@ -118,7 +118,7 @@ static int sFromNetPack (netPacketHead* pN, pPacketHead& pNew)
 	return nRet;
 }
 
-static int sToNetPack (netPacketHead* pN, pPacketHead& pNew)
+int toNetPack (netPacketHead* pN, pPacketHead& pNew)
 {
 	int nRet = 0;
 	do {
@@ -138,12 +138,9 @@ static int sToNetPack (netPacketHead* pN, pPacketHead& pNew)
 }
 serverMgr::serverMgr()
 {
-	// m_sinServerS.second = 0;
 	for (decltype (c_serverLevelNum) i = 0; i < c_serverLevelNum; i++) {
 		  m_muServerPairS[i].second = 0;
 	}
-	// m_lastServer.second = 0;
-	// m_mutServerS1.second = 0;
 	m_netServerTmp = c_emptyLoopHandle;
 	m_serverNum = 0;
 	m_outNum = 1;
@@ -151,7 +148,6 @@ serverMgr::serverMgr()
 	m_delTcpServerFn = nullptr;
 	m_packSendInfoTime = 5000;
 
-	// m_CurLoopNum = 0;
 	m_gropId = 0;
     m_delSendPackTime = 5000;
 	m_canUpRouteServerNum = 0;
@@ -310,18 +306,6 @@ static void  sLogCallStack (loopHandleType pThis, int nL)
 server*   serverMgr:: getServer(loopHandleType handle)
 {
 	server* pRet = nullptr;
-/*	
-	for (auto i = 0; i < LoopNum; i++) {
-		if (!m_loopS[i]) {
-			continue;
-		}
-		auto curH = m_loopS[i]->myHandle ();
-		if (curH == handle) {
-			pRet = m_loopS[i].get();
-			break;
-		}
-	}
-	*/
 
 	loopHandleType ubyLv,  onceLv, onceIndex ;
 	getLvevlFromSerId (handle, ubyLv, onceLv, onceIndex);
@@ -634,14 +618,6 @@ int midSendPackToLoopForChannelFun(packetHead* pack) /* 返回值貌似没用 */
 			mError(" no net server pack is : "<<*pack);
 			freePack (pack);
 		}
-		/*
-		auto objSer = pN->ubyDesServId;
-		if (bRand) {
-			objSer = rMgr.getOnceUpOrDownServer ();
-			myAssert (c_emptyLoopHandle != objSer);
-		}
-		rSerMgr.pushPackToLoop  (objSer, pack);
-		*/
 	} while (0);
 	return nRet;
 }
@@ -652,7 +628,6 @@ int midSendPackToLoopFun(packetHead* pack) /* 返回值貌似没用 */
 	int nRet = 0; // procPacketFunRetType_del;
 	int nR = 0;
 	auto pN = P2NHead (pack);
-	// auto& rMgr = tSingleton<loopMgr>::single ();
 	auto& rMgr = tSingleton<serverMgr>::single();
 	auto& rSerMgr = rMgr; // tSingleton<serverMgr>::single ();
 
@@ -674,13 +649,18 @@ int midSendPackToLoopFun(packetHead* pack) /* 返回值貌似没用 */
 		}
 		if (bIsRet) {
 			if (EmptySessionID == pack->sessionID) {
+				/*
 				auto objSe = rMgr.getOnceUpServer ();
 				myAssert (c_emptyLoopHandle != objSe);
-				if (c_emptyLoopHandle == objSe) {       /*     由于本函数是处理首站发出, 不可能会出现这种情况        */
+				*/
+				auto pSendServer = rMgr.getOnceNetServer ();
+				if (!pSendServer) {
+				// if (c_emptyLoopHandle == objSe) {       /*     由于本函数是处理首站发出, 不可能会出现这种情况        */
 					mError(" can not find net server whith pack pack is : "<<*pack);
 					freePack (pack);
 				} else {
-					rSerMgr.pushPackToLoop (objSe, pack);
+					pSendServer->pushPack (pack);
+					// rSerMgr.pushPackToLoop (objSe, pack);
 				}
 			} else {
 				auto pSess = pS->getSession (pack->sessionID);
@@ -700,7 +680,6 @@ int midSendPackToLoopFun(packetHead* pack) /* 返回值貌似没用 */
 
 		bool  bNeetRet = false;
 
-		// auto& rMsgInfoMgr = tSingleton<loopMgr>::single ().defMsgInfoMgr ();
 		auto& rMsgInfoMgr = rMgr.defMsgInfoMgr ();
 		auto retMsgId = rMsgInfoMgr.getRetMsg (pN->uwMsgID);
 		if (c_null_msgID != retMsgId) {
@@ -718,11 +697,19 @@ int midSendPackToLoopFun(packetHead* pack) /* 返回值貌似没用 */
 			pN->dwToKen = pS->nextToken ();
 		}
 		pack->pAsk = 0;
-		
+		/*	
 		auto objSer = rMgr.getOnceUpServer ();
 		myAssert (c_emptyLoopHandle != objSer);
+		*/
+		auto pSendServer = rMgr.getOnceNetServer ();
+		myAssert (pSendServer);
+		if (!pSendServer) {
+			mError(" no net server pack is : "<<*pack);
+			freePack (pack);
+			break;
+		}
 
-		auto toNetPack = rMgr.toNetPack ();
+		// auto toNetPack = rMgr.toNetPack ();
 		packetHead* pNew = nullptr;
 		toNetPack (pN, pNew);
 		
@@ -744,14 +731,14 @@ int midSendPackToLoopFun(packetHead* pack) /* 返回值貌似没用 */
 			pack = pNew;
 		} else {
 			if (pNew) {
-				// freeFun (pack);
 				freePack (pack);
 				pack = pNew;
 			}
 		}
 		pack->sessionID = EmptySessionID;
 		pack->loopId = c_emptyLoopHandle;
-		rSerMgr.pushPackToLoop (objSer, pack);
+		// rSerMgr.pushPackToLoop (objSer, pack);
+		pSendServer->pushPack (pack);
 	} while (0);
 	return nRet;
 }
@@ -805,15 +792,7 @@ static void sFreePack (packetHead* pack)
 	auto pN = P2NHead (pack);
 	g_freePackFun (pack);
 }
-/*
-static int sCreateServer (const char* szName, loopHandleType serId, 
-		serverNode* pNode, frameFunType funFrame, void* arg)
-{
-	auto& rMgr = tSingleton<serverMgr>::single();
-	return rMgr.createServer(szName, serId,
-			pNode, funFrame, arg);
-}
-*/
+
 static int sRegRouteFun(loopHandleType myServerId, loopHandleType objServerId, SessionIDType sessionId,  udword onlyId)
 {
 	int nRet = 0;
@@ -837,16 +816,16 @@ static int sRegRouteFun(loopHandleType myServerId, loopHandleType objServerId, S
 }
 
 typedef void		(*freePackFT)(packetHead* pack);
-
+/*
 serializePackFunType  serverMgr:: fromNetPack ()
 {
     return m_fromNetPack;
 }
-
-int serverMgr::init(int nArgC, char** argS/*, PhyCallback& info*/)
+*/
+int serverMgr::init(int nArgC, char** argS)
 {
-	m_fromNetPack = nullptr;
-	m_toNetPack = nullptr;
+	// m_fromNetPack = nullptr;
+	// m_toNetPack = nullptr;
 	auto& forLogic = getForLogicFun();
 	g_allocPackFun = allocPack; // info.fnAllocPack;
 	g_freePackFun = freePack; // info.fnFreePack;
@@ -899,8 +878,10 @@ int serverMgr::init(int nArgC, char** argS/*, PhyCallback& info*/)
 				if (serNum) {
 					s_SerFunSet.init ((pSerializePackFunType3*)(pBuf.get()), serNum);
 				}
-				forLogic.fromNetPack = sFromNetPack;
-				forLogic.toNetPack = sToNetPack;
+				forLogic.fromNetPack = fromNetPack;
+				forLogic.toNetPack = toNetPack;
+				// m_toNetPack =  sToNetPack;
+				// m_fromNetPack = sFromNetPack;
 			}
 
 			typedef int  (*getMsgPairSFT) (uword* pFunS, int nNum);
@@ -932,7 +913,7 @@ int serverMgr::init(int nArgC, char** argS/*, PhyCallback& info*/)
 
 		auto modelNum = rConfig.modelNum ();
 		auto pAllMod = rConfig.allModelS ();
-
+		auto nAppNetType = (appNetType)(rConfig.appNetType());
 		auto* pSerA = muServerPairSPtr ();
 		for (decltype (modelNum) i = 0; i < modelNum; i++) {
 			auto& rMod = pAllMod[i];
@@ -960,16 +941,40 @@ int serverMgr::init(int nArgC, char** argS/*, PhyCallback& info*/)
 				auto& rPa = rMu.first[onceLv];
 				rPa.second = rS.openNum;
 				rPa.first = std::make_unique<server[]>(rPa.second);
+				serverNode node;
+				node.sleepSetp = 10;
+				node.fpsSetp = 40000;
+				node.autoRun = rS.autoRun;
+				node.route = rS.route;
+				node.connectorNum = 0;
+				node.listenerNum = 0;
+				serverEndPointInfo	* pEndpoint = &node.connectEndpoint[0];
+				if (node.route) {
+					if (nAppNetType == appNetType_gate) {
+						node.listenerNum = 1;
+						pEndpoint = &node.listenEndpoint[0];
+					} else {
+						node.connectorNum = 1;
+						if (nAppNetType == appNetType_client) {
+							myAssert(1 == 	rPa.second);
+						} 
+					}
+					strNCpy (pEndpoint->ip, sizeof(pEndpoint->ip), rConfig.ip());
+					auto curNet = netServerTmp ();
+					myAssert (curNet == c_emptyLoopHandle);
+					setNetServerTmp (rS.serverTmpId);
+				}
+				
 				for (decltype (rPa.second) k = 0; k < rPa.second; k++) {
 					auto& rServer = rPa.first[k];
 					auto serId = rS.serverTmpId + k;
-					serverNode node;
 					node.handle = serId;
-					node.sleepSetp = 10;
-					node.fpsSetp = 40000;
-					node.autoRun = rS.autoRun;
-					node.connectorNum = 0;
-					node.listenerNum = 0;
+					if (nAppNetType == appNetType_client) {
+						pEndpoint->port = rConfig.startPort() + rand()%rPa.second;
+					} else {
+						pEndpoint->port = rConfig.startPort() + k;
+					}
+					pEndpoint->userData = serId;
 					rServer.initMid ("", serId, &node);
 				}
 			}
@@ -1060,6 +1065,7 @@ uword   serverMgr::getAllCanDownServerS (loopHandleType* pBuff, uword buffNum)
 	return nRet;
 }
 
+/*
 loopHandleType serverMgr:: getOnceUpServer ()
 {
     loopHandleType    nRet = c_emptyLoopHandle;
@@ -1096,7 +1102,7 @@ loopHandleType serverMgr::getOnceUpOrDownServer ()
     } while (0);
     return nRet;
 }
-
+*/
 ForLogicFun&  serverMgr::getForLogicFun()
 {
 	return  m_forLogic;
@@ -1124,12 +1130,12 @@ int   serverMgr :: initNetServer ()
     } while (0);
     return nRet;
 }
-
+/*
 serializePackFunType serverMgr:: toNetPack ()
 {
     return m_toNetPack;
 }
-
+*/
 uword serverMgr:: canRouteNum ()
 {
     return m_canUpRouteServerNum  + m_canDownRouteServerNum; // m_upNum;
@@ -1244,27 +1250,6 @@ CModule&  serverMgr:: ModuleMgr ()
     return m_ModuleMgr;
 }
 
-/*
-serverMgr::serverPair&  serverMgr:: sinServerS ()
-{
-    return m_sinServerS;
-}
-serverMgr::serverPair&  serverMgr:: lastServer ()
-{
-    return m_lastServer;
-}
-
-serverMgr::serverPair&  serverMgr:: mutServerS1 ()
-{
-    return m_mutServerS1;
-}
-
-serverMgr::serverPair&  serverMgr:: mutServerS2 ()
-{
-    return m_mutServerS2;
-}
-*/
-
 serverMgr::muServerPairS* serverMgr:: muServerPairSPtr ()
 {
 	return m_muServerPairS;
@@ -1273,6 +1258,11 @@ serverMgr::muServerPairS* serverMgr:: muServerPairSPtr ()
 serverIdType  serverMgr:: netServerTmp ()
 {
     return m_netServerTmp;
+}
+
+void           serverMgr:: setNetServerTmp (serverIdType serverId)
+{
+    m_netServerTmp = serverId;
 }
 
 server*   serverMgr:: getNetServerS (uword& num)
@@ -1296,6 +1286,32 @@ server*   serverMgr:: getNetServerS (uword& num)
 			num = rS.second;
 		}
 	} while (0);
+    return nRet;
+}
+
+server*        serverMgr:: getOnceNetServer ()
+{
+    server*        nRet = nullptr;
+    do {
+		auto tmpId = netServerTmp ();
+		if (c_emptyLoopHandle == tmpId) {
+			break;
+		}
+		loopHandleType ubyLv,  onceLv, onceIndex ;
+		getLvevlFromSerId (tmpId, ubyLv, onceLv, onceIndex);
+		muServerPairS* pAS = muServerPairSPtr ();
+		auto& rMu = pAS[ubyLv];
+		if (onceLv >= rMu.second) {
+			break;	
+		}
+		auto& rS = rMu.first[onceLv];
+		if (rS.second) {
+			nRet = rS.first.get ();
+			auto num = rS.second;
+			myAssert (num);
+			nRet += rand()%num;
+		}
+    } while (0);
     return nRet;
 }
 

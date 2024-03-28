@@ -83,18 +83,20 @@ public:
 	void  setRearEnd (bool v);
 	bool  regRoute ();
 	void  setRegRoute (bool v);
-	uword  arryLen ();
-	void  setArryLen (uword v);
 	const char*  strTmpHandle ();
 	void  setStrTmpHandle (const char* v);
 	uword  openNum ();
 	void  setOpenNum (uword v);
 	uword  tmpNum ();
 	void  setTmpNum (uword v);
+	bool  route ();
+	void  setRoute (bool v);
 private:
+	bool  m_route;
+	udword			m_fpsSetp;
+	udword			m_sleepSetp;
 	uword  m_tmpNum;
 	uword  m_openNum;
-	uword  m_arryLen;
 	bool  m_regRoute;
 	bool  m_rearEnd;
 	bool  m_autoRun;
@@ -111,7 +113,5 @@ private:
 	std::unique_ptr <char[]>  m_commit;
 	toolServerNode  m_serverInfo;
 	rpcMap			m_procMsgS;
-	udword			m_fpsSetp;
-	udword			m_sleepSetp;
 };
 #endif

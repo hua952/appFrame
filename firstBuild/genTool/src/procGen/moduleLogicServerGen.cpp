@@ -284,138 +284,7 @@ dword )"<<strMgrClassName<<R"(::afterLoad (int nArgC, char** argS, ForLogicFun* 
 	)"
 	<<R"(
 )";
-	/*
-	std::stringstream  osName;
-	std::stringstream  osHS;
-	std::stringstream  osNum;
-	std::stringstream  osConNum;
-	std::stringstream  osLN;
-	std::stringstream  osCN;
-	std::stringstream  osFps;
-	std::stringstream  osSleep;
-	std::stringstream  osAutoRun;
-	std::stringstream  osSerPat;
-	osName<<R"(const char* serverNameS[] = {)";
-	osSerPat<<R"(logicServer* osSerPat[] = {)";
-	osHS<<R"(ServerIDType  serverHS[] = {)";
-	osFps<<R"(udword fpsSetpS[] = {)";
-	osSleep<<R"(udword sleepSetpS[] = {)";
-	osAutoRun<<R"(bool autoRunS[] = {)";
-	osNum<<R"(    ubyte listenNumS []= {)";
-	osConNum<<R"(    ubyte connectNumS []= {)";
-	osCN<<R"(auto pConEndPointS = std::make_unique<
-		std::unique_ptr<conEndPointT []>[]>(serverNum);
-	)";
 	
-	osLN<<R"(auto pLenEndPointS = std::make_unique<
-		std::unique_ptr<conEndPointT []>[]>(serverNum);
-	)";
-	auto& rENS = rGlobleFile.endPointGlobalS ();
-	for (decltype (serverNum) i = 0; i < serverNum; i++) {
-		auto pName = rSS[i]->serverName ();
-		auto pH = rSS[i]->strHandle();
-		if (i) {
-			osName<<",";
-			osSerPat<<",";
-			osFps<<",";
-			osSleep<<",";
-			osAutoRun<<",";
-			osHS<<",";
-			osNum<<",";
-			osConNum<<",";
-		}
-		osName<<R"(")"<<pName<<R"(")";
-		osSerPat<<R"(&m_)"<<pName;
-		osHS<<pH;
-		osFps<<rSS[i]->fpsSetp ();
-		osSleep<<rSS[i]->sleepSetp();
-		osAutoRun<<rSS[i]->autoRun()?"true":"false";
-		osNum<<(int)(rSS[i]->serverInfo().listenerNum);
-		osConNum<<(int)(rSS[i]->serverInfo().connectorNum);
-		
-		if (rSS[i]->serverInfo().listenerNum) {
-			osCN<<"pLenEndPointS ["<<(int)i<<"] = std::make_unique<conEndPointT []>("<<
-				(int)rSS[i]->serverInfo().listenerNum<<R"();
-	)";
-			for (decltype (rSS[i]->serverInfo().listenerNum) k = 0; k < rSS[i]->serverInfo().listenerNum; k++) {
-				auto ite = rENS.find (rSS[i]->serverInfo().listenEndpoint[k].endPointName);
-				myAssert (rENS.end () != ite);
-				std::stringstream ss;
-				ss<<"rEndPL"<<(int)i<<(int)k;
-				std::string rEndPLK = ss.str();
-				osCN<<"auto& "<<rEndPLK<<" = pLenEndPointS["<<(int)i<<"]["<<(int)k<<R"(];
-	)"<<rEndPLK<<R"(.port= )"<<
-			ite->second<<R"(;
-	)"<<rEndPLK<<R"(.userData = )"<<
-			rSS[i]->serverInfo().listenEndpoint[k].userData<<R"(;
-	)"<<rEndPLK<<R"(.bDef = )"<<
-			rSS[i]->serverInfo().listenEndpoint[k].bDef<<R"(;
-	)"<<rEndPLK<<R"(.strEndPointName = ")"<<rSS[i]->serverInfo().listenEndpoint[k].endPointName<<R"(";
-		)";
-			} // for
-		} // if
-
-		if (rSS[i]->serverInfo().connectorNum) {
-			osCN<<"pConEndPointS ["<<(int)i<<"] = std::make_unique<conEndPointT []>("<<
-				(int)rSS[i]->serverInfo().connectorNum<<R"();
-	)";
-
-			auto sendReg = rSS[i]->rearEnd () ? true : rSS[i]->regRoute ();
-			std::string strTargetHandle = "EmptySessionID";
-			for (decltype (rSS[i]->serverInfo().connectorNum) k = 0; k < rSS[i]->serverInfo().connectorNum; k++) {
-				std::stringstream ss;
-				ss<<"rEndPC"<<(int)i<<(int)k;
-				std::string rEndPCK = ss.str();
-				auto pFS = rGloble.getServerByListenEndPointName (rSS[i]->serverInfo().connectEndpoint[k].targetEndPoint);
-				myAssert (pFS);
-				if (!pFS) {
-					rError(" can not getServerByListenEndPointName name = "<<rSS[i]->serverInfo().connectEndpoint[k].targetEndPoint);
-					break;
-				}
-				if (sendReg) {
-					strTargetHandle = pFS->strHandle ();
-				}
-				
-				auto ite = rENS.find (rSS[i]->serverInfo().connectEndpoint[k].targetEndPoint);
-				myAssert (rENS.end () != ite);
-				osCN<<"auto& "<<rEndPCK<<" = pConEndPointS["<<(int)i<<"]["<<(int)k<<R"(];
-
-	)"<<rEndPCK<<R"(.ip = ")"<<rSS[i]->serverInfo().connectEndpoint[k].ip<<
-				R"(";
-	)"<<rEndPCK<<R"(.port = )"<<
-			ite->second<<R"(;
-	)"<<rEndPCK<<R"(.bDef = )"<<
-			rSS[i]->serverInfo().connectEndpoint[k].bDef<<R"(;
-	)"<<rEndPCK<<R"(.userData = )"<<
-			rSS[i]->serverInfo().connectEndpoint[k].userData<<R"(;
-	)"<<rEndPCK<<R"(.rearEnd = )"<<rSS[i]->rearEnd () <<R"(;
-	)"<<rEndPCK<<R"(.regRoute = )"<<rSS[i]->regRoute () <<R"(;
-	)"<<rEndPCK<<R"(.targetHandle = )"<<strTargetHandle<<R"(;
-	)"<<rEndPCK<<R"(.strEndPointName = ")"<<rSS[i]->serverInfo().connectEndpoint[k].endPointName<<R"(";
-		)";
-			} // for
-			if (nRet) {
-				break;
-			}
-		} // if
-
-		if (nRet) {
-			break;
-		}
-	} // for
-	if (nRet) {
-		break;
-	}
-
-	osName<<"};";
-	osSerPat<<"};";
-	osHS<<"};";
-	osNum<<"};";
-	osFps<<"};";
-	osSleep<<"};";
-	osAutoRun<<"};";
-	osConNum<<"};";
-	*/
 	os<<R"(
 	} while (0);
 	return nRet;
@@ -435,9 +304,8 @@ int   moduleLogicServerGen:: genH (moduleGen& rMod)
 
 		auto& rGlobalFile = tSingleton<globalFile>::single ();
 		auto pPmp = rGlobalFile.findMsgPmp ("defMsg");
-		auto& rRpcFileMgr = pPmp->rpcFileS(); // tSingleton <rpcFileMgr>::single ();
-		auto& rMsgMgr = pPmp->msgFileS();// tSingleton <msgFileMgr>::single ();
-		// std::string frameFunDir = rMod.frameFunDir ();
+		auto& rRpcFileMgr = pPmp->rpcFileS();
+		auto& rMsgMgr = pPmp->msgFileS();
 		std::string genMgrH = modSrcPath;
 		std::string strMgrClassName = pModName;
 		strMgrClassName += "ServerMgr";
@@ -457,15 +325,6 @@ int   moduleLogicServerGen:: genH (moduleGen& rMod)
 		for (decltype (serverNum) i = 0; i < serverNum; i++) {
 			auto& rServer = *rSS[i];
 			auto pName = rServer.serverName ();
-			/*
-			auto arryLen = rServer.arryLen ();
-			std::string strLen;
-			if (arryLen > 1) {
-				std::stringstream ss;
-				ss<<"["<<arryLen<<"]";
-				strLen = ss.str();
-			}
-			*/
 			serInc<<R"(#include <map>
 )"<<R"(#include ")"<<pName<<R"(.h"
 )";
@@ -737,13 +596,11 @@ static void   sOutListenChannel (bool bAsk, std::ostream& ps)
 		ps<<R"(auto& rChS = channelS ();
 	auto& rCh = *((channelKey*)(&rAsk.m_chKey[0]));
 	auto it = rChS.find(rCh);
-	rRet.m_result = 0;
 	do {
 		if (rChS.end() == it) {
 			gError("can not find channel chId = "<<std::hex<<rCh.key
 			<<" "<<rCh.value);
-			// rRet.m_result = 1;
-			rRet.m_result =createChannel (rCh, srcSer, seId);
+			createChannel (rCh, srcSer, seId);
 			break;
 		}
 		auto& rSidS = it->second;
@@ -765,12 +622,10 @@ static void   sOutSendToChannel (bool bAsk, std::ostream& ps)
 			ps<<R"(auto rChS = channelS ();
 	auto& rCh = *((channelKey*)(&rAsk.m_chKey[0]));
 	auto it = rChS.find(rCh);
-	rRet.m_result = 0;
 	do {
 		if (rChS.end() == it) {
 			gError("can not find channel chId = "<<std::hex<<rCh.key
 			<<" "<<rCh.value);
-			rRet.m_result = 1;
 			break;
 		}
 		auto& rSidS = it->second;
@@ -811,12 +666,10 @@ static void   sOutQuitChannel (bool bAsk, std::ostream& ps)
 			ps<<R"(auto rChS = channelS ();
 	auto& rCh = *((channelKey*)(&rAsk.m_chKey[0]));
 	auto it = rChS.find(rCh);
-	rRet.m_result = 0;
 	do {
 		if (rChS.end() == it) {
 			gError("can not find channel chId = "<<std::hex<<rCh.key
 			<<" "<<rCh.value);
-			rRet.m_result = 1;
 			break;
 		}
 		auto& rSidS = it->second;
@@ -834,7 +687,6 @@ static void   sOutDelChannel (bool bAsk, std::ostream& ps)
 		ps<<R"(auto rSendS = channelS ();
 	auto& rCh = *((channelKey*)(&rAsk.m_chKey[0]));
 	rSendS.erase(rCh);
-	rRet.m_result = 0;
 	)";
 	}
 }
@@ -852,13 +704,13 @@ static void   sOutNtfExit (bool bAsk, std::ostream& ps)
 	}
 }
 
-static void   sOutAddChannel (bool bAsk, std::ostream& ps)
+static void   sOutAddChannel (const std::string& strMgrClassName, bool bAsk, std::ostream& ps)
 {
 	if (bAsk) {
 		ps<<R"(
-	auto &rMgr = tSingleton<clientMServerMgr>::single();
+	auto &rMgr = tSingleton<)"<<strMgrClassName<<R"(>::single();
 	auto& rCh = *((channelKey*)rAsk.m_chKey);
-	rRet.m_result =createChannel (rCh, srcSer, seId);
+	createChannel (rCh, srcSer, seId);
 		)";	
 	} else {
 		ps<<R"(auto rSendS = channelSendS ();
@@ -1065,7 +917,7 @@ ps<<R"(#include "logicServer.h"
 	if (strcmp (rpcName, "ntfExit") == 0) {
 		sOutNtfExit (bAsk, ps);
 	} else if (strcmp (rpcName, "addChannel") == 0) {
-		sOutAddChannel (bAsk, ps);
+		sOutAddChannel (strMgrClassName, bAsk, ps);
 	} else if (strcmp (rpcName, "delChannel") == 0) {
 		sOutDelChannel (bAsk, ps);
 	}  else if (strcmp (rpcName, "listenChannel") == 0) {

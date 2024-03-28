@@ -31,7 +31,6 @@ bool  cmpProcRpcNode::operator () (const procRpcNode& a, const procRpcNode& b) c
 
 serverFile:: serverFile ()
 {
-	m_arryLen = 1;
 	m_openNum = 1;
 	m_sleepSetp=10;
 	m_fpsSetp=0;
@@ -40,10 +39,21 @@ serverFile:: serverFile ()
 	m_serverInfo.connectorNum = 0;
 	m_rearEnd = true;
 	m_regRoute = false;
+	m_route = false;
 }
 
 serverFile:: ~serverFile ()
 {
+}
+
+bool  serverFile:: route ()
+{
+    return m_route;
+}
+
+void  serverFile:: setRoute (bool v)
+{
+    m_route = v;
 }
 
 const char*  serverFile::serverName ()
@@ -270,16 +280,6 @@ bool  serverFile:: regRoute ()
 void  serverFile:: setRegRoute (bool v)
 {
     m_regRoute = v;
-}
-
-uword  serverFile:: arryLen ()
-{
-    return m_arryLen;
-}
-
-void  serverFile:: setArryLen (uword v)
-{
-    m_arryLen = v;
 }
 
 const char*  serverFile:: strTmpHandle ()

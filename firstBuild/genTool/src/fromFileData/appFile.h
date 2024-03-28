@@ -26,6 +26,7 @@ public:
 	const char*  mainLoopServer ();
 	void  setMainLoopServer (const char* v);
 	bool  haveServer ();
+	bool  haveNetServer ();
 	ubyte  netType ();
 	void  setNetType (ubyte v);
 private:

@@ -54,12 +54,6 @@ int defMsgGen::loopHandleSGen ()
 		auto& rModMgr = tSingleton<moduleFileMgr>::single ();
 		int ip = 0;
 		std::stringstream ssTem;
-		/*
-		std::stringstream sss;
-		sss<<R"(static serverIdType s_allSer[] = {)";
-		bool sssFirst = true;
-		*/
-		// const auto onceLevelNum = 256 / c_serverLevelNum;
 		for (auto it = rAppS.begin (); rAppS.end () != it; ++it) {
 			auto& rApp = *(it->second.get ());
 			int is = ip++ * LoopNum;
@@ -83,19 +77,7 @@ int defMsgGen::loopHandleSGen ()
 					auto pServer = iter->get (); // iter->second.get ();
 					auto pSName = pServer->strHandle ();
 					auto pTmpHandle = pServer->strTmpHandle ();
-					auto arryLen = pServer->arryLen ();
-					/*
-					auto serId = c_levelMaxOpenNum [nLevel] * lvI[nLevel]++;
-					if (arryLen > 1) {
-						myAssert(mutI < c_maxMutServerNum);
-						serId = mutI * c_onceMutServerNum;
-						mutI++;
-					} else {
-						myAssert(sinI < c_maxSinServerNum);
-						serId = c_sinServerIdBegin  + sinI;
-						sinI++;
-					}
-					*/
+					
 					auto openNum = pServer->openNum ();
 					serverIdType nLevel = 0xffff;
 					for (serverIdType i = 0; i < c_serverLevelNum; i++) {
@@ -110,38 +92,13 @@ int defMsgGen::loopHandleSGen ()
 					serId += is;
 					decltype (nLevel) tmpNum = serId;
 					pServer->setTmpNum (tmpNum);
-					// os<<R"(#define  )"<<pSName<<"  "<<serId<<std::endl;
 					ssTem<<R"(#define  )"<<pTmpHandle<<" "<<serId<<std::endl;
-					/*
-					if (sssFirst) {
-						sssFirst = false;
-					} else {
-						sss<<",";
-					}
-					sss<<pSName;
-					*/
+					
 					tmpId++;
 				}
 			}
 		}
-		// sss<<"};";
 		auto& rGlobal = tSingleton<globalFile>::single ();
-		/*
-		auto& rRootV = rGlobal.rootServerS ();
-		if (rRootV.empty()) {
-			os<<R"(static serverIdType s_RootSer[] = {0};)";
-		} else {
-			os<<R"(static serverIdType s_RootSer[] = {)";
-			for (auto it = rRootV.begin(); rRootV.end() != it; ++it) {
-				if (it != rRootV.begin()) {
-					os<<",";
-				}
-				os<<*it;
-			}
-			os<<"};"<<std::endl;
-		}
-		*/
-		// os<<sss.str()<<std::endl;
 		os<<ssTem.str()<<std::endl;
 		os<<R"(#endif)";
 	} while (0);

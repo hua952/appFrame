@@ -113,8 +113,8 @@ void logicOnAccept(serverIdType	fId, SessionIDType sessionId, uqword userData)
 	auto &rMgr = tSingleton<)"<<strMgrClassName<<R"(>::single();
 	auto pS = rMgr.findServer(fId);
 	if (pS) {
-		auto pEN = (serverEndPointInfo*)userData;
-		pS->logicOnAcceptSession(sessionId, pEN->logicData);
+		// auto pEN = (serverEndPointInfo*)userData;
+		pS->logicOnAcceptSession(sessionId, userData/*pEN->logicData*/);
 	}
 }
 
@@ -156,6 +156,7 @@ void logicOnConnect(serverIdType fId, SessionIDType sessionId, uqword userData)
 	auto &rMgr = tSingleton<)"<<strMgrClassName<<R"(>::single();
 	auto pS = rMgr.findServer(fId);
 	if (pS) {
+		/*
 		auto pEN = (serverEndPointInfo*)userData;
 		bool bSend = pEN->rearEnd?true:pEN->regRoute;
 		if (EmptySessionID != pEN->targetHandle && bSend) {
@@ -166,7 +167,8 @@ void logicOnConnect(serverIdType fId, SessionIDType sessionId, uqword userData)
 			pN->ubyDesServId = pEN->targetHandle;
 			pS->sendToServer (askMsg, pEN->targetHandle);
 		}
-		pS->logicOnConnect(sessionId, pEN->logicData);
+		*/
+		pS->logicOnConnect(sessionId, userData/*pEN->logicData*/);
 	}
 }
 

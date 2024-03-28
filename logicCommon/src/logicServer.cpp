@@ -86,54 +86,33 @@ int logicServer:: sendPack (packetHead* pack)
 			pack = nullptr;
 			break;
 		}
-
-		loopHandleType level,  onceLv, onceIndex;
-		getLvevlFromSerId (handle, level, onceLv, onceIndex);
-		if (c_levelMaxOpenNum[level] > 1) {
-			auto pAS = rMgr.logicMuServerPairSPtr ();
-			auto& rBig = pAS[level];
-			if (!rBig.second) {
-				fnFree (pack);
-				pack = nullptr;
-				break;
-			}
-			auto& rOnce = rBig.first[onceLv];
-			if (!rOnce.second) {
-				fnFree (pack);
-				pack = nullptr;
-				break;
-			}
-			if (rOnce.second > 1) {
-				handle += rand()%rOnce.second;
+		auto myId = serverId ();
+		if (getProcFromHandle(myId) == getProcFromHandle(handle)) {
+			loopHandleType level,  onceLv, onceIndex;
+			getLvevlFromSerId (handle, level, onceLv, onceIndex);
+			if (c_levelMaxOpenNum[level] > 1) {
+				auto pAS = rMgr.logicMuServerPairSPtr ();
+				auto& rBig = pAS[level];
+				if (!rBig.second) {
+					fnFree (pack);
+					pack = nullptr;
+					break;
+				}
+				auto& rOnce = rBig.first[onceLv];
+				if (!rOnce.second) {
+					fnFree (pack);
+					pack = nullptr;
+					break;
+				}
+				if (rOnce.second > 1) {
+					handle += rand()%rOnce.second;
+				}
 			}
 		}
-		// auto pA = getServerArray 
 		nRet = sendPackToServer (pack, handle);
     } while (0);
     return nRet;
 }
-/*
-int          logicServer:: sendPackToOnceOfTmp (packetHead* pack)
-{
-	int          nRet = 0;
-	do {
-		auto fnGetDefProcServerId =  getForMsgModuleFunS ().fnGetDefProcServerId;
-		auto pN = P2NHead (pack);
-		auto& rMgr = logicServerMgr::getMgr();
-		auto handle = rMgr.getMsgDefProcTmp (pN->uwMsgID);
-		myAssert (c_emptyLoopHandle != handle);
-		if ((c_emptyLoopHandle == handle)) {
-			auto fnFree =  getForMsgModuleFunS ().fnFreePack;
-			fnFree (pack);
-			pack = nullptr;
-		} else {
-
-			nRet = sendPackToServer (pack, handle);
-		}
-	} while (0);
-	return nRet;
-}
-*/
 
 serverIdType   logicServer:: serverId ()
 {

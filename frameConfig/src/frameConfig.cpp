@@ -13,6 +13,7 @@ frameConfig::frameConfig ()
 	m_detachServerS = 1;
 	strCpy("", m_endPoint);
 	strCpy("", m_frameConfigFile);
+	strCpy("127.0.0.1", m_ip);
 	strCpy("cppLevel0L", m_level0);
 	strCpy("", m_logFile);
 	m_logLevel = 2;
@@ -21,6 +22,7 @@ frameConfig::frameConfig ()
 	strCpy("libeventSession", m_netLib);
 	m_procId = 0;
 	strCpy("", m_serializePackLib);
+	m_startPort = 12000;
 	strCpy("C:/work/appFrameProject/project/chatTestInstall", m_workDir);
 	
 }
@@ -82,6 +84,16 @@ const char*  frameConfig::frameConfigFile ()
 void  frameConfig::setFrameConfigFile (const char* v)
 {
 	strCpy(v, m_frameConfigFile);
+}
+
+const char*  frameConfig::ip ()
+{
+    return m_ip.get();
+}
+
+void  frameConfig::setIp (const char* v)
+{
+	strCpy(v, m_ip);
 }
 
 const char*  frameConfig::level0 ()
@@ -162,6 +174,16 @@ const char*  frameConfig::serializePackLib ()
 void  frameConfig::setSerializePackLib (const char* v)
 {
 	strCpy(v, m_serializePackLib);
+}
+
+uword  frameConfig::startPort ()
+{
+    return m_startPort;
+}
+
+void  frameConfig::setStartPort (uword v)
+{
+	m_startPort = v;
 }
 
 const char*  frameConfig::workDir ()
@@ -255,6 +277,11 @@ int  frameConfig:: procCmdArgS (int nArg, char** argS)
 	strCpy(strVal.c_str(), m_frameConfigFile);
 				continue;
 			}
+				if (strKey == "ip") {
+				ssV>>strVal;
+	strCpy(strVal.c_str(), m_ip);
+				continue;
+			}
 				if (strKey == "level0") {
 				ssV>>strVal;
 	strCpy(strVal.c_str(), m_level0);
@@ -291,6 +318,10 @@ int  frameConfig:: procCmdArgS (int nArg, char** argS)
 				if (strKey == "serializePackLib") {
 				ssV>>strVal;
 	strCpy(strVal.c_str(), m_serializePackLib);
+				continue;
+			}
+				if (strKey == "startPort") {
+				ssV>>m_startPort;
 				continue;
 			}
 				if (strKey == "workDir") {

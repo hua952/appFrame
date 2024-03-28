@@ -382,7 +382,7 @@ int server:: processAllGatePack(packetHead* pPack)
 		auto& rMgr = tSingleton<serverMgr>::single();
 		if (pDS) {
 			packetHead* pNew = nullptr;
-			auto toNetPack = rMgr.toNetPack ();
+			// auto toNetPack = rMgr.toNetPack ();
 			auto pN = P2NHead(pPack);
 			toNetPack (pN, pNew);
 			if (pNew) {
@@ -461,7 +461,7 @@ int server:: processOtherAppToMePack(ISession* session, packetHead* pPack)
 		if (pRet) {
 			// auto freeFun = rCS.fnFreePack;
 			if (bNeetRet) {
-				auto toNetPack = rMgr.toNetPack ();
+				// auto toNetPack = rMgr.toNetPack ();
 				packetHead* pNew = nullptr;
 				toNetPack (P2NHead(pRet), pNew);
 				if (pNew) {
@@ -600,7 +600,7 @@ int  server:: sendPackToSomeSession(netPacketHead* pN, uqword* pSessS, udword se
     do {
 		// auto& rMgr =  tSingleton<loopMgr>::single();
 		auto& rMgr = tSingleton<serverMgr>::single();
-		auto toNetPack = rMgr.toNetPack ();
+		// auto toNetPack = rMgr.toNetPack ();
 		packetHead* pNew = nullptr;
 		toNetPack (pN, pNew);
 		if (pNew) {
@@ -912,7 +912,7 @@ int server::processOncePack(packetHead* pPack)
 				auto pS = getSession (pPack->sessionID);
 				myAssert (pS);
 				if (pS) {
-					auto toNetPack = rMgr.toNetPack ();
+					// auto toNetPack = rMgr.toNetPack ();
 					packetHead* pNew = nullptr;
 					toNetPack (pN, pNew);
 					if (pNew) {
@@ -1039,7 +1039,7 @@ int server::processNetPackFun(ISession* session, packetHead* pack)
 		auto sid = session->id();
 		pack->sessionID = sid;
 		if (c_emptyLoopHandle == pN->ubyDesServId) {
-			auto fromNetPack = rMgr.fromNetPack ();
+			// auto fromNetPack = rMgr.fromNetPack ();
 			packetHead* pNew = nullptr;
 			fromNetPack (pN, pNew);
 			if (pNew) {
@@ -1067,18 +1067,9 @@ int server::processNetPackFun(ISession* session, packetHead* pack)
 		bool bIsRet = NIsRet(pN);
 		bool bNeetRet = NNeetRet(pN);
 		if (myPId == dPId) {
-			auto fromNetPack = rMgr.fromNetPack ();
+			// auto fromNetPack = rMgr.fromNetPack ();
 			auto pB = (ubyte*)N2User(pN);
-			/*
-			std::stringstream ss;
-			std::unique_ptr<char[]> pOut;
-			for (decltype (pN->udwLength) i = 0; i < pN->udwLength; i++) {
-				ss<<std::hex<<(int)(pB[i])<<" ";
-			}
-			strCpy(ss.str().c_str(), pOut);
-			auto szOut = pOut.get();
-			mInfo(" NetPackBeforeUnzip msgId = "<<pN->uwMsgID<<" length = "<<pN->udwLength<<" data = "<<szOut);
-			*/
+			
 			packetHead* pNew = nullptr;
 			fromNetPack (pN, pNew);
 			auto pProcPack = pack;
@@ -1087,14 +1078,13 @@ int server::processNetPackFun(ISession* session, packetHead* pack)
 				pProcPack = pNew;
 			}
 			if (mySId == dSId) {
-				auto nR = processOtherAppToMePack(session, pProcPack);  /*  发个本线程的收到就直接处理掉    */
+				auto nR = processOtherAppToMePack(session, pProcPack);  /*  发给本线程的收到就直接处理掉    */
 				if ((procPacketFunRetType_doNotDel & nR)) {
 					if (pProcPack == pack) {
 						nRet =  procPacketFunRetType_doNotDel;
 					}
 				} else {
 					if (pNew) {
-						// fnFree (pNew);
 						freePack  (pNew);
 					}
 				}
@@ -1106,7 +1096,6 @@ int server::processNetPackFun(ISession* session, packetHead* pack)
 					pProcPack->sessionID = EmptySessionID;
 					pProcPack->loopId = c_emptyLoopHandle;
 				}
-				// fnPushPackToLoop (pN->ubyDesServId, pProcPack);
 				rSerMgr.pushPackToLoop (pN->ubyDesServId, pProcPack);
 				if (pProcPack == pack) {
 					nRet =  procPacketFunRetType_doNotDel;

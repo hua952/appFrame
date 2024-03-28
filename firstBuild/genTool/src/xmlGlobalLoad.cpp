@@ -11,7 +11,14 @@
 #include "fromFileData/moduleFileMgr.h"
 #include "fromFileData/msgPmpFile.h"
 #include "fromFileData/toolServerEndPointInfoMgr.h"
-
+#include <set>
+#include <map>
+#include <string>
+#include <vector>
+#include <list>
+#include <deque>
+#include <sstream>
+#include<unordered_map>
 #include "xmlCommon.h"
 
 xmlGlobalLoad:: xmlGlobalLoad ()
@@ -131,62 +138,170 @@ static const char* s_comMsg = R"(<?xml version='1.0' encoding='utf-8' ?>
 	</rpc>
 )";
 
+int   xmlGlobalLoad:: perProc(rapidxml::xml_document<>& doc)
+{
+    int   nRet = 0;
+    do {
+		rapidxml::xml_node<> *root = doc.first_node();
+		myAssert (root);
+		auto pAppS = root->first_node("app");
+		myAssert (pAppS);
+		std::set<std::string> appNameS;
+		std::string netServerNum = "4";
+		auto pNetNum = pAppS->first_attribute("netNum");
+		if (pNetNum) {
+			netServerNum = pNetNum->value();
+		}
+		auto findGate = false;
+		for(rapidxml::xml_node<char> * pApp = pAppS->first_node();  NULL != pApp; pApp= pApp->next_sibling()) {
+			auto inRet = appNameS.insert(pApp->name());
+			myAssert (inRet.second);
+			int appNetType = 0;
+			auto pA = pApp->first_attribute("appNetType");
+			if (pA) {
+				appNetType = atoi(pA->value());
+			}
+			if (1 == appNetType) {
+				myAssert(!findGate);
+				findGate = true;
+			}
+		}
+		if (!findGate) {
+			auto gateServerName = "gateAuto";
+			auto it = appNameS.find(gateServerName);
+			myAssert (appNameS.end() == it);
+			rapidxml::xml_node<>* pGateNode = doc.allocate_node(rapidxml::node_element, gateServerName);
+			myAssert (pGateNode);
+			pAppS->append_node(pGateNode);
+			pGateNode->append_attribute(doc.allocate_attribute("appNetType", "1"));
+			rapidxml::xml_node<>* pModuleS = doc.allocate_node(rapidxml::node_element, "module");
+			myAssert (pModuleS);
+			pGateNode->append_node(pModuleS);
+			rapidxml::xml_node<>* pM= doc.allocate_node(rapidxml::node_element, "gateM");
+			pModuleS->append_node(pM);
+			rapidxml::xml_node<>* pServerS = doc.allocate_node(rapidxml::node_element, "server");
+			pM->append_node(pServerS);
+		}
+		for(rapidxml::xml_node<char> * pApp = pAppS->first_node();  NULL != pApp; pApp= pApp->next_sibling()) {
+			auto pModuleS = pApp->first_node("module");
+			myAssert(pModuleS);
+			auto pM = pModuleS->first_node();
+			myAssert (pM);
+			myAssert (!pM->next_sibling());
+			auto pServerS = pM->first_node("server");
+			myAssert (pServerS);
+			auto findNetServer = false;
+			std::set<std::string> serverNameS;
+			int appNetType = 0;
+			auto pA = pApp->first_attribute("appNetType");
+			if (pA) {
+				appNetType = atoi(pA->value());
+			}
+			for(rapidxml::xml_node<char> * pS = pServerS->first_node();  NULL != pS; pS = pS->next_sibling()) {
+				auto inS = serverNameS.insert(pS->name());
+				myAssert (inS.second);
+				auto pA = pS->first_attribute("route");
+				if (pA) {
+					bool bR = atoi(pA->value());
+					if (bR) {
+						findNetServer = true;
+						break;
+					}
+				}
+			}
+			if (!findNetServer && appNameS.size() > 1) {
+				auto netServerName = "netThAuto";
+				auto it = serverNameS.find(netServerName);
+				myAssert (serverNameS.end() == it);
+
+				rapidxml::xml_node<>* pNetNode = doc.allocate_node(rapidxml::node_element, netServerName);
+				myAssert (pNetNode);
+				pServerS->append_node(pNetNode);
+				pNetNode->append_attribute(doc.allocate_attribute("route", "1"));
+				std::string netNum = netServerNum;
+				if (0 == appNetType) {
+					netNum = "1";
+				}
+				static char szOpenNum[4];
+				strNCpy (szOpenNum, 4, netNum.c_str());
+				pNetNode->append_attribute(doc.allocate_attribute("openNum", szOpenNum));
+			}
+		}
+		
+    } while (0);
+    return nRet;
+}
+
 int  xmlGlobalLoad::xmlLoad (const char* szFile)
 {
 	int nRet = 0;
-	// rInfo (" process xml : "<<szFile);
+	rInfo (" sizeof(std::string) =  "<<sizeof(std::string));
+	rInfo (" sizeof(std::stringstream) =  "<<sizeof(std::stringstream));
+	rInfo (" sizeof(std::vector<int>) =  "<<sizeof(std::vector<int>));
+	rInfo (" sizeof(std::list<int>) =  "<<sizeof(std::list<int>));
+	rInfo (" sizeof(std::deque<int>) =  "<<sizeof(std::deque<int>));
+	rInfo (" sizeof(std::set<int>) =  "<<sizeof(std::set<int>));
+	rInfo (" sizeof(std::map<int, int>) =  "<<sizeof(std::map<int, int>));
+	rInfo (" sizeof(std::unordered_map<int, int>) =  "<<sizeof(std::unordered_map<int, int>));
+
     rapidxml::file<> fdoc(szFile);
 	rapidxml::xml_document<> doc;
 	doc.parse<0>(fdoc.data());
-	rapidxml::xml_node<> *root = doc.first_node();
-	auto& rGlobal = tSingleton<globalFile>::single ();
-	auto& rMsgFileS =  rGlobal.msgFileS ();
-	auto& rV = rGlobal.argS ();
-	for (auto pArg = root->first_node ("appArg");
-		pArg; pArg = root->next_sibling()) {
-		rV.push_back (pArg->value ());
-	}
-	rapidxml::xml_node<char> * pAppS = nullptr;
-	for(rapidxml::xml_node<char> * pRpc = root->first_node();  NULL != pRpc; pRpc = pRpc->next_sibling()) {
-		auto pName = pRpc->name ();
-		auto szPath = pRpc->value ();
-		if(0 == strcmp(pName, "projectDir")) {
-			rGlobal.setProjectDir (szPath);
-		} else if(0 == strcmp(pName, "projectName")) {
-			rGlobal.setProjectName (szPath);
-		} else if(0 == strcmp(pName, "configDef")) {
-			rGlobal.setConfigDef(szPath);
-		}  else if(0 == strcmp(pName, "configFile")) {
-			rGlobal.setConfigFile(szPath);
-		} else if(0 == strcmp(pName, "frameInstallPath")) {
-			rGlobal.setFrameInstallPath(szPath);
-		} else if(0 == strcmp(pName, "thirdPartyDir")) {
-			rGlobal.setThirdPartyDir(szPath);
-		} else if(0 == strcmp(pName, "endPoint")) {
-			procEndPointS (pRpc);
-		} else if(0 == strcmp(pName, "defMsg")) {
-			auto pPmp = std::make_shared <msgPmpFile> ();
-			std::string pmpName = "defMsg";
-			auto pPmpName = pRpc->first_attribute("pmpName");
-			if (pPmpName) {
-				pmpName = pPmpName->value ();
-			}
-			pPmp->setPmpName (pmpName.c_str());
-			auto inR = rMsgFileS.insert(std::make_pair(pmpName, pPmp));
-			myAssert (inR.second);
-			auto& rFileV = pPmp->msgDefFileS ();
-			rFileV.clear ();
-			for (auto pNP = pRpc->first_attribute("file");
-					pNP; pNP = pNP->next_attribute("file")) {
-				// myAssert (pNP);
-				rFileV.push_back (pNP->value ());
-			}
-		} else if(0 == strcmp(pName, "app")) {
-			pAppS = pRpc;
-		}
-	}
+	int nR = 0;
+	nR = perProc(doc);
+
 	do {
-		int nR = 0;
+		if (nR) {
+			nRet = 1;
+			break;
+		}
+		rapidxml::xml_node<> *root = doc.first_node();
+		auto& rGlobal = tSingleton<globalFile>::single ();
+		auto& rMsgFileS =  rGlobal.msgFileS ();
+		auto& rV = rGlobal.argS ();
+		for (auto pArg = root->first_node ("appArg");
+				pArg; pArg = root->next_sibling()) {
+			rV.push_back (pArg->value ());
+		}
+		rapidxml::xml_node<char> * pAppS = nullptr;
+		for(rapidxml::xml_node<char> * pRpc = root->first_node();  NULL != pRpc; pRpc = pRpc->next_sibling()) {
+			auto pName = pRpc->name ();
+			auto szPath = pRpc->value ();
+			if(0 == strcmp(pName, "projectDir")) {
+				rGlobal.setProjectDir (szPath);
+			} else if(0 == strcmp(pName, "projectName")) {
+				rGlobal.setProjectName (szPath);
+			} else if(0 == strcmp(pName, "configDef")) {
+				rGlobal.setConfigDef(szPath);
+			}  else if(0 == strcmp(pName, "configFile")) {
+				rGlobal.setConfigFile(szPath);
+			} else if(0 == strcmp(pName, "frameInstallPath")) {
+				rGlobal.setFrameInstallPath(szPath);
+			} else if(0 == strcmp(pName, "thirdPartyDir")) {
+				rGlobal.setThirdPartyDir(szPath);
+			} else if(0 == strcmp(pName, "endPoint")) {
+				procEndPointS (pRpc);
+			} else if(0 == strcmp(pName, "defMsg")) {
+				auto pPmp = std::make_shared <msgPmpFile> ();
+				std::string pmpName = "defMsg";
+				auto pPmpName = pRpc->first_attribute("pmpName");
+				if (pPmpName) {
+					pmpName = pPmpName->value ();
+				}
+				pPmp->setPmpName (pmpName.c_str());
+				auto inR = rMsgFileS.insert(std::make_pair(pmpName, pPmp));
+				myAssert (inR.second);
+				auto& rFileV = pPmp->msgDefFileS ();
+				rFileV.clear ();
+				for (auto pNP = pRpc->first_attribute("file");
+						pNP; pNP = pNP->next_attribute("file")) {
+					// myAssert (pNP);
+					rFileV.push_back (pNP->value ());
+				}
+			} else if(0 == strcmp(pName, "app")) {
+				pAppS = pRpc;
+			}
+		}
 		
 		std::unique_ptr<char[]>  dirBuf;
 		nR = getDirFromFile (szFile, dirBuf);
@@ -339,11 +454,17 @@ int   xmlGlobalLoad:: onceAppLoad (rapidxml::xml_node<char>* pApp, std::shared_p
 			nRet = 2;
 			break;
 		}
-
+		auto& rMS = rApp->moduleFileNameS ();
+		auto haveNetServer = rApp->haveNetServer ();
+		auto haveServer = rApp->haveServer ();
+		if (!haveNetServer && haveServer) {
+			auto pM = tSingleton<moduleFileMgr>::single().findModule (rMS.begin()->c_str());
+			myAssert (pM);
+			
+		}
 		auto pM = rApp->mainLoopServer ();
 		if (!pM) {
 			const char* szMain = nullptr;
-			auto& rMS = rApp->moduleFileNameS ();
 			if (!rMS.empty()) {
 				for (auto it = rMS.begin (); it != rMS.end (); it++) {
 					auto pM = tSingleton<moduleFileMgr>::single().findModule (it->c_str());
@@ -675,12 +796,11 @@ int   xmlGlobalLoad:: onceServerLoad (rapidxml::xml_node<char>* pS,
 			auto dwSetp = atoi (pOpenNum->value());
 			newServer->setOpenNum(dwSetp);
 		}
-		auto pArryLen = pS->first_attribute("arryLen");
-		if (pArryLen) {
-			auto dwSetp = atoi (pArryLen->value());
-			newServer->setArryLen ((uword)dwSetp);
+		auto pRoute = pS->first_attribute("route");
+		if (pRoute) {
+			auto dwSetp = atoi (pRoute->value());
+			newServer->setRoute(dwSetp);
 		}
-
 		auto pSleepA = pS->first_attribute("sleepSetp");
 		if (pSleepA) {
 			auto dwSetp = atoi (pSleepA->value());

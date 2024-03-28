@@ -744,8 +744,7 @@ struct )"<<sName<<R"(
 		for (auto iter = rDv.begin(); rDv.end() != iter; ++iter) {
 			auto& rData = *(iter->get());
 			// std::string strD;
-			genOnceData (rS, rData, /*strD*/ os, protoStr, nIndex++, osFrom, osTo);
-			// os<<strD;
+			genOnceData (rS, rData, /*strD*/ os, protoStr, nIndex++, osFrom, osTo); // os<<strD;
 		}
 		os<<R"(};
 )";

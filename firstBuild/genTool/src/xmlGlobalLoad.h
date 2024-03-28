@@ -28,6 +28,7 @@ public:
 	serverFile*    getServerByHandle(const char* szHandle);
 	serverFile*    getServerByListenEndPointName(const char* szEnName);
 	allServerMap&  allServer ();
+	int  perProc (rapidxml::xml_document<>& doc);
 private:
 	int  procEndPointS (rapidxml::xml_node<char>* pEndPointS);
 	allServerMap  m_allServer;

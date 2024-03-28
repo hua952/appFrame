@@ -1,6 +1,10 @@
 #include "appFile.h"
 #include "strFun.h"
 #include "mainLoop.h"
+#include "tSingleton.h"
+#include "moduleFileMgr.h"
+#include "moduleFile.h"
+#include "serverFile.h"
 
 appFile:: appFile ()
 {
@@ -74,6 +78,32 @@ bool   appFile:: haveServer ()
     do {
 		auto& rMs =  moduleFileNameS ();
 		nRet = !rMs.empty ();
+    } while (0);
+    return nRet;
+}
+
+bool   appFile:: haveNetServer ()
+{
+    bool   nRet = false;
+    do {
+		auto& rMs =  moduleFileNameS ();
+		auto& rModMgr = tSingleton <moduleFileMgr>::single ();
+		for (auto it = rMs.begin (); rMs.end () != it; ++it) {
+			auto pMod = rModMgr.findModule (it->c_str ());
+			if (pMod) {
+				auto& rSS =  pMod->orderS ();
+				for (auto ite = rSS.begin (); ite != rSS.end (); ite++) {
+					auto pS = ite->get();
+					if (pS->route()) {
+						nRet = true;
+						break;
+					}
+				}
+			}
+			if (nRet) {
+				break;
+			}
+		}
     } while (0);
     return nRet;
 }

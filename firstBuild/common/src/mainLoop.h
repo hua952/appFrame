@@ -128,7 +128,8 @@ struct serverNode
 	ubyte					connectorNum;
 	ubyte                   listenerNum;
 	bool                    autoRun;
-	ubyte                   unUse [3];
+	bool                    route;
+	ubyte                   unUse [2];
 	// logicOnAcceptSessionFT  fnOnAccept;
 	// logicOnConnectFT        fnOnConnect;
 	serverEndPointInfo		listenEndpoint [c_onceServerMaxListenNum];

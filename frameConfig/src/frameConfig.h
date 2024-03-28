@@ -21,6 +21,8 @@ public:
   void  setEndPoint (const char* v);
   const char*  frameConfigFile ();
   void  setFrameConfigFile (const char* v);
+  const char*  ip ();
+  void  setIp (const char* v);
   const char*  level0 ();
   void  setLevel0 (const char* v);
   const char*  logFile ();
@@ -37,6 +39,8 @@ public:
   void  setProcId (uword v);
   const char*  serializePackLib ();
   void  setSerializePackLib (const char* v);
+  uword  startPort ();
+  void  setStartPort (uword v);
   const char*  workDir ();
   void  setWorkDir (const char* v);
 private:
@@ -46,6 +50,7 @@ private:
   ubyte  m_detachServerS;
   std::unique_ptr <char[]>  m_endPoint;
   std::unique_ptr <char[]>  m_frameConfigFile;
+  std::unique_ptr <char[]>  m_ip;
   std::unique_ptr <char[]>  m_level0;
   std::unique_ptr <char[]>  m_logFile;
   word  m_logLevel;
@@ -54,6 +59,7 @@ private:
   std::unique_ptr <char[]>  m_netLib;
   uword  m_procId;
   std::unique_ptr <char[]>  m_serializePackLib;
+  uword  m_startPort;
   std::unique_ptr <char[]>  m_workDir;
 };
 #endif
