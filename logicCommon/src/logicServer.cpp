@@ -270,6 +270,53 @@ logicServer::exitHandleSet&  logicServer:: exitHandleS ()
     return m_exitHandleS;
 }
 
+int logicServer:: sendPackToAllOtherLocalServer(packetHead* pack, bool excMe)
+{
+    int          nRet = 0;
+    do {
+		auto& rMgr = logicServerMgr::getMgr();
+		auto pAS = rMgr.logicMuServerPairSPtr ();
+		auto  fnSendPackToLoop =  getForMsgModuleFunS ().fnSendPackToLoop;
+		auto fnFreePack = getForMsgModuleFunS ().fnFreePack;
+		auto pN = P2NHead (pack);
+		for (int i = 0; i < c_serverLevelNum; i++) {
+			auto& rBig = pAS[i];
+			for (decltype (rBig.second) j = 0; j < rBig.second; j++) {
+				auto& rOnce = rBig.first[j];
+				for (decltype (rOnce.second) k = 0; k < rOnce.second; k++) {
+					auto pS = rOnce.first[k];
+					myAssert (pS);
+					auto objId = pS->serverId ();
+					if (objId == serverId () && excMe) {
+						continue;
+					}
+					auto p = allocPacket (pN->udwLength);
+					*p = *pack;
+					auto pNN = P2NHead (p);
+					memcpy (pNN, pN, pN->udwLength + NetHeadSize);
+					pNN->ubyDesServId = objId;
+					nRet = fnSendPackToLoop (p);
+				}
+			}
+		}
+		fnFreePack (pack);
+    } while (0);
+    return nRet;
+}
+
+int          logicServer:: sendMsgToAllOtherLocalServer(CMsgBase& rMsg, bool excMe)
+{
+    int          nRet = 0;
+    do {
+		auto pack = rMsg.getPack();
+		auto nR = sendPackToAllOtherLocalServer(pack, excMe);
+		if (!nR) {
+			rMsg.pop ();
+		}
+    } while (0);
+    return nRet;
+}
+
 int logicServer:: sendMsgToSomeLocalServer(CMsgBase& rMsg, serverIdType* pSerS, udword serverNum)
 {
     int nRet = 0;

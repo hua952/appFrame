@@ -4,3 +4,4 @@ EXPORTS
 	onPhyLoopBegin    @2
 	onPhyLoopEnd      @3
 	onPhyFrame        @4
+	onPhyGetRunThreadIdS  @5

@@ -4,6 +4,7 @@
 #include "msgMgr.h"
 #include "CModule.h"
 #include <map>
+#include <mutex>
 
 typedef server* pserver;
 packetHead* allocPack(udword udwSize);// Thread safety
@@ -16,6 +17,7 @@ class serverMgr
 public:
 	using  serverPair = std::pair<std::unique_ptr<server[]>, loopHandleType>;
 	using  muServerPairS = std::pair<std::unique_ptr<serverPair[]>, loopHandleType>;
+	using  runThreadIdSet = std::set<loopHandleType>;
 	serverMgr();
 	~serverMgr();
 	int				initFun (int cArg, char** argS);
@@ -69,7 +71,13 @@ public:
 	void          setNetServerTmp (serverIdType serverId);
 	server*       getNetServerS (uword& num);
 	server*       getOnceNetServer ();
+	int  runThNum (char* szBuf, int bufSize);
+	void  incRunThNum (loopHandleType pThis);
+	void  subRunThNum (loopHandleType pThis);
+	runThreadIdSet&  runThreadIdS ();
 private:
+	runThreadIdSet  m_runThreadIdS;
+	std::mutex m_mtxRunThNum;
 	serverIdType  m_netServerTmp;
 	muServerPairS  m_muServerPairS[c_serverLevelNum];
 	CModule  m_ModuleMgr;

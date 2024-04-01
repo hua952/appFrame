@@ -1429,3 +1429,45 @@ server*        serverMgr:: getOnceNetServer ()
     return nRet;
 }
 
+int  serverMgr::runThNum (char* szBuf, int bufSize)
+{
+	int nRet = 0;
+	const int c_MaxNum = 128;
+	auto tempH = std::make_unique<loopHandleType []>(c_MaxNum);
+	auto pH = tempH.get();
+	{
+		std::lock_guard<std::mutex> lock(m_mtxRunThNum);
+		auto& rIdS = runThreadIdS ();
+		for (auto it = rIdS.begin (); it != rIdS.end (); it++) {
+			pH[nRet++] = *it;
+		}
+	}
+	auto ss = std::make_unique<std::stringstream>();
+	auto& rS = *ss;
+	for (decltype (nRet) i = 0; i < nRet; i++) {
+		rS<<pH[i]<<" ";
+	}
+	strNCpy (szBuf, bufSize, rS.str().c_str());
+    return nRet;
+}
+
+void   serverMgr:: incRunThNum (loopHandleType pThis)
+{
+	std::lock_guard<std::mutex> lock(m_mtxRunThNum);
+	auto& rIdS = runThreadIdS ();
+	rIdS.insert(pThis);
+}
+
+void   serverMgr:: subRunThNum (loopHandleType pThis)
+{
+	std::lock_guard<std::mutex> lock(m_mtxRunThNum);
+	auto& rIdS = runThreadIdS ();
+	rIdS.erase(pThis);
+}
+
+serverMgr::runThreadIdSet&  serverMgr:: runThreadIdS ()
+{
+    return m_runThreadIdS;
+}
+
+

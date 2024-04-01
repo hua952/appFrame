@@ -3,7 +3,7 @@
 #include <iostream>
 #include <sstream>
 #include <time.h>
-
+#include <thread>
 
 uword myLogger::s_comLevel[c_comLevelNum ] = {1000, 2000, 3000, 4000, 5000};
 const char* myLogger::s_comLevelShow[c_comLevelNum + 1] = {"T", "D", "I", "W", "E", "F"};
@@ -40,6 +40,7 @@ myLogger:: myLogger (const char* fileName):m_os(fileName, std::ios::app)
 	m_logTime = true;
 	m_logToCon = true;
 	m_logToFile = true;
+	m_logThreId = true;
 }
 
 myLogger:: ~myLogger ()
@@ -84,6 +85,11 @@ int    myLogger:: logTxt (const char* szTxt, uword uwLevel)
 			auto uwI = getLevelIndex (uwLevel);
 			ss<<s_comLevelShow[uwI]<<" ";
 		}
+		if (logThreId ()) {
+			auto uwI = getLevelIndex (uwLevel);
+			ss<<"["<<std::this_thread::get_id()<<"] ";
+
+		}
 		ss<<szTxt<<" "<<std::endl;
 		auto& ws = std::cout;
 		if (logToCon () ) {
@@ -118,5 +124,15 @@ bool  myLogger:: logToFile ()
 void  myLogger:: setLogToFile (bool v)
 {
     m_logToFile = v;
+}
+
+bool  myLogger:: logThreId ()
+{
+    return m_logThreId;
+}
+
+void  myLogger:: setLogThreId (bool v)
+{
+    m_logThreId = v;
 }
 

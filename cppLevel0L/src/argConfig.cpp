@@ -115,6 +115,7 @@ int  argConfig:: afterAllArgProc ()
 		auto muServerPairS = rMgr.muServerPairSPtr ();
 		auto cur = 0;
 		m_modelNum = (decltype(m_modelNum ))(modMap.size());
+		myAssert (m_modelNum <= 1);
 		m_modelS = std::make_unique<stModel[]>(m_modelNum);
 		for (auto it = modMap.begin (); it != modMap.end (); it++) {
 			auto& rMod = m_modelS[cur++];

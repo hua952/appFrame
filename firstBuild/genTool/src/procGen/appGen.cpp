@@ -8,10 +8,9 @@
 #include "tSingleton.h"
 #include "fromFileData/globalFile.h"
 #include "fromFileData/moduleFileMgr.h"
-#include "moduleMgrGen.h"
+// #include "moduleMgrGen.h"
 #include "rLog.h"
 #include "moduleGen.h"
-#include "moduleMgrGen.h"
 #include "mainGen.h"
 #include "fromFileData/moduleFile.h"
 #include "fromFileData/serverFile.h"
@@ -45,6 +44,7 @@ int  appGen:: startGen (appFile& rApp)
 			rError ("cmakeGen.startGen ret error nR = "<<nR);
 			break;
 		}
+		/*
 		moduleMgrGen   mgrGen;
 		std::string mgrName = thisRoot ();
 		
@@ -59,6 +59,7 @@ int  appGen:: startGen (appFile& rApp)
 			nRet = 3;
 			break;
 		}
+		*/
 		nR = batFileGen (rApp);
 		if (nR) {
 			rError ("moduleMgrGen batFileGen error nR = "<<nR);
@@ -165,8 +166,9 @@ int  appGen:: batFileGen (appFile& rApp)
 			<<" logFile="<<strLogFile
 			<<" workDir="<<strInsHome;
 		std::stringstream ssModelS;
-		ssModelS<<"modelS="<<szAppName<<"ModuleMgr";
 		auto& rModules = rApp.moduleFileNameS ();
+		// ssModelS<<"modelS="<<szAppName<<"ModuleMgr";
+		ssModelS<<"modelS="<<*(rModules.begin ()); // <<szAppName<<"ModuleMgr";
 		auto& rModMgr = tSingleton <moduleFileMgr>::single ();
 		for (auto it = rModules.begin (); rModules.end () != it; ++it) {
 			std::stringstream ts;
@@ -222,7 +224,7 @@ set(BUILD_USE_64BITS on)
 set(CMAKE_CXX_STANDARD 20) 
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-add_subdirectory ()"<<strMgr<<R"()
+# add_subdirectory ()"<<strMgr<<R"()
 )";
 		auto ds = rApp.detachServerS ();
 		if (ds) {

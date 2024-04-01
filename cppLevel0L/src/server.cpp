@@ -131,9 +131,9 @@ void server::run()
 		
 	}
 	onMidLoopEnd(m_id);
-	auto& os = std::cout;
+	// auto& os = std::cout;
 	// os<<"Loop "<<(int)(m_loopHandle)<<" exit"<<std::endl;
-	os<<"Loop "<<(int)(m_id)<<" exit"<<std::endl;
+	// os<<"Loop "<<(int)(m_id)<<" exit"<<std::endl;
 }
 
 bool server::pushPack (packetHead* pack)
@@ -297,6 +297,7 @@ int onMidLoopBegin(loopHandleType pThis)
 	auto pTH = rMgr.getLoop (pThis);
 	auto nRet = pTH->onLoopBegin();
 	rMgr.onLoopBegin(pThis);
+	rMgr.incRunThNum (pThis);
 	return nRet;
 }
 
@@ -307,6 +308,8 @@ int onMidLoopEnd(loopHandleType pThis)
 	auto pTH = rMgr.getLoop (pThis);
 	auto nRet = pTH->onLoopEnd();
 	rMgr.onLoopEnd(pThis);
+	rMgr.subRunThNum (pThis);
+	rInfo(" server: "<<pThis<<" end");
 	return nRet;
 }
 

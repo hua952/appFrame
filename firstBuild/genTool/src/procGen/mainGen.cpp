@@ -342,6 +342,12 @@ int main(int cArg, char** argS)
 	auto funLoopEnd = (loopEndFT)(getFun(handle, "onPhyLoopEnd"));
 	typedef bool (*loopFrameFT)(loopHandleType pThis);
 	auto funLoopFrame = (loopFrameFT)(getFun(handle, "onPhyFrame"));
+
+	typedef bool (*loopFrameFT)(loopHandleType pThis);
+
+	typedef int  (*runThNumFT) (char*, int);
+	auto funRunThNum = (runThNumFT)(getFun(handle, "onPhyGetRunThreadIdS"));
+
 	funLoopBegin ()"<<mainLoopServer <<R"();
 	while(1) {
 		auto bE = funLoopFrame ()"<<mainLoopServer <<R"();
@@ -350,6 +356,17 @@ int main(int cArg, char** argS)
 		}
 	}
 	funLoopEnd ()"<<mainLoopServer <<R"();
+	int curRunNum = 0;
+	const auto c_tempSize = 256;
+	auto tempBuf = std::make_unique<char[]>(c_tempSize);
+	auto pTemp = tempBuf.get();
+	do {
+		curRunNum = funRunThNum (pTemp, c_tempSize);
+		if (curRunNum) {
+			std::cout<<" leaf run num is: "<<curRunNum<<" run serverS is : "<<pTemp<<std::endl;
+			std::this_thread::sleep_for(std::chrono::microseconds (1000000));
+		}
+	} while (curRunNum);
 					)";
 				}
 		}

@@ -28,3 +28,9 @@ bool onPhyFrame(loopHandleType pThis)
 	auto pS = rSM.getServer (pThis);
 	return pS ? pS->onFrame () : true;
 }
+
+int  onPhyGetRunThreadIdS (char* szBuf, int bufSize)
+{
+	auto& rSM = tSingleton<serverMgr>::single ();
+	return rSM.runThNum (szBuf, bufSize);
+}

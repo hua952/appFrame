@@ -25,7 +25,10 @@ public:
 	void  setLogToCon (bool v);
 	bool  logToFile ();
 	void  setLogToFile (bool v);
+	bool  logThreId ();
+	void  setLogThreId (bool v);
 private:
+	bool  m_logThreId;
 	bool  m_logToFile;
 	bool  m_logToCon;
 	bool  m_logTime;

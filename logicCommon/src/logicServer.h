@@ -42,6 +42,8 @@ public:
 	// int         sendPackToOnceOfTmp (packetHead* pack);
 	int         sendPackToServer (packetHead* pack, loopHandleType handle);
 	int         sendPackToSomeServer(packetHead* pack, serverIdType* pSerS, udword serverNum);
+	int         sendPackToAllOtherLocalServer(packetHead* pack, bool excMe = true);
+	int         sendMsgToAllOtherLocalServer(CMsgBase& rMsg, bool excMe = true);
 	int         sendMsgToSomeServer(CMsgBase& rMsg, serverIdType* pSerS, udword serverNum);
 	int         sendPackToSomeLocalServer(packetHead* pack, serverIdType* pSerS, udword serverNum);
 	int         sendMsgToSomeLocalServer(CMsgBase& rMsg, serverIdType* pSerS, udword serverNum);

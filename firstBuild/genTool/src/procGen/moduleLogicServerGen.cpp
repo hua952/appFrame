@@ -654,13 +654,13 @@ static void   sOutDelChannel (bool bAsk, std::ostream& ps)
 static void   sOutNtfExit (bool bAsk, std::ostream& ps)
 {
 	if (!bAsk) {
-		ps<<R"(	auto& es =  exitHandleS ();
+		ps<<R"(/*	auto& es =  exitHandleS ();
 	auto nu = es.erase (srcSer);
 	myAssert (nu);
 	if (es.empty ()) {
 		setWillExit (true);
 		gInfo("all other local server alder exit");
-	}
+	}*/
 	)";
 	}
 }
