@@ -54,10 +54,13 @@ int defMsgGen::loopHandleSGen ()
 		auto& rModMgr = tSingleton<moduleFileMgr>::single ();
 		int ip = 0;
 		std::stringstream ssTem;
+		auto pSSRoot = std::make_unique<std::stringstream>();
+		auto& ssRoot = *pSSRoot;
 		for (auto it = rAppS.begin (); rAppS.end () != it; ++it) {
 			auto& rApp = *(it->second.get ());
 			int is = ip++ * LoopNum;
 			rApp.setProcId (is);
+			auto netType = rApp.netType ();
 			auto& rModNameS = rApp.moduleFileNameS ();
 			int mutI = 0;
 			int sinI = 0;
@@ -93,13 +96,17 @@ int defMsgGen::loopHandleSGen ()
 					decltype (nLevel) tmpNum = serId;
 					pServer->setTmpNum (tmpNum);
 					ssTem<<R"(#define  )"<<pTmpHandle<<" "<<serId<<std::endl;
-					
+					auto route = pServer->route ();
+					if (appNetType_gate == netType && route) {
+						myAssert (ssRoot.str().empty());
+						ssRoot<<R"(#define  c_rootTmp )"<<pTmpHandle<<std::endl;
+					}
 					tmpId++;
 				}
 			}
 		}
 		auto& rGlobal = tSingleton<globalFile>::single ();
-		os<<ssTem.str()<<std::endl;
+		os<<ssTem.str()<<std::endl<<ssRoot.str()<<std::endl;
 		os<<R"(#endif)";
 	} while (0);
     return nRet;

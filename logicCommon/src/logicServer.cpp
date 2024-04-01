@@ -34,8 +34,10 @@ static int OnFrameCli(void* pArgS)
 
 logicServer::logicServer ()
 {
+	m_autoRun = true;
 	m_willExit = false;
 	m_serverId = c_emptyLoopHandle;
+	m_route = false;
 }
 
 int logicServer::onServerInitGen(ForLogicFun* pForLogic)
@@ -131,6 +133,19 @@ int logicServer:: sendPackToServer (packetHead* pack, loopHandleType handle)
 		auto pN = P2NHead (pack);
 		pN->ubySrcServId = serverId ();
 		pN->ubyDesServId = handle;
+		auto  fnSendPackToLoop =  getForMsgModuleFunS ().fnSendPackToLoop;
+		nRet = fnSendPackToLoop (pack);
+    } while (0);
+    return nRet;
+}
+
+int          logicServer:: sendPackToSession (packetHead* pack, SessionIDType sessionId)
+{
+    int          nRet = 0;
+    do {
+		auto pN = P2NHead (pack);
+		pN->ubySrcServId = serverId ();
+		pN->ubyDesServId = c_emptyLoopHandle;
 		auto  fnSendPackToLoop =  getForMsgModuleFunS ().fnSendPackToLoop;
 		nRet = fnSendPackToLoop (pack);
     } while (0);
@@ -363,5 +378,25 @@ bool  logicServer:: willExit ()
 void  logicServer:: setWillExit (bool v)
 {
     m_willExit = v;
+}
+
+bool  logicServer:: route ()
+{
+    return m_route;
+}
+
+void  logicServer:: setRoute (bool v)
+{
+    m_route = v;
+}
+
+bool  logicServer:: autoRun ()
+{
+    return m_autoRun;
+}
+
+void  logicServer:: setAutoRun (bool v)
+{
+    m_autoRun = v;
 }
 

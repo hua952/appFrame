@@ -1,17 +1,7 @@
 #include "msgMgr.h"
 #include "myAssert.h"
 #include "loop.h"
-/*
-bool msgMgr::msgInfo::operator () (const pmsgInfo& pa, const pmsgInfo& pb) const
-{
-	return true;
-}
 
-bool  msgMgr::msgInfoCmp::operator () (const msgInfo& ra, const msgInfo& rb) const
-{
-	return ra.msgId < rb.msgId;
-}
-*/
 msgMgr::msgMgr ()
 {
 }

@@ -138,6 +138,11 @@ int  appGen:: batFileGen (appFile& rApp)
 		}
 		{
 			std::stringstream ts;
+			ts<<"netNum="<<rGlobalFile.netNum();
+			rMainArgS.push_back(ts.str());
+		}
+		{
+			std::stringstream ts;
 			uword uwT = rApp.netType ();
 			ts<<"appNetType="<<uwT;
 			rMainArgS.push_back(ts.str());

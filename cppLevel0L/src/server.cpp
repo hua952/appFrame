@@ -13,9 +13,7 @@
 #include "cppLevel0LCom.h"
 #include "iPackSave.h"
 #include "mLog.h"
-#include "mArgMgr.h"
-
-// #include "framMsgId.h"
+#include "argConfig.h"
 
 int onLoopFrame(loopHandleType pThis);
 int processOncePack(loopHandleType pThis, packetHead* pPack);
@@ -41,16 +39,12 @@ server::server()
 	m_defSession = nullptr;
 	m_canUpRoute = false;
 	m_canDownRoute = false;
+	m_route = false;
 }
 
 server::~server()
 {
 	
-}
-
-server::serverSessionMapT&  server::  serverSessionMap()
-{
-	return m_serverSessionS;
 }
 
 void server::ThreadFun(server* pS)
@@ -346,74 +340,46 @@ int processOncePack(loopHandleType pThis, packetHead* pPack)
 	return nRet;
 }
 
-int  server:: clonePackToOtherNetThread (packetHead* pack)	
+int  server:: clonePackToOtherNetThread (packetHead* pack, bool excMe)	
 {
     int 	 nRet = 0;
     do {
-		// auto& rMgr =  tSingleton<loopMgr>::single();
 		auto& rMgr = tSingleton<serverMgr>::single();
-		// auto& rCS = rMgr.getPhyCallback();
-		const auto c_Max = 16;
-		loopHandleType buf[c_Max];
-		auto upN = rMgr.getAllCanRouteServerS (buf, c_Max);
+		// auto upN = rMgr.getAllCanRouteServerS (buf, c_Max);
 		auto myId = id ();
-		auto& rSerMgr = tSingleton<serverMgr>::single ();
-		for (decltype (upN) i = 0; i < upN; i++) {
-			auto objSer = buf[i];
-			if (myId == objSer) {
+		uword num = 0;
+		auto pSS = rMgr.getNetServerS (num);
+		for (decltype (num) i = 0; i < num; i++) {
+			auto& rS = pSS[i];
+			auto objId = rS.id();
+			if (myId == objId && excMe) {
 				continue;
 			}
 			auto pS = sclonePack (pack);
 			pS->sessionID = EmptySessionID;
-
-			rSerMgr.pushPackToLoop (objSer, pS);
-			// rCS.fnPushPackToLoop (objSer, pS);
+			auto pN = P2NHead(pack);
+			pN->ubyDesServId = c_emptyLoopHandle;
+			rMgr.pushPackToLoop (objId, pS);
+			rS.pushPack (pS);
 		}
     } while (0);
     return nRet;
 }
 
-int server:: processAllGatePack(packetHead* pPack)
+int server:: processAllGatePack(ISession* session, packetHead* pPack)
 {
 	int  nRet = procPacketFunRetType_del;
 	do {
-		auto pDS =   defSession ();
-		// auto& rMgr =  tSingleton<loopMgr>::single();
-		auto& rMgr = tSingleton<serverMgr>::single();
-		if (pDS) {
-			packetHead* pNew = nullptr;
-			// auto toNetPack = rMgr.toNetPack ();
-			auto pN = P2NHead(pPack);
-			toNetPack (pN, pNew);
-			if (pNew) {
-				pDS->send (pNew);  /* 发压缩包 */
-			} else {
-				pDS->send (pPack);
-				nRet = procPacketFunRetType_doNotDel;  /* 发原包,不能删 */
-			}
-		} else {
-			/*  本线程就是gate    */
-			auto pN = P2NHead(pPack);
-			auto pF = findMsg(pN->uwMsgID);
-			if (pF) {
-				packetHead* pRet = nullptr;
-				procPacketArg argP;
-				argP.handle = id ();
-				nRet = pF(pPack, pRet, &argP);
-				// myAssert(!pRet);
-				if (pRet) {
-					// auto fnFree = rMgr.getForLogicFun().fnFreePack;
-					// fnFree (pRet);
-					freePack  (pRet);
-					pRet = nullptr;
-					pPack->pAsk = 0;
-				}
-				if (!NIsOtherNetLoopSend(pN)) {
-					NSetOtherNetLoopSend(pN);
-					clonePackToOtherNetThread (pPack);
-				}
-			}
+		auto& rConfig = tSingleton<argConfig>::single ();
+		nRet = processOtherAppToMePack(session, pPack);  /*  本线程先处理    */
+		if (procPacketFunRetType_stopBroadcast & nRet) {
+			nRet &= (~procPacketFunRetType_stopBroadcast);  /*  不需要广播,目前只有此处用到这个标记,用完擦除    */
+			break;
 		}
+		if (rConfig.appNetType () != appNetType_gate) {
+			break;
+		}
+		clonePackToOtherNetThread (pPack); 
 	} while (0);
 	return nRet;
 }
@@ -422,9 +388,7 @@ int server:: processOtherAppToMePack(ISession* session, packetHead* pPack)
 {
     int  nRet = procPacketFunRetType_del;
     do {
-		// auto& rMgr =  tSingleton<loopMgr>::single();
 		auto& rMgr = tSingleton<serverMgr>::single();
-		// auto& rCS = rMgr.getPhyCallback();
 		auto pN = P2NHead (pPack);
 		auto bIsRet = NIsRet (pN);
 		auto pF = findMsg(pN->uwMsgID);
@@ -436,7 +400,9 @@ int server:: processOtherAppToMePack(ISession* session, packetHead* pPack)
 					<<"myHandle = "<<(int)myHandle);
 			break;
 		}
-		pPack->sessionID = session->id ();
+		if (session) {
+			pPack->sessionID = session->id ();
+		}
 		procPacketArg argP;
 		argP.handle = id ();
 		if (bIsRet) {
@@ -456,28 +422,23 @@ int server:: processOtherAppToMePack(ISession* session, packetHead* pPack)
 		bool bNeetRet = NNeetRet(pN);
 		packetHead* pRet = nullptr;
 
-		
 		nRet = pF(pPack, pRet, &argP);
 		if (pRet) {
-			// auto freeFun = rCS.fnFreePack;
-			if (bNeetRet) {
-				// auto toNetPack = rMgr.toNetPack ();
+			if (bNeetRet && session) {
 				packetHead* pNew = nullptr;
 				toNetPack (P2NHead(pRet), pNew);
 				if (pNew) {
-					// freeFun (pRet);
 					freePack (pRet);
 					pRet = pNew;
 				}
 				pRet->sessionID = pPack->sessionID;
 				auto pRN = P2NHead (pRet);
-				pRN->ubySrcServId = pN->ubyDesServId;
+				pRN->ubySrcServId = id ();
 				pRN->ubyDesServId = pN->ubySrcServId;
 				pRN->dwToKen = pN->dwToKen;
 				session->send (pRet);
 			} else {
 				/* 发送Ask端不想处理Ret */
-				// freeFun (pRet);
 				freePack (pRet);
 				pRet = nullptr;
 			}
@@ -489,11 +450,9 @@ int server:: processOtherAppToMePack(ISession* session, packetHead* pPack)
 int server:: processOtherAppPack(packetHead* pPack)
 {
 	int  nRet = procPacketFunRetType_del;
-	// auto& rCS = tSingleton<loopMgr>::single().getPhyCallback();
 	auto& rSerMgr = tSingleton<serverMgr>::single ();
 	auto pN = P2NHead (pPack);
 	auto bIsRet = NIsRet (pN);
-	// auto freeFun = rCS.fnFreePack;
 
 	procPacketArg argP;
 	argP.handle = id ();
@@ -511,8 +470,8 @@ int server:: processOtherAppPack(packetHead* pPack)
 		if (bIsRet) {
 			auto pIPackSave = getIPackSave ();
 			auto pAskPack = pIPackSave->netTokenPackFind (pN->dwToKen);
+			myAssert (pAskPack);
 			if (pAskPack) {
-				myAssert (pAskPack);
 				pPack->pAsk = (uqword)pAskPack;  // must for delete pAskPack
 				nRet = pF(pAskPack, pPack, &argP);
 				pIPackSave->netTokenPackErase (pN->dwToKen);
@@ -534,10 +493,8 @@ int server:: processOtherAppPack(packetHead* pPack)
 				pRN->ubySrcServId = pN->ubyDesServId;
 				pRN->ubyDesServId = pN->ubySrcServId;
 				pRN->dwToKen = pN->dwToKen;
-				// rCS.fnPushPackToLoop (pPack->loopId, pRet);
-				rSerMgr.pushPackToLoop (pPack->loopId, pRet);
+				rSerMgr.pushPackToLoop (pPack->loopId, pRet);  /*   通过接收ask包的网络线程返回ret包     */
 			} else {
-				// freeFun (pRet);
 				freePack (pRet); 
 				pRet = nullptr;
 			}
@@ -619,29 +576,15 @@ int  server:: sendPackToSomeSession(netPacketHead* pN, uqword* pSessS, udword se
 			auto pSN = P2NHead(pSend);
 			pSN->ubyDesServId = loopId;
 			auto pB = (ubyte*)N2User(pSN);
-			/*
-			std::stringstream ss;
-			std::unique_ptr<char[]> pOut;
-			for (decltype (pSN->udwLength) i = 0; i < pSN->udwLength; i++) {
-				ss<<std::hex<<(int)(pB[i])<<" ";
-			}
-			strCpy (ss.str().c_str(), pOut);
-			auto szOut = ss.get();
-			mInfo(" sendPackToSomeSession msgId = "<<pSN->uwMsgID<<" length = "<<pSN->udwLength<<" data = "<<szOut);
-			*/
 			pSe->send (pSend);
 		}
 		if (pNew) {
-			/*
-			auto fnFreePack = rMgr.getForLogicFun().fnFreePack;
-			fnFreePack(pNew);
-			*/
 			freePack (pNew);
 		}
     } while (0);
     return nRet;
 }
-
+/*
 int server:: forwardForOtherServer(packetHead* pPack)
 {
     int  nRet = procPacketFunRetType_doNotDel;
@@ -658,7 +601,7 @@ int server:: forwardForOtherServer(packetHead* pPack)
 		loopHandleType sPId;
 		loopHandleType sSId;
 		fromHandle (pN->ubySrcServId, sPId, sSId);
-		myAssert (sPId != myPId); /* 该函数只处理非首站发出 */
+		myAssert (sPId != myPId);
 		myAssert (NIsOtherNetLoopSend(pN));
 		myAssert (pN->inGateSerId!=c_emptyLoopHandle);
 		ISession* pSe = nullptr;
@@ -693,7 +636,7 @@ int server:: forwardForOtherServer(packetHead* pPack)
 			if (pSe) {
 				pSe->send (pPack);
 			} else {
-				nRet = procPacketFunRetType_del; /* 无法发送,删除包 */ 
+				nRet = procPacketFunRetType_del;
 			}
 			break;
 		}
@@ -716,7 +659,7 @@ int server:: forwardForOtherServer(packetHead* pPack)
 		if (pSe) {
 			pSe->send (pPack);
 		} else {
-			nRet = procPacketFunRetType_del; /* 无法发送,删除包 */ 
+			nRet = procPacketFunRetType_del;
 			break;
 		}
 		pISave->oldTokenInsert(newToken, info);
@@ -730,14 +673,15 @@ int server:: forwardForOtherServer(packetHead* pPack)
     } while (0);
     return nRet;
 }
+*/
 
 int server:: forward(packetHead* pPack)
 {
     int  nRet = procPacketFunRetType_doNotDel;
     do {
-		// auto& rMgr = tSingleton<loopMgr>::single ();
 		auto& rSerMgr = tSingleton<serverMgr>::single ();
 		auto& rMgr = tSingleton<serverMgr>::single();
+		auto& rConfig = tSingleton<argConfig>::single ();
 		iPackSave* pISave = getIPackSave ();
 		auto pN = P2NHead (pPack);
 		myAssert(c_emptyLoopHandle != pN->ubyDesServId);
@@ -749,78 +693,48 @@ int server:: forward(packetHead* pPack)
 		loopHandleType sSId;
 		fromHandle (pN->ubySrcServId, sPId, sSId);
 		myAssert (sPId != myPId); /* 该函数只处理非首站发出 */
-		myAssert (!NIsOtherNetLoopSend(pN));
 		ISession* pSe = nullptr;
 		if (NIsRet (pN)) {
 			auto recToken = pN->dwToKen;
 			auto pInfo = pISave->oldTokenFind (recToken);
 			myAssert(pInfo);
-
 			pN->dwToKen = pInfo->oldToken;
-			if (c_emptyLocalServerId == pInfo->inGateSerId) {
-				pSe = getSession (pInfo->sessionId); // getServerSession (pInfo->sessionId);
-				myAssert (pSe);
-				if (pSe) {
-					pSe->send (pPack);
-				} else {
-					nRet = procPacketFunRetType_del;
-				}
+			pSe = getSession (pInfo->sessionId); // getServerSession (pInfo->sessionId);
+			if (pSe) {
+				pSe->send (pPack);
 			} else {
-				auto realSer = toHandle (myPId, pInfo->inGateSerId);
-				NSetOtherNetLoopSend(pN);
-				rSerMgr.pushPackToLoop(realSer, pPack);
+				rWarn("ret pack can not find client scession sesId = "<<pInfo->sessionId<<" pPack = "<<*pPack);
+				nRet = procPacketFunRetType_del;
 			}
 			pISave->oldTokenErase(recToken);
 			break;
 		} 
-		bool neetRet = NNeetRet(pN);
-		if (!neetRet) {
-			pSe = getServerSession (pN->ubyDesServId);
-			if (!pSe) {
-				pSe = getProcessSessionByFullServerId (pN->ubyDesServId);
-			}
-			if (!pSe) {
-				pSe = defSession ();
-			}
-			if (pSe) {
-				pSe->send (pPack);
-			} else {
-				NSetOtherNetLoopSend(pN);
-				clonePackToOtherNetThread (pPack);
-			}
+
+		pSe = getProcessSessionByFullServerId (pN->ubyDesServId);
+		myAssert (pSe);
+		if (!pSe) {
+			rError(" can not find server session so can not forward pPack = "<<*pPack);
+			nRet = procPacketFunRetType_del;
 			break;
 		}
-		auto newToken = nextToken ();
-		tokenInfo info;
-		info.lastServer = myHandle;
-		info.oldToken = pN->dwToKen;
-		info.sessionId = pPack->sessionID;
-		info.inGateSerId = c_emptyLocalServerId;
-		pN->dwToKen = newToken;
-		pISave->oldTokenInsert(newToken, info);
-		std::pair<server*, NetTokenType> argS;
-		argS.first = this;
-		argS.second = newToken;
-		auto& rArgS = tSingleton<mArgMgr>::single ();
-		auto timeOut = rArgS.packTokenTime ();
-		auto& rTimeMgr = getTimerMgr ();
-		rTimeMgr.addComTimer (timeOut, sDelTokenInfo, &argS, sizeof (argS));
-
-		pSe = getServerSession (pN->ubyDesServId);
-		if (!pSe) {
-			pSe = getProcessSessionByFullServerId (pN->ubyDesServId);
+		bool neetRet = NNeetRet(pN);
+		if (neetRet) {
+			auto newToken = nextToken ();
+			tokenInfo info;
+			info.lastServer = myHandle;
+			info.oldToken = pN->dwToKen;
+			info.sessionId = pPack->sessionID;
+			info.inGateSerId = c_emptyLocalServerId;
+			pN->dwToKen = newToken;
+			pISave->oldTokenInsert(newToken, info);
+			std::pair<server*, NetTokenType> argS;
+			argS.first = this;
+			argS.second = newToken;
+			auto timeOut = rConfig.delSaveTokenTime ();
+			auto& rTimeMgr = getTimerMgr ();
+			rTimeMgr.addComTimer (timeOut, sDelTokenInfo, &argS, sizeof (argS));
 		}
-		if (!pSe) {
-			pSe = defSession ();
-		}
-		if (pSe) {
-			pSe->send (pPack);
-		} else {
-			NSetOtherNetLoopSend(pN);
-			pN->inGateSerId = mySId;  /*   请求其它线程代发,记录下本线程ID, 便于返回     */
-			clonePackToOtherNetThread (pPack);
-		}
-		
+		pSe->send (pPack);
     } while (0);
     return nRet;
 }
@@ -844,11 +758,11 @@ int  server:: procProx(packetHead* pPack)
 		myAssert (sPId == myPId); /* 该函数只处理首站发出的ask包 */
 
 		ISession* pSe = nullptr;
-		myAssert (EmptySessionID == pPack->sessionID && c_emptyLoopHandle == pPack->loopId);    /*   纯测试,不确定会不会出现该情况   */
+		// myAssert (EmptySessionID == pPack->sessionID && c_emptyLoopHandle == pPack->loopId);    /*   纯测试,不确定会不会出现该情况   */
 		if (EmptySessionID == pPack->sessionID) {
-			pSe = getServerSession (pN->ubyDesServId);
+			pSe = defSession ();
 			if (!pSe) {
-				pSe = defSession ();
+				pSe = getProcessSessionByFullServerId(pN->ubyDesServId);
 			}
 		} else {
 			pSe = getSession (pPack->sessionID);
@@ -872,23 +786,43 @@ int server::processOncePack(packetHead* pPack)
 {
 	int nRet = procPacketFunRetType_del;
 	auto& rMgr = tSingleton<serverMgr>::single();
+	auto& rConfig = tSingleton<argConfig>::single();
 	auto pN = P2NHead(pPack);
 	bool bIsRet = NIsRet(pN);
 	auto myHandle = id ();
 	do {
 		procPacketArg argP;
 		argP.handle = id ();
-		if (c_emptyLoopHandle == pN->ubyDesServId	) {
-			nRet = processAllGatePack (pPack);
+		auto appNetType = rConfig.appNetType ();	
+		if (c_emptyLoopHandle == pN->ubyDesServId) {
+			/*  本进程的其它线性委托本线程发消息到网关,一般广播    */
+			myAssert (route());
+			if (appNetType_gate == appNetType) {
+				nRet = processOtherAppToMePack (nullptr, pPack);
+			} else {
+				auto pDS = defSession ();
+				myAssert (pDS);
+				if (pDS) {
+					packetHead* pNew = nullptr;
+					toNetPack (pN, pNew);
+					if (pNew) {
+						pDS->send(pNew);
+					} else {
+						pDS->send(pPack);
+						nRet = procPacketFunRetType_doNotDel;
+					}
+				}
+			}
 			break;
 		}
+		myAssert (c_emptyLoopHandle != pN->ubyDesServId);
 		auto bInOncePro = packInOnceProc(pPack);
 		if (bInOncePro) {
 			myAssert (myHandle == pN->ubyDesServId);
 			nRet = processLocalServerPack (pPack);    /*  一定是本进程其它线程发给本线程的 */
 			break;
 		}
-
+		/*  以下处理其它进程到本线程的包    */
 		loopHandleType desPId;
 		loopHandleType desSId;
 		fromHandle (pN->ubyDesServId, desPId, desSId);
@@ -900,7 +834,7 @@ int server::processOncePack(packetHead* pPack)
 		loopHandleType mySId;
 		fromHandle (myHandle, myPId, mySId);
 		if (desPId == myPId) {
-			myAssert (myHandle == pN->ubyDesServId);  /* 如果不等在接到网络数据包时就转发了不会到这  */
+			myAssert (myHandle == pN->ubyDesServId);  /* 如果不等在接到网络数据包时就转发了不会到这, 到此是一定要处理了,不会再转  */
 			nRet = processOtherAppPack (pPack);  /*   其它进程发给本线程处理的包(通过本进程的其它线程从网络将收再转交给本线程处理)    */
 			break;
 		}
@@ -922,17 +856,13 @@ int server::processOncePack(packetHead* pPack)
 						nRet = procPacketFunRetType_doNotDel;
 					}
 				} else {
-					mError("can not find sesssion pack: "<<*pPack);
+					mError(" ret pack can not find sesssion pack: "<<*pPack);
 				}
 			} else {
+				myAssert(!bIsRet);
 				nRet = procProx (pPack);
 			}
 			break;
-		}
-		auto isOtherLoopSend = NIsOtherNetLoopSend(pN);
-		myAssert (isOtherLoopSend);
-		if (isOtherLoopSend) {
-			nRet = forwardForOtherServer (pPack); /*   本进程的其它线程在转发包时无法路由, 请求本线程尝试一下   */
 		}
 	} while (0);
 	return nRet;
@@ -1001,7 +931,7 @@ int  server:: processLocalServerPack(packetHead* pPack)
 	} while (0);
 	return nRet;
 }
-
+/*
 ISession*   server:: getServerSession(ServerIDType sid)
 {
     ISession*   nRet = nullptr;
@@ -1014,7 +944,7 @@ ISession*   server:: getServerSession(ServerIDType sid)
     } while (0);
     return nRet;
 }
-
+*/
 ISession* server:: getSession(SessionIDType sid)
 {
 	ISession*   nRet = nullptr;
@@ -1032,29 +962,25 @@ int server::processNetPackFun(ISession* session, packetHead* pack)
 	int nRet = procPacketFunRetType_del;
 	do {
 		auto pN = P2NHead (pack);
-		// auto& rMgr =  tSingleton<loopMgr>::single();
 		auto& rSerMgr = tSingleton<serverMgr>::single ();
 		auto& rMgr =  rSerMgr;
-		// auto fnFree = rMgr.getForLogicFun().fnFreePack;
+		auto& rConfig = tSingleton<argConfig>::single ();
 		auto sid = session->id();
 		pack->sessionID = sid;
 		if (c_emptyLoopHandle == pN->ubyDesServId) {
-			// auto fromNetPack = rMgr.fromNetPack ();
 			packetHead* pNew = nullptr;
 			fromNetPack (pN, pNew);
 			if (pNew) {
 				pNew->sessionID = sid;
-				auto nR = processAllGatePack (pNew);
+				auto nR = processAllGatePack (session, pNew);
 				if (!(nR & procPacketFunRetType_doNotDel)) {
-					// fnFree (pNew);
 					freePack (pNew);
 				}
 			} else {
-				nRet = processAllGatePack (pack);
+				nRet = processAllGatePack (session, pack);
 			}
 			break;
 		}
-		// auto fnPushPackToLoop = rMgr.getPhyCallback().fnPushPackToLoop;
 		auto myHandle = id ();
 		loopHandleType myPId;
 		loopHandleType mySId;
@@ -1067,9 +993,7 @@ int server::processNetPackFun(ISession* session, packetHead* pack)
 		bool bIsRet = NIsRet(pN);
 		bool bNeetRet = NNeetRet(pN);
 		if (myPId == dPId) {
-			// auto fromNetPack = rMgr.fromNetPack ();
 			auto pB = (ubyte*)N2User(pN);
-			
 			packetHead* pNew = nullptr;
 			fromNetPack (pN, pNew);
 			auto pProcPack = pack;
@@ -1090,8 +1014,8 @@ int server::processNetPackFun(ISession* session, packetHead* pack)
 				}
 			} else {
 				if (!bIsRet && bNeetRet) {
-					pProcPack->sessionID = sid;
-					pProcPack->loopId = myHandle;
+					pProcPack->sessionID = sid;  /*   记录客户端会话ID, 返回ret包时要用到   */
+					pProcPack->loopId = myHandle;  /*   记录本线程ID, 因为ret包还需要通过本线程返回,否则找不到客户端回话, 因为客户端只链接到本线程   */
 				} else {
 					pProcPack->sessionID = EmptySessionID;
 					pProcPack->loopId = c_emptyLoopHandle;
@@ -1103,7 +1027,12 @@ int server::processNetPackFun(ISession* session, packetHead* pack)
 			}
 			break;
 		}
-		
+		auto appNetType = rConfig.appNetType ();
+		if (appNetType != appNetType_gate) {
+			rError(" I' am not gate can not forward my appNetType = "<<appNetType<<" pack = "<<*pack);
+			freePack  (pack);
+			break;
+		}
 		nRet = forward (pack);  /*   处理转发包(非本进程发出)   */
 		break;
 	} while (0);
@@ -1119,23 +1048,9 @@ void server::onAcceptSession(ISession* session, void* userData)
 
 void server::onConnect(ISession* session, void* userData)
 {
-	auto pBuff = (uqword*)userData;
-	mInfo ("onConnect userData = "<<userData<<" pBuff = "<<pBuff );
-	auto sid = session->id();
-	if (pBuff[0]) {  // not def
-		auto pDS = defSession ();
-		// myAssert (!pDS);
-		if (!pDS) {
-			setDefSession (session);
-		}
-	} else {
-		auto& rMap = serverSessionS ();
-		auto inRet = rMap.insert (std::make_pair((ServerIDType)(pBuff[1]), sid));
-		myAssert (inRet.second);
-	}
-
-	// auto& rMgr = tSingleton<loopMgr>::single();
 	auto& rMgr = tSingleton<serverMgr>::single();
+	auto sid = session->id();
+	auto pBuff = (uqword*)userData;
 	rMgr.logicOnConnect (id(), sid, *(pBuff + 2));
 }
 
@@ -1152,6 +1067,7 @@ int server::initMid(const char* szName, ServerIDType id, serverNode* pNode,
 		frameFunType funOnFrame, void* argS)
 {
 	int nRet = 0;
+	auto& rConfig = tSingleton<argConfig>::single ();
 	do {
 		int nR = init (pNode);
 		if (nR) {
@@ -1159,6 +1075,7 @@ int server::initMid(const char* szName, ServerIDType id, serverNode* pNode,
 			mError ("init return error nR = "<<nR);
 			break;
 		}
+		setRoute (pNode->route);
 		auto nL = strlen(szName);
 		auto pN = std::make_unique<char[]>(nL + 1);
 		strcpy(pN.get(), szName);
@@ -1169,8 +1086,7 @@ int server::initMid(const char* szName, ServerIDType id, serverNode* pNode,
 		if (pNode) {
 			m_serverNode = *pNode;
 		}
-		auto& rArgS = tSingleton<mArgMgr>::single ();
-		auto packSaveTag = rArgS.savePackTag ();
+		auto packSaveTag = rConfig.savePackTag ();
 		if (0 == packSaveTag) {
 			m_pImpPackSave_map = std::make_unique <impPackSave_map> ();
 			m_packSave = m_pImpPackSave_map.get();
@@ -1202,6 +1118,7 @@ int server::initMid(const char* szName, ServerIDType id, serverNode* pNode,
 			}
 			endPoint  connectEP [c_onceServerMaxConnectNum];
 			auto pTemp = pTempBuf.get();
+			myAssert (!pNode->route || pNode->listenerNum || 1 == pNode->connectorNum);
 			for (decltype (pNode->connectorNum)i = 0; i < pNode->connectorNum; i++) {
 				myAssert (nIndexT < c_tempStackSize - c_perLoopNum);
 				uqword* pBuff = pTemp + nIndexT;
@@ -1209,7 +1126,7 @@ int server::initMid(const char* szName, ServerIDType id, serverNode* pNode,
 				auto& info = pNode->connectEndpoint[i];
 				strNCpy (ep.ip, sizeof (ep.ip), info.ip);
 				uword uwDef = info.bDef ? 1 : 0;
-				if (info.bDef) {
+				if (pNode->route/*info.bDef*/) {
 					ep.ppIConnector = &m_defSession;
 				} else {
 					ep.ppIConnector = nullptr;
@@ -1223,8 +1140,6 @@ int server::initMid(const char* szName, ServerIDType id, serverNode* pNode,
 				pBuff = (uqword*)(ep.userData);
 				pBuff[0] = uwDef;
 				pBuff[1] = info.targetHandle;
-				// bool bRegRoute = info.rearEnd?true:info.regRoute;
-				// pBuff[2] = bRegRoute?EmptySessionID:id;
 				memcpy(pBuff + c_userQuewordNum, &(info.userData), sizeof (info.userData));
 				mInfo("connect endpoint ip = "<<ep.ip<<" port = "<<ep.port<<" userData = "<<ep.userData<<" pBuff = "<<pBuff);
 				nIndexT += c_perLoopNum;
@@ -1334,12 +1249,12 @@ iPackSave*     server:: getIPackSave ()
 {
 	return m_packSave;
 }
-
+/*
 server::serverSessionMapMid&  server:: serverSessionS ()
 {
     return m_serverSessionSMid;
 }
-
+*/
 ISession*  server:: defSession ()
 {
     return m_defSession;
@@ -1349,25 +1264,13 @@ void  server:: setDefSession (ISession* v)
 {
     m_defSession = v;
 }
-/*
-NetTokenType	 server:: nextToken ()
-{
-    NetTokenType	 nRet = 0;
-    do {
-		auto& rMgr = tSingleton<serverMgr>::single();
-		auto pF = rMgr.getPhyCallback().fnNextToken;
-		nRet = pF(id());
-    } while (0);
-    return nRet;
-}
-*/
+
 int  server:: regRoute (ServerIDType objServer, SessionIDType sessionId, udword onlyId)
 {
     int  nRet = 0;
     do {
-		auto& rMap = serverSessionS ();
-		auto inRet = rMap.insert (std::make_pair(objServer, sessionId));
-		// myAssert (inRet.second);
+		// auto& rMap = serverSessionS ();
+		// auto inRet = rMap.insert (std::make_pair(objServer, sessionId));
 		loopHandleType objPId;
 		loopHandleType objSId;
 		fromHandle (objServer, objPId, objSId);
@@ -1375,8 +1278,16 @@ int  server:: regRoute (ServerIDType objServer, SessionIDType sessionId, udword 
 		uqword key = objPId;
 		key <<=32;
 		key |= sessionId;
-		auto setRet = rSet.insert (key);
-		// myAssert (setRet.second);
+		auto it = rSet.find (key);
+		if (rSet.end() != it) {
+			auto seid = (SessionIDType)(*it);
+			auto pOldS = getSession (seid);
+			if (pOldS) {
+				pOldS->close();
+			}
+			rSet.erase(it);
+		}
+		rSet.insert (key);
     } while (0);
     return nRet;
 }
@@ -1404,5 +1315,15 @@ bool  server:: canDownRoute ()
 void  server:: setCanDownRoute (bool v)
 {
     m_canDownRoute = v;
+}
+
+bool  server:: route ()
+{
+    return m_route;
+}
+
+void  server:: setRoute (bool v)
+{
+    m_route = v;
 }
 

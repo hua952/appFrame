@@ -9,6 +9,7 @@
 globalFile:: globalFile ()
 {
 	initProtoDataTypeS ();
+	m_netNum = 4;
 }
 
 globalFile:: ~globalFile ()
@@ -328,5 +329,15 @@ const char*  globalFile:: xmlDir ()
 void  globalFile:: setXmlDir (const char* v)
 {
     strCpy (v, m_xmlDir);
+}
+
+uword  globalFile:: netNum ()
+{
+    return m_netNum;
+}
+
+void  globalFile:: setNetNum (uword v)
+{
+    m_netNum = v;
 }
 

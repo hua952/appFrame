@@ -29,6 +29,7 @@ extern ServerIDType		c_levelMaxOpenNum[c_serverLevelNum];
 #define c_onceServerLevelNum  (256/c_serverLevelNum)
 
 typedef int (*sendPackToLoopFT)(packetHead*);
+// typedef int (*sendPackToScessionFT)(SessionIDType, packetHead*);
 typedef int (*pushPackToLoopFT)(loopHandleType pThis, packetHead*);
 typedef void (*stopLoopSFT)();
 typedef packetHead* (*allocPackFT)(udword udwSize);
@@ -61,6 +62,7 @@ typedef struct _ForLogicFun
 	freePackFT		 fnFreePack; // Thread safety
 	createLoopFT	 fnCreateLoop;
 	regMsgFT		 fnRegMsg;
+	sendPackToLoopFT fnSendPackUp;// Thread safety
 	sendPackToLoopFT fnSendPackToLoop;// Thread safety
 	sendPackToLoopFT fnSendPackToLoopForChannel;// Thread safety
 	sendPackToSomeSessionFT		fnSendPackToSomeSession; // Thread safety
@@ -138,7 +140,7 @@ struct serverNode
 
 extern "C"
 {
-	int InitMidFrame(int nArgC, char** argS/*, PhyCallback* pCallbackS*/); // call by level 0
+	// int InitMidFrame(int nArgC, char** argS/*, PhyCallback* pCallbackS*/); // call by level 0
 	// int getAllLoopAndStart(serverNode* pBuff, int nBuffNum); // call by level 0
 	//void loopStartResult(loopHandleType pLoop, int res, ServerIDType id); // call by level 0
 }

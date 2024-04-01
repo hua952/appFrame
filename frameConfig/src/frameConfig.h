@@ -15,8 +15,12 @@ public:
   void  setAppNetType (word v);
   bool  clearTag ();
   void  setClearTag (bool v);
+  udword  delSaveTokenTime ();
+  void  setDelSaveTokenTime (udword v);
   ubyte  detachServerS ();
   void  setDetachServerS (ubyte v);
+  bool  dumpMsg ();
+  void  setDumpMsg (bool v);
   const char*  endPoint ();
   void  setEndPoint (const char* v);
   const char*  frameConfigFile ();
@@ -35,19 +39,29 @@ public:
   void  setModelS (const char* v);
   const char*  netLib ();
   void  setNetLib (const char* v);
+  uword  netNum ();
+  void  setNetNum (uword v);
   uword  procId ();
   void  setProcId (uword v);
+  udword  savePackTag ();
+  void  setSavePackTag (udword v);
   const char*  serializePackLib ();
   void  setSerializePackLib (const char* v);
+  bool  srand ();
+  void  setSrand (bool v);
   uword  startPort ();
   void  setStartPort (uword v);
+  udword  testTag ();
+  void  setTestTag (udword v);
   const char*  workDir ();
   void  setWorkDir (const char* v);
 private:
   std::unique_ptr <char[]>  m_addLogic;
   word  m_appNetType;
   bool  m_clearTag;
+  udword  m_delSaveTokenTime;
   ubyte  m_detachServerS;
+  bool  m_dumpMsg;
   std::unique_ptr <char[]>  m_endPoint;
   std::unique_ptr <char[]>  m_frameConfigFile;
   std::unique_ptr <char[]>  m_ip;
@@ -57,9 +71,13 @@ private:
   std::unique_ptr <char[]>  m_logicModel;
   std::unique_ptr <char[]>  m_modelS;
   std::unique_ptr <char[]>  m_netLib;
+  uword  m_netNum;
   uword  m_procId;
+  udword  m_savePackTag;
   std::unique_ptr <char[]>  m_serializePackLib;
+  bool  m_srand;
   uword  m_startPort;
+  udword  m_testTag;
   std::unique_ptr <char[]>  m_workDir;
 };
 #endif

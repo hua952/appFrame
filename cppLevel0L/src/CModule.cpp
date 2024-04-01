@@ -5,7 +5,6 @@
 #include "strFun.h"
 #include "modelLoder.h"
 #include "mLog.h"
-#include "mArgMgr.h"
 #include "tSingleton.h"
 #include "argConfig.h"
 
@@ -41,7 +40,6 @@ int CModule::init(const char* szName)
 
 int CModule::load(int nArgC, char** argS, ForLogicFun* pForLogic)
 {
-	auto& mArgS = tSingleton<mArgMgr>::single();
 	int nRet = 0;
 	auto pBuff = m_name.get ();
 	const int c_BuffNum = 3;

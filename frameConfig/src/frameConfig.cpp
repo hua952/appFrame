@@ -10,7 +10,9 @@ frameConfig::frameConfig ()
 	strCpy("libeventSession", m_addLogic);
 	m_appNetType = 0;
 	m_clearTag = false;
+	m_delSaveTokenTime = 50000;
 	m_detachServerS = 1;
+	m_dumpMsg = true;
 	strCpy("", m_endPoint);
 	strCpy("", m_frameConfigFile);
 	strCpy("127.0.0.1", m_ip);
@@ -20,9 +22,13 @@ frameConfig::frameConfig ()
 	strCpy("", m_logicModel);
 	strCpy("", m_modelS);
 	strCpy("libeventSession", m_netLib);
+	m_netNum = 4;
 	m_procId = 0;
+	m_savePackTag = 0;
 	strCpy("", m_serializePackLib);
+	m_srand = true;
 	m_startPort = 12000;
+	m_testTag = 1234;
 	strCpy("C:/work/appFrameProject/project/chatTestInstall", m_workDir);
 	
 }
@@ -56,6 +62,16 @@ void  frameConfig::setClearTag (bool v)
 	m_clearTag = v;
 }
 
+udword  frameConfig::delSaveTokenTime ()
+{
+    return m_delSaveTokenTime;
+}
+
+void  frameConfig::setDelSaveTokenTime (udword v)
+{
+	m_delSaveTokenTime = v;
+}
+
 ubyte  frameConfig::detachServerS ()
 {
     return m_detachServerS;
@@ -64,6 +80,16 @@ ubyte  frameConfig::detachServerS ()
 void  frameConfig::setDetachServerS (ubyte v)
 {
 	m_detachServerS = v;
+}
+
+bool  frameConfig::dumpMsg ()
+{
+    return m_dumpMsg;
+}
+
+void  frameConfig::setDumpMsg (bool v)
+{
+	m_dumpMsg = v;
 }
 
 const char*  frameConfig::endPoint ()
@@ -156,6 +182,16 @@ void  frameConfig::setNetLib (const char* v)
 	strCpy(v, m_netLib);
 }
 
+uword  frameConfig::netNum ()
+{
+    return m_netNum;
+}
+
+void  frameConfig::setNetNum (uword v)
+{
+	m_netNum = v;
+}
+
 uword  frameConfig::procId ()
 {
     return m_procId;
@@ -164,6 +200,16 @@ uword  frameConfig::procId ()
 void  frameConfig::setProcId (uword v)
 {
 	m_procId = v;
+}
+
+udword  frameConfig::savePackTag ()
+{
+    return m_savePackTag;
+}
+
+void  frameConfig::setSavePackTag (udword v)
+{
+	m_savePackTag = v;
 }
 
 const char*  frameConfig::serializePackLib ()
@@ -176,6 +222,16 @@ void  frameConfig::setSerializePackLib (const char* v)
 	strCpy(v, m_serializePackLib);
 }
 
+bool  frameConfig::srand ()
+{
+    return m_srand;
+}
+
+void  frameConfig::setSrand (bool v)
+{
+	m_srand = v;
+}
+
 uword  frameConfig::startPort ()
 {
     return m_startPort;
@@ -184,6 +240,16 @@ uword  frameConfig::startPort ()
 void  frameConfig::setStartPort (uword v)
 {
 	m_startPort = v;
+}
+
+udword  frameConfig::testTag ()
+{
+    return m_testTag;
+}
+
+void  frameConfig::setTestTag (udword v)
+{
+	m_testTag = v;
 }
 
 const char*  frameConfig::workDir ()
@@ -263,8 +329,16 @@ int  frameConfig:: procCmdArgS (int nArg, char** argS)
 				m_clearTag = strVal == "true";
 				continue;
 			}
+				if (strKey == "delSaveTokenTime") {
+				ssV>>m_delSaveTokenTime;
+				continue;
+			}
 				if (strKey == "detachServerS") {
 				m_detachServerS = (ubyte)(atoi(retS[1]));
+				continue;
+			}
+				if (strKey == "dumpMsg") {
+				m_dumpMsg = strVal == "true";
 				continue;
 			}
 				if (strKey == "endPoint") {
@@ -311,8 +385,16 @@ int  frameConfig:: procCmdArgS (int nArg, char** argS)
 	strCpy(strVal.c_str(), m_netLib);
 				continue;
 			}
+				if (strKey == "netNum") {
+				ssV>>m_netNum;
+				continue;
+			}
 				if (strKey == "procId") {
 				ssV>>m_procId;
+				continue;
+			}
+				if (strKey == "savePackTag") {
+				ssV>>m_savePackTag;
 				continue;
 			}
 				if (strKey == "serializePackLib") {
@@ -320,8 +402,16 @@ int  frameConfig:: procCmdArgS (int nArg, char** argS)
 	strCpy(strVal.c_str(), m_serializePackLib);
 				continue;
 			}
+				if (strKey == "srand") {
+				m_srand = strVal == "true";
+				continue;
+			}
 				if (strKey == "startPort") {
 				ssV>>m_startPort;
+				continue;
+			}
+				if (strKey == "testTag") {
+				ssV>>m_testTag;
 				continue;
 			}
 				if (strKey == "workDir") {

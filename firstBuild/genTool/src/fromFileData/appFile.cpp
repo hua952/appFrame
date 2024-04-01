@@ -9,7 +9,7 @@
 appFile:: appFile ()
 {
 	m_procId = 0x7fffffff;
-	m_detachServerS = false;
+	m_detachServerS = true;
 	m_netType = appNetType_client;
 }
 

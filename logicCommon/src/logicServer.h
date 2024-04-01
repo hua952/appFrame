@@ -38,6 +38,7 @@ public:
 	int         sendToServer (CMsgBase& rMsg, loopHandleType handle);
 	int         sendToAllGateServer (CMsgBase& rMsg);
 	int         sendPack (packetHead* pack);
+	int         sendPackToSession (packetHead* pack, SessionIDType sessionId);
 	// int         sendPackToOnceOfTmp (packetHead* pack);
 	int         sendPackToServer (packetHead* pack, loopHandleType handle);
 	int         sendPackToSomeServer(packetHead* pack, serverIdType* pSerS, udword serverNum);
@@ -59,7 +60,13 @@ public:
 	bool  willExit ();
 	void  setWillExit (bool v);
 	int   createChannel (channelKey& rCh, serverIdType srcSer, SessionIDType seId);
+	bool  route ();
+	void  setRoute (bool v);
+	bool  autoRun ();
+	void  setAutoRun (bool v);
 private:
+	bool  m_autoRun;
+	bool  m_route;
 	serverIdType  m_serverId;
 	bool  m_willExit;
 	exitHandleSet  m_exitHandleS;

@@ -47,7 +47,10 @@ public:
 	void  setConfigClassName (const char* v);
 	const char*  xmlDir ();
 	void  setXmlDir (const char* v);
+	uword  netNum ();
+	void  setNetNum (uword v);
 private:
+	uword  m_netNum;
 	std::unique_ptr <char[]>  m_xmlDir;
 	std::unique_ptr <char[]>  m_configClassName;
 	std::unique_ptr <char[]>  m_projectDir;

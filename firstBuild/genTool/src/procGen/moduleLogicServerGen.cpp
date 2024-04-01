@@ -11,6 +11,8 @@
 #include "fromFileData/msgFileMgr.h"
 #include "fromFileData/msgPmpFile.h"
 #include "fromFileData/globalFile.h"
+#include "fromFileData/appFile.h"
+#include "fromFileData/appFileMgr.h"
 #include "fromFileData/toolServerEndPointInfoMgr.h"
 #include "xmlGlobalLoad.h"
 #include "tSingleton.h"
@@ -122,6 +124,8 @@ int   moduleLogicServerGen:: genMgrCpp (moduleGen& rMod, const char* genPath)
 				rOnce.first[k] = &rSr;
 				rSr.setServerName (")"<<pName<<R"(");
 				rSr.onServerInitGen (pForLogic);
+				rSr.setAutoRun(rSerN.autoRun);
+				rSr.setRoute(rSerN.route);
 			}
 		})";
 		}
@@ -208,6 +212,8 @@ dword )"<<strMgrClassName<<R"(::afterLoad (int nArgC, char** argS, ForLogicFun* 
 		{
 			loopHandleType  first;
 			loopHandleType  second;
+			bool            autoRun;
+			bool            route;
 		};
 		auto szModelS = rConfig.modelS ();
 		std::unique_ptr<char[]> modelSBuf;
@@ -242,6 +248,12 @@ dword )"<<strMgrClassName<<R"(::afterLoad (int nArgC, char** argS, ForLogicFun* 
 							rSerN.second = atoi (onceRet[1]);
 						} else {
 							rSerN.second = 1;
+						}
+						if (onceR > 2) {
+							rSerN.autoRun = atoi (onceRet[2]);
+						}
+						if (onceR > 3) {
+							rSerN.route = atoi (onceRet[3]);
 						}
 						loopHandleType level,  onceLv, onceIndex;
 						getLvevlFromSerId (rSerN.first, level, onceLv, onceIndex);
@@ -325,7 +337,7 @@ int   moduleLogicServerGen:: genH (moduleGen& rMod)
 		for (decltype (serverNum) i = 0; i < serverNum; i++) {
 			auto& rServer = *rSS[i];
 			auto pName = rServer.serverName ();
-			serInc<<R"(#include <map>
+			serInc<<R"(
 )"<<R"(#include ")"<<pName<<R"(.h"
 )";
 			serVar<<"    std::pair<std::unique_ptr<"<<pName<<R"([]>, loopHandleType>      m_)"<<pName<<R"(;
@@ -335,6 +347,7 @@ int   moduleLogicServerGen:: genH (moduleGen& rMod)
 #define )"<<pModName<<R"(ServerMgr_h__
 #include "logicServer.h"
 #include "logicServerMgr.h"
+#include <map>
 )"<<serInc.str()<<R"(
 class )"<<strMgrClassName<<R"( : public logicServerMgr
 {
@@ -389,10 +402,6 @@ public:
 			auto strG = strProc;
 			strG += iter->c_str();
 			myMkdir (strG.c_str());
-			/*
-			auto strG = strGenPath;
-			myMkdir (strG.c_str());
-			*/
 		}
 osH<<R"(
 class )"<<pName<<R"( : public  logicServer
@@ -541,55 +550,7 @@ int   moduleLogicServerGen:: genCpp (moduleGen& rMod)
 	} while (0);
     return nRet;
 }
-/*
-int   moduleLogicServerGen:: genOnFrameFun (moduleGen& rMod, const char* szServerName)
-{
-    int   nRet = 0;
-    do {
-		std::string strFile = rMod.frameFunDir ();
-		strFile += "/";
-		strFile += szServerName;
-		strFile += "FrameFun.cpp";
-		std::ifstream is (strFile.c_str ());
-		if (is) {
-			break;
-		}
-		std::ofstream os(strFile.c_str ());
-		if (!os) {
-			nRet = 1;
-			break;
-		}
-		auto& rData = rMod.moduleData ();
-		auto pSer = rData.findServer (szServerName);
-		myAssert (pSer);
-		if (!pSer) {
-			nRet = 2;
-			break;
-		}
-		auto pFrameDec = pSer->frameFunDec ();
-		auto pInitDec = pSer->initFunDec ();
-		os<<R"(
-#include "mainLoop.h"
-#include "gLog.h"
-#include "msg.h"
-#include "logicServer.h"
-#include "logicServerMgr.h"
-#include "tSingleton.h"
 
-)"<<pFrameDec<<R"(
-{
-	return procPacketFunRetType_del;
-}
-)"<<pInitDec<<R"(
-{
-	int nRet = 0;
-	return nRet;
-}
-)";
-    } while (0);
-    return nRet;
-}
-*/
 static void   sOutListenChannel (bool bAsk, std::ostream& ps)
 {
 	if (bAsk) {
@@ -1060,8 +1021,12 @@ int   moduleLogicServerGen:: genServerReadOnlyCpp (moduleGen& rMod)
 			strFile += "Gen.cpp";
 			auto regPackFunName = rServer.regPackFunName ();
 			auto regPackFunDec = rServer.regPackFunDec ();
+		auto pModName = rData.moduleName();
+		std::string strMgrClassName = pModName;
+		strMgrClassName += "ServerMgr";
 			std::ofstream os (strFile.c_str ());
 			os<<R"(#include ")"<<pName<<R"(.h"
+#include ")"<<strMgrClassName<<R"(.h"
 #include "comMsgRpc.h"
 #include "tSingleton.h"
 #include "loopHandleS.h"
@@ -1077,6 +1042,27 @@ int )"<<pName<<R"( :: onServerInitGen(ForLogicFun* pForLogic)
 		)"<<regPackFunDec <<R"(;
 		)"<<regPackFunName<<R"( (pForLogic->fnRegMsg, serverId ());
 		nRet = onServerInit(pForLogic);
+		)";
+	auto appName = rData.appName ();
+	auto& rMap = tSingleton<appFileMgr>::single ();
+	auto pApp = rMap.findApp (appName);
+	myAssert (pApp);
+	auto netType = pApp->netType(); 
+	auto route = rServer.route ();
+	if (appNetType_server == netType && route) {
+		
+		os<<R"(
+	auto &rMgr = tSingleton<)"<<strMgrClassName<<R"(>::single();
+	auto fun = rMgr.forLogicFunSt().fnSendPackUp;
+	regRouteAskMsg askMsg;
+	auto p = askMsg.getPack ();
+	auto pN = P2NHead(p);
+	pN->ubySrcServId = serverId ();
+	askMsg.pop();
+	fun (p);
+	)";
+	}
+		os<<R"(
 	} while (0);
 	return nRet;
 }

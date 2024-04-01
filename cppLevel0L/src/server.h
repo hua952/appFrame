@@ -30,7 +30,6 @@ public:
     typedef std::map<loopHandleType, ISession*> serverSessionMapT;
 	typedef int (*onProcNetPackT)(server* pServer, ISession* session, packetHead* packet);
 	typedef std::map<int, onProcNetPackT>  netMsgMap;
-    serverSessionMapT&    serverSessionMap();
     NetTokenType	nextToken ();
 	netMsgMap&    netMsgProcMap();
 	loopHandleType  myProId ();
@@ -57,7 +56,6 @@ private:
 	static void ThreadFun(server* pS);
 	std::unique_ptr<std::thread> m_pTh;
 	deListMsgQue	m_slistMsgQue;
-	// loopHandleType  m_loopHandle;
 	netMsgMap       m_netMsgMap;
 
 public:
@@ -77,34 +75,32 @@ public:
 	int processLocalServerPack(packetHead* pPack);
 	int processOtherAppToMePack(ISession* session, packetHead* pPack);
 	int processOtherAppPack(packetHead* pPack);
-	int processAllGatePack(packetHead* pPack);
+	int processAllGatePack(ISession* session, packetHead* pPack);
 	int procProx(packetHead* pPack);
 	int forward(packetHead* pPack);
-	int forwardForOtherServer(packetHead* pPack);
+	// int forwardForOtherServer(packetHead* pPack);
 	int sendPackToSomeSession(netPacketHead* pack, uqword* pSessS, udword sessionNum);
-    // NetTokenType	nextToken ();
 	ServerIDType id();
-	// cTimerMgr&    getTimerMgr();
 	serverNode*   getServerNode ();
 	typedef std::map<uword, procRpcPacketFunType> MsgMap;
 	typedef std::map<NetTokenType, packetHead*>  tokenMsgMap;
 	iPackSave*    getIPackSave ();
 	void  showFps ();
 	fpsCount&  fpsC ();
-	int clonePackToOtherNetThread (packetHead* pack);	
+	int clonePackToOtherNetThread (packetHead* pack, bool excMe = true);	
 	int processNetPackFun(ISession* session, packetHead* pack)override;
 	void onAcceptSession(ISession* session, void* userData)override;
 	void onConnect(ISession* session, void* userData)override;
 	void onClose(ISession* session)override;
 	void onWritePack(ISession* session, packetHead* pack)override;
-	using serverSessionMapMid = std::map<ServerIDType, SessionIDType>;
+	// using serverSessionMapMid = std::map<ServerIDType, SessionIDType>;
 	using processSessionMap = std::set<uqword>;
 
-	serverSessionMapMid&  serverSessionS ();
+	// serverSessionMapMid&  serverSessionS ();
 	ISession*  defSession ();
 	void  setDefSession (ISession* v);
 	ISession*  getSession(SessionIDType sid);
-	ISession*  getServerSession(ServerIDType sid);
+	// ISession*  getServerSession(ServerIDType sid);
 
 	static const auto c_userQuewordNum = 2;
 	int regRoute (ServerIDType objServer, SessionIDType sessionId, udword onlyId);
@@ -115,18 +111,20 @@ public:
 	processSessionMap&  processSessionS ();
 	ISession*  getProcessSession(ServerIDType pid);
 	ISession*  getProcessSessionByFullServerId(ServerIDType fullId);
+	bool  route ();
+	void  setRoute (bool v);
 private:
+	bool  m_route;
 	processSessionMap  m_processSessionS;
 	bool  m_canDownRoute;
 	bool  m_canUpRoute;
 	ISession*  m_defSession;
-	serverSessionMapMid  m_serverSessionSMid;
+	// serverSessionMapMid  m_serverSessionSMid;
 	uqword    m_frameNum;
 	fpsCount  m_fpsC;
 	std::unique_ptr<impPackSave_map>	 m_pImpPackSave_map;
 	iPackSave*							 m_packSave;
     tokenMsgMap  m_tokenMsgS;
-	// cTimerMgr          m_timerMgr;
 	serverNode		   m_serverNode;
 	MsgMap	m_MsgMap;
 	frameFunType	m_funOnFrame;

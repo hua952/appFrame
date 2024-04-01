@@ -1,9 +1,14 @@
 #include "moduleExportFunGen.h"
 #include "strFun.h"
 #include "fromFileData/moduleFile.h"
+#include "fromFileData/appFile.h"
+#include "fromFileData/appFileMgr.h"
 #include "rLog.h"
 #include <fstream>
 #include "moduleGen.h"
+#include "myAssert.h"
+#include "tSingleton.h"
+#include "mainLoop.h"
 
 moduleExportFunGen:: moduleExportFunGen ()
 {
@@ -153,22 +158,11 @@ void onLoopEnd	(serverIdType	fId)
 
 void logicOnConnect(serverIdType fId, SessionIDType sessionId, uqword userData)
 {
-	auto &rMgr = tSingleton<)"<<strMgrClassName<<R"(>::single();
+	auto &rMgr = tSingleton<)"<<strMgrClassName<<R"(>::single();)";
+		os<<R"(
 	auto pS = rMgr.findServer(fId);
 	if (pS) {
-		/*
-		auto pEN = (serverEndPointInfo*)userData;
-		bool bSend = pEN->rearEnd?true:pEN->regRoute;
-		if (EmptySessionID != pEN->targetHandle && bSend) {
-			regRouteAskMsg askMsg;
-			auto p = askMsg.getPack ();
-			auto pN = P2NHead(p);
-			pN->ubySrcServId = fId;
-			pN->ubyDesServId = pEN->targetHandle;
-			pS->sendToServer (askMsg, pEN->targetHandle);
-		}
-		*/
-		pS->logicOnConnect(sessionId, userData/*pEN->logicData*/);
+		pS->logicOnConnect(sessionId, userData);
 	}
 }
 

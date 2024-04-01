@@ -1,0 +1,66 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<servers>
+	<projectDir>C:/work/appFrameProject/project</projectDir>
+	<thirdPartyDir>C:/work/</thirdPartyDir>
+	<frameInstallPath>C:/work/appFrameInstall/</frameInstallPath>
+	<configDef>chatTestConfig.xml</configDef>
+	<defMsg file="cChess.xml"/>
+	<appArg>serializePackLib=protobufSer</appArg>
+	<app netNum="4">
+		<client appNetType="0">
+			<appArg>detachServerS=1</appArg>
+			<appArg>frameConfigFile=clientFrame.txt</appArg>
+			<module>
+				<appClientM>
+					<server>
+						<chatTh sleepSetp="1" showFps="1" fpsSetp="40000">
+							<procRpc>
+								<manualList askType="ret"/>
+								<regret askType="ret"/>
+								<roomChannel askType="ret"/>
+								<roomChatTxt askType="ask"/>
+							</procRpc>
+						</chatTh>
+						<netTh sleepSetp="1" showFps="1" fpsSetp="40000" route="1">
+							<procRpc>
+								<manualList askType="ask"/>
+							</procRpc>
+						</netTh>
+						<muTh sleepSetp="1" rearEnd="0" openNum="2" regRoute="0" showFps="1" fpsSetp="40000">
+							<procRpc>
+								<regret askType="ask"/>
+							</procRpc>
+						</muTh>
+						<appClientConTh autoRun="0">
+						</appClientConTh>
+					</server>
+				</appClientM>
+			</module>
+		</client>
+		<server appNetType="2">
+			<appArg>detachServerS=1</appArg>
+			<appArg>frameConfigFile=serverFrame.txt</appArg>
+			<module>
+				<appServerM>
+					<server>
+						<textSender sleepSetp="1" showFps="1" fpsSetp="40000">
+							<procRpc>
+								<roomChannel askType="ask"/>
+								<roomChatTxt askType="ask"/>
+							</procRpc>
+						</textSender>
+						<textRecer sleepSetp="1" showFps="1" fpsSetp="40000">
+							<procRpc>
+								<roomChannel askType="ret"/>
+								<roomChatTxt askType="ask"/>
+							</procRpc>
+						</textRecer>
+						<appServerConTh autoRun="0" showFps="0">
+						</appServerConTh>
+					</server>
+				</appServerM>
+			</module>
+		</server>
+	</app>
+</servers>
+

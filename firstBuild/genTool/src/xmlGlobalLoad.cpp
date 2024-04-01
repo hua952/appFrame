@@ -21,6 +21,10 @@
 #include<unordered_map>
 #include "xmlCommon.h"
 
+// #include "rapidxml/rapidxml.hpp"
+// #include "rapidxml/rapidxml_ext.hpp"
+// #include "rapidxml/rapidxml_utils.hpp"
+
 xmlGlobalLoad:: xmlGlobalLoad ()
 {
 }
@@ -59,11 +63,6 @@ int   xmlGlobalLoad:: secondProcess ()
 			auto& rSS = rMod.orderS ();
 			for (auto ite = rSS.begin (); rSS.end () != ite; ++ite) {
 				auto& rN = ite->get ()->serverInfo ();
-				/*
-				for (decltype (rN.connectorNum) i = 0; i < rN.connectorNum; i++) {
-					procConTarge (rN.connectEndpoint[i]);
-				}
-				*/
 				bool bFindDefLis = false;
 				bool bFindDefCon = false;
 				for (decltype (rN.listenerNum) i = 0; i < rN.listenerNum; i++) {
@@ -133,6 +132,9 @@ static const char* s_comMsg = R"(<?xml version='1.0' encoding='utf-8' ?>
 					<nolyId dataType="udword" />
 					<signature dataType="ubyte" length="256" haveSize="1" commit="" />
 				</ask>
+				<ret neetSession="1">
+					<result dataType="udword" />
+				</ret>
 			</regRoute>
 		</comMsg >
 	</rpc>
@@ -177,12 +179,17 @@ int   xmlGlobalLoad:: perProc(rapidxml::xml_document<>& doc)
 			rapidxml::xml_node<>* pModuleS = doc.allocate_node(rapidxml::node_element, "module");
 			myAssert (pModuleS);
 			pGateNode->append_node(pModuleS);
-			rapidxml::xml_node<>* pM= doc.allocate_node(rapidxml::node_element, "gateM");
+			rapidxml::xml_node<>* pM= doc.allocate_node(rapidxml::node_element, "gateAutoM");
 			pModuleS->append_node(pM);
 			rapidxml::xml_node<>* pServerS = doc.allocate_node(rapidxml::node_element, "server");
 			pM->append_node(pServerS);
 		}
+		pAppS = root->first_node("app");
+		const auto c_BufLen = 1024;
+		static char szNotAutoBuf[c_BufLen];
+		static int leaf = c_BufLen;
 		for(rapidxml::xml_node<char> * pApp = pAppS->first_node();  NULL != pApp; pApp= pApp->next_sibling()) {
+			auto appName = pApp->name();
 			auto pModuleS = pApp->first_node("module");
 			myAssert(pModuleS);
 			auto pM = pModuleS->first_node();
@@ -190,13 +197,14 @@ int   xmlGlobalLoad:: perProc(rapidxml::xml_document<>& doc)
 			myAssert (!pM->next_sibling());
 			auto pServerS = pM->first_node("server");
 			myAssert (pServerS);
-			auto findNetServer = false;
 			std::set<std::string> serverNameS;
 			int appNetType = 0;
 			auto pA = pApp->first_attribute("appNetType");
 			if (pA) {
 				appNetType = atoi(pA->value());
 			}
+			auto findNetServer = false;
+			bool allAutoRun = true;
 			for(rapidxml::xml_node<char> * pS = pServerS->first_node();  NULL != pS; pS = pS->next_sibling()) {
 				auto inS = serverNameS.insert(pS->name());
 				myAssert (inS.second);
@@ -205,16 +213,49 @@ int   xmlGlobalLoad:: perProc(rapidxml::xml_document<>& doc)
 					bool bR = atoi(pA->value());
 					if (bR) {
 						findNetServer = true;
-						break;
+					}
+				}
+				pA = pS->first_attribute("autoRun");
+				if (pA) {
+					bool bR = atoi(pA->value());
+					if (!bR) {
+						allAutoRun = false;
 					}
 				}
 			}
+			if (allAutoRun && appNameS.size() > 1) {
+				std::string netServerName = appName;
+				netServerName += "ConTh";
+				auto it = serverNameS.find(netServerName);
+				myAssert (serverNameS.end() == it);
+				int allSize = netServerName.length() + 1;
+				myAssert (leaf <= c_BufLen );
+				auto nStart = c_BufLen - leaf;
+				char* pCur = szNotAutoBuf;
+				pCur += nStart;
+				strNCpy(pCur,leaf,netServerName.c_str());
+				leaf -= allSize;
+				rapidxml::xml_node<>* pNetNode = doc.allocate_node(rapidxml::node_element, pCur);
+				myAssert (pNetNode);
+				pServerS->append_node(pNetNode);
+				pNetNode->append_attribute(doc.allocate_attribute("autoRun", "0"));
+			}
+
 			if (!findNetServer && appNameS.size() > 1) {
-				auto netServerName = "netThAuto";
+				std::string netServerName = appName;
+				netServerName += "NetTh";
 				auto it = serverNameS.find(netServerName);
 				myAssert (serverNameS.end() == it);
 
-				rapidxml::xml_node<>* pNetNode = doc.allocate_node(rapidxml::node_element, netServerName);
+				int allSize = netServerName.length() + 1;
+				myAssert (leaf <= c_BufLen );
+				auto nStart = c_BufLen - leaf;
+				char* pCur = szNotAutoBuf;
+				pCur += nStart;
+				strNCpy(pCur,leaf,netServerName.c_str());
+				leaf -= allSize;
+
+				rapidxml::xml_node<>* pNetNode = doc.allocate_node(rapidxml::node_element, pCur);
 				myAssert (pNetNode);
 				pServerS->append_node(pNetNode);
 				pNetNode->append_attribute(doc.allocate_attribute("route", "1"));
@@ -225,6 +266,7 @@ int   xmlGlobalLoad:: perProc(rapidxml::xml_document<>& doc)
 				static char szOpenNum[4];
 				strNCpy (szOpenNum, 4, netNum.c_str());
 				pNetNode->append_attribute(doc.allocate_attribute("openNum", szOpenNum));
+				// std::cout<<doc;
 			}
 		}
 		
@@ -249,7 +291,7 @@ int  xmlGlobalLoad::xmlLoad (const char* szFile)
 	doc.parse<0>(fdoc.data());
 	int nR = 0;
 	nR = perProc(doc);
-
+// std::cout<<doc;
 	do {
 		if (nR) {
 			nRet = 1;
@@ -341,6 +383,10 @@ int  xmlGlobalLoad::xmlLoad (const char* szFile)
 			rError ("can not find appS node");
 			nRet = 1;
 			break;
+		}
+		auto pNetNum = pAppS->first_attribute("netNum");
+		if (pNetNum) {
+			rGlobal.setNetNum(atoi(pNetNum->value())); 
 		}
 		nR = appSLoad (pAppS);
 		if (nR) {
@@ -991,7 +1037,7 @@ int   xmlGlobalLoad:: onceServerLoad (rapidxml::xml_node<char>* pS,
 		
 		if (appNetType_gate == netType || appNetType_server == netType) {
 			procRpcNode node;
-			node.retValue = "procPacketFunRetType_del"; /* 特殊情况单独处理 */
+			node.retValue = "procPacketFunRetType_stopBroadcast"; /* 特殊情况单独处理 */
 			node.bAsk = appNetType_gate == netType;
 			node.rpcName = "regRoute";
 			auto inRet = rProcS.insert (node);

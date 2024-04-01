@@ -3,6 +3,7 @@
 	<workDir type="string">C:/work/appFrameProject/project/chatTestInstall</workDir>
 	<ip type="string">127.0.0.1</ip>
 	<startPort type="uword">12000</startPort>
+	<netNum type="uword">4</netNum>
 	<logFile type="string"></logFile>
 	<serializePackLib type="string"></serializePackLib>
 	<logicModel type="string"></logicModel>
@@ -16,4 +17,9 @@
 	<appNetType type="word">0</appNetType>
 	<detachServerS type="ubyte">1</detachServerS>
 	<clearTag type="bool">false</clearTag>
+	<srand type="bool">true</srand>
+	<dumpMsg type="bool">true</dumpMsg>
+	<delSaveTokenTime type="udword">50000</delSaveTokenTime >
+	<savePackTag type="udword">0</savePackTag>
+	<testTag type="udword">1234</testTag>
 </config>

@@ -59,9 +59,9 @@ public:
 	// loopHandleType   getOnceUpServer ();
 	// loopHandleType   getOnceDownServer ();
 	// loopHandleType   getOnceUpOrDownServer ();
-	uword  getAllCanRouteServerS (loopHandleType* pBuff, uword buffNum); // Thread safety
-	uword  getAllCanUpServerS (loopHandleType* pBuff, uword buffNum); // Thread safety
-	uword  getAllCanDownServerS (loopHandleType* pBuff, uword buffNum); // Thread safety
+	// uword  getAllCanRouteServerS (loopHandleType* pBuff, uword buffNum); // Thread safety
+	// uword  getAllCanUpServerS (loopHandleType* pBuff, uword buffNum); // Thread safety
+	// uword  getAllCanDownServerS (loopHandleType* pBuff, uword buffNum); // Thread safety
 	bool   isRootApp ();
 	CModule&  ModuleMgr ();
 	muServerPairS*  muServerPairSPtr ();

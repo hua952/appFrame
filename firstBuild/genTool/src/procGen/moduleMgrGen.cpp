@@ -405,24 +405,11 @@ int   moduleMgrGen:: writeLogicServerCpp ()
 		auto& rConfig = tSingleton<configMgr>::single ();
 		auto structBadyType = rConfig.structBadyType ();
 		std::string strProtoSerInc;
-		// std::stringstream strProtobufSerSS;
 		auto bH = rGlobal.haveServer ();
 		if (bH) {
 			strProtoSerInc = R"(#include ")";
 			strProtoSerInc += serializePackFunStName;
 			strProtoSerInc += R"(.h")";
-			/*
-			strProtobufSerSS<<R"(	static )"<<serializePackFunStName<<R"(   s_FunS;
-			int  getSerializeFunS ()"<<serializePackFunStName<<R"(* pFunS, ForLogicFun* pForLogic);
-			getSerializeFunS (&s_FunS, pForLogic);
-			auto serNum = sizeof (s_FunS) / sizeof (pSerializePackFunType3);
-			if (serNum) {
-				s_SerFunSet.init ((pSerializePackFunType3*)(&s_FunS), serNum);
-			}
-			m_ForLogicFun.pSerFunSPtr = &s_FunS;
-			pForLogic->fromNetPack = sFromNetPack;
-			pForLogic->toNetPack = sToNetPack;
-	)";*/
 		}
 
 		os<<R"(#include <iostream>

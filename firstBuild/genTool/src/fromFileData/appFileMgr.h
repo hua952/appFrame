@@ -12,6 +12,7 @@ public:
     appFileMgr ();
     ~appFileMgr ();
 	appMap&  appS ();
+	appFile* findApp (const char* szAppName);
 private:
 	appMap  m_appS;
 };
