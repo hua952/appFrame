@@ -289,7 +289,7 @@ dword )"<<strMgrClassName<<R"(::afterLoad (int nArgC, char** argS, ForLogicFun* 
 		auto defProcNum = getDefProc (pDefProc, c_defProcBufSize);
 		myAssert (defProcNum < c_defProcBufSize);
 		nR = initMsgDefProc (pDefProc, defProcNum);
-		if (!nR) {
+		if (nR) {
 			nRet = 5;
 			break;
 		}

@@ -375,6 +375,8 @@ int main(int cArg, char** argS)
 		}
 		endMain();
 	} while (0);
+	std::this_thread::sleep_for(std::chrono::microseconds (2000000));
+	std::cout<<" app exit now"<<std::endl;
 	return nRet;
 })";
     } while (0);

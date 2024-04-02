@@ -279,6 +279,8 @@ int logicServer:: sendPackToAllOtherLocalServer(packetHead* pack, bool excMe)
 		auto  fnSendPackToLoop =  getForMsgModuleFunS ().fnSendPackToLoop;
 		auto fnFreePack = getForMsgModuleFunS ().fnFreePack;
 		auto pN = P2NHead (pack);
+		auto myId = serverId ();
+		pN->ubySrcServId = myId;
 		for (int i = 0; i < c_serverLevelNum; i++) {
 			auto& rBig = pAS[i];
 			for (decltype (rBig.second) j = 0; j < rBig.second; j++) {
@@ -287,7 +289,7 @@ int logicServer:: sendPackToAllOtherLocalServer(packetHead* pack, bool excMe)
 					auto pS = rOnce.first[k];
 					myAssert (pS);
 					auto objId = pS->serverId ();
-					if (objId == serverId () && excMe) {
+					if (objId == myId && excMe) {
 						continue;
 					}
 					auto p = allocPacket (pN->udwLength);

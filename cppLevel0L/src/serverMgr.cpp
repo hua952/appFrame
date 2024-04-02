@@ -44,7 +44,7 @@ void	freePack(packetHead* pack)
 		pack->pAsk = 0;
 	}
 	auto pN = P2NHead (pack);
-	rTrace (" will delete pack "<<*pack);
+	// rTrace (" will delete pack "<<*pack);
 	delete [] ((char*)(pack));
 	POP_FUN_CALL
 }
@@ -1071,7 +1071,7 @@ int serverMgr::init(int nArgC, char** argS)
 					auto& rServer = rPa.first[k];
 					auto serId = rS.serverTmpId + k;
 					node.handle = serId;
-
+					rServer.setAutoRun(node.autoRun);
 					if (node.route) {
 						if (nAppNetType == appNetType_client) {
 							auto netNum = rConfig.netNum();
