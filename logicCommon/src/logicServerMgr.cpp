@@ -46,7 +46,7 @@ int     logicServerMgr:: initModelS (const char* szModelS)
 		};
 		using  tempSerInfoMap = std::map<loopHandleType, tempSerInfo>;
 		tempSerInfoMap  tempMap;
-		for (decltype (nR) i = 1; i < nR; i++) {
+		for (decltype (nR) i = 0; i < nR; i++) {
 			auto serS = serRetS [i];
 			const auto c_argMaxRet = 6;
 			auto argBuf = std::make_unique<char* []>(c_argMaxRet);

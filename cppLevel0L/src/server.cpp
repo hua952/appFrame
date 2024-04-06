@@ -292,6 +292,7 @@ packetHead* sclonePack(packetHead* p)
 
 int onMidLoopBegin(loopHandleType pThis)
 {
+	rInfo(" server: "<<pThis<<" begin ");
 	// auto& rMgr = tSingleton<loopMgr>::single();
 	auto& rMgr = tSingleton<serverMgr>::single();
 	auto pTH = rMgr.getLoop (pThis);
@@ -378,6 +379,8 @@ int server:: processAllGatePack(ISession* session, packetHead* pPack)
 		if (procPacketFunRetType_stopBroadcast & nRet) {
 			nRet &= (~procPacketFunRetType_stopBroadcast);  /*  不需要广播,目前只有此处用到这个标记,用完擦除    */
 			break;
+		} else {
+			myAssert (!NNeetRet(P2NHead(pPack)));
 		}
 		if (rConfig.appNetType () != appNetType_gate) {
 			break;
@@ -1094,7 +1097,7 @@ int server::initMid(const char* szName, ServerIDType id, serverNode* pNode,
 			m_pImpPackSave_map = std::make_unique <impPackSave_map> ();
 			m_packSave = m_pImpPackSave_map.get();
 		}
-
+		setAutoRun (pNode->autoRun);
 		if (pNode->fpsSetp) {
 			auto& rTimer = getTimerMgr();
 			auto pSer = this;

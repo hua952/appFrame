@@ -21,10 +21,6 @@
 #include<unordered_map>
 #include "xmlCommon.h"
 
-// #include "rapidxml/rapidxml.hpp"
-// #include "rapidxml/rapidxml_ext.hpp"
-// #include "rapidxml/rapidxml_utils.hpp"
-
 xmlGlobalLoad:: xmlGlobalLoad ()
 {
 }
@@ -32,24 +28,7 @@ xmlGlobalLoad:: xmlGlobalLoad ()
 xmlGlobalLoad:: ~xmlGlobalLoad ()
 {
 }
-/*
-static int procConTarge (toolServerEndPointInfo& node)
-{
-	int nRet = 1;
-	auto& rMap = tSingleton<moduleFileMgr>::single ().moduleS ();
-	for (auto it = rMap.begin (); rMap.end () != it; ++it) {
-		auto& rMod = *(it->second.get());
-		auto pS = rMod.findServer (node.szTarget);
-		if (pS) {
-			strNCpy (node.szTarget, sizeof (node.szTarget),
-					pS->strHandle ());
-			nRet = 0;
-			break;
-		}
-	}
-	return nRet;
-}
-*/
+
 int   xmlGlobalLoad:: secondProcess ()
 {
     int   nRet = 0;
@@ -127,6 +106,14 @@ static const char* s_comMsg = R"(<?xml version='1.0' encoding='utf-8' ?>
 					<result dataType="udword" />
 				</ret>
 			</ntfExit>
+			<ntfExitByNet>
+				<ask>
+					<exitType dataType="udword" />
+				</ask>
+				<ret neetSession="1">
+					<result dataType="udword" />
+				</ret>
+			</ntfExitByNet>
 			<regRoute>
 				<ask neetSession="1">
 					<nolyId dataType="udword" />
@@ -960,6 +947,7 @@ int   xmlGlobalLoad:: onceServerLoad (rapidxml::xml_node<char>* pS,
 		auto pPmp = rGlobalGen.findMsgPmp ("defMsg");
 		auto& rMsgMgr = pPmp->msgFileS();
 		auto& rProcS = newServer->procMsgS ();
+		auto  route = newServer->route();
 		auto& rXmlCommon = tSingleton<xmlCommon>::single ();
 		auto pXmlRrocRpc = pS->first_node ("procRpc");
 		if (pXmlRrocRpc) {
@@ -1054,6 +1042,22 @@ int   xmlGlobalLoad:: onceServerLoad (rapidxml::xml_node<char>* pS,
 			node.bAsk = false;
 			node.rpcName = "ntfExit";
 			inRet = rProcS.insert (node);
+			myAssert (inRet.second);
+		}
+		{
+			procRpcNode node;
+			if (route) {
+				node.retValue = "procPacketFunRetType_stopBroadcast"; /* 特殊情况单独处理 */
+				node.bAsk = true;
+				node.rpcName = "ntfExitByNet";
+				auto inRet = rProcS.insert (node);
+				myAssert (inRet.second);
+			}
+			
+			node.retValue = "procPacketFunRetType_del";
+			node.bAsk = false;
+			node.rpcName = "ntfExitByNet";
+			auto inRet = rProcS.insert (node);
 			myAssert (inRet.second);
 		}
     } while (0);

@@ -174,7 +174,8 @@ int  appGen:: batFileGen (appFile& rApp)
 			std::stringstream ts;
 			ts<<" logicModel="<<*it;
 			os<<ts.str();
-			ssModelS<<"*"<<*it;
+			// ssModelS<<"*"<<*it;
+			ssModelS<<"*";
 			auto pM = rModMgr.findModule (it->c_str());
 			myAssert (pM);
 			auto& rSS = pM->orderS ();
@@ -182,7 +183,11 @@ int  appGen:: batFileGen (appFile& rApp)
 				auto& pS = *ite;
 				auto autoRun = (int)(pS->autoRun());
 				auto route = (int)(pS->route());
-				ssModelS<<"+"<<pS->tmpNum ()<<"-"<<pS->openNum ()<<"-"<<autoRun<<"-"<<route;
+				if (rSS.begin() != ite) {
+					ssModelS<<"+";
+				}
+				// ssModelS<<"+"<<pS->tmpNum ()<<"-"<<pS->openNum ()<<"-"<<autoRun<<"-"<<route;
+				ssModelS<<pS->tmpNum ()<<"-"<<pS->openNum ()<<"-"<<autoRun<<"-"<<route;
 			}
 		}
 		rMainArgS.push_back(ssModelS.str());

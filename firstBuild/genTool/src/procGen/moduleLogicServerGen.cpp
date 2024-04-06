@@ -228,60 +228,60 @@ dword )"<<strMgrClassName<<R"(::afterLoad (int nArgC, char** argS, ForLogicFun* 
 			nRet = 3;
 			break;
 		}
-		for (decltype (nR) i = 0; i < nR; i++) {
+		myAssert (2 == nR);
+		if (2 != nR) {
+			nRet = 4;
+			break;
+		}
+		for (decltype (nR) i = 1; i < nR; i++) {
 			const auto c_retSerMaxNum = 64;
 			auto retSerS = std::make_unique<char* []>(c_retSerMaxNum);
 			auto pRetSerS = retSerS.get();
 			auto nRS = strR (pRetS[i], '+', pRetSerS, c_retSerMaxNum);
-			if (nRS > 1) {
-				auto nCmp = strcmp (m_modelName.get(), pRetSerS[0]);
-				if (0 == nCmp) {
-					auto serverN = (loopHandleType)(nRS - 1);
-					auto pSerNum = std::make_unique<tempServerInfo []>(serverN);
-					for (decltype (nRS) j = 1; j < nRS; j++) {
-						const auto c_retSerMaxNum = 6;
-						char* onceRet[c_retSerMaxNum];
-						auto onceR = strR (pRetSerS[j], '-', onceRet, c_retSerMaxNum);
-						auto& rSerN = pSerNum [j - 1];
-						rSerN.first = (loopHandleType)(atoi(onceRet[0]));
-						if (onceR > 1) {
-							rSerN.second = atoi (onceRet[1]);
-						} else {
-							rSerN.second = 1;
-						}
-						if (onceR > 2) {
-							rSerN.autoRun = atoi (onceRet[2]);
-						}
-						if (onceR > 3) {
-							rSerN.route = atoi (onceRet[3]);
-						}
-						loopHandleType level,  onceLv, onceIndex;
-						getLvevlFromSerId (rSerN.first, level, onceLv, onceIndex);
-						auto& bigLv = m_muServerPairS[level];
-						bigLv.second++;
-					}
-					for (decltype (serverN) j = 0; j < serverN; j++) {
-						auto& rSerN = pSerNum [j];
-						loopHandleType level,  onceLv, onceIndex;
-						getLvevlFromSerId (rSerN.first, level, onceLv, onceIndex);
-						auto& bigLv = m_muServerPairS[level];
-						if (!bigLv.first) {
-							bigLv.first = std::make_unique<logicServerPair[]>(bigLv.second);
-							for (decltype (bigLv.second) k = 0; k < bigLv.second; k++) {
-								bigLv.first[k].second = 0;
-							}
-						}
-						auto& rOnceA = bigLv.first[onceLv];
-						rOnceA.second = rSerN.second;
-						rOnceA.first = std::make_unique<logicServer*[]>(rOnceA.second);
-					}
-					for (decltype (serverN) j = 0; j < serverN; j++) {
-						auto& rSerN = pSerNum [j];
-						)"<<ssNew.str()<<R"(
-					}
-					break;
+			auto serverN = (loopHandleType)(nRS);
+			auto pSerNum = std::make_unique<tempServerInfo []>(serverN);
+			for (decltype (nRS) j = 0; j < nRS; j++) {
+				const auto c_retSerMaxNum = 6;
+				char* onceRet[c_retSerMaxNum];
+				auto onceR = strR (pRetSerS[j], '-', onceRet, c_retSerMaxNum);
+				auto& rSerN = pSerNum [j];
+				rSerN.first = (loopHandleType)(atoi(onceRet[0]));
+				if (onceR > 1) {
+					rSerN.second = atoi (onceRet[1]);
+				} else {
+					rSerN.second = 1;
 				}
+				if (onceR > 2) {
+					rSerN.autoRun = atoi (onceRet[2]);
+				}
+				if (onceR > 3) {
+					rSerN.route = atoi (onceRet[3]);
+				}
+				loopHandleType level,  onceLv, onceIndex;
+				getLvevlFromSerId (rSerN.first, level, onceLv, onceIndex);
+				auto& bigLv = m_muServerPairS[level];
+				bigLv.second++;
 			}
+			for (decltype (serverN) j = 0; j < serverN; j++) {
+				auto& rSerN = pSerNum [j];
+				loopHandleType level,  onceLv, onceIndex;
+				getLvevlFromSerId (rSerN.first, level, onceLv, onceIndex);
+				auto& bigLv = m_muServerPairS[level];
+				if (!bigLv.first) {
+					bigLv.first = std::make_unique<logicServerPair[]>(bigLv.second);
+					for (decltype (bigLv.second) k = 0; k < bigLv.second; k++) {
+						bigLv.first[k].second = 0;
+					}
+				}
+				auto& rOnceA = bigLv.first[onceLv];
+				rOnceA.second = rSerN.second;
+				rOnceA.first = std::make_unique<logicServer*[]>(rOnceA.second);
+			}
+			for (decltype (serverN) j = 0; j < serverN; j++) {
+				auto& rSerN = pSerNum [j];
+				)"<<ssNew.str()<<R"(
+			}
+					break;
 		}
 		const auto c_defProcBufSize = 512 * 2;
 		auto defProcBuf = std::make_unique<loopHandleType[]>(c_defProcBufSize);
@@ -653,14 +653,25 @@ static void   sOutDelChannel (bool bAsk, std::ostream& ps)
 }
 static void   sOutNtfExit (bool bAsk, std::ostream& ps)
 {
-	if (!bAsk) {
-		ps<<R"(/*	auto& es =  exitHandleS ();
-	auto nu = es.erase (srcSer);
-	myAssert (nu);
-	if (es.empty ()) {
+	if (bAsk) {
+		ps<<R"(	gInfo("rec NtfExit ask");
+	)";
+	} else {
+		ps<<R"(	gInfo("rec NtfExit ret");
+	)";
+	}
+}
+
+static void sOutNtfExitByNet (bool bAsk, std::ostream& ps)
+{
+	if (bAsk) {
+		ps<<R"(	gInfo("rec NtfExitByNet ask");
+		ntfExitAskMsg  ask;
+		sendMsgToAllOtherLocalServer (ask);
 		setWillExit (true);
-		gInfo("all other local server alder exit");
-	}*/
+	)";
+	} else {
+		ps<<R"(	gInfo("rec NtfExitByNet ret");
 	)";
 	}
 }
@@ -877,6 +888,8 @@ ps<<R"(#include "logicServer.h"
 		
 	if (strcmp (rpcName, "ntfExit") == 0) {
 		sOutNtfExit (bAsk, ps);
+	} else if (strcmp (rpcName, "ntfExitByNet") == 0) {
+		sOutNtfExitByNet (bAsk, ps);
 	} else if (strcmp (rpcName, "addChannel") == 0) {
 		sOutAddChannel (strMgrClassName, bAsk, ps);
 	} else if (strcmp (rpcName, "delChannel") == 0) {
@@ -1167,6 +1180,7 @@ int )"<<pName<<R"( :: sendPackToChannel(packetHead* pack, channelKey& chK, bool 
 		pNN->ubySrcServId = serverId ();
 		pNN->ubyDesServId = c_emptyLoopHandle;
 		pNN->uwMsgID = comMsg2FullMsg(comMsgMsgId_sendToChannelAsk);
+		NSetUnRet(pNN);
 		auto pU = (sendToChannelAsk*)(N2User(pNN));
 		memcpy (pU->m_pack, pSN, sendSize);
 		pU->m_packNum = (udword)sendSize;

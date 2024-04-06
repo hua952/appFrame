@@ -36,7 +36,8 @@ public:
 	virtual void onLoopEnd();
 	int         sendMsg (CMsgBase& rMsg);
 	int         sendToServer (CMsgBase& rMsg, loopHandleType handle);
-	int         sendToAllGateServer (CMsgBase& rMsg);
+	int         sendPackToAllGateServer (packetHead* pack, bool neetRet = false);
+	int         sendToAllGateServer (CMsgBase& rMsg, bool neetRet = false);
 	int         sendPack (packetHead* pack);
 	int         sendPackToSession (packetHead* pack, SessionIDType sessionId);
 	// int         sendPackToOnceOfTmp (packetHead* pack);

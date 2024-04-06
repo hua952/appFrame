@@ -192,16 +192,33 @@ int   logicServer:: sendPackToSomeServer(packetHead* pack, serverIdType* pSerS, 
     return nRet;
 }
 
-int logicServer:: sendToAllGateServer (CMsgBase& rMsg)
+int logicServer:: sendPackToAllGateServer (packetHead* pack, bool neetRet)
 {
-    int nRet = 0;
-    do {
-		auto pack = rMsg.pop();
+	int  nRet = 0;
+	do {
 		auto pNN = P2NHead (pack);
 		pNN->ubySrcServId = serverId ();
 		pNN->ubyDesServId = c_emptyLoopHandle;
+		if (neetRet) {
+			NSetNeetRet(pNN);
+		} else {
+			NSetUnRet(pNN);
+		}
 		auto fnSendPackToLoopForChannel = getForMsgModuleFunS ().fnSendPackToLoopForChannel;
 		fnSendPackToLoopForChannel (pack);
+	} while (0);
+	return nRet;
+}
+
+int logicServer:: sendToAllGateServer (CMsgBase& rMsg, bool neetRet)
+{
+    int nRet = 0;
+    do {
+		auto pack = rMsg.getPack();
+		auto nR = sendPackToAllGateServer (pack, neetRet);
+		if (!nR) {
+			rMsg.pop ();
+		}
     } while (0);
     return nRet;
 }

@@ -608,7 +608,7 @@ int midSendPackToLoopForChannelFun(packetHead* pack) /* 返回值貌似没用 */
 			bRand = !packInOnceProc(pack);
 		}
 		
-		NSetUnRet(pN);
+		// NSetUnRet(pN);
 		/*
 		uword netNum = 0;
 		server* pA = rMgr.getNetServerS (netNum);

@@ -42,10 +42,13 @@ int  argConfig:: afterAllArgProc ()
 			nRet = 1;
 			break;
 		}
-		myAssert (nR);
-		if (nR) {
-			setModelMgrName (pRetS[0]);
+		myAssert (2 == nR);
+		if (2 != nR) {
+			nRet = 5;
+			break;
 		}
+		auto modelMgrname = pRetS[0];
+		setModelMgrName (modelMgrname);
 		for (decltype (nR) i = 1; i < nR; i++) {
 			auto c_retSerMaxNum = 64;
 			auto retSerS = std::make_unique<char* []>(c_retSerMaxNum);
@@ -60,15 +63,14 @@ int  argConfig:: afterAllArgProc ()
 			if (!nSerR) {
 				continue;
 			}
-			auto mapRet = modMap.insert (std::make_pair(pRetSerS[0], tempServerS ()));
+			auto mapRet = modMap.insert (std::make_pair(modelMgrname, tempServerS ()));
 			myAssert (mapRet.second);
 			if (!mapRet.second) {
 				nRet = 3;
 				break;
 			}
 			auto& serverS = mapRet.first->second;
-
-			for (decltype (nSerR) j = 1; j < nSerR; j++) {
+			for (decltype (nSerR) j = 0; j < nSerR; j++) {
 				auto pA = pRetSerS[j];
 				const auto c_argMaxRetNum = 8;
 				char* retArgS[c_argMaxRetNum];
@@ -78,26 +80,25 @@ int  argConfig:: afterAllArgProc ()
 					nRet = 4;
 					break;
 				}
+				auto serverId = (serverIdType)(atoi(retArgS[0]));
 				tempInfo info;
-				auto thTmpId = (ubyte)(atoi(retArgS[0]));
+				auto thTmpId = (ubyte)(serverId);
 				auto nLevel = thTmpId / c_onceServerLevelNum;
-				/*
-				ServerIDType openNum = 1;
-				bool autoRun = true;
-				bool route = false;
-				*/
+				
 				info.first = 1;
 				info.second = true;
 				info.route = false;
 				if (nRArgS > 1) {
 					info.first = (decltype (thTmpId)) (atoi(retArgS[1]));
-				} else if (nRArgS > 2) {
+				}
+				if (nRArgS > 2) {
 					info.second = atoi(retArgS[2]);
-				} if (nRArgS > 3) {
+				}
+				if (nRArgS > 3) {
 					info.route = atoi(retArgS[3]);
 				}
 				myAssert (info.first <= c_levelMaxOpenNum[nLevel]);
-				auto insRet = serverS.insert(std::make_pair((serverIdType)(atoi(retArgS[0])), info));
+				auto insRet = serverS.insert(std::make_pair(serverId, info));
 				myAssert (insRet.second);
 				if (!insRet.second) {
 					nRet = 5;
@@ -119,7 +120,7 @@ int  argConfig:: afterAllArgProc ()
 		m_modelS = std::make_unique<stModel[]>(m_modelNum);
 		for (auto it = modMap.begin (); it != modMap.end (); it++) {
 			auto& rMod = m_modelS[cur++];
-			strCpy (it->first.c_str(), rMod.modelName);
+			strCpy (modelMgrname, rMod.modelName);
 			auto& rServerS = it->second;
 			rMod.serverTemNum = (decltype(rMod.serverTemNum))(rServerS.size());
 			rMod.serverS = std::make_unique<stServer[]>(rMod.serverTemNum);
