@@ -11,6 +11,8 @@ public:
 	int  loadConfig (const char* szFile);
 		  const char*  addLogic ();
   void  setAddLogic (const char* v);
+  bool  allocDebug ();
+  void  setAllocDebug (bool v);
   word  appNetType ();
   void  setAppNetType (word v);
   bool  clearTag ();
@@ -57,6 +59,7 @@ public:
   void  setWorkDir (const char* v);
 private:
   std::unique_ptr <char[]>  m_addLogic;
+  bool  m_allocDebug;
   word  m_appNetType;
   bool  m_clearTag;
   udword  m_delSaveTokenTime;

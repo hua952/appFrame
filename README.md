@@ -5,6 +5,7 @@ cmake .. -A x64 -Dprotobuf_BUILD_TESTS=OFF -DCMAKE_BUILD_TYPE=Debug -Dprotobuf_B
 
 cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -DCMAKE_BUILD_TYPE=Debug  ..
 cmake cmake -DCMAKE_BUILD_TYPE=Debug ..
+cmake -DCMAKE_BUILD_TYPE=Release ..
 level0=libcppLevel0L.so addLogic=libtestLogic.so procId=1
 
 
@@ -17,6 +18,7 @@ genTool.exe defFile=C:\work\appFrame\test\chatTest.xml structBadyType=0
 genTool.exe defFile=C:\work\appFrame\test\openNumTest.xml structBadyType=1
 genTool.exe defFile=C:\work\appFrame\test\newChat.xml structBadyType=1
 genTool.exe defFile=C:\work\appFrame\test\openWorkDir.xml structBadyType=0
+genTool.exe defFile=C:\study\vulkan\vulk1.xml structBadyType=0
 
 configFile.exe file=C:\work\appFrame\test\frameConfig.xml
 

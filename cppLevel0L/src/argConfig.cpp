@@ -42,7 +42,10 @@ int  argConfig:: afterAllArgProc ()
 			nRet = 1;
 			break;
 		}
-		myAssert (2 == nR);
+		myAssert (2 == nR || 0 == nR);
+		if (0 == nR) {
+			break;
+		}
 		if (2 != nR) {
 			nRet = 5;
 			break;

@@ -10,6 +10,7 @@
 	<addLogic type="string">libeventSession</addLogic>
 	<procId type="uword">0</procId>
 	<logLevel type="word">0</logLevel>
+	<txtSendNum type="udword">3</txtSendNum>
 	<logicConfigFile type="string"></frameConfigFile>
 	<detachServerS type="ubyte">1</detachServerS>
 </config>

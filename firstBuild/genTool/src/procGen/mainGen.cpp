@@ -41,6 +41,8 @@ int  mainGen:: startGen (appFile& rApp)
 		myMkdir (strFileU.c_str());
 		strFile += R"(/win)";
 		myMkdir (strFile.c_str());
+		auto pL = userLogicDir();
+		myMkdir (pL);
 		auto nR = writeCmake (rApp);
 		if (nR) {
 			rError ("writeCmake error nR = "<<nR);
@@ -65,6 +67,47 @@ int  mainGen:: startGen (appFile& rApp)
 			nRet = 4;
 			break;
 		}
+		nR = writeUserLogic ();
+		if (nR) {
+			rError ("writeUserLogic error nR = "<<nR);
+			nRet = 4;
+			break;
+		}
+    } while (0);
+    return nRet;
+}
+
+int  mainGen:: writeUserLogic ()
+{
+    int  nRet = 0;
+    do {
+		auto pDir = userLogicDir();
+		std::string strFile = pDir;
+		strFile += R"(/userLogic.cpp)";
+		auto bE = isPathExit (strFile.c_str());
+		if (bE) {
+			break;
+		}
+		std::ofstream os(strFile.c_str());
+		if (!os) {
+			nRet = 1;
+			break;
+		}
+		os<<R"(
+#include<cstdlib>
+#include<cstdio>
+#include<vector>
+#include<string>
+#include<memory>
+
+int  initUserLogic (std::vector<std::string>& vArgS)
+{
+	int nRet = 0;
+	do {
+	} while (0);
+	return nRet;
+}
+)";
     } while (0);
     return nRet;
 }
@@ -81,7 +124,7 @@ int  mainGen:: writeCmake (appFile& rApp)
 		strExcName += "Exc";
 		os<<R"(SET(prjName )"<<strExcName<<R"()
 set(srcS)
-file(GLOB srcS src/*.cpp)
+file(GLOB srcS src/*.cpp src/userLogic/*.cpp)
 set(libS common)
 set(osSrc)
 set(libPath)
@@ -272,6 +315,11 @@ int main(int cArg, char** argS)
 			reArgS[reArgNum++] = pArgBuf;
 			pArgBuf += (nL + 1);
 		}
+		int  initUserLogic (std::vector<std::string>& vArgS);
+		int nURet = initUserLogic (vArgS);
+		if (nURet) {
+			break;
+		}
 		vArgS.clear();
 		std::string strFrameHome;
 		for (decltype (reArgNum) i = 1; i < reArgNum; i++) {
@@ -364,18 +412,19 @@ int main(int cArg, char** argS)
 		curRunNum = funRunThNum (pTemp, c_tempSize);
 		if (curRunNum) {
 			std::cout<<" leaf run num is: "<<curRunNum<<" run serverS is : "<<pTemp<<std::endl;
-			std::this_thread::sleep_for(std::chrono::microseconds (1000000));
+			std::this_thread::sleep_for(std::chrono::microseconds (500000));
 		}
 	} while (curRunNum);
 					)";
 				}
 		}
 				os<<R"(
+				std::cout<<pTemp<<std::endl;
 			}while(0);
 		}
 		endMain();
 	} while (0);
-	std::this_thread::sleep_for(std::chrono::microseconds (2000000));
+	std::this_thread::sleep_for(std::chrono::microseconds (1000000));
 	std::cout<<" app exit now"<<std::endl;
 	return nRet;
 })";
@@ -440,5 +489,14 @@ const char*  mainGen:: srcDir ()
 void  mainGen:: setSrcDir (const char* v)
 {
     strCpy (v, m_srcDir);
+	std::string strL = v;
+	strL += R"(/userLogic)";
+    strCpy (strL.c_str(), m_userLogicDir);
 }
+
+const char*  mainGen:: userLogicDir ()
+{
+    return m_userLogicDir.get ();
+}
+
 

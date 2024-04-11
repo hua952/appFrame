@@ -182,6 +182,7 @@ bool server::onFrame()
 		while (n != pH) {
 			auto d = n;
 			n = n->pNext;
+			/*
 			auto pN = P2NHead (d);
 			if (NIsRet (pN)) {  // ask pack will delete by midFrame
 				PUSH_FUN_CALL
@@ -189,6 +190,8 @@ bool server::onFrame()
 				freePack(d);
 				POP_FUN_CALL
 			}
+			*/
+			freePack(d);
 		}
 	}
 	if (m_sleepSetp) {
@@ -1066,6 +1069,11 @@ void server::onClose(ISession* session)
 
 void server::onWritePack(ISession* session, packetHead* pack)
 {
+	auto pN = P2NHead(pack);
+	if (pN->uwMsgID) {
+		int a = 0; 
+		a++;
+	}
 	freePack (pack); 
 }
 

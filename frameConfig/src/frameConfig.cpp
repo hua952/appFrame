@@ -8,11 +8,12 @@
 frameConfig::frameConfig ()
 {
 	strCpy("libeventSession", m_addLogic);
+	m_allocDebug = false;
 	m_appNetType = 0;
 	m_clearTag = false;
 	m_delSaveTokenTime = 50000;
 	m_detachServerS = 1;
-	m_dumpMsg = true;
+	m_dumpMsg = false;
 	strCpy("", m_endPoint);
 	strCpy("", m_frameConfigFile);
 	strCpy("127.0.0.1", m_ip);
@@ -40,6 +41,16 @@ const char*  frameConfig::addLogic ()
 void  frameConfig::setAddLogic (const char* v)
 {
 	strCpy(v, m_addLogic);
+}
+
+bool  frameConfig::allocDebug ()
+{
+    return m_allocDebug;
+}
+
+void  frameConfig::setAllocDebug (bool v)
+{
+	m_allocDebug = v;
 }
 
 word  frameConfig::appNetType ()
@@ -321,12 +332,18 @@ int  frameConfig:: procCmdArgS (int nArg, char** argS)
 	strCpy(strVal.c_str(), m_addLogic);
 				continue;
 			}
+				if (strKey == "allocDebug") {
+				ssV>>strVal;
+	m_allocDebug = strVal == "true";
+				continue;
+			}
 				if (strKey == "appNetType") {
 				ssV>>m_appNetType;
 				continue;
 			}
 				if (strKey == "clearTag") {
-				m_clearTag = strVal == "true";
+				ssV>>strVal;
+	m_clearTag = strVal == "true";
 				continue;
 			}
 				if (strKey == "delSaveTokenTime") {
@@ -338,7 +355,8 @@ int  frameConfig:: procCmdArgS (int nArg, char** argS)
 				continue;
 			}
 				if (strKey == "dumpMsg") {
-				m_dumpMsg = strVal == "true";
+				ssV>>strVal;
+	m_dumpMsg = strVal == "true";
 				continue;
 			}
 				if (strKey == "endPoint") {
@@ -403,7 +421,8 @@ int  frameConfig:: procCmdArgS (int nArg, char** argS)
 				continue;
 			}
 				if (strKey == "srand") {
-				m_srand = strVal == "true";
+				ssV>>strVal;
+	m_srand = strVal == "true";
 				continue;
 			}
 				if (strKey == "startPort") {

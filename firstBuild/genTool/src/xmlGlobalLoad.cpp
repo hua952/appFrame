@@ -155,7 +155,7 @@ int   xmlGlobalLoad:: perProc(rapidxml::xml_document<>& doc)
 				findGate = true;
 			}
 		}
-		if (!findGate) {
+		if (!findGate && appNameS.size() > 1) {
 			auto gateServerName = "gateAuto";
 			auto it = appNameS.find(gateServerName);
 			myAssert (appNameS.end() == it);
@@ -178,12 +178,18 @@ int   xmlGlobalLoad:: perProc(rapidxml::xml_document<>& doc)
 		for(rapidxml::xml_node<char> * pApp = pAppS->first_node();  NULL != pApp; pApp= pApp->next_sibling()) {
 			auto appName = pApp->name();
 			auto pModuleS = pApp->first_node("module");
-			myAssert(pModuleS);
+			if (!pModuleS) {
+				break;
+			}
 			auto pM = pModuleS->first_node();
-			myAssert (pM);
+			if (!pM) {
+				break;
+			}
 			myAssert (!pM->next_sibling());
 			auto pServerS = pM->first_node("server");
-			myAssert (pServerS);
+			if (!pServerS) {
+				break;
+			}
 			std::set<std::string> serverNameS;
 			int appNetType = 0;
 			auto pA = pApp->first_attribute("appNetType");
@@ -202,10 +208,10 @@ int   xmlGlobalLoad:: perProc(rapidxml::xml_document<>& doc)
 						findNetServer = true;
 					}
 				}
-				pA = pS->first_attribute("autoRun");
+				pA = pS->first_attribute("mainLoop");
 				if (pA) {
 					bool bR = atoi(pA->value());
-					if (!bR) {
+					if (bR) {
 						allAutoRun = false;
 					}
 				}
@@ -225,7 +231,7 @@ int   xmlGlobalLoad:: perProc(rapidxml::xml_document<>& doc)
 				rapidxml::xml_node<>* pNetNode = doc.allocate_node(rapidxml::node_element, pCur);
 				myAssert (pNetNode);
 				pServerS->append_node(pNetNode);
-				pNetNode->append_attribute(doc.allocate_attribute("autoRun", "0"));
+				pNetNode->append_attribute(doc.allocate_attribute("mainLoop", "1"));
 			}
 
 			if (!findNetServer && appNameS.size() > 1) {
@@ -727,7 +733,10 @@ int   xmlGlobalLoad:: serverSLoad (rapidxml::xml_node<char>* pServerS,
 			break;
 		}
 		bool bFind = false;
-		myAssert (!rSS.empty ());
+		// myAssert (!rSS.empty ());
+		if (rSS.empty ()) {
+			break;
+		}
 		auto& rInfo = rSS.begin ()->get()->serverInfo ();
 		bFind = findDefCon (rInfo);
 		if (!bFind) {
@@ -849,18 +858,23 @@ int   xmlGlobalLoad:: onceServerLoad (rapidxml::xml_node<char>* pS,
 			auto dwSetp = atoi (pRegRoute->value());
 			newServer->setRegRoute(dwSetp);
 		}
+		
 		auto pAutoRun= pS->first_attribute("autoRun");
 		if (pAutoRun) {
 			auto autoRun = atoi (pAutoRun->value()) != 0;
 			newServer->setAutoRun(autoRun);
-			if (!autoRun) {
-				auto pM = rApp.mainLoopServer();
-				if (!pM) {
-					rApp.setMainLoopServer (newServer->strTmpHandle ());
-				}
-			}
 		}
-
+		auto pMainLoop = pS->first_attribute("mainLoop");
+		if (pMainLoop) {
+			auto bMain = atoi (pMainLoop->value());
+			if (bMain) {
+				auto pM = rApp.mainLoopServer();
+				myAssert (!pM);
+				rApp.setMainLoopServer (newServer->strTmpHandle ());
+				newServer->setAutoRun(false);
+			}
+			// newServer->setRegRoute(dwSetp);
+		}
 		// auto& rEndPointS = tSingleton<toolServerEndPointInfoMgr>::single().endPointS ();
 		auto& rInfo = newServer->serverInfo ();
 		auto& rENS = rGrobal.endPointGlobalS ();

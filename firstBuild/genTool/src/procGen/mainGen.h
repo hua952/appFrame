@@ -13,11 +13,14 @@ public:
 	int writeUnixDep ();
 	int writeWinDep ();
 	int writeMain (appFile& rApp);
+	int writeUserLogic ();
 	const char*  thisRoot ();
 	void  setThisRoot (const char* v);
 	const char*  srcDir ();
 	void  setSrcDir (const char* v);
+	const char*  userLogicDir ();
 private:
+	std::unique_ptr <char[]>  m_userLogicDir;
 	std::unique_ptr <char[]>  m_srcDir;
 	std::unique_ptr <char[]>  m_thisRoot;
 };

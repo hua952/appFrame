@@ -121,6 +121,8 @@ int   globalGen:: configLibGen ()
 		cmdOs<<"configFile ";
 		if (configDef) {
 			strFile += configDef;
+			auto bE = isPathExit (strFile.c_str());
+			myAssert (bE);
 			cmdOs<<"file="<<strFile<<" ";
 		}
 		auto projectDir = rGlobalFile.projectHome ();

@@ -7,11 +7,18 @@
 #include <mutex>
 
 typedef server* pserver;
-packetHead* allocPack(udword udwSize);// Thread safety
-void	freePack(packetHead* pack);// Thread safety
+// packetHead* allocPack(udword udwSize);// Thread safety
+// void	freePack(packetHead* pack);// Thread safety
 
 int fromNetPack (netPacketHead* pN, pPacketHead& pNew);// Thread safety
 int toNetPack (netPacketHead* pN, pPacketHead& pNew);// Thread safety
+
+
+extern allocPackFT  allocPack;
+extern freePackFT  freePack;
+typedef  void (*outMemLeakFT)(std::ostream& os);
+extern outMemLeakFT  outMemLeak;
+
 class serverMgr
 {
 public:
@@ -100,10 +107,10 @@ private:
 	std::unique_ptr<loopHandleType[]>	 m_canRouteServerIdS;
 	ForLogicFun m_forLogic;
 };
-
+/*
 packetHead* allocPack(udword udwSize);
 void	freePack(packetHead* pack);
-
+*/
 void         lv0PushToCallStack (const char* szTxt);
 void         lv0PopFromCallStack ();
 void         lv0LogCallStack (int nL);

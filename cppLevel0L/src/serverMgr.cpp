@@ -9,6 +9,7 @@
 #include "cppLevel0LCom.h"
 
 #include <set>
+#include <map>
 #include <string>
 #include "CModule.h"
 #include "myAssert.h"
@@ -22,20 +23,32 @@
 #include <vector>
 #include "argConfig.h"
 #include <time.h>
+#include <mutex>
 
-packetHead* allocPack(udword udwSize)
+allocPackFT  allocPack = nullptr;
+freePackFT  freePack = nullptr;
+outMemLeakFT  outMemLeak = nullptr;
+
+static std::mutex g_mem_mtx;
+using memMap = std::map<packetHead*, packetHead*>;
+static memMap s_memMap;
+
+packetHead* allocPackDebug(udword udwSize)
 {
-	PUSH_FUN_CALL
 	auto pRet = (packetHead*)(new char [sizeof(packetHead) + sizeof(netPacketHead) + udwSize]);
 	pRet->pAsk = 0;
 	auto pN = P2NHead(pRet);
 	pN->udwLength = udwSize;
 	pN->uwTag = 0;
-	POP_FUN_CALL
+	{
+		std::lock_guard<std::mutex> lock(g_mem_mtx);
+		auto inRet = s_memMap.insert(std::make_pair(pRet, pRet));
+		myAssert (inRet.second);
+	}
 	return pRet;
 }
 
-void	freePack(packetHead* pack)
+void	freePackDebug(packetHead* pack)
 {
 	PUSH_FUN_CALL
 	lv0LogCallStack (27);
@@ -43,10 +56,46 @@ void	freePack(packetHead* pack)
 		freePack ((packetHead*)(pack->pAsk));
 		pack->pAsk = 0;
 	}
-	auto pN = P2NHead (pack);
+	// auto pN = P2NHead (pack);
 	// rTrace (" will delete pack "<<*pack);
+	{
+		std::lock_guard<std::mutex> lock(g_mem_mtx);
+		auto inRet = s_memMap.erase(pack);
+	}
+
 	delete [] ((char*)(pack));
 	POP_FUN_CALL
+}
+
+void outMemLeakDebug (std::ostream& os)
+{
+	os<<" leak mem is :"<<std::endl;
+	for (auto it = s_memMap.begin (); it != s_memMap.end (); it++) {
+		os<<" leaf pack : "<<*(it->first)<<std::endl;
+	}
+}
+
+packetHead* allocPackRelease (udword udwSize)
+{
+	auto pRet = (packetHead*)(new char [sizeof(packetHead) + sizeof(netPacketHead) + udwSize]);
+	pRet->pAsk = 0;
+	auto pN = P2NHead(pRet);
+	pN->udwLength = udwSize;
+	pN->uwTag = 0;
+	return pRet;
+}
+
+void	freePackRelease (packetHead* pack)
+{
+	if (pack->pAsk) {
+		freePack ((packetHead*)(pack->pAsk));
+		pack->pAsk = 0;
+	}
+	delete [] ((char*)(pack));
+}
+
+void outMemLeakRelease(std::ostream& os)
+{
 }
 
 int sPushPackToLoop (loopHandleType pThis, packetHead* pack)
@@ -373,7 +422,16 @@ int serverMgr::initFun (int cArg, char** argS)
 			mError("rConfig.procCmdArgS error nR = "<<nR);
 			break;
 		}
-
+		auto allocDebug = rConfig.allocDebug ();
+		if (allocDebug) {
+			allocPack = allocPackDebug;
+			freePack = freePackDebug;
+			outMemLeak = outMemLeakDebug;
+		} else {
+			allocPack = allocPackRelease;
+			freePack = freePackRelease;
+			outMemLeak = outMemLeakRelease;
+		}
 		nR = rConfig.afterAllArgProc ();
 		if (nR) {
 			nRet = 2;
@@ -603,12 +661,15 @@ int midSendPackToLoopForChannelFun(packetHead* pack) /* 返回值貌似没用 */
 	auto& rSerMgr = rMgr; //tSingleton<serverMgr>::single ();
 	pack->pAsk = 0;
 	do {
+		myAssert (pN->ubyDesServId == c_emptyLoopHandle);
+		/*
 		bool bRand = true;
 		if (pN->ubyDesServId != c_emptyLoopHandle) {
 			bRand = !packInOnceProc(pack);
 		}
+		*/
 		
-		// NSetUnRet(pN);
+		NSetUnRet(pN);
 		/*
 		uword netNum = 0;
 		server* pA = rMgr.getNetServerS (netNum);
@@ -877,7 +938,7 @@ serverIdType sGetDefProcServerId (msgIdType msgId)
 	} while (0);
 	return nRet;
 }
-
+/*
 static allocPackFT g_allocPackFun = nullptr;
 packetHead* sAllocPack(udword udwSize)
 {
@@ -892,7 +953,7 @@ static void sFreePack (packetHead* pack)
 	auto pN = P2NHead (pack);
 	g_freePackFun (pack);
 }
-
+*/
 static int sRegRouteFun(loopHandleType myServerId, loopHandleType objServerId, SessionIDType sessionId,  udword onlyId)
 {
 	int nRet = 0;
@@ -927,11 +988,11 @@ int serverMgr::init(int nArgC, char** argS)
 	// m_fromNetPack = nullptr;
 	// m_toNetPack = nullptr;
 	auto& forLogic = getForLogicFun();
-	g_allocPackFun = allocPack; // info.fnAllocPack;
-	g_freePackFun = freePack; // info.fnFreePack;
+	// g_allocPackFun = allocPack; // info.fnAllocPack;
+	// g_freePackFun = freePack; // info.fnFreePack;
 	forLogic.fnCreateLoop = nullptr; // sCreateServer;
-	forLogic.fnAllocPack = sAllocPack; // info.fnAllocPack;
-	forLogic.fnFreePack = sFreePack; //  info.fnFreePack;
+	forLogic.fnAllocPack = allocPack; // sAllocPack; // info.fnAllocPack;
+	forLogic.fnFreePack = freePack; // sFreePack; //  info.fnFreePack;
 	forLogic.fnRegMsg = sRegMsg;
 
 	forLogic.fnSendPackUp =  midSendPackUpFun;
@@ -1095,6 +1156,9 @@ int serverMgr::init(int nArgC, char** argS)
 			}
 		}
 		auto szModelMgrName = rConfig.modelMgrName ();
+		if (!szModelMgrName ) {
+			break;
+		}
 		auto& rMM = ModuleMgr ();
 		rMM.init (szModelMgrName);
 		nR = rMM.load (nArgC, argS, &forLogic);
@@ -1446,6 +1510,9 @@ int  serverMgr::runThNum (char* szBuf, int bufSize)
 	auto& rS = *ss;
 	for (decltype (nRet) i = 0; i < nRet; i++) {
 		rS<<pH[i]<<" ";
+	}
+	if (!nRet) {
+		outMemLeak (rS);
 	}
 	strNCpy (szBuf, bufSize, rS.str().c_str());
     return nRet;

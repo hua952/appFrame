@@ -10,6 +10,7 @@
 		<client appNetType="0">
 			<appArg>detachServerS=1</appArg>
 			<appArg>frameConfigFile=clientFrame.txt</appArg>
+			<appArg>logicConfigFile=clientLogicConf.txt</appArg>
 			<module>
 				<appClientM>
 					<server>
@@ -31,7 +32,7 @@
 								<regret askType="ask"/>
 							</procRpc>
 						</muTh>
-						<appClientConTh autoRun="0">
+						<appClientConTh mainLoop="1">
 						</appClientConTh>
 					</server>
 				</appClientM>
@@ -40,6 +41,7 @@
 		<server appNetType="2">
 			<appArg>detachServerS=1</appArg>
 			<appArg>frameConfigFile=serverFrame.txt</appArg>
+			<appArg>logicConfigFile=serverLogicConf.txt</appArg>
 			<module>
 				<appServerM>
 					<server>
@@ -55,7 +57,7 @@
 								<roomChatTxt askType="ask"/>
 							</procRpc>
 						</textRecer>
-						<appServerConTh autoRun="0" showFps="0">
+						<appServerConTh mainLoop="1" showFps="0">
 						</appServerConTh>
 					</server>
 				</appServerM>

@@ -254,6 +254,9 @@ int  configSrcGen:: writeClassCpp ()
 					}
 				}
 			} else if (BigDataType_bool == dataType) {
+
+				ssVR<<R"(ssV>>strVal;
+	)";
 				ssVR<<memberItemName<<R"( = strVal == "true";)";
 
 				std::string strV = "false";

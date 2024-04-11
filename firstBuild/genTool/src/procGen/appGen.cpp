@@ -165,32 +165,34 @@ int  appGen:: batFileGen (appFile& rApp)
 		os<<"procId="<<procId
 			<<" logFile="<<strLogFile
 			<<" workDir="<<strInsHome;
-		std::stringstream ssModelS;
+
 		auto& rModules = rApp.moduleFileNameS ();
-		// ssModelS<<"modelS="<<szAppName<<"ModuleMgr";
-		ssModelS<<"modelS="<<*(rModules.begin ()); // <<szAppName<<"ModuleMgr";
-		auto& rModMgr = tSingleton <moduleFileMgr>::single ();
-		for (auto it = rModules.begin (); rModules.end () != it; ++it) {
-			std::stringstream ts;
-			ts<<" logicModel="<<*it;
-			os<<ts.str();
-			// ssModelS<<"*"<<*it;
-			ssModelS<<"*";
-			auto pM = rModMgr.findModule (it->c_str());
-			myAssert (pM);
-			auto& rSS = pM->orderS ();
-			for (auto ite = rSS.begin (); ite != rSS.end (); ite++) {
-				auto& pS = *ite;
-				auto autoRun = (int)(pS->autoRun());
-				auto route = (int)(pS->route());
-				if (rSS.begin() != ite) {
-					ssModelS<<"+";
+		if (!rModules.empty()) {
+			std::stringstream ssModelS;
+			ssModelS<<"modelS="<<*(rModules.begin ()); // <<szAppName<<"ModuleMgr";
+			auto& rModMgr = tSingleton <moduleFileMgr>::single ();
+			for (auto it = rModules.begin (); rModules.end () != it; ++it) {
+				std::stringstream ts;
+				ts<<" logicModel="<<*it;
+				os<<ts.str();
+				// ssModelS<<"*"<<*it;
+				ssModelS<<"*";
+				auto pM = rModMgr.findModule (it->c_str());
+				myAssert (pM);
+				auto& rSS = pM->orderS ();
+				for (auto ite = rSS.begin (); ite != rSS.end (); ite++) {
+					auto& pS = *ite;
+					auto autoRun = (int)(pS->autoRun());
+					auto route = (int)(pS->route());
+					if (rSS.begin() != ite) {
+						ssModelS<<"+";
+					}
+					// ssModelS<<"+"<<pS->tmpNum ()<<"-"<<pS->openNum ()<<"-"<<autoRun<<"-"<<route;
+					ssModelS<<pS->tmpNum ()<<"-"<<pS->openNum ()<<"-"<<autoRun<<"-"<<route;
 				}
-				// ssModelS<<"+"<<pS->tmpNum ()<<"-"<<pS->openNum ()<<"-"<<autoRun<<"-"<<route;
-				ssModelS<<pS->tmpNum ()<<"-"<<pS->openNum ()<<"-"<<autoRun<<"-"<<route;
 			}
+			rMainArgS.push_back(ssModelS.str());
 		}
-		rMainArgS.push_back(ssModelS.str());
 		auto& rV = rApp.argS ();
 		for (auto it = rV.begin(); rV.end() != it; ++it) {
 			os<<" "<<*it;

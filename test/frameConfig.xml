@@ -18,7 +18,8 @@
 	<detachServerS type="ubyte">1</detachServerS>
 	<clearTag type="bool">false</clearTag>
 	<srand type="bool">true</srand>
-	<dumpMsg type="bool">true</dumpMsg>
+	<dumpMsg type="bool">false</dumpMsg>
+	<allocDebug type="bool">false</allocDebug>
 	<delSaveTokenTime type="udword">50000</delSaveTokenTime >
 	<savePackTag type="udword">0</savePackTag>
 	<testTag type="udword">1234</testTag>
