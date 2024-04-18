@@ -8,10 +8,9 @@ class frameConfig
 public:
 	frameConfig ();
 	int  procCmdArgS (int nArg, char** argS);
+	int  dumpConfig (const char* szFile);
 	int  loadConfig (const char* szFile);
-		  const char*  addLogic ();
-  void  setAddLogic (const char* v);
-  bool  allocDebug ();
+		  bool  allocDebug ();
   void  setAllocDebug (bool v);
   word  appNetType ();
   void  setAppNetType (word v);
@@ -43,8 +42,6 @@ public:
   void  setNetLib (const char* v);
   uword  netNum ();
   void  setNetNum (uword v);
-  uword  procId ();
-  void  setProcId (uword v);
   udword  savePackTag ();
   void  setSavePackTag (udword v);
   const char*  serializePackLib ();
@@ -58,7 +55,6 @@ public:
   const char*  workDir ();
   void  setWorkDir (const char* v);
 private:
-  std::unique_ptr <char[]>  m_addLogic;
   bool  m_allocDebug;
   word  m_appNetType;
   bool  m_clearTag;
@@ -75,7 +71,6 @@ private:
   std::unique_ptr <char[]>  m_modelS;
   std::unique_ptr <char[]>  m_netLib;
   uword  m_netNum;
-  uword  m_procId;
   udword  m_savePackTag;
   std::unique_ptr <char[]>  m_serializePackLib;
   bool  m_srand;

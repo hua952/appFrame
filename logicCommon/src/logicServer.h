@@ -67,7 +67,10 @@ public:
 	void  setRoute (bool v);
 	bool  autoRun ();
 	void  setAutoRun (bool v);
+	void*  userData ();
+	void  setUserData (void* v);
 private:
+	void*  m_userData;
 	bool  m_autoRun;
 	bool  m_route;
 	serverIdType  m_serverId;

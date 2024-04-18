@@ -53,8 +53,7 @@ int             getCurModelPath (std::unique_ptr<char[]>& pathBuf)
 	Dl_info info;
 	int rc = dladdr((void*)fun1, &info);
 	auto nL = strlen (info.dli_fname);
-	pathBuf = std::make_unique<char[]> (nL + 1);
-	strNCpy(pathBuf.get(), nL + 1, info.dli_fname);
+	strCpy (info.dli_fname, pathBuf);
 	return 0;
 }
 

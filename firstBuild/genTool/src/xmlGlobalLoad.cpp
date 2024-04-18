@@ -155,6 +155,7 @@ int   xmlGlobalLoad:: perProc(rapidxml::xml_document<>& doc)
 				findGate = true;
 			}
 		}
+		
 		if (!findGate && appNameS.size() > 1) {
 			auto gateServerName = "gateAuto";
 			auto it = appNameS.find(gateServerName);
@@ -162,6 +163,21 @@ int   xmlGlobalLoad:: perProc(rapidxml::xml_document<>& doc)
 			rapidxml::xml_node<>* pGateNode = doc.allocate_node(rapidxml::node_element, gateServerName);
 			myAssert (pGateNode);
 			pAppS->append_node(pGateNode);
+
+
+			std::string frameConfig = "frameConfigFile=";
+			frameConfig += gateServerName;
+			frameConfig += "Frame.txt";
+
+			rapidxml::xml_node<>* pArg = doc.allocate_node(rapidxml::node_element, "appArg", doc.allocate_string(frameConfig.c_str()));
+			pGateNode->append_node(pArg);
+
+			frameConfig = "logicConfigFile=";
+			frameConfig += gateServerName;
+			frameConfig += "LogicConf.txt";
+			pArg = doc.allocate_node(rapidxml::node_element, "appArg", doc.allocate_string(frameConfig.c_str()));
+			pGateNode->append_node(pArg);
+
 			pGateNode->append_attribute(doc.allocate_attribute("appNetType", "1"));
 			rapidxml::xml_node<>* pModuleS = doc.allocate_node(rapidxml::node_element, "module");
 			myAssert (pModuleS);
@@ -172,9 +188,7 @@ int   xmlGlobalLoad:: perProc(rapidxml::xml_document<>& doc)
 			pM->append_node(pServerS);
 		}
 		pAppS = root->first_node("app");
-		const auto c_BufLen = 1024;
-		static char szNotAutoBuf[c_BufLen];
-		static int leaf = c_BufLen;
+		
 		for(rapidxml::xml_node<char> * pApp = pAppS->first_node();  NULL != pApp; pApp= pApp->next_sibling()) {
 			auto appName = pApp->name();
 			auto pModuleS = pApp->first_node("module");
@@ -221,14 +235,8 @@ int   xmlGlobalLoad:: perProc(rapidxml::xml_document<>& doc)
 				netServerName += "ConTh";
 				auto it = serverNameS.find(netServerName);
 				myAssert (serverNameS.end() == it);
-				int allSize = netServerName.length() + 1;
-				myAssert (leaf <= c_BufLen );
-				auto nStart = c_BufLen - leaf;
-				char* pCur = szNotAutoBuf;
-				pCur += nStart;
-				strNCpy(pCur,leaf,netServerName.c_str());
-				leaf -= allSize;
-				rapidxml::xml_node<>* pNetNode = doc.allocate_node(rapidxml::node_element, pCur);
+				
+				rapidxml::xml_node<>* pNetNode = doc.allocate_node(rapidxml::node_element, doc.allocate_string(netServerName.c_str()));
 				myAssert (pNetNode);
 				pServerS->append_node(pNetNode);
 				pNetNode->append_attribute(doc.allocate_attribute("mainLoop", "1"));
@@ -240,15 +248,7 @@ int   xmlGlobalLoad:: perProc(rapidxml::xml_document<>& doc)
 				auto it = serverNameS.find(netServerName);
 				myAssert (serverNameS.end() == it);
 
-				int allSize = netServerName.length() + 1;
-				myAssert (leaf <= c_BufLen );
-				auto nStart = c_BufLen - leaf;
-				char* pCur = szNotAutoBuf;
-				pCur += nStart;
-				strNCpy(pCur,leaf,netServerName.c_str());
-				leaf -= allSize;
-
-				rapidxml::xml_node<>* pNetNode = doc.allocate_node(rapidxml::node_element, pCur);
+				rapidxml::xml_node<>* pNetNode = doc.allocate_node(rapidxml::node_element, doc.allocate_string(netServerName.c_str()));
 				myAssert (pNetNode);
 				pServerS->append_node(pNetNode);
 				pNetNode->append_attribute(doc.allocate_attribute("route", "1"));

@@ -280,7 +280,6 @@ PhyCallback&  serverMgr::getPhyCallback()
 {
 	return m_PhyCallback;
 }
-*/
 
 int serverMgr::procArgS(int nArgC, char** argS)
 {
@@ -311,6 +310,7 @@ int serverMgr::procArgS(int nArgC, char** argS)
 	}
 	return 0;
 }
+*/
 
 static NetTokenType   sNextToken(loopHandleType pThis)
 {
@@ -377,21 +377,25 @@ int serverMgr::initFun (int cArg, char** argS)
 {
 	// std::this_thread::sleep_for(std::chrono::microseconds (20000000));
 	int nRet = 0;
+	
 	// tSingleton <cArgMgr>::createSingleton ();
 	// auto& rArgS = tSingleton<cArgMgr>::single ();
 	// rArgS.procArgS (cArg, argS);
-	procArgS (cArg, argS);
-	
+	// procArgS (cArg, argS);
 	tSingleton <argConfig>::createSingleton ();
 	auto& rConfig = tSingleton<argConfig>::single ();
+	auto nR = getCurModelPath (m_homeDir);
+	myAssert (0 == nR);
+	auto bR = upDir (m_homeDir.get());
+	myAssert (bR);
 	do {
-		auto nR = rConfig.procCmdArgS (cArg, argS);   /* 下一步用到参数里的文件名,所以要先解析一遍命令行参数  */
+		nR = rConfig.procCmdArgS (cArg, argS);   /* 下一步用到参数里的文件名,所以要先解析一遍命令行参数  */
 		if (nR) {
 			nRet = 1;
 			break;
 		}
 		{
-			auto pWorkDir = rConfig.workDir ();
+			auto pWorkDir = homeDir ();// rConfig.workDir ();
 			myAssert (pWorkDir);
 			std::string strFile = pWorkDir;
 			auto frameConfig = rConfig.frameConfigFile ();
@@ -401,7 +405,7 @@ int serverMgr::initFun (int cArg, char** argS)
 		}
 		
 		auto logLevel = rConfig.logLevel ();
-		auto pWorkDir = rConfig.workDir ();
+		auto pWorkDir = homeDir (); // rConfig.workDir ();
 		myAssert (pWorkDir);
 		std::string strFile = pWorkDir;
 		strFile += "/logs/";
@@ -1013,7 +1017,7 @@ int serverMgr::init(int nArgC, char** argS)
 	auto& rConfig = tSingleton<argConfig>::single ();
 	do
 	{
-		auto workDir = rConfig.workDir();
+		auto workDir = homeDir (); // rConfig.workDir();
 		std::string strPath;
 		if (workDir) {
 			strPath = workDir;
@@ -1537,4 +1541,27 @@ serverMgr::runThreadIdSet&  serverMgr:: runThreadIdS ()
     return m_runThreadIdS;
 }
 
+
+const char*  serverMgr:: homeDir ()
+{
+	const char* pRet = m_homeDir.get ();
+	auto& rConfig = tSingleton<argConfig>::single ();
+	auto workDir = rConfig.workDir ();
+	do {
+		if (!workDir) {
+			break;
+		}
+		auto nL = strlen (workDir);
+		if (!nL) {
+			break;
+		}
+		pRet = workDir;
+	} while (0);
+    return m_homeDir.get ();
+}
+
+void  serverMgr:: setHomeDir (const char* v)
+{
+    strCpy (v, m_homeDir);
+}
 

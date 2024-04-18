@@ -5,7 +5,6 @@
 	<frameInstallPath>C:/work/appFrameInstall/</frameInstallPath>
 	<configDef>chatTestConfig.xml</configDef>
 	<defMsg file="cChess.xml"/>
-	<appArg>serializePackLib=protobufSer</appArg>
 	<app netNum="4">
 		<client appNetType="0">
 			<appArg>detachServerS=1</appArg>

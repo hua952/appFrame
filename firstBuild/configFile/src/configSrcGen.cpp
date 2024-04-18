@@ -84,6 +84,7 @@ int  configSrcGen:: writeClassH ()
 public:
 	)"<<pClassName<<R"( ();
 	int  procCmdArgS (int nArg, char** argS);
+	int  dumpConfig (const char* szFile);
 	int  loadConfig (const char* szFile);
 		)";
 		std::stringstream ssF;
@@ -188,7 +189,10 @@ int  configSrcGen:: writeClassCpp ()
 		std::stringstream initOs;
 		std::stringstream readFileOs;
 		std::stringstream ssM;
-		std::stringstream ssProcCmdArgS;
+
+		auto pSSVr = std::make_unique<std::stringstream>();
+		std::stringstream& ssProcCmdArgS = *pSSVr;
+		// std::stringstream ssProcCmdArgS;
 		std::stringstream ssInit;
 
 		os<<R"(#include ")"<<pConfigFileName<<R"(.h"
@@ -200,6 +204,8 @@ int  configSrcGen:: writeClassCpp ()
 
 )";
 
+	auto pDumpOs = std::make_unique<std::stringstream>();
+	auto& dumpOs = *pDumpOs;
 		for (auto it = rMap.begin (); rMap.end () != it; ++it) {
 			auto pItem = it->second;
 			auto itemName = it->first;
@@ -209,7 +215,16 @@ int  configSrcGen:: writeClassCpp ()
 			auto itemType = pItem->itemType ();
 			auto itemValue = pItem->itemValue ();
 			auto pWordName = pItem->wordItemName();
-
+			auto dumpItemValue = pItem->itemValue ();
+			if (!dumpItemValue) {
+				dumpItemValue = "";
+			}
+			dumpOs<<R"(		ofs<<")"<<itemName<<"="<<itemValue;
+			auto pCommit = pItem->commit();
+			if (pCommit) {
+				dumpOs<<"  ## "<<pCommit;
+			}
+			dumpOs<<R"("<<std::endl;)"<<std::endl;
 			if (BigDataType_string == dataType) {
 				writeDataType = "const char*";
 			}
@@ -231,7 +246,9 @@ int  configSrcGen:: writeClassCpp ()
 			}
 			funOs<<";"<<std::endl
 				<<"}"<<std::endl<<std::endl;
-			std::stringstream& ssVR = ssProcCmdArgS;
+
+			std::stringstream& ssVR = *pSSVr;
+
 			ssVR<<R"(		if (strKey == ")"<<itemName<<R"(") {
 				)";
 			if (BigDataType_int == dataType) {
@@ -291,15 +308,36 @@ int  configSrcGen:: writeClassCpp ()
 )"
 <<funOs.str()<<std::endl<<R"(
 
+int  )"<<pClassName<<R"(:: dumpConfig (const char* szFile)
+{
+	int nRet = 0;
+	
+	std::unique_ptr<char[]>	dirBuf;
+	strCpy (szFile,dirBuf);
+	auto pDir = dirBuf.get();
+	upDir (pDir);
+	do {
+		std::ofstream ofs (szFile);
+		if (!ofs) {
+			nRet = 1;
+			break;
+		}
+)";
+	os<<dumpOs.str()<<R"(
+	} while (0);
+	return nRet;
+}
+
 int  )"<<pClassName<<R"(:: loadConfig (const char* szFile)
 {
 	int nRet = 0;
 	do {
 		std::ifstream ifs (szFile);
 		if (!ifs) {
-			nRet = 1;
+			dumpConfig (szFile);
 			break;
 		}
+
 		std::stringstream ss;
 		std::string strLine;
 		std::vector <std::string> vecT;
@@ -348,7 +386,6 @@ int  )"<<pClassName<<R"(:: procCmdArgS (int nArg, char** argS)
 	return nRet;
 }
 )";
-
     } while (0);
     return nRet;
 }

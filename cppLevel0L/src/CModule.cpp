@@ -7,6 +7,7 @@
 #include "mLog.h"
 #include "tSingleton.h"
 #include "argConfig.h"
+#include "serverMgr.h"
 
 CModule::CModule()
 {
@@ -46,10 +47,10 @@ int CModule::load(int nArgC, char** argS, ForLogicFun* pForLogic)
 	char* buff[c_BuffNum];
 	auto nR = strR(pBuff, '+', buff, c_BuffNum);
 	auto szName = buff[0];
-	// auto& rPho =  tSingleton<loopMgr>::single ();
+	auto& rServerMgr = tSingleton<serverMgr>::single ();
 	std::string strPath;
 	auto& rConfig = tSingleton<argConfig>::single ();
-	auto workDir = rConfig.workDir();
+	auto workDir = rServerMgr.homeDir (); // rConfig.workDir();
 	if (workDir) {
 		strPath = workDir;
 	} else {

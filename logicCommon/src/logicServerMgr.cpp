@@ -6,8 +6,21 @@ dword logicServerMgr::afterLoad(int nArgC, char** argS, ForLogicFun* pForLogic)
 {
 	dword nRet = 0;
 	do {
+		auto nR = getCurModelPath (m_homeDir);
+		myAssert (0 == nR);
+		auto bR = upDir (m_homeDir.get ());
+		myAssert (bR);
+		nRet = afterLoadLogic (nArgC, argS, pForLogic);
 	} while (0);
 	return nRet;
+}
+
+dword  logicServerMgr:: afterLoadLogic(int nArgC, char** argS, ForLogicFun* pForLogic)
+{
+    dword  nRet = 0;
+    do {
+    } while (0);
+    return nRet;
 }
 
 void           logicServerMgr:: setNetServerTmp (serverIdType serverId)
@@ -237,5 +250,15 @@ int  logicServerMgr:: procArgS (int nArgC, char** argS)
 {
 	int nRet;
 	return nRet;
+}
+
+const char*  logicServerMgr:: homeDir ()
+{
+    return m_homeDir.get ();
+}
+
+void  logicServerMgr:: setHomeDir (const char* v)
+{
+    strCpy (v, m_homeDir);
 }
 

@@ -82,7 +82,10 @@ public:
 	void  incRunThNum (loopHandleType pThis);
 	void  subRunThNum (loopHandleType pThis);
 	runThreadIdSet&  runThreadIdS ();
+	const char*  homeDir ();
+	void  setHomeDir (const char* v);
 private:
+	std::unique_ptr<char[]>  m_homeDir;
 	runThreadIdSet  m_runThreadIdS;
 	std::mutex m_mtxRunThNum;
 	serverIdType  m_netServerTmp;
@@ -94,7 +97,7 @@ private:
     delTcpServerFT  m_delTcpServerFn;
     createTcpServerFT  m_createTcpServerFn;
     ubyte  m_outNum;
-	int procArgS(int nArgC, char** argS);
+	// int procArgS(int nArgC, char** argS);
 	loopHandleType	m_procId;
 	loopHandleType	m_gropId;
 	std::unique_ptr<char[]>      m_netLibName;

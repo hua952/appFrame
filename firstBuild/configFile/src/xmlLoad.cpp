@@ -61,6 +61,10 @@ int  xmlLoad:: load (const char* szFileName)
 			if (!ret.second) {
 				continue;
 			}
+			auto pCommit = pC->first_attribute("commit");
+			if (pCommit) {
+				pI->setCommit(pCommit->value ());
+			}
 		}
 	} while (0);
 	return nRet;

@@ -7,7 +7,6 @@
 
 frameConfig::frameConfig ()
 {
-	strCpy("libeventSession", m_addLogic);
 	m_allocDebug = false;
 	m_appNetType = 0;
 	m_clearTag = false;
@@ -24,25 +23,14 @@ frameConfig::frameConfig ()
 	strCpy("", m_modelS);
 	strCpy("libeventSession", m_netLib);
 	m_netNum = 4;
-	m_procId = 0;
 	m_savePackTag = 0;
-	strCpy("", m_serializePackLib);
+	strCpy("protobufSer", m_serializePackLib);
 	m_srand = true;
 	m_startPort = 12000;
 	m_testTag = 1234;
-	strCpy("C:/work/appFrameProject/project/chatTestInstall", m_workDir);
+	strCpy("", m_workDir);
 	
 }
-const char*  frameConfig::addLogic ()
-{
-    return m_addLogic.get();
-}
-
-void  frameConfig::setAddLogic (const char* v)
-{
-	strCpy(v, m_addLogic);
-}
-
 bool  frameConfig::allocDebug ()
 {
     return m_allocDebug;
@@ -203,16 +191,6 @@ void  frameConfig::setNetNum (uword v)
 	m_netNum = v;
 }
 
-uword  frameConfig::procId ()
-{
-    return m_procId;
-}
-
-void  frameConfig::setProcId (uword v)
-{
-	m_procId = v;
-}
-
 udword  frameConfig::savePackTag ()
 {
     return m_savePackTag;
@@ -276,15 +254,57 @@ void  frameConfig::setWorkDir (const char* v)
 
 
 
+int  frameConfig:: dumpConfig (const char* szFile)
+{
+	int nRet = 0;
+	
+	std::unique_ptr<char[]>	dirBuf;
+	strCpy (szFile,dirBuf);
+	auto pDir = dirBuf.get();
+	upDir (pDir);
+	do {
+		std::ofstream ofs (szFile);
+		if (!ofs) {
+			nRet = 1;
+			break;
+		}
+		ofs<<"allocDebug=false"<<std::endl;
+		ofs<<"appNetType=0"<<std::endl;
+		ofs<<"clearTag=false"<<std::endl;
+		ofs<<"delSaveTokenTime=50000"<<std::endl;
+		ofs<<"detachServerS=1"<<std::endl;
+		ofs<<"dumpMsg=false"<<std::endl;
+		ofs<<"endPoint="<<std::endl;
+		ofs<<"frameConfigFile=  ## 框架配置文件"<<std::endl;
+		ofs<<"ip=127.0.0.1"<<std::endl;
+		ofs<<"level0=cppLevel0L"<<std::endl;
+		ofs<<"logFile="<<std::endl;
+		ofs<<"logLevel=2"<<std::endl;
+		ofs<<"logicModel="<<std::endl;
+		ofs<<"modelS="<<std::endl;
+		ofs<<"netLib=libeventSession"<<std::endl;
+		ofs<<"netNum=4"<<std::endl;
+		ofs<<"savePackTag=0"<<std::endl;
+		ofs<<"serializePackLib=protobufSer"<<std::endl;
+		ofs<<"srand=true"<<std::endl;
+		ofs<<"startPort=12000"<<std::endl;
+		ofs<<"testTag=1234"<<std::endl;
+		ofs<<"workDir="<<std::endl;
+
+	} while (0);
+	return nRet;
+}
+
 int  frameConfig:: loadConfig (const char* szFile)
 {
 	int nRet = 0;
 	do {
 		std::ifstream ifs (szFile);
 		if (!ifs) {
-			nRet = 1;
+			dumpConfig (szFile);
 			break;
 		}
+
 		std::stringstream ss;
 		std::string strLine;
 		std::vector <std::string> vecT;
@@ -327,12 +347,7 @@ int  frameConfig:: procCmdArgS (int nArg, char** argS)
 			std::stringstream ssK (retS[0]);
 			ssK>>strKey;
 			std::stringstream ssV (retS[1]);
-		if (strKey == "addLogic") {
-				ssV>>strVal;
-	strCpy(strVal.c_str(), m_addLogic);
-				continue;
-			}
-				if (strKey == "allocDebug") {
+		if (strKey == "allocDebug") {
 				ssV>>strVal;
 	m_allocDebug = strVal == "true";
 				continue;
@@ -405,10 +420,6 @@ int  frameConfig:: procCmdArgS (int nArg, char** argS)
 			}
 				if (strKey == "netNum") {
 				ssV>>m_netNum;
-				continue;
-			}
-				if (strKey == "procId") {
-				ssV>>m_procId;
 				continue;
 			}
 				if (strKey == "savePackTag") {

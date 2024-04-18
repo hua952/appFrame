@@ -119,6 +119,10 @@ int  mainGen:: writeCmake (appFile& rApp)
 		auto& rGlobalFile = tSingleton<globalFile>::single ();
 		std::string strFile = thisRoot ();
 		strFile += "/CMakeLists.txt";
+		auto bE = isPathExit (strFile.c_str());
+		if (bE) {
+			break;
+		}
 		std::ofstream os(strFile.c_str());
 		std::string strExcName = rApp.appName ();
 		strExcName += "Exc";

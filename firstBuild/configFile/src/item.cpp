@@ -71,6 +71,17 @@ void  item:: setMemberItemName (const char* v)
 {
     strCpy (v, m_memberItemName);
 }
+
+const char*  item:: commit ()
+{
+    return m_commit.get ();
+}
+
+void  item:: setCommit (const char* v)
+{
+    strCpy (v, m_commit);
+}
+
 /*
 int item:: writeProcArg (const char* szArg, std::ostream& os)
 {

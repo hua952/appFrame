@@ -17,7 +17,8 @@ public:
 	using  logicMuServerPairS = std::pair<std::unique_ptr<logicServerPair []>, loopHandleType>;
     logicServerMgr ();
     ~logicServerMgr ();
-	virtual dword afterLoad(int nArgC, char** argS, ForLogicFun* pForLogic);
+	dword afterLoad(int nArgC, char** argS, ForLogicFun* pForLogic);
+	virtual dword afterLoadLogic(int nArgC, char** argS, ForLogicFun* pForLogic);
 	int   initMsgDefProc (loopHandleType* pBuf, int num);
 	int   procArgS (int nArgC, char** argS);
 	ubyte  serverNum ();
@@ -32,7 +33,10 @@ public:
 	loopHandleType  getMsgDefProcTmp (msgIdType msgId);
 	logicServerPair*  getServerArray (serverIdType	serverId);
 	static logicServerMgr&  getMgr();
+	const char*  homeDir ();
+	void  setHomeDir (const char* v);
 protected:
+	std::unique_ptr<char[]>  m_homeDir;
 	static logicServerMgr* s_Mgr;
 	std::unique_ptr<serverOpenMap>	m_serverOpenS;
 	std::unique_ptr<msgDefProcMap>	m_msgDefProcS;

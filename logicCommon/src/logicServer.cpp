@@ -38,6 +38,7 @@ logicServer::logicServer ()
 	m_willExit = false;
 	m_serverId = c_emptyLoopHandle;
 	m_route = false;
+	m_userData = nullptr;
 }
 
 int logicServer::onServerInitGen(ForLogicFun* pForLogic)
@@ -466,3 +467,12 @@ void  logicServer:: setAutoRun (bool v)
     m_autoRun = v;
 }
 
+void* logicServer::userData ()
+{
+    return m_userData;
+}
+
+void logicServer::setUserData (void* v)
+{
+    m_userData = v;
+}

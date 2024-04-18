@@ -179,7 +179,7 @@ struct conEndPointT
 	strCpy(")"<<pModName<<R"(", m_modelName);)"<<R"(
 }
 
-dword )"<<strMgrClassName<<R"(::afterLoad (int nArgC, char** argS, ForLogicFun* pForLogic)
+dword )"<<strMgrClassName<<R"(::afterLoadLogic (int nArgC, char** argS, ForLogicFun* pForLogic)
 {
 	dword nRet = 0;
 	do {
@@ -192,7 +192,7 @@ dword )"<<strMgrClassName<<R"(::afterLoad (int nArgC, char** argS, ForLogicFun* 
 			break;
 		}
 		{
-			auto pWorkDir = rConfig.workDir ();
+			auto pWorkDir = homeDir(); // rConfig.workDir ();
 			myAssert (pWorkDir);
 			std::string strFile = pWorkDir;
 			auto frameConfig = rConfig.logicConfigFile ();
@@ -353,7 +353,7 @@ class )"<<strMgrClassName<<R"( : public logicServerMgr
 {
 public:
 	)"<<strMgrClassName<<R"(();
-	dword afterLoad (int nArgC, char** argS, ForLogicFun* pForLogic) override;
+	dword afterLoadLogic (int nArgC, char** argS, ForLogicFun* pForLogic) override;
 )"<<serVar.str()<<R"(
 };
 #endif
@@ -420,12 +420,8 @@ public:
 	int sendMsgToChannel(CMsgBase& rMsg, channelKey& chK, bool ntfMe = false);
 	void logicOnAcceptSession(SessionIDType sessionId, uqword userData)override;
 	void logicOnConnect(SessionIDType sessionId, uqword userData)override;
-	void*  userData ();
-	void  setUserData (void* v);
 	void onLoopBegin() override;
 	void onLoopEnd() override;
-private:
-	void*  m_userData;
 public:
 )";
 		for (auto ite = rPMap.begin(); rPMap.end() != ite; ++ite) {
@@ -1080,19 +1076,8 @@ int )"<<pName<<R"( :: onServerInitGen(ForLogicFun* pForLogic)
 	return nRet;
 }
 
-void* )"<<pName<<R"( ::userData ()
-{
-    return m_userData;
-}
-
-void )"<<pName<<R"(::setUserData (void* v)
-{
-    m_userData = v;
-}
-
 )"<<pName<<R"(::)"<<pName<<R"(()
 {
-	m_userData = nullptr;
 }
 
 int )"<<pName<<R"( :: sendDelChannel (channelKey & chK)

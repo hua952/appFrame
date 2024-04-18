@@ -118,9 +118,11 @@ int  appGen:: batFileGen (appFile& rApp)
 		auto& rMainArgS = rApp.mainArgS();
 
 		auto& rMap = tSingleton<appFileMgr>::single ().appS ();
+		/*
 		if (rMap.size () > 1) {
 			rMainArgS.push_back("netLib=libeventSession");
 		}
+		*/
 		auto haveServer = rGlobalFile.haveServer ();
 		if (haveServer) {
 			std::stringstream ts;
@@ -132,11 +134,13 @@ int  appGen:: batFileGen (appFile& rApp)
 		if (appNetType_gate == netType) {
 			rMainArgS.push_back("ip=0.0.0.0");
 		}
+		/*
 		{
 			std::stringstream ts;
 			ts<<"workDir="<<strInsHome;
 			rMainArgS.push_back(ts.str());
 		}
+		*/
 		{
 			std::stringstream ts;
 			ts<<"netNum="<<rGlobalFile.netNum();
@@ -163,8 +167,8 @@ int  appGen:: batFileGen (appFile& rApp)
 		rMainArgS.push_back(frameHomeFull);
 	
 		os<<"procId="<<procId
-			<<" logFile="<<strLogFile
-			<<" workDir="<<strInsHome;
+			<<" logFile="<<strLogFile;
+			// <<" workDir="<<strInsHome;
 
 		auto& rModules = rApp.moduleFileNameS ();
 		if (!rModules.empty()) {

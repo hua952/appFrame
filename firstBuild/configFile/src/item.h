@@ -26,8 +26,10 @@ public:
 	const char*  wordItemName ();
 	const char*  memberItemName ();
 	void  setMemberItemName (const char* v);
-	// int   writeProcArg (const char* szArg, std::ostream& os);
+	const char*  commit ();
+	void  setCommit (const char* v);
 private:
+	std::unique_ptr <char[]>  m_commit;
 	std::unique_ptr <char[]>  m_memberItemName;
 	std::unique_ptr <char[]>  m_wordItemName;
 	std::unique_ptr <char[]>  m_itemType;
