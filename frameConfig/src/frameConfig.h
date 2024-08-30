@@ -42,6 +42,8 @@ public:
   void  setNetLib (const char* v);
   uword  netNum ();
   void  setNetNum (uword v);
+  const char*  runServerNum ();
+  void  setRunServerNum (const char* v);
   udword  savePackTag ();
   void  setSavePackTag (udword v);
   const char*  serializePackLib ();
@@ -71,6 +73,7 @@ private:
   std::unique_ptr <char[]>  m_modelS;
   std::unique_ptr <char[]>  m_netLib;
   uword  m_netNum;
+  std::unique_ptr <char[]>  m_runServerNum;
   udword  m_savePackTag;
   std::unique_ptr <char[]>  m_serializePackLib;
   bool  m_srand;

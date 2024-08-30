@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <config className="frameConfig" projectDir="C:\work\appFrame"  projectName="frameConfig">
 	<ip type="string">127.0.0.1</ip>
+	<runServerNum type="string"></runServerNum>
 	<workDir type="string"></workDir>
 	<startPort type="uword">12000</startPort>
 	<netNum type="uword">4</netNum>

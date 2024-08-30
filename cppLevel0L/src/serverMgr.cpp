@@ -375,13 +375,7 @@ static loopHandleType      getCurServerHandle ()
 
 int serverMgr::initFun (int cArg, char** argS)
 {
-	// std::this_thread::sleep_for(std::chrono::microseconds (20000000));
 	int nRet = 0;
-	
-	// tSingleton <cArgMgr>::createSingleton ();
-	// auto& rArgS = tSingleton<cArgMgr>::single ();
-	// rArgS.procArgS (cArg, argS);
-	// procArgS (cArg, argS);
 	tSingleton <argConfig>::createSingleton ();
 	auto& rConfig = tSingleton<argConfig>::single ();
 	auto nR = getCurModelPath (m_homeDir);
@@ -451,53 +445,11 @@ int serverMgr::initFun (int cArg, char** argS)
 			mError("loopMgr init error nRet = "<<nRet);
 			break;
 		}
-		// auto nInitMidFrame = InitMidFrame(cArg, argS);
 		auto dumpMsg = rConfig.dumpMsg ();
 		if (dumpMsg) {
 			rInfo ("dupmMsg end plese check");
 			break;
 		}
-		
-		/*
-		const auto c_maxLoopNum = 16;
-		serverNode loopHandleS[c_maxLoopNum];
-		auto proLoopNum =  getAllLoopAndStart(loopHandleS, c_maxLoopNum);
-		rInfo ("initFun proLoopNum = "<<proLoopNum);
-		if (proLoopNum > 0) {
-			g_ServerNum = proLoopNum;
-			auto detachServerS = rArgS.detachServerS ();
-			if (detachServerS) {
-				for (int i = 0; i < LoopNum; i++ ) {
-					auto p = m_loopS[i].get();//pServerS[i];
-					if (!p) {
-						continue;
-					}
-					auto autoRun = p->autoRun ();
-					if (autoRun) {
-						p->start();
-						p->detach();
-					}
-				}
-			} else {
-				for (int i = 0; i < LoopNum; i++ ) {
-					auto p = m_loopS[i].get(); // pServerS[i];
-					if (!p) {
-						continue;
-					}
-					p->start();
-				}
-				for (int i = 0; i < LoopNum; i++ ) {
-					auto p = m_loopS[i].get(); // pServerS[i];
-					if (!p) {
-						continue;
-					}
-					p->join();
-				}
-				std::cout<<"All server End"<<std::endl;
-			}
-		}
-		*/
-
 		loggerDrop ();
 	} while (0);
 	return nRet;
@@ -548,35 +500,6 @@ void         lv0LogCallStack (int nL)
 	sLogCallStack (server::s_loopHandleLocalTh, nL);
 }
 
-/*
-int  InitMidFrame(int nArgC, char** argS)
-{
-	int nRet = 0;
-	do {
-		tSingleton <mArgMgr>::createSingleton ();
-		auto& rArgS = tSingleton<mArgMgr>::single ();
-		nRet = rArgS.procArgS (nArgC, argS);
-		myAssert (0 == nRet);
-		if (nRet) {
-			mError ("rArgS.procArgS error nRet = "<<nRet);
-			break;
-		}
-		auto& rMgr = tSingleton<serverMgr>::single();
-		nRet = rMgr.init(nArgC, argS);
-		if (nRet) {
-			mError("loopMgr init error nRet = "<<nRet);
-			break;
-		}
-	} while (0);
-	return nRet;
-}
-
-int getAllLoopAndStart(serverNode* pBuff, int nBuffNum)
-{
-	auto& rMgr = tSingleton<serverMgr>::single();
-	return rMgr.getAllLoopAndStart(pBuff, nBuffNum);
-}
-*/
 static int sRegMsg(loopHandleType handle, uword uwMsgId, procRpcPacketFunType pFun)
 {
 	int nRet = 0;
@@ -911,17 +834,14 @@ int midSendPackUpFun(packetHead* pack) /* 返回值貌似没用 */
 static int    sRegRpc(msgIdType askId, msgIdType retId, serverIdType	askDefProcSer,
 			serverIdType	retDefProcSer)
 {
-	// auto& rMgr = tSingleton<loopMgr>::single().defMsgInfoMgr();
 	auto& rMgr = tSingleton<serverMgr>::single().defMsgInfoMgr();
 	return rMgr.regRpc (askId, retId, askDefProcSer, retDefProcSer);
 }
 
 serverIdType sGetDefProcServerId (msgIdType msgId)
 {
-	// auto& rMgr = tSingleton<loopMgr>::single().defMsgInfoMgr();
 	serverIdType nRet = c_emptyLoopHandle;
 	auto& rMgr = tSingleton<serverMgr>::single().defMsgInfoMgr();
-	// return rMgr.getDefProcServerId (msgId);
 	auto nR = rMgr.getDefProcServerId (msgId);
 	do {
 		if (c_emptyLoopHandle == nR) {
@@ -942,22 +862,7 @@ serverIdType sGetDefProcServerId (msgIdType msgId)
 	} while (0);
 	return nRet;
 }
-/*
-static allocPackFT g_allocPackFun = nullptr;
-packetHead* sAllocPack(udword udwSize)
-{
-	auto pPack = g_allocPackFun (udwSize);
-	pPack->sessionID = EmptySessionID;
-	return pPack;
-}
 
-static freePackFT g_freePackFun = nullptr;
-static void sFreePack (packetHead* pack)
-{
-	auto pN = P2NHead (pack);
-	g_freePackFun (pack);
-}
-*/
 static int sRegRouteFun(loopHandleType myServerId, loopHandleType objServerId, SessionIDType sessionId,  udword onlyId)
 {
 	int nRet = 0;
@@ -989,11 +894,7 @@ serializePackFunType  serverMgr:: fromNetPack ()
 */
 int serverMgr::init(int nArgC, char** argS)
 {
-	// m_fromNetPack = nullptr;
-	// m_toNetPack = nullptr;
 	auto& forLogic = getForLogicFun();
-	// g_allocPackFun = allocPack; // info.fnAllocPack;
-	// g_freePackFun = freePack; // info.fnFreePack;
 	forLogic.fnCreateLoop = nullptr; // sCreateServer;
 	forLogic.fnAllocPack = allocPack; // sAllocPack; // info.fnAllocPack;
 	forLogic.fnFreePack = freePack; // sFreePack; //  info.fnFreePack;
@@ -1047,8 +948,6 @@ int serverMgr::init(int nArgC, char** argS)
 				}
 				forLogic.fromNetPack = fromNetPack;
 				forLogic.toNetPack = toNetPack;
-				// m_toNetPack =  sToNetPack;
-				// m_fromNetPack = sFromNetPack;
 			}
 
 			typedef int  (*getMsgPairSFT) (uword* pFunS, int nNum);
@@ -1067,7 +966,6 @@ int serverMgr::init(int nArgC, char** argS)
 				}
 			}
 		}
-		// auto& rArgS = tSingleton<mArgMgr>::single ();
 		auto midNetLibName = rConfig.netLib (); // rArgS.midNetLibName ();
 		if (midNetLibName ) {
 			nR = initNetServer ();
@@ -1147,12 +1045,6 @@ int serverMgr::init(int nArgC, char** argS)
 							auto netNum = rConfig.netNum();
 							myAssert (netNum == rPa.second);
 						}
-						/*
-						udword udwIp = 0;
-						auto status = inet_pton(AF_INET, pEndpoint->ip, &udwIp);
-						pEndpoint->userData = udwIp;
-						pEndpoint->userData <= 32;
-						*/
 						pEndpoint->userData = k;
 					}
 					rServer.initMid ("", serId, &node);
@@ -1189,13 +1081,6 @@ int serverMgr::init(int nArgC, char** argS)
 	return nRet;
 }
 
-int serverMgr::createServerS()
-{
-	int nRet = 0;
-	
-	return nRet;
-}
-
 msgMgr& serverMgr::defMsgInfoMgr ()
 {
 	return m_defMsgInfoMgr;
@@ -1205,86 +1090,7 @@ server* serverMgr::getLoop(loopHandleType id)
 {
 	return getServer (id);
 }
-/*
-uword  serverMgr:: getAllCanRouteServerS (loopHandleType* pBuff, uword buffNum) // Thread safety
-{
-	auto nAll = m_canUpRouteServerNum + m_canDownRouteServerNum;
-	myAssert (buffNum > nAll);
-    uword  nRet = nAll;
-	if (nRet > buffNum	) {
-		nRet = buffNum;
-	}
-    do {
-		for (decltype (nRet) i = 0; i < nRet; i++) {
-			pBuff[i] = m_canRouteServerIdS[i];
-		}
-    } while (0);
-    return nRet;
-}
 
-uword   serverMgr::getAllCanUpServerS (loopHandleType* pBuff, uword buffNum)
-{
-	myAssert (buffNum > m_canUpRouteServerNum);
-	uword nRet = m_canUpRouteServerNum;
-	if (nRet > buffNum	) {
-		nRet = buffNum;
-	}
-	for (decltype (nRet) i = 0; i < nRet; i++) {
-		pBuff[i] = m_canRouteServerIdS[i];
-	}
-	return nRet;
-}
-
-uword   serverMgr::getAllCanDownServerS (loopHandleType* pBuff, uword buffNum)
-{
-	myAssert (buffNum > m_canDownRouteServerNum);
-	uword nRet = m_canDownRouteServerNum;
-	if (nRet > buffNum	) {
-		nRet = buffNum;
-	}
-	for (decltype (nRet) i = 0; i < nRet; i++) {
-		pBuff[i] = m_canRouteServerIdS[i + m_canUpRouteServerNum];
-	}
-	return nRet;
-}
-
-loopHandleType serverMgr:: getOnceUpServer ()
-{
-    loopHandleType    nRet = c_emptyLoopHandle;
-    do {
-		if (m_canUpRouteServerNum) {
-			auto i = rand () % m_canUpRouteServerNum;
-			nRet = m_canRouteServerIdS [i];
-		}
-    } while (0);
-    return nRet;
-}
-
-loopHandleType serverMgr:: getOnceDownServer ()
-{
-    loopHandleType    nRet = c_emptyLoopHandle;
-    do {
-		if (m_canDownRouteServerNum) {
-			auto i = rand () % m_canDownRouteServerNum;
-			nRet = m_canRouteServerIdS [i +  m_canUpRouteServerNum];
-		}
-    } while (0);
-    return nRet;
-}
-
-loopHandleType serverMgr::getOnceUpOrDownServer ()
-{
-    loopHandleType    nRet = 0;
-    do {
-		nRet = getOnceUpServer ();
-		if (c_emptyLoopHandle != nRet) {
-			break;
-		}
-		nRet = getOnceDownServer ();
-    } while (0);
-    return nRet;
-}
-*/
 ForLogicFun&  serverMgr::getForLogicFun()
 {
 	return  m_forLogic;
@@ -1303,7 +1109,7 @@ int   serverMgr :: initNetServer ()
 		std::string strPath = binH.get (); 
 		strPath += midNetLibName;
 		strPath += dllExtName ();
-		nRet = initComTcpNet (strPath.c_str(), allocPack /*rC.fnAllocPack*/, freePack /*rC.fnFreePack*/, logMsg /*rC.fnLogMsg*/);
+		nRet = initComTcpNet (strPath.c_str(), allocPack, freePack, logMsg);
 		if (nRet) {
 			mError ("initComTcpNet error nRet = "<<nRet<<" strPath = "
 					<<strPath.c_str());
@@ -1312,12 +1118,7 @@ int   serverMgr :: initNetServer ()
     } while (0);
     return nRet;
 }
-/*
-serializePackFunType serverMgr:: toNetPack ()
-{
-    return m_toNetPack;
-}
-*/
+
 uword serverMgr:: canRouteNum ()
 {
     return m_canUpRouteServerNum  + m_canDownRouteServerNum; // m_upNum;

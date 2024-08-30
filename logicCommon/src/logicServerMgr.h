@@ -8,6 +8,11 @@
 #include "staticArrayMap.h"
 
 class logicServer;
+struct ServerTemplateInfo
+{
+	serverIdType  beginId {0};
+	serverIdType  runNum {0};
+};
 class logicServerMgr
 {
 public:
@@ -36,6 +41,8 @@ public:
 	const char*  homeDir ();
 	void  setHomeDir (const char* v);
 protected:
+	std::unique_ptr<ServerTemplateInfo[]>	m_logicServers;
+	std::unique_ptr<logicServer*[]>			m_allLogicServer;
 	std::unique_ptr<char[]>  m_homeDir;
 	static logicServerMgr* s_Mgr;
 	std::unique_ptr<serverOpenMap>	m_serverOpenS;

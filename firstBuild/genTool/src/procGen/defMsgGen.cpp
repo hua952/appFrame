@@ -37,6 +37,7 @@ int defMsgGen::loopHandleSGen ()
 {
     int  nRet = 0;
     do {
+		std::stringstream ssTmp;
 		std::string strFile = srcDir ();
 		strFile += "/loopHandleS.h";
 		std::ofstream os(strFile);
@@ -53,6 +54,7 @@ int defMsgGen::loopHandleSGen ()
 		auto& rAppS = tSingleton<appFileMgr>::single ().appS ();
 		auto& rModMgr = tSingleton<moduleFileMgr>::single ();
 		int ip = 0;
+		std::stringstream ssEn;
 		std::stringstream ssTem;
 		auto pSSRoot = std::make_unique<std::stringstream>();
 		auto& ssRoot = *pSSRoot;
@@ -96,6 +98,7 @@ int defMsgGen::loopHandleSGen ()
 					decltype (nLevel) tmpNum = serId;
 					pServer->setTmpNum (tmpNum);
 					ssTem<<R"(#define  )"<<pTmpHandle<<" "<<serId<<std::endl;
+					ssEn<<R"(	Enu_)"<<pTmpHandle<<","<<std::endl;
 					auto route = pServer->route ();
 					if (appNetType_gate == netType && route) {
 						myAssert (ssRoot.str().empty());
@@ -107,6 +110,12 @@ int defMsgGen::loopHandleSGen ()
 		}
 		auto& rGlobal = tSingleton<globalFile>::single ();
 		os<<ssTem.str()<<std::endl<<ssRoot.str()<<std::endl;
+		os<<R"(enum  enServerIdTemplate
+{
+)"<<ssEn.str()<<R"(
+	Enu_ServerIdTemplateNum
+};
+)";
 		os<<R"(#endif)";
 	} while (0);
     return nRet;

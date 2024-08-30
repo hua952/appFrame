@@ -2,22 +2,16 @@
 #define _mainLoop_h__
 #include "loop.h"
 #include "comFun.h"
-// #include "iRpcInfoMgr.h"
 #include "ISession.h"
 
 #define LoopNumBitLen 8
 #define ProcNumBitLen (sizeof(loopHandleType)*8-LoopNumBitLen)
-// #define GroupNumBitLen 1 
 #define LoopNum			(1<<LoopNumBitLen)
 #define LoopMark		(LoopNum-1)
 #define AllGateLoopId  (LoopMark-1)
 #define ProcNum			(1<<ProcNumBitLen)
-// #define ProcMark		((ProcNum-1)<<LoopNum)
 #define ProcMark		((ProcNum-1))
-/*
-#define GroupNum		(1<<GroupNumBitLen)
-#define GroupMark		((GroupNum-1)<<(LoopNumBitLen+ProcNumBitLen))
-*/
+
 #define serverNameSize  32
 #define getProcFromHandle(h) ((h>>LoopNumBitLen)&ProcMark)
 #define netPackInOnceProc(n) (getProcFromHandle(n->ubySrcServId)==getProcFromHandle(n->ubyDesServId))
@@ -29,7 +23,6 @@ extern ServerIDType		c_levelMaxOpenNum[c_serverLevelNum];
 #define c_onceServerLevelNum  (256/c_serverLevelNum)
 
 typedef int (*sendPackToLoopFT)(packetHead*);
-// typedef int (*sendPackToScessionFT)(SessionIDType, packetHead*);
 typedef int (*pushPackToLoopFT)(loopHandleType pThis, packetHead*);
 typedef void (*stopLoopSFT)();
 typedef packetHead* (*allocPackFT)(udword udwSize);
@@ -48,7 +41,6 @@ struct  serverNode;
 typedef int (*createLoopFT)(const char* szName, loopHandleType serId, serverNode* pNode, frameFunType funFrame, void* arg);
 typedef  int (*regMsgFT)(loopHandleType serverId, uword uwMsgId, procRpcPacketFunType pFun); // call by level 2
 typedef  int (*removeMsgFT)(loopHandleType handle, uword uwMsgId); // call by level 2
-// typedef  iRpcInfoMgr* (*getIRpcInfoMgrFT)();
 typedef  void (*popFromCallStackFT) (loopHandleType handle);
 typedef  int    (*regRpcFT) (msgIdType askId, msgIdType retId, serverIdType	askDefProcSer,
 			serverIdType	retDefProcSer);
@@ -69,14 +61,9 @@ typedef struct _ForLogicFun
 	logMsgFT		 fnLogMsg;
     addComTimerFT    fnAddComTimer;// Thread safety
 	nextTokenFT      fnNextToken;
-	// getIRpcInfoMgrFT fnGetIRpcInfoMgr;
-	// pushToCallStackFT      fnPushToCallStack;
-	// popFromCallStackFT     fnPopFromCallStack;
-	// logCallStackFT         fnLogCallStack;
 	regRpcFT               fnRegRpc;
     getDefProcServerIdFT   fnGetDefProcServerId;
 	regRouteFT             fnRegRoute;
-	// void*                  pSerFunSPtr;
 	serializePackFunType   fromNetPack;   // rec
 	serializePackFunType   toNetPack;   // rec
 } ForLogicFun;
@@ -88,11 +75,6 @@ typedef void (*logicOnConnectFT)(serverIdType fId, SessionIDType sessionId, uqwo
 typedef void (*onLoopBeginFT)(serverIdType	fId);
 typedef int (*onFrameLagicFT)(serverIdType	fId);
 typedef void (*onLoopEndFT)(serverIdType	fId);
-/*
-typedef struct _ForRegMsg{
-	regMsgFT		 fnRegMsg;
-} ForRegMsg;
-*/
 
 enum appNetType
 {
@@ -106,8 +88,6 @@ enum appNetType
 struct serverEndPointInfo
 {
 	char              ip[16];
-	// void*             userData;
-	// udword            userDataLen;
 	uqword            userData;
 	uqword            logicData;
 	uword             port;
@@ -118,10 +98,7 @@ struct serverEndPointInfo
 	bool			  rearEnd; 
 	bool              regRoute;
 };
-/*
-typedef void (*logicOnAcceptSessionFT)(serverIdType fId, SessionIDType, uqword);
-typedef void (*logicOnConnectFT)(serverIdType fId, SessionIDType, uqword);
-*/
+
 struct serverNode
 {
 	udword                  sleepSetp;
@@ -132,16 +109,11 @@ struct serverNode
 	bool                    autoRun;
 	bool                    route;
 	ubyte                   unUse [2];
-	// logicOnAcceptSessionFT  fnOnAccept;
-	// logicOnConnectFT        fnOnConnect;
 	serverEndPointInfo		listenEndpoint [c_onceServerMaxListenNum];
 	serverEndPointInfo		connectEndpoint [c_onceServerMaxConnectNum];
 };
 
 extern "C"
 {
-	// int InitMidFrame(int nArgC, char** argS/*, PhyCallback* pCallbackS*/); // call by level 0
-	// int getAllLoopAndStart(serverNode* pBuff, int nBuffNum); // call by level 0
-	//void loopStartResult(loopHandleType pLoop, int res, ServerIDType id); // call by level 0
 }
 #endif

@@ -50,7 +50,6 @@ public:
 	int             init(int nArgC, char** argS/*, PhyCallback& info*/);
 	int   initNetServer ();
 	
-	int             createServerS();
 	int getAllLoopAndStart(serverNode* pBuff, int nBuffNum);
 	msgMgr& defMsgInfoMgr (); // Thread safety
 	ForLogicFun&  getForLogicFun();
@@ -59,18 +58,11 @@ public:
 	void onLoopEnd(ServerIDType fId);
 	void logicOnConnect(serverIdType fId, SessionIDType sessionId, uqword userData);
 	void logicOnAccept(serverIdType fId, SessionIDType sessionId, uqword userData);
-	// serializePackFunType  fromNetPack ();
-	// serializePackFunType  toNetPack ();
 	uword  canUpRouteServerNum ();
 	void  setCanUpRouteServerNum (uword v);
 	uword  canDownRouteServerNum ();
 	void  setCanDownRouteServerNum (uword v);
-	// loopHandleType   getOnceUpServer ();
-	// loopHandleType   getOnceDownServer ();
-	// loopHandleType   getOnceUpOrDownServer ();
-	// uword  getAllCanRouteServerS (loopHandleType* pBuff, uword buffNum); // Thread safety
-	// uword  getAllCanUpServerS (loopHandleType* pBuff, uword buffNum); // Thread safety
-	// uword  getAllCanDownServerS (loopHandleType* pBuff, uword buffNum); // Thread safety
+	
 	bool   isRootApp ();
 	CModule&  ModuleMgr ();
 	muServerPairS*  muServerPairSPtr ();
@@ -97,23 +89,17 @@ private:
     delTcpServerFT  m_delTcpServerFn;
     createTcpServerFT  m_createTcpServerFn;
     ubyte  m_outNum;
-	// int procArgS(int nArgC, char** argS);
 	loopHandleType	m_procId;
 	loopHandleType	m_gropId;
 	std::unique_ptr<char[]>      m_netLibName;
 
 	uword  m_canDownRouteServerNum;
 	uword  m_canUpRouteServerNum;
-	// serializePackFunType  m_toNetPack;
-	// serializePackFunType  m_fromNetPack;
 	msgMgr		m_defMsgInfoMgr;
 	std::unique_ptr<loopHandleType[]>	 m_canRouteServerIdS;
 	ForLogicFun m_forLogic;
 };
-/*
-packetHead* allocPack(udword udwSize);
-void	freePack(packetHead* pack);
-*/
+
 void         lv0PushToCallStack (const char* szTxt);
 void         lv0PopFromCallStack ();
 void         lv0LogCallStack (int nL);

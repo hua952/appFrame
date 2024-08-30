@@ -23,6 +23,7 @@ frameConfig::frameConfig ()
 	strCpy("", m_modelS);
 	strCpy("libeventSession", m_netLib);
 	m_netNum = 4;
+	strCpy("", m_runServerNum);
 	m_savePackTag = 0;
 	strCpy("protobufSer", m_serializePackLib);
 	m_srand = true;
@@ -191,6 +192,16 @@ void  frameConfig::setNetNum (uword v)
 	m_netNum = v;
 }
 
+const char*  frameConfig::runServerNum ()
+{
+    return m_runServerNum.get();
+}
+
+void  frameConfig::setRunServerNum (const char* v)
+{
+	strCpy(v, m_runServerNum);
+}
+
 udword  frameConfig::savePackTag ()
 {
     return m_savePackTag;
@@ -284,6 +295,7 @@ int  frameConfig:: dumpConfig (const char* szFile)
 		ofs<<"modelS="<<std::endl;
 		ofs<<"netLib=libeventSession"<<std::endl;
 		ofs<<"netNum=4"<<std::endl;
+		ofs<<"runServerNum="<<std::endl;
 		ofs<<"savePackTag=0"<<std::endl;
 		ofs<<"serializePackLib=protobufSer"<<std::endl;
 		ofs<<"srand=true"<<std::endl;
@@ -420,6 +432,11 @@ int  frameConfig:: procCmdArgS (int nArg, char** argS)
 			}
 				if (strKey == "netNum") {
 				ssV>>m_netNum;
+				continue;
+			}
+				if (strKey == "runServerNum") {
+				ssV>>strVal;
+	strCpy(strVal.c_str(), m_runServerNum);
 				continue;
 			}
 				if (strKey == "savePackTag") {
