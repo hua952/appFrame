@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <config className="frameConfig" projectDir="C:\work\appFrame"  projectName="frameConfig">
 	<ip type="string">127.0.0.1</ip>
-	<runServerNum type="string"></runServerNum>
+	<runWorkNum type="string" commit="本进程线程启动的数量"><runWorkNum/>
+	<gateRunWorkNum type="string" commit="gate进程及线程启动的数量"><gateRunWorkNum/>
+	<serverRunWorkNum type="string" commit="gate进程及线程启动的数量"><serverRunWorkNum/>
 	<workDir type="string"></workDir>
 	<startPort type="uword">12000</startPort>
 	<netNum type="uword">4</netNum>
