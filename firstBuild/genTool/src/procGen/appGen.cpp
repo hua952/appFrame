@@ -118,29 +118,23 @@ int  appGen:: batFileGen (appFile& rApp)
 		auto& rMainArgS = rApp.mainArgS();
 
 		auto& rMap = tSingleton<appFileMgr>::single ().appS ();
-		/*
-		if (rMap.size () > 1) {
-			rMainArgS.push_back("netLib=libeventSession");
-		}
-		*/
+		
 		auto haveServer = rGlobalFile.haveServer ();
 		if (haveServer) {
 			std::stringstream ts;
 			ts<<"procId="<<procId;
 			rMainArgS.push_back(ts.str());
+		
+			std::stringstream appSS;
+			appSS<<"appRunWorkNum="<<rGlobalFile.appRunWorkNum ();
+			rMainArgS.push_back(appSS.str());
 		}
 
 		auto netType = rApp.netType ();
 		if (appNetType_gate == netType) {
 			rMainArgS.push_back("ip=0.0.0.0");
 		}
-		/*
-		{
-			std::stringstream ts;
-			ts<<"workDir="<<strInsHome;
-			rMainArgS.push_back(ts.str());
-		}
-		*/
+		
 		{
 			std::stringstream ts;
 			ts<<"netNum="<<rGlobalFile.netNum();
@@ -168,18 +162,16 @@ int  appGen:: batFileGen (appFile& rApp)
 	
 		os<<"procId="<<procId
 			<<" logFile="<<strLogFile;
-			// <<" workDir="<<strInsHome;
 
 		auto& rModules = rApp.moduleFileNameS ();
 		if (!rModules.empty()) {
 			std::stringstream ssModelS;
-			ssModelS<<"modelS="<<*(rModules.begin ()); // <<szAppName<<"ModuleMgr";
+			ssModelS<<"modelS="<<*(rModules.begin ());
 			auto& rModMgr = tSingleton <moduleFileMgr>::single ();
 			for (auto it = rModules.begin (); rModules.end () != it; ++it) {
 				std::stringstream ts;
 				ts<<" logicModel="<<*it;
 				os<<ts.str();
-				// ssModelS<<"*"<<*it;
 				ssModelS<<"*";
 				auto pM = rModMgr.findModule (it->c_str());
 				myAssert (pM);
@@ -191,7 +183,6 @@ int  appGen:: batFileGen (appFile& rApp)
 					if (rSS.begin() != ite) {
 						ssModelS<<"+";
 					}
-					// ssModelS<<"+"<<pS->tmpNum ()<<"-"<<pS->openNum ()<<"-"<<autoRun<<"-"<<route;
 					ssModelS<<pS->tmpNum ()<<"-"<<pS->openNum ()<<"-"<<autoRun<<"-"<<route;
 				}
 			}

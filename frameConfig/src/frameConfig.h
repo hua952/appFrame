@@ -16,6 +16,8 @@ public:
   void  setAppNetType (word v);
   bool  clearTag ();
   void  setClearTag (bool v);
+  const char*  clientRunWorkNum ();
+  void  setClientRunWorkNum (const char* v);
   udword  delSaveTokenTime ();
   void  setDelSaveTokenTime (udword v);
   ubyte  detachServerS ();
@@ -26,6 +28,8 @@ public:
   void  setEndPoint (const char* v);
   const char*  frameConfigFile ();
   void  setFrameConfigFile (const char* v);
+  const char*  gateRunWorkNum ();
+  void  setGateRunWorkNum (const char* v);
   const char*  ip ();
   void  setIp (const char* v);
   const char*  level0 ();
@@ -42,12 +46,12 @@ public:
   void  setNetLib (const char* v);
   uword  netNum ();
   void  setNetNum (uword v);
-  const char*  runServerNum ();
-  void  setRunServerNum (const char* v);
   udword  savePackTag ();
   void  setSavePackTag (udword v);
   const char*  serializePackLib ();
   void  setSerializePackLib (const char* v);
+  const char*  serverRunWorkNum ();
+  void  setServerRunWorkNum (const char* v);
   bool  srand ();
   void  setSrand (bool v);
   uword  startPort ();
@@ -60,11 +64,13 @@ private:
   bool  m_allocDebug;
   word  m_appNetType;
   bool  m_clearTag;
+  std::unique_ptr <char[]>  m_clientRunWorkNum;
   udword  m_delSaveTokenTime;
   ubyte  m_detachServerS;
   bool  m_dumpMsg;
   std::unique_ptr <char[]>  m_endPoint;
   std::unique_ptr <char[]>  m_frameConfigFile;
+  std::unique_ptr <char[]>  m_gateRunWorkNum;
   std::unique_ptr <char[]>  m_ip;
   std::unique_ptr <char[]>  m_level0;
   std::unique_ptr <char[]>  m_logFile;
@@ -73,9 +79,9 @@ private:
   std::unique_ptr <char[]>  m_modelS;
   std::unique_ptr <char[]>  m_netLib;
   uword  m_netNum;
-  std::unique_ptr <char[]>  m_runServerNum;
   udword  m_savePackTag;
   std::unique_ptr <char[]>  m_serializePackLib;
+  std::unique_ptr <char[]>  m_serverRunWorkNum;
   bool  m_srand;
   uword  m_startPort;
   udword  m_testTag;

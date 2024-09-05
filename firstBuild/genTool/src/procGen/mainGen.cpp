@@ -264,8 +264,21 @@ int main(int cArg, char** argS)
 		}
 		)";
 		auto& rMainArgS = rApp.mainArgS();
+		auto  mainArgSize = rMainArgS.size();
+		os<<R"(auto defArgS = std::make_unique<char*[]>()"<<mainArgSize + 1<<R"();
+		)";
+		auto defLen = 0;
 		for (auto it = rMainArgS.begin(); rMainArgS.end() != it; ++it) {
-			os<<R"(	procArgS.push_back(")"<<*it<<R"(");
+			defLen += it->length() + 1;
+		}
+		os<<R"(
+			auto defArgTxt = std::make_unique<char[]>()"<<defLen<<R"();
+			int curDef = 0;
+			char* pCur = defArgTxt.get();
+		)";
+		for (auto it = rMainArgS.begin(); rMainArgS.end() != it; ++it) {
+			os<<R"(defArgS[curDef++] = pCur;
+		pCur += (sprintf (pCur, "%s", ")"<<it->c_str()<<R"(") + 1);
 		)";
 		}
 		os<<R"(std::string pLevel0Name;
@@ -375,7 +388,7 @@ int main(int cArg, char** argS)
 					nRet = 12;
 					break;
 				}
-				auto nnR = funOnLoad (reArgNum, reArgS.get());
+				auto nnR = funOnLoad (reArgNum, reArgS.get(), )"<<mainArgSize<<R"(, defArgS.get());
 				if (nnR) {
 					std::cout<<"funOnLoad error nnR = "<<nnR<<std::endl;
 					break;

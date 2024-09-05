@@ -4,7 +4,7 @@
 #include "tSingleton.h"
 #include "serverMgr.h"
 
-int initFun (int cArg, char** argS)
+int initFun (int cArg, char** argS, int cDefArg, char** defArgS)
 {
 	tSingleton<serverMgr>::createSingleton();
 	auto& rMgr = tSingleton<serverMgr>::single();

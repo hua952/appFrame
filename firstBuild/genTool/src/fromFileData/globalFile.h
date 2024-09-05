@@ -49,14 +49,16 @@ public:
 	void  setXmlDir (const char* v);
 	uword  netNum ();
 	void  setNetNum (uword v);
+	const char*  appRunWorkNum ();
+	void  setAppRunWorkNum (const char* v);
 private:
-	uword  m_netNum;
+	std::unique_ptr <char[]>  m_appRunWorkNum;
+	std::unique_ptr <char[]>  m_xmlDir;
 	std::unique_ptr <char[]>  m_xmlDir;
 	std::unique_ptr <char[]>  m_configClassName;
 	std::unique_ptr <char[]>  m_projectDir;
 	std::unique_ptr <char[]>  m_configFile;
 	std::unique_ptr <char[]>  m_configDef;
-	endPointGlobalMap  m_endPointGlobalS;
 	std::unique_ptr <char[]>  m_projectInstallDir;
     std::unique_ptr <char[]>  m_thirdPartyDir;
     std::unique_ptr <char[]>  m_installPath;
@@ -68,7 +70,9 @@ private:
 	std::unique_ptr <char[]>  m_frameHome;
 	std::unique_ptr <char[]>  m_depIncludeHome;
 	std::unique_ptr <char[]>  m_depLibHome;
+	uword  m_netNum;
 	protoDataTypeMap  m_protoDataTypeS;
+	endPointGlobalMap  m_endPointGlobalS;
 	msgFileV  m_msgFileS;
 	std::vector<std::string>  m_rootServerS;
 	void reSetProjectInstallDir ();

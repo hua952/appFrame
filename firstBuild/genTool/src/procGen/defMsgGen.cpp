@@ -54,10 +54,17 @@ int defMsgGen::loopHandleSGen ()
 		auto& rAppS = tSingleton<appFileMgr>::single ().appS ();
 		auto& rModMgr = tSingleton<moduleFileMgr>::single ();
 		int ip = 0;
-		std::stringstream ssEn;
 		std::stringstream ssTem;
 		auto pSSRoot = std::make_unique<std::stringstream>();
 		auto& ssRoot = *pSSRoot;
+		std::stringstream appTem;
+		appTem<<R"(
+enum appTmpID
+{
+)";
+		std::stringstream  appOpenSS;
+		bool bFirst = true;
+		int  appIndex = 0;
 		for (auto it = rAppS.begin (); rAppS.end () != it; ++it) {
 			auto& rApp = *(it->second.get ());
 			int is = ip++ * LoopNum;
@@ -70,6 +77,19 @@ int defMsgGen::loopHandleSGen ()
 			for (int i = 0; i < c_serverLevelNum; i++) {
 				lvI[i] = 0;
 			}
+			appTem<<"    appTmpId_"<<rApp.appName()<<","<<std::endl;
+
+			std::stringstream appThTem;
+			std::stringstream routeThTem;
+			appThTem<<R"(enum )"<<rApp.appName()<<R"(ServerTmpID
+{
+)"<<std::endl;
+			if (bFirst) {
+				bFirst = false;
+			} else {
+				appOpenSS<<"+";
+			}
+			appOpenSS<<"appId:"<<appIndex++<<"*openNum:1";
 			for (auto ite = rModNameS.begin ();
 					rModNameS.end () != ite; ++ite) {
 				auto& rMName = *ite;
@@ -77,6 +97,7 @@ int defMsgGen::loopHandleSGen ()
 				myAssert (pMod);
 				auto& rSS = pMod->orderS ();
 				auto tmpId = 0;
+				bool firstServer = true;
 				for (auto iter = rSS.begin ();
 						rSS.end () != iter; ++iter) {
 					auto pServer = iter->get (); // iter->second.get ();
@@ -98,8 +119,19 @@ int defMsgGen::loopHandleSGen ()
 					decltype (nLevel) tmpNum = serId;
 					pServer->setTmpNum (tmpNum);
 					ssTem<<R"(#define  )"<<pTmpHandle<<" "<<serId<<std::endl;
-					ssEn<<R"(	Enu_)"<<pTmpHandle<<","<<std::endl;
 					auto route = pServer->route ();
+					if (route) {
+						routeThTem<<rApp.appName()<<R"(ServerTmpID_)"<<pServer->serverName();
+					} else {
+						appThTem<<R"(    )"<<rApp.appName()<<R"(ServerTmpID_)"<<pServer->serverName()<<","<<std::endl;
+						if (firstServer) {
+							appOpenSS<<"*runServer:";
+							firstServer = false;
+						} else {
+							appOpenSS<<"-";
+						}
+						appOpenSS<<tmpNum<<"/1";
+					}
 					if (appNetType_gate == netType && route) {
 						myAssert (ssRoot.str().empty());
 						ssRoot<<R"(#define  c_rootTmp )"<<pTmpHandle<<std::endl;
@@ -107,15 +139,23 @@ int defMsgGen::loopHandleSGen ()
 					tmpId++;
 				}
 			}
-		}
-		auto& rGlobal = tSingleton<globalFile>::single ();
-		os<<ssTem.str()<<std::endl<<ssRoot.str()<<std::endl;
-		os<<R"(enum  enServerIdTemplate
-{
-)"<<ssEn.str()<<R"(
-	Enu_ServerIdTemplateNum
+
+			appThTem<<R"(    )"<<routeThTem.str()<<","<<std::endl;
+			appThTem<<R"(    )"<<rApp.appName()<<R"(ServerTmpID_serverTmpNum
 };
 )";
+	os<<appThTem.str()<<std::endl;
+	os<<R"(#define )"<<rApp.appName()<<R"(RouteServerTmp )"<<routeThTem.str()<<std::endl;
+	}
+appTem<<R"(    appTmpId_appTmpNum
+};
+)";
+
+		auto& rGlobal = tSingleton<globalFile>::single ();
+		rGlobal.setAppRunWorkNum (appOpenSS.str().c_str());
+		os<<appTem.str()<<std::endl;
+		os<<ssTem.str()<<std::endl<<ssRoot.str()<<std::endl;
+
 		os<<R"(#endif)";
 	} while (0);
     return nRet;
