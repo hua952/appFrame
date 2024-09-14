@@ -1,6 +1,8 @@
 #include "workServer.h"
 #include "strFun.h"
 #include "mLog.h"
+#include "workServerMgr.h"
+#include "tSingleton.h"
 
 workServer:: workServer ()
 {
@@ -13,7 +15,7 @@ workServer:: ~workServer ()
 {
 }
 
-int  workServer::initWorkServer (ServerIDType id)
+int  workServer::initWorkServer ()
 {
 	int nRet = 0;
 	do
@@ -37,7 +39,7 @@ void workServer::run()
 	onMidLoopEnd(m_id);
 }
 
-void workServer::ThreadFun(server* pS)
+void workServer::ThreadFun(workServer* pS)
 {
 	pS->run();
 }
@@ -45,8 +47,24 @@ void workServer::ThreadFun(server* pS)
 bool  workServer:: start()
 {
 	mTrace("startThread handle = "<<m_id<<" this = "<<this);
-	m_pTh =std::make_unique<std::thread>(server::ThreadFun, this);
+	m_pTh =std::make_unique<std::thread>(workServer::ThreadFun, this);
 	return true;
+}
+
+void workServer::detach ()
+{
+	myAssert (m_pTh);
+	m_pTh->detach ();
+}
+
+procRpcPacketFunType workServer::findMsg(uword uwMsgId)
+{
+	procRpcPacketFunType pRet = nullptr;
+	auto it = m_MsgMap.find(uwMsgId);
+	if (m_MsgMap.end () != it) {
+		pRet = it->second;
+	}
+	return pRet;
 }
 
 bool  workServer:: onFrame()
@@ -100,46 +118,25 @@ bool  workServer:: onFrame()
 
 int workServer::processOncePack(packetHead* pPack)
 {
-	int nRet = procPacketFunRetType_del;
-	auto pN = P2NHead(pPack);
-	do {
-		myAssert (c_emptyLoopHandle != pN->ubyDesServId);
-		auto bInOncePro = packInOnceProc(pPack);
-		if (bInOncePro) {
-			myAssert (myHandle == pN->ubyDesServId);
-			nRet = processLocalServerPack (pPack);    /*  一定是本进程其它线程发给本线程的 */
-			break;
-		}
-		/*  以下处理其它进程到本线程的包    */
-		myAssert (myHandle == pN->ubyDesServId);  /* 如果不等在接到网络数据包时就转发了不会到这, 到此是一定要处理了,不会再转(本线程只是普通线程,要转也转不了)  */
-		nRet = processOtherAppPack (pPack);  /*   其它进程发给本线程处理的包(通过本进程的其它线程从网络将收再转交给本线程处理)    */
-	} while (0);
-	return nRet;
-}
-
-int  workServer:: processLocalServerPack(packetHead* pPack)
-{
 	int  nRet = procPacketFunRetType_del;
 	do {
-		auto& rSerMgr = tSingleton<serverMgr>::single ();
+		auto& rSerMgr = tSingleton<workServerMgr>::single ();
+		auto alderHandle = rSerMgr.onRecPacketFun ()(serverId(), pPack);
+		if (alderHandle & procPacketFunRetType_alderHandle) {
+			nRet = alderHandle & (~procPacketFunRetType_alderHandle);
+			break;
+		}
 		auto pN = P2NHead(pPack);
-		myAssert(c_emptyLoopHandle != pN->ubyDesServId);
-		auto fromId = pN->ubySrcServId;
-		auto toId = pN->ubyDesServId;
 		bool bIsRet = NIsRet(pN);
 		auto pF = findMsg(pN->uwMsgID);
-		auto myHandle = id ();
 		if(!pF) {
-			if (pN->uwMsgID < 60000) {
-				mWarn ("can not find proc function token: "
-					<<pN->dwToKen<<" msgId = "<<pN->uwMsgID
-					<<" length = "<<pN->udwLength
-					<<"myHandle = "<<(int)myHandle);
-			}
+			mWarn ("can not find proc function token: "
+				<<pN->dwToKen<<" msgId = "<<pN->uwMsgID
+					<<" length = "<<pN->udwLength);
 			break;
 		}
 		procPacketArg argP;
-		argP.handle = id ();
+		argP.handle = serverId();
 		if (bIsRet) { // pPack->pAsk put by other server
 			auto  pAsk = (pPacketHead)(pPack->pAsk);
 			pPack->pAsk = (decltype (pPack->pAsk))pAsk;
@@ -149,33 +146,34 @@ int  workServer:: processLocalServerPack(packetHead* pPack)
 			auto fRet = pF(pPack, pRet, &argP);
 			if (pRet) {
 				pRet->pAsk = (uqword)pPack;
-				auto pRN = P2NHead (pRet);
-				pRN->ubySrcServId = toId;
-				pRN->ubyDesServId = fromId;
-				pRN->dwToKen = pN->dwToKen;
-
-				/* 不能删除ask包,因为其他线程处理ret包时还要用   */
 				nRet = procPacketFunRetType_doNotDel;
-
+				pRet->loopId = serverId ();
 				if (procPacketFunRetType_exitNow == fRet || procPacketFunRetType_exitAfterLoop == fRet) {
 					nRet |= fRet;
 				}
-				rSerMgr.pushPackToLoop (pRN->ubyDesServId, pRet);
+				auto pSendServer = rSerMgr.getServer (pPack->loopId);
+				if (pSendServer) {
+					pSendServer->pushPack (pRet);
+				} else {
+					mWarn("can not find SendServer id : "<<pPack->loopId);
+				}
 			}
 		}
 	} while (0);
 	return nRet;
 }
 
-ServerIDType workServer::id()
+bool workServer::pushPack (packetHead* pack)
 {
-	return m_id;
+	return m_slistMsgQue.pushPack (pack);
 }
 
 int workServer:: onLoopBegin()
 {
     int  nRet = 0;
     do {
+		auto& rMgr = tSingleton<workServerMgr>::single();
+		rMgr.incRunThNum (serverId());
     } while (0);
     return nRet;
 }
@@ -184,6 +182,8 @@ int workServer:: onLoopEnd()
 {
     int  nRet = 0;
     do {
+		auto& rMgr = tSingleton<workServerMgr>::single();
+		rMgr.subRunThNum (serverId());
     } while (0);
     return nRet;
 }
@@ -205,5 +205,42 @@ void workServer:: showFps ()
 		auto dFps = fps.update (m_frameNum);
 		mInfo(" FPS : "<<dFps);
     } while (0);
+}
+
+udword  workServer:: sleepSetp ()
+{
+    return m_sleepSetp;
+}
+
+void  workServer:: setSleepSetp (udword v)
+{
+    m_sleepSetp = v;
+}
+
+bool workServer::regMsg(uword uwMsgId, procRpcPacketFunType pFun)
+{
+	bool bRet = true;
+	m_MsgMap [uwMsgId] = pFun;
+	return bRet;
+}
+
+cTimerMgr&  workServer:: getTimerMgr ()
+{
+	return m_timerMgr;
+}
+
+NetTokenType	workServer::nextToken ()
+{
+    return m_nextToken++;
+}
+
+ubyte  workServer:: serverId ()
+{
+    return m_serverId;
+}
+
+void  workServer:: setServerId (ubyte v)
+{
+    m_serverId = v;
 }
 

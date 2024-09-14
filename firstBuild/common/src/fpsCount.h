@@ -1,3 +1,6 @@
+#ifndef fpsCount_h__
+#define fpsCount_h__
+
 #include "comFun.h"
 #include <ctime>
 #include <chrono> 
@@ -14,3 +17,5 @@ private:
 	std::chrono::time_point<std::chrono::system_clock>   m_beginTime;
 	// std::chrono::time_point<std::chrono::system_clock>   m_sysBeginTime;
 };
+
+#endif 

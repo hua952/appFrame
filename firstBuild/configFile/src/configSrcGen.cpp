@@ -219,12 +219,12 @@ int  configSrcGen:: writeClassCpp ()
 			if (!dumpItemValue) {
 				dumpItemValue = "";
 			}
-			dumpOs<<R"(		ofs<<")"<<itemName<<"="<<itemValue;
+			dumpOs<<R"(		ofs<<R"()"<<itemName<<"="<<itemValue;
 			auto pCommit = pItem->commit();
 			if (pCommit) {
 				dumpOs<<"  ## "<<pCommit;
 			}
-			dumpOs<<R"("<<std::endl;)"<<std::endl;
+			dumpOs<<R"++()"<<std::endl;)++"<<std::endl;
 			if (BigDataType_string == dataType) {
 				writeDataType = "const char*";
 			}

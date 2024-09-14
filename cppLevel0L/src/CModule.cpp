@@ -113,7 +113,7 @@ int CModule::load(int nArgC, char** argS, ForLogicFun* pForLogic)
 		}
 		m_handle = hdll;
 		try {
-			auto nR = funOnLoad(nArgC, argS, pForLogic);
+			auto nR = funOnLoad(nArgC, argS, pForLogic, 0, nullptr);
 			if (nR) {
 				mError ("funOnLoad ret error nR = "<<nR);
 			}

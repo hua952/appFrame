@@ -10,24 +10,24 @@ frameConfig::frameConfig ()
 	m_allocDebug = false;
 	m_appNetType = 0;
 	m_clearTag = false;
-	strCpy("", m_clientRunWorkNum);
 	m_delSaveTokenTime = 50000;
 	m_detachServerS = 1;
 	m_dumpMsg = false;
 	strCpy("", m_endPoint);
 	strCpy("", m_frameConfigFile);
-	strCpy("", m_gateRunWorkNum);
+	strCpy("forClientIp:127.0.0.1*forServerIp:127.0.0.1*startPort:12000*netServerNum:4+forClientIp:127.0.0.1*forServerIp:127.0.0.1*startPort:22000*netServerNum:4", m_gateInfo);
 	strCpy("127.0.0.1", m_ip);
 	strCpy("cppLevel0L", m_level0);
 	strCpy("", m_logFile);
 	m_logLevel = 2;
 	strCpy("", m_logicModel);
+	strCpy("", m_modelName);
 	strCpy("", m_modelS);
 	strCpy("libeventSession", m_netLib);
 	m_netNum = 4;
+	strCpy("", m_runWorkNum);
 	m_savePackTag = 0;
 	strCpy("protobufSer", m_serializePackLib);
-	strCpy("", m_serverRunWorkNum);
 	m_srand = true;
 	m_startPort = 12000;
 	m_testTag = 1234;
@@ -62,16 +62,6 @@ bool  frameConfig::clearTag ()
 void  frameConfig::setClearTag (bool v)
 {
 	m_clearTag = v;
-}
-
-const char*  frameConfig::clientRunWorkNum ()
-{
-    return m_clientRunWorkNum.get();
-}
-
-void  frameConfig::setClientRunWorkNum (const char* v)
-{
-	strCpy(v, m_clientRunWorkNum);
 }
 
 udword  frameConfig::delSaveTokenTime ()
@@ -124,14 +114,14 @@ void  frameConfig::setFrameConfigFile (const char* v)
 	strCpy(v, m_frameConfigFile);
 }
 
-const char*  frameConfig::gateRunWorkNum ()
+const char*  frameConfig::gateInfo ()
 {
-    return m_gateRunWorkNum.get();
+    return m_gateInfo.get();
 }
 
-void  frameConfig::setGateRunWorkNum (const char* v)
+void  frameConfig::setGateInfo (const char* v)
 {
-	strCpy(v, m_gateRunWorkNum);
+	strCpy(v, m_gateInfo);
 }
 
 const char*  frameConfig::ip ()
@@ -184,6 +174,16 @@ void  frameConfig::setLogicModel (const char* v)
 	strCpy(v, m_logicModel);
 }
 
+const char*  frameConfig::modelName ()
+{
+    return m_modelName.get();
+}
+
+void  frameConfig::setModelName (const char* v)
+{
+	strCpy(v, m_modelName);
+}
+
 const char*  frameConfig::modelS ()
 {
     return m_modelS.get();
@@ -214,6 +214,16 @@ void  frameConfig::setNetNum (uword v)
 	m_netNum = v;
 }
 
+const char*  frameConfig::runWorkNum ()
+{
+    return m_runWorkNum.get();
+}
+
+void  frameConfig::setRunWorkNum (const char* v)
+{
+	strCpy(v, m_runWorkNum);
+}
+
 udword  frameConfig::savePackTag ()
 {
     return m_savePackTag;
@@ -232,16 +242,6 @@ const char*  frameConfig::serializePackLib ()
 void  frameConfig::setSerializePackLib (const char* v)
 {
 	strCpy(v, m_serializePackLib);
-}
-
-const char*  frameConfig::serverRunWorkNum ()
-{
-    return m_serverRunWorkNum.get();
-}
-
-void  frameConfig::setServerRunWorkNum (const char* v)
-{
-	strCpy(v, m_serverRunWorkNum);
 }
 
 bool  frameConfig::srand ()
@@ -301,31 +301,31 @@ int  frameConfig:: dumpConfig (const char* szFile)
 			nRet = 1;
 			break;
 		}
-		ofs<<"allocDebug=false"<<std::endl;
-		ofs<<"appNetType=0"<<std::endl;
-		ofs<<"clearTag=false"<<std::endl;
-		ofs<<"clientRunWorkNum=  ## client进程及线程启动的数量"<<std::endl;
-		ofs<<"delSaveTokenTime=50000"<<std::endl;
-		ofs<<"detachServerS=1"<<std::endl;
-		ofs<<"dumpMsg=false"<<std::endl;
-		ofs<<"endPoint="<<std::endl;
-		ofs<<"frameConfigFile=  ## 框架配置文件"<<std::endl;
-		ofs<<"gateRunWorkNum=  ## gate进程及线程启动的数量"<<std::endl;
-		ofs<<"ip=127.0.0.1"<<std::endl;
-		ofs<<"level0=cppLevel0L"<<std::endl;
-		ofs<<"logFile="<<std::endl;
-		ofs<<"logLevel=2"<<std::endl;
-		ofs<<"logicModel="<<std::endl;
-		ofs<<"modelS="<<std::endl;
-		ofs<<"netLib=libeventSession"<<std::endl;
-		ofs<<"netNum=4"<<std::endl;
-		ofs<<"savePackTag=0"<<std::endl;
-		ofs<<"serializePackLib=protobufSer"<<std::endl;
-		ofs<<"serverRunWorkNum=  ## gate进程及线程启动的数量"<<std::endl;
-		ofs<<"srand=true"<<std::endl;
-		ofs<<"startPort=12000"<<std::endl;
-		ofs<<"testTag=1234"<<std::endl;
-		ofs<<"workDir="<<std::endl;
+		ofs<<R"(allocDebug=false)"<<std::endl;
+		ofs<<R"(appNetType=0)"<<std::endl;
+		ofs<<R"(clearTag=false)"<<std::endl;
+		ofs<<R"(delSaveTokenTime=50000)"<<std::endl;
+		ofs<<R"(detachServerS=1)"<<std::endl;
+		ofs<<R"(dumpMsg=false)"<<std::endl;
+		ofs<<R"(endPoint=)"<<std::endl;
+		ofs<<R"(frameConfigFile=  ## 框架配置文件)"<<std::endl;
+		ofs<<R"(gateInfo=forClientIp:127.0.0.1*forServerIp:127.0.0.1*startPort:12000*netServerNum:4+forClientIp:127.0.0.1*forServerIp:127.0.0.1*startPort:22000*netServerNum:4  ## gate IP 等)"<<std::endl;
+		ofs<<R"(ip=127.0.0.1)"<<std::endl;
+		ofs<<R"(level0=cppLevel0L)"<<std::endl;
+		ofs<<R"(logFile=)"<<std::endl;
+		ofs<<R"(logLevel=2)"<<std::endl;
+		ofs<<R"(logicModel=)"<<std::endl;
+		ofs<<R"(modelName=)"<<std::endl;
+		ofs<<R"(modelS=)"<<std::endl;
+		ofs<<R"(netLib=libeventSession)"<<std::endl;
+		ofs<<R"(netNum=4)"<<std::endl;
+		ofs<<R"(runWorkNum=  ## client进程及线程启动的数量)"<<std::endl;
+		ofs<<R"(savePackTag=0)"<<std::endl;
+		ofs<<R"(serializePackLib=protobufSer)"<<std::endl;
+		ofs<<R"(srand=true)"<<std::endl;
+		ofs<<R"(startPort=12000)"<<std::endl;
+		ofs<<R"(testTag=1234)"<<std::endl;
+		ofs<<R"(workDir=)"<<std::endl;
 
 	} while (0);
 	return nRet;
@@ -397,11 +397,6 @@ int  frameConfig:: procCmdArgS (int nArg, char** argS)
 	m_clearTag = strVal == "true";
 				continue;
 			}
-				if (strKey == "clientRunWorkNum") {
-				ssV>>strVal;
-	strCpy(strVal.c_str(), m_clientRunWorkNum);
-				continue;
-			}
 				if (strKey == "delSaveTokenTime") {
 				ssV>>m_delSaveTokenTime;
 				continue;
@@ -425,9 +420,9 @@ int  frameConfig:: procCmdArgS (int nArg, char** argS)
 	strCpy(strVal.c_str(), m_frameConfigFile);
 				continue;
 			}
-				if (strKey == "gateRunWorkNum") {
+				if (strKey == "gateInfo") {
 				ssV>>strVal;
-	strCpy(strVal.c_str(), m_gateRunWorkNum);
+	strCpy(strVal.c_str(), m_gateInfo);
 				continue;
 			}
 				if (strKey == "ip") {
@@ -454,6 +449,11 @@ int  frameConfig:: procCmdArgS (int nArg, char** argS)
 	strCpy(strVal.c_str(), m_logicModel);
 				continue;
 			}
+				if (strKey == "modelName") {
+				ssV>>strVal;
+	strCpy(strVal.c_str(), m_modelName);
+				continue;
+			}
 				if (strKey == "modelS") {
 				ssV>>strVal;
 	strCpy(strVal.c_str(), m_modelS);
@@ -468,6 +468,11 @@ int  frameConfig:: procCmdArgS (int nArg, char** argS)
 				ssV>>m_netNum;
 				continue;
 			}
+				if (strKey == "runWorkNum") {
+				ssV>>strVal;
+	strCpy(strVal.c_str(), m_runWorkNum);
+				continue;
+			}
 				if (strKey == "savePackTag") {
 				ssV>>m_savePackTag;
 				continue;
@@ -475,11 +480,6 @@ int  frameConfig:: procCmdArgS (int nArg, char** argS)
 				if (strKey == "serializePackLib") {
 				ssV>>strVal;
 	strCpy(strVal.c_str(), m_serializePackLib);
-				continue;
-			}
-				if (strKey == "serverRunWorkNum") {
-				ssV>>strVal;
-	strCpy(strVal.c_str(), m_serverRunWorkNum);
 				continue;
 			}
 				if (strKey == "srand") {

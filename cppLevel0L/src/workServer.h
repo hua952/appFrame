@@ -15,32 +15,43 @@
 class workServer
 {
 public:
+	typedef std::map<uword, procRpcPacketFunType> MsgMap;
     workServer ();
     ~workServer ();
-	int  initWorkServer (ServerIDType id);
-	ServerIDType id();
+	int  initWorkServer ();
 	void run();
-
-	virtual int onLoopBegin();
-	virtual int onLoopEnd();
-	virtual int onLoopFrame();
+	void detach ();
+	int onLoopBegin();
+	int onLoopEnd();
+	int onLoopFrame();
 
 	void showFps ();
+
+	udword  sleepSetp ();
+	void  setSleepSetp (udword v);
+	NetTokenType nextToken ();
+	cTimerMgr&   getTimerMgr ();
+	bool regMsg(uword uwMsgId, procRpcPacketFunType pFun);
+	ubyte  serverId ();
+	void  setServerId (ubyte v);
+	bool pushPack (packetHead* pack); // Thread safety
+	procRpcPacketFunType findMsg(uword uwMsgId);
+	bool start();
+	bool onFrame();
 private:
-	uqword    m_frameNum;
+	ubyte  m_serverId;
+	MsgMap  m_MsgMap;
+	uqword    m_frameNum{0};
 	fpsCount  m_fpsC;
 	udword  m_sleepSetp;
 	ServerIDType m_id;
 	cTimerMgr          m_timerMgr;
-    NetTokenType	   m_nextToken;
+    NetTokenType	   m_nextToken{0};
 	std::unique_ptr<std::thread> m_pTh;
 	deListMsgQue	m_slistMsgQue;
 
-	static void ThreadFun(server* pS);
+	static void ThreadFun(workServer* pS);
 
-	bool start();
-	bool onFrame();
 	virtual int processOncePack(packetHead* pPack);
-	int processLocalServerPack(packetHead* pPack);
 };
 #endif

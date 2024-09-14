@@ -126,7 +126,7 @@ int  appGen:: batFileGen (appFile& rApp)
 			rMainArgS.push_back(ts.str());
 		
 			std::stringstream appSS;
-			appSS<<"appRunWorkNum="<<rGlobalFile.appRunWorkNum ();
+			appSS<<"runWorkNum="<<rApp.runWorkNum ();
 			rMainArgS.push_back(appSS.str());
 		}
 

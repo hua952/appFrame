@@ -105,3 +105,23 @@ void toWord (char* szWord)
 		*szWord -= 32;
 	}
 }
+
+std::vector<std::string> stringSplit (const char* src, const char delim, bool trim)
+{	std::stringstream iss(src);
+	return stringSplit (iss, delim, trim);
+}
+
+std::vector<std::string> stringSplit (std::istream& src, const char delim, bool trim)
+{
+	std::vector<std::string> ret;
+	std::string token;
+	while (getline(src, token, delim))
+	{
+		if (trim) {
+			std::stringstream ss(token);
+			ss>>token;
+		}
+		ret.push_back(token);
+	}
+	return ret;
+}

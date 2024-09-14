@@ -18,10 +18,10 @@ typedef struct _packetHead
 {
 	struct _packetHead*    pNext;
 	struct _packetHead*    pPer;
-	// struct _packetHead*    pAsk;
 	uqword    pAsk;
 	udword    sessionID; /*   处理ret网络消息要用   */
-	udword    loopId;     /*   处理ret网络消息要用   */
+	uword    loopId;     /*   处理ret网络消息要用   */
+	ubyte    Tag[2];
 }packetHead;
 
 typedef packetHead* pPacketHead;

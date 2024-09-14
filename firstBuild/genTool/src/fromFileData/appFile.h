@@ -29,7 +29,10 @@ public:
 	bool  haveNetServer ();
 	ubyte  netType ();
 	void  setNetType (ubyte v);
+	const char*  runWorkNum ();
+	void  setRunWorkNum (const char* v);
 private:
+	std::unique_ptr <char[]>  m_runWorkNum;
 	ubyte  m_netType;
 	std::unique_ptr <char[]>  m_mainLoopServer;
 	argV  m_mainArgS;

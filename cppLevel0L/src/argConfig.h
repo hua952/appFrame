@@ -20,6 +20,13 @@ public:
 		std::unique_ptr<stServer[]>  serverS;
 		serverIdType	         serverTemNum;
 	};
+	struct serverRunInfo
+	{
+		udword		  sleepSetp;
+		serverIdType  beginId;
+		serverIdType  runNum;
+		bool          autoRun;
+	};
     argConfig ();
     ~argConfig ();
 	int afterAllArgProc ();
@@ -27,7 +34,12 @@ public:
 	serverIdType  modelNum ();
 	const char*  modelMgrName ();
 	void  setModelMgrName (const char* v);
+	int  serverGroupNum ();
+	void  setServerGroupNum (int v);
+	const serverRunInfo*  serverGroups();
 private:
+    std::unique_ptr<serverRunInfo>	m_serverGroups;
+	int  m_serverGroupNum {0};
 	std::unique_ptr<char[]>  m_modelMgrName;
 	serverIdType  m_modelNum;
 	std::unique_ptr<stModel[]>  m_modelS;

@@ -49,11 +49,7 @@ public:
 	void  setXmlDir (const char* v);
 	uword  netNum ();
 	void  setNetNum (uword v);
-	const char*  appRunWorkNum ();
-	void  setAppRunWorkNum (const char* v);
 private:
-	std::unique_ptr <char[]>  m_appRunWorkNum;
-	std::unique_ptr <char[]>  m_xmlDir;
 	std::unique_ptr <char[]>  m_xmlDir;
 	std::unique_ptr <char[]>  m_configClassName;
 	std::unique_ptr <char[]>  m_projectDir;

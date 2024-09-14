@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <config className="frameConfig" projectDir="C:\work\appFrame"  projectName="frameConfig">
 	<ip type="string">127.0.0.1</ip>
-	<appRunWorkNum type="string" commit="client进程及线程启动的数量"></appRunWorkNum>
+	<runWorkNum type="string" commit="client进程及线程启动的数量"></runWorkNum>
+	<gateInfo type="string" commit="gate IP 等">forClientIp:127.0.0.1*forServerIp:127.0.0.1*startPort:12000*netServerNum:4+forClientIp:127.0.0.1*forServerIp:127.0.0.1*startPort:22000*netServerNum:4</gateInfo>
 	<workDir type="string"></workDir>
+	<modelName type="string"></modelName>
 	<startPort type="uword">12000</startPort>
 	<netNum type="uword">4</netNum>
 	<logFile type="string"></logFile>

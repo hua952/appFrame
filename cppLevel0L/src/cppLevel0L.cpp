@@ -2,35 +2,44 @@
 #include <memory>
 #include "cppLevel0L.h"
 #include "tSingleton.h"
-#include "serverMgr.h"
+#include "workServer.h"
+#include "workServerMgr.h"
 
 int initFun (int cArg, char** argS, int cDefArg, char** defArgS)
 {
-	tSingleton<serverMgr>::createSingleton();
-	auto& rMgr = tSingleton<serverMgr>::single();
-	int nRet = rMgr.initFun(cArg, argS);
+	tSingleton<workServerMgr>::createSingleton();
+	auto& rMgr = tSingleton<workServerMgr>::single();
+	int nRet = rMgr.initWorkServerMgr (cArg, argS, cDefArg, defArgS);
 	return nRet;
 }
 
 int onPhyLoopBegin(loopHandleType pThis)
 {
-	return onMidLoopBegin (pThis);
+	auto& rSM = tSingleton<workServerMgr>::single ();
+	auto pS = rSM.getServer(pThis);
+	return pS ? pS->onLoopBegin() : true;
 }
 
 int onPhyLoopEnd(loopHandleType pThis)
 {
-	return onMidLoopEnd (pThis);
+	auto& rSM = tSingleton<workServerMgr>::single ();
+	auto pS = rSM.getServer(pThis);
+	return pS ? pS->onLoopEnd() : true;
 }
 
 bool onPhyFrame(loopHandleType pThis)
 {
-	auto& rSM = tSingleton<serverMgr>::single ();
-	auto pS = rSM.getServer (pThis);
+	auto& rSM = tSingleton<workServerMgr>::single ();
+	auto pS = rSM.getServer(pThis);
 	return pS ? pS->onFrame () : true;
 }
 
 int  onPhyGetRunThreadIdS (char* szBuf, int bufSize)
 {
-	auto& rSM = tSingleton<serverMgr>::single ();
+	auto& rSM = tSingleton<workServerMgr>::single ();
 	return rSM.runThNum (szBuf, bufSize);
+}
+
+void afterAllLoopEndBeforeExitApp  ()
+{
 }

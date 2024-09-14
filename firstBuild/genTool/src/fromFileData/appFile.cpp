@@ -118,3 +118,14 @@ void  appFile:: setNetType (ubyte v)
     m_netType = v;
 }
 
+const char*  appFile:: runWorkNum ()
+{
+    return m_runWorkNum.get ();
+}
+
+void  appFile:: setRunWorkNum (const char* v)
+{
+    strCpy (v, m_runWorkNum);
+}
+
+

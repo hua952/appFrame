@@ -341,13 +341,3 @@ void  globalFile:: setNetNum (uword v)
     m_netNum = v;
 }
 
-const char*  globalFile:: appRunWorkNum ()
-{
-    return m_appRunWorkNum.get ();
-}
-
-void  globalFile:: setAppRunWorkNum (const char* v)
-{
-    strCpy (v, m_appRunWorkNum);
-}
-

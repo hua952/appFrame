@@ -520,7 +520,6 @@ static int sRegMsg(loopHandleType handle, uword uwMsgId, procRpcPacketFunType pF
 static int sRemoveMsg(loopHandleType handle, uword uwMsgId)
 {
 	int nRet = 0;
-	// auto& rMgr = tSingleton<loopMgr>::single();
 	auto& rMgr = tSingleton<serverMgr>::single();
 	auto pLoop = rMgr.getLoop(handle);
 	do 
@@ -538,17 +537,13 @@ static int sAddComTimer(loopHandleType pThis, udword firstSetp, udword udwSetp,
 		ComTimerFun pF, void* pUsrData, udword userDataLen)
 {
 	int nL = pThis;
-	//mTrace ("at then begin of sAddComTimer pThis = "<<nL);
 	int nRet = 0;
-	// auto& rMgr = tSingleton<loopMgr>::single();
 	auto& rMgr = tSingleton<serverMgr>::single();
 	auto pTH = rMgr.getLoop(pThis);
-	//mTrace ("at then begin of sAddComTimer pTH = "<<pTH);
 	cTimerMgr&  rTimeMgr =    pTH->getTimerMgr();
 	rTimeMgr.addComTimer (firstSetp, udwSetp, pF, pUsrData, userDataLen);
 	return nRet;
 }
-// static sendPackToLoopFT g_sendPackToLoopFun = nullptr;
 
 static bool sDelNetPack (void* pUP)
 {
@@ -892,6 +887,7 @@ serializePackFunType  serverMgr:: fromNetPack ()
     return m_fromNetPack;
 }
 */
+
 int serverMgr::init(int nArgC, char** argS)
 {
 	auto& forLogic = getForLogicFun();

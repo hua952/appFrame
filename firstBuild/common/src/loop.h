@@ -9,7 +9,8 @@ enum procPacketFunRetType
 	procPacketFunRetType_doNotDel = 1,
 	procPacketFunRetType_stopBroadcast = 2,
 	procPacketFunRetType_exitNow = 4,
-	procPacketFunRetType_exitAfterLoop = 8
+	procPacketFunRetType_exitAfterLoop = 8,
+	procPacketFunRetType_alderHandle = 16
 };
 
 typedef struct _procPacketArg

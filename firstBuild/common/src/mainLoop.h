@@ -48,6 +48,8 @@ typedef  serverIdType (*getDefProcServerIdFT) (msgIdType msgId);
 
 typedef int (*regRouteFT)(loopHandleType myServerId, loopHandleType objServerId, SessionIDType sessionId, udword onlyId);
 typedef int (*sendPackToSomeSessionFT)(loopHandleType myServerId,  netPacketHead* pN, uqword* pSessS, udword sessionNum);
+typedef int (*pushPackToServerFT)(loopHandleType desServerId, packetHead* pack);
+
 typedef struct _ForLogicFun
 {
 	allocPackFT		 fnAllocPack; // Thread safety
@@ -66,15 +68,17 @@ typedef struct _ForLogicFun
 	regRouteFT             fnRegRoute;
 	serializePackFunType   fromNetPack;   // rec
 	serializePackFunType   toNetPack;   // rec
+	pushPackToServerFT     fnPushPackToServer;
 } ForLogicFun;
 
-typedef dword (*afterLoadFunT)(int nArgC, char** argS, ForLogicFun* pForLogic);
+typedef dword (*afterLoadFunT)(int nArgC, char** argS, ForLogicFun* pForLogic, int nDefArgC, char** defArgS);
 typedef void (*beforeUnloadFT)();
 typedef void (*logicOnAcceptFT)(serverIdType	fId, SessionIDType sessionId, uqword userData);
 typedef void (*logicOnConnectFT)(serverIdType fId, SessionIDType sessionId, uqword userData);
 typedef void (*onLoopBeginFT)(serverIdType	fId);
 typedef int (*onFrameLagicFT)(serverIdType	fId);
 typedef void (*onLoopEndFT)(serverIdType	fId);
+typedef int (*onRecPacketFT)(serverIdType	fId, packetHead* pack);
 
 enum appNetType
 {

@@ -5,7 +5,8 @@
 #include "mainLoop.h"
 extern "C"
 {
-	int initFun (int cArg, char** argS);
+	int initFun (int cArg, char** argS, int cDefArg, char** defArgS);
+	void afterAllLoopEndBeforeExitApp ();
 }
 
 #endif
