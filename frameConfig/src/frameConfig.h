@@ -12,6 +12,8 @@ public:
 	int  loadConfig (const char* szFile);
 		  bool  allocDebug ();
   void  setAllocDebug (bool v);
+  uword  appGroupId ();
+  void  setAppGroupId (uword v);
   word  appNetType ();
   void  setAppNetType (word v);
   bool  clearTag ();
@@ -28,6 +30,8 @@ public:
   void  setFrameConfigFile (const char* v);
   const char*  gateInfo ();
   void  setGateInfo (const char* v);
+  const char*  homeDir ();
+  void  setHomeDir (const char* v);
   const char*  ip ();
   void  setIp (const char* v);
   const char*  level0 ();
@@ -58,10 +62,9 @@ public:
   void  setStartPort (uword v);
   udword  testTag ();
   void  setTestTag (udword v);
-  const char*  workDir ();
-  void  setWorkDir (const char* v);
 private:
   bool  m_allocDebug;
+  uword  m_appGroupId;
   word  m_appNetType;
   bool  m_clearTag;
   udword  m_delSaveTokenTime;
@@ -70,6 +73,7 @@ private:
   std::unique_ptr <char[]>  m_endPoint;
   std::unique_ptr <char[]>  m_frameConfigFile;
   std::unique_ptr <char[]>  m_gateInfo;
+  std::unique_ptr <char[]>  m_homeDir;
   std::unique_ptr <char[]>  m_ip;
   std::unique_ptr <char[]>  m_level0;
   std::unique_ptr <char[]>  m_logFile;
@@ -85,6 +89,5 @@ private:
   bool  m_srand;
   uword  m_startPort;
   udword  m_testTag;
-  std::unique_ptr <char[]>  m_workDir;
 };
 #endif

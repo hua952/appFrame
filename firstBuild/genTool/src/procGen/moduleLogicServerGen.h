@@ -10,6 +10,18 @@ public:
 	int  startGen (moduleGen& rMod);
 private:
 	int  genH (moduleGen& rMod);
+
+	int  genWorkerH (moduleGen& rMod, const char* serverName);
+	int  genWorkerCpp (moduleGen& rMod, const char* serverName);
+
+	int  genOnWorkerInitCpp (moduleGen& rMod, const char* serverName);
+	int  genOnLoopBegin (moduleGen& rMod, const char* serverName);
+	int  genOnLoopEnd(moduleGen& rMod, const char* serverName);
+	int  genOnLoopFrame(moduleGen& rMod, const char* serverName);
+
+	int  genWorkerMgrH (moduleGen& rMod);
+	int  genWorkerMgrCpp (moduleGen& rMod);
+
 	int  genCpp (moduleGen& rMod);
 	int  genMgrCpp (moduleGen& rMod, const char* genPath);
 	int  genServerReadOnlyCpp (moduleGen& rMod);

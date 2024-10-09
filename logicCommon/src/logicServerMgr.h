@@ -22,7 +22,8 @@ public:
 	using  logicMuServerPairS = std::pair<std::unique_ptr<logicServerPair []>, loopHandleType>;
     logicServerMgr ();
     ~logicServerMgr ();
-	dword afterLoad(int nArgC, char** argS, ForLogicFun* pForLogic);
+
+	dword afterLoadOld(int nArgC, char** argS, ForLogicFun* pForLogic);
 	virtual dword afterLoadLogic(int nArgC, char** argS, ForLogicFun* pForLogic);
 	int   initMsgDefProc (loopHandleType* pBuf, int num);
 	int   procArgS (int nArgC, char** argS);

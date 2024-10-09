@@ -253,15 +253,7 @@ int main(int cArg, char** argS)
 			ws<<" beginMain error nRet = "<<nRet<<std::endl;
 			break;
 		}
-		std::set<std::string> setMut;
-		setMut.insert("logicModel");
-		setMut.insert("endPoint");
-		using argVector = std::vector<std::string>;
-		argVector vArgS;
-		argVector  procArgS;
-		for (decltype (cArg) i = 0; i < cArg; i++) {
-			procArgS.push_back(argS[i]);
-		}
+		
 		)";
 		auto& rMainArgS = rApp.mainArgS();
 		auto  mainArgSize = rMainArgS.size();
@@ -269,8 +261,9 @@ int main(int cArg, char** argS)
 		)";
 		auto defLen = 0;
 		for (auto it = rMainArgS.begin(); rMainArgS.end() != it; ++it) {
-			defLen += it->length() + 1;
+			defLen += (it->length() + 1);
 		}
+		// defLen = 2048;
 		os<<R"(
 			auto defArgTxt = std::make_unique<char[]>()"<<defLen<<R"();
 			int curDef = 0;
@@ -282,85 +275,13 @@ int main(int cArg, char** argS)
 		)";
 		}
 		os<<R"(std::string pLevel0Name;
-		char* pRetBuf[3];
-		std::map<std::string, std::string> kvMap;
-		for (auto it = procArgS.begin(); procArgS.end() != it; ++it) {
-			std::unique_ptr<char[]> kvBuf;
-			strCpy(it->c_str(), kvBuf);
-			auto pBuf = kvBuf.get();
-			auto nNum = strR(pBuf, '=', pRetBuf, 3);
-			if (2 == nNum) {
-				std::stringstream ts(pRetBuf[0]);
-				std::string strKey;
-				ts>>strKey;
-				std::stringstream vs(pRetBuf[1]);
-				std::string strValue;
-				vs>>strValue;
-				if (setMut.find (strKey) == setMut.end()) {
-					kvMap.insert(std::make_pair(strKey, strValue));
-				} else {
-					std::string strIn = strKey;
-					strIn += "=";
-					strIn += strValue;
-					vArgS.push_back(strIn);
-				}
-			} else {
-				vArgS.push_back(*it);
-			}
-		}
-		procArgS.clear();
-		for (auto it = kvMap.begin(); kvMap.end() != it; ++it) {
-			std::string str = it->first;
-			str+="=";
-			str+=it->second;
-			vArgS.push_back (str);
-		}
-		kvMap.clear();
-		auto argBufSize = 0;
-		for (auto it = vArgS.begin(); vArgS.end() != it; ++it) {
-			argBufSize += it->length();
-			argBufSize++;
-		}
-		auto argBuf = std::make_unique<char[]>(argBufSize);
-		auto reArgS = std::make_unique<char*[]>(vArgS.size());
-		auto pArgBuf = argBuf.get();
-		auto reArgNum = 0;
-		for (auto it = vArgS.begin(); vArgS.end() != it; ++it) {
-			auto nL = it->length();
-			memcpy(pArgBuf, it->c_str(), nL);
-			pArgBuf[nL] = 0;
-			reArgS[reArgNum++] = pArgBuf;
-			pArgBuf += (nL + 1);
-		}
-		int  initUserLogic (std::vector<std::string>& vArgS);
-		int nURet = initUserLogic (vArgS);
-		if (nURet) {
-			break;
-		}
-		vArgS.clear();
 		std::string strFrameHome;
-		for (decltype (reArgNum) i = 1; i < reArgNum; i++) {
-			auto pArg = reArgS[i];
-			ws << "proc " << pArg << std::endl;
-			auto nArgL = strlen(pArg);
-			std::unique_ptr<char[]>	 buf = std::make_unique<char[]>(nArgL + 1);
-			auto pBuf = buf.get();
-			strcpy(pBuf, pArg);
-			auto nNum = strR(pBuf, '=', pRetBuf, 3);
-			if (2 != nNum) {
-				ws << "2 != nNum = " << nNum << std::endl;
-				continue;
-			}
-			std::stringstream sst(pRetBuf[0]);
-			std::string strKey;
-			sst>>strKey;
-			if (strKey == "level0") {
-				ws << "level0 find" << std::endl;
-				pLevel0Name = pRetBuf[1];
-			} else if (strKey == "frameHome"){
-				strFrameHome = pRetBuf[1];
-			}
+
+		auto level0Ret = getTwoValueFromArgS (cArg, argS,  "level0", "frameHome", pLevel0Name, strFrameHome);
+		if (!level0Ret) {
+			level0Ret = getTwoValueFromArgS ()"<<mainArgSize<<R"(, defArgS.get(),  "level0", "frameHome", pLevel0Name, strFrameHome);
 		}
+		
 		if (pLevel0Name.empty()) {
 			std::cout<<"LevelName empty"<<std::endl;
 			nRet = 1;
@@ -380,7 +301,7 @@ int main(int cArg, char** argS)
 					ws<<"load module "<<pLevel0Name<<" error"<<std::endl;
 					break;
 				}
-				typedef int (*initFunType) (int cArg, char** argS);
+				typedef int (*initFunType) (int cArg, char** argS, int cDArg, char** argDS);
 				auto funOnLoad = (initFunType)(getFun(handle, "initFun"));
 				myAssert(funOnLoad);
 				if(!funOnLoad) {
@@ -388,7 +309,7 @@ int main(int cArg, char** argS)
 					nRet = 12;
 					break;
 				}
-				auto nnR = funOnLoad (reArgNum, reArgS.get(), )"<<mainArgSize<<R"(, defArgS.get());
+				auto nnR = funOnLoad (cArg, argS, )"<<mainArgSize<<R"(, defArgS.get());
 				if (nnR) {
 					std::cout<<"funOnLoad error nnR = "<<nnR<<std::endl;
 					break;
@@ -396,11 +317,12 @@ int main(int cArg, char** argS)
 				)";
 				auto bDet = rApp.detachServerS ();
 				if (bDet) {
-					auto mainLoopServer = rApp.mainLoopServer();
+					// auto mainLoopServer = rApp.mainLoopServer();
+					auto mainLoopGroupId =  rApp.mainLoopGroupId();
 					if (bHave ) {
-						myAssert(mainLoopServer);
+						myAssert(mainLoopGroupId);
 					}
-					if (mainLoopServer) {
+					if (mainLoopGroupId) {
 					os<<R"(typedef int (*loopBeginFT)(loopHandleType pThis);
 	auto funLoopBegin = (loopBeginFT)(getFun(handle, "onPhyLoopBegin"));
 	typedef int (*loopEndFT)(loopHandleType pThis);
@@ -412,15 +334,21 @@ int main(int cArg, char** argS)
 
 	typedef int  (*runThNumFT) (char*, int);
 	auto funRunThNum = (runThNumFT)(getFun(handle, "onPhyGetRunThreadIdS"));
-
-	funLoopBegin ()"<<mainLoopServer <<R"();
+	
+	typedef int (*getServerGroupInfoFT)(uword, ubyte*, ubyte*);
+	auto funGetServerGroupInfo = (getServerGroupInfoFT)(getFun(handle, "getServerGroupInfo"));
+	ubyte beginId = 0;
+	ubyte runNum = 0;
+	auto  getGroupInfoRet = funGetServerGroupInfo ()"<<mainLoopGroupId<<R"(, &beginId, &runNum);
+	myAssert (0 == getGroupInfoRet);
+	funLoopBegin (beginId);
 	while(1) {
-		auto bE = funLoopFrame ()"<<mainLoopServer <<R"();
+		auto bE = funLoopFrame (beginId);
 		if (bE) {
 			break;
 		}
 	}
-	funLoopEnd ()"<<mainLoopServer <<R"();
+	funLoopEnd (beginId);
 	int curRunNum = 0;
 	const auto c_tempSize = 256;
 	auto tempBuf = std::make_unique<char[]>(c_tempSize);

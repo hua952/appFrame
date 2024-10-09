@@ -25,6 +25,9 @@ const char*  appFile::appName ()
 void  appFile::setAppName (const char* v)
 {
     strCpy (v, m_appName);
+	std::string str = "appTmpId_";
+	str += v;
+	setAppGroupId (str.c_str());
 }
 
 appFile::moduleFileNameSet&  appFile:: moduleFileNameS ()
@@ -128,4 +131,34 @@ void  appFile:: setRunWorkNum (const char* v)
     strCpy (v, m_runWorkNum);
 }
 
+
+const char*  appFile:: appGroupId ()
+{
+    return m_appGroupId.get ();
+}
+
+void  appFile:: setAppGroupId (const char* v)
+{
+    strCpy (v, m_appGroupId);
+}
+
+const char*  appFile:: mainLoopGroupId ()
+{
+    return m_mainLoopGroupId.get ();
+}
+
+void  appFile:: setMainLoopGroupId (const char* v)
+{
+    strCpy (v, m_mainLoopGroupId);
+}
+
+uword  appFile:: appGroupIdInt ()
+{
+    return m_appGroupIdInt;
+}
+
+void  appFile:: setAppGroupIdInt (uword v)
+{
+    m_appGroupIdInt = v;
+}
 

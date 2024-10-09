@@ -31,7 +31,16 @@ public:
 	void  setNetType (ubyte v);
 	const char*  runWorkNum ();
 	void  setRunWorkNum (const char* v);
+	const char*  appGroupId ();
+	void  setAppGroupId (const char* v);
+	const char*  mainLoopGroupId ();
+	void  setMainLoopGroupId (const char* v);
+	uword  appGroupIdInt ();
+	void  setAppGroupIdInt (uword v);
 private:
+	uword  m_appGroupIdInt;
+	std::unique_ptr <char[]>  m_mainLoopGroupId;
+	std::unique_ptr <char[]>  m_appGroupId;
 	std::unique_ptr <char[]>  m_runWorkNum;
 	ubyte  m_netType;
 	std::unique_ptr <char[]>  m_mainLoopServer;

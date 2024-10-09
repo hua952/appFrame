@@ -6,3 +6,4 @@ EXPORTS
 	onPhyFrame        @4
 	onPhyGetRunThreadIdS  @5
 	afterAllLoopEndBeforeExitApp  @6
+	getServerGroupInfo  @7

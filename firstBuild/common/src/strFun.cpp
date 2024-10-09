@@ -107,8 +107,9 @@ void toWord (char* szWord)
 }
 
 std::vector<std::string> stringSplit (const char* src, const char delim, bool trim)
-{	std::stringstream iss(src);
-	return stringSplit (iss, delim, trim);
+{
+	std::stringstream ss(src);
+	return stringSplit (ss, delim, trim);
 }
 
 std::vector<std::string> stringSplit (std::istream& src, const char delim, bool trim)

@@ -20,10 +20,6 @@ public:
     CMsgBase();
     ~CMsgBase();
 
-	// void unZip();
-    // void   zip ();
-	// virtual int fromPack();
-    // virtual int toPack();
     packetHead*  pop();
 	packetHead*  getPack()const;
 protected:

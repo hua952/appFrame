@@ -29,6 +29,14 @@ static int sRegMsg(loopHandleType handle, uword uwMsgId, procRpcPacketFunType pF
 	do 
 	{
 		// nRet = pLoop->regMsg(uwMsgId, pFun);
+		auto& rMgr = tSingleton<workServerMgr>::single();
+		auto pTH = rMgr.getServer(handle);
+		if (pTH) {
+			auto bRet = pTH->regMsg(uwMsgId, pFun);
+			if (!bRet) {
+				nRet = 1;
+			}
+		}
 	} while(0);
 	return nRet;
 }
@@ -40,8 +48,12 @@ static int sAddComTimer(loopHandleType pThis, udword firstSetp, udword udwSetp,
 	int nRet = 0;
 	auto& rMgr = tSingleton<workServerMgr>::single();
 	auto pTH = rMgr.getServer(pThis);
-	cTimerMgr&  rTimeMgr =    pTH->getTimerMgr();
-	rTimeMgr.addComTimer (firstSetp, udwSetp, pF, pUsrData, userDataLen);
+	if (pTH ) {
+		cTimerMgr&  rTimeMgr = pTH->getTimerMgr();
+		rTimeMgr.addComTimer (firstSetp, udwSetp, pF, pUsrData, userDataLen);
+	} else {
+		nRet = 1;
+	}
 	return nRet;
 }
 
@@ -72,6 +84,8 @@ static int sPushPackToServer(loopHandleType desServerId, packetHead* pack)
 		auto pS = rMgr.getServer(desServerId);
 		if (!pS) {
 			nRet = 1;
+			mError("can not find server pack is : "<<pack);
+			freePack (pack);
 			break;
 		}
 		nRet = pS->pushPack (pack) ? 0 : 1;
@@ -84,12 +98,8 @@ int  workServerMgr:: initWorkServerMgr (int cArg, char** argS, int cDefArg, char
 	int  nRet = 0;
 	tSingleton <argConfig>::createSingleton ();
 	auto& rConfig = tSingleton<argConfig>::single ();
-	auto nR = getCurModelPath (m_homeDir);
-	myAssert (0 == nR);
-	auto bR = upDir (m_homeDir.get());
-	myAssert (bR);
 	do {
-		nR = rConfig.procCmdArgS (cDefArg, defArgS);   /* 下一步用到参数里的文件名,所以要先解析一遍命令行参数  */
+		int nR = rConfig.procCmdArgS (cDefArg, defArgS);   /* 下一步用到参数里的文件名,所以要先解析一遍命令行参数  */
 		if (nR) {
 			nRet = 1;
 			break;
@@ -100,8 +110,20 @@ int  workServerMgr:: initWorkServerMgr (int cArg, char** argS, int cDefArg, char
 			break;
 		}
 
-		auto pWorkDir = homeDir ();// rConfig.workDir ();
-		myAssert (pWorkDir);
+		auto pWorkDir = rConfig.homeDir ();// rConfig.workDir ();
+		int workDirLen = 0;
+		if (pWorkDir) {
+			workDirLen = (int)(strlen(pWorkDir));
+		}
+		if (!workDirLen) {
+			std::unique_ptr<char[]>	homeDirPtr;
+			auto nR = getCurModelPath (homeDirPtr);
+			myAssert (0 == nR);
+			auto bR = upDir (homeDirPtr.get());
+			myAssert (bR);
+			rConfig.setHomeDir(homeDirPtr.get());
+			pWorkDir = rConfig.homeDir ();
+		}
 		std::string frameConfigFile = pWorkDir;
 		auto frameConfig = rConfig.frameConfigFile ();
 		frameConfigFile += "/config/";
@@ -128,6 +150,8 @@ int  workServerMgr:: initWorkServerMgr (int cArg, char** argS, int cDefArg, char
 			mError("rConfig.procCmdArgS error nR = "<<nR);
 			break;
 		}
+
+		pWorkDir = rConfig.homeDir ();
 		auto allocDebug = rConfig.allocDebug ();
 		if (allocDebug) {
 			allocPack = allocPackDebug;
@@ -138,12 +162,14 @@ int  workServerMgr:: initWorkServerMgr (int cArg, char** argS, int cDefArg, char
 			freePack = freePackRelease;
 			outMemLeak = outMemLeakRelease;
 		}
+
 		nR = rConfig.afterAllArgProc ();
 		if (nR) {
 			nRet = 2;
 			mError("rConfig.afterAllArgProc error nR = "<<nR);
 			break;
 		}
+
 		auto sr = rConfig.srand ();
 		if (sr) {
 			srand(time(NULL));
@@ -168,11 +194,14 @@ int  workServerMgr:: initWorkServerMgr (int cArg, char** argS, int cDefArg, char
 		forLogic.toNetPack = nullptr;
 		forLogic.fnPushPackToServer = sPushPackToServer;
 
-		std::string strPath = workDir();
+		mInfo("workDir is : "<<pWorkDir);
+
+		std::string strPath = pWorkDir;// workDir();
 		auto modelName = rConfig.modelName();
 		strPath += "/bin/";
 		strPath += modelName;
 		strPath += dllExtName();
+
 		auto hdll = loadDll (strPath.c_str());
 		do {
 			if (!hdll) {
@@ -225,6 +254,7 @@ int  workServerMgr:: initWorkServerMgr (int cArg, char** argS, int cDefArg, char
 			mError("loopMgr init error nRet = "<<nRet);
 			break;
 		}
+
 		auto serverGroupNum  = rConfig.serverGroupNum ();
 		auto serverGroups = rConfig.serverGroups ();
 		for (decltype (serverGroupNum) i = 0; i < serverGroupNum; i++) {
@@ -242,19 +272,11 @@ int  workServerMgr:: initWorkServerMgr (int cArg, char** argS, int cDefArg, char
 			}
 		}
 		if (m_fnAfterLoad ) {
-			auto nR = m_fnAfterLoad (cArg, argS, &forLogic, 0, nullptr);
+			std::unique_ptr<char[]>	homeDirPtr;
+			
+			auto nR = m_fnAfterLoad (cArg, argS, &forLogic, cDefArg, defArgS);
 			if (nR) {
 				mError ("funOnLoad ret error nR = "<<nR);
-			}
-		}
-		for (decltype (serverGroupNum) i = 0; i < serverGroupNum; i++) {
-			auto& rInfo = serverGroups[i];
-			for (decltype (rInfo.runNum) j = 0; j < rInfo.runNum; j++) {
-				auto& rServer = m_allServers[rInfo.beginId + i];
-				if (rInfo.autoRun) {
-					rServer.start();
-					rServer.detach();
-				}
 			}
 		}
 		auto dumpMsg = rConfig.dumpMsg ();
@@ -262,7 +284,18 @@ int  workServerMgr:: initWorkServerMgr (int cArg, char** argS, int cDefArg, char
 			rInfo ("dupmMsg end plese check");
 			break;
 		}
-		loggerDrop ();
+		for (decltype (serverGroupNum) i = 0; i < serverGroupNum; i++) {
+			auto& rInfo = serverGroups[i];
+			for (decltype (rInfo.runNum) j = 0; j < rInfo.runNum; j++) {
+				auto& rServer = m_allServers[rInfo.beginId + j];
+				if (rInfo.autoRun) {
+					rServer.start();
+					rServer.detach();
+				}
+			}
+		}
+		
+		// loggerDrop ();
 	} while (0);
 	return nRet;
 }
@@ -280,31 +313,6 @@ void  workServerMgr:: afterAllLoopEndBeforeExitApp  ()
     } while (0);
 }
 
-const char*   workServerMgr:: workDir ()
-{
-	auto& rConfig = tSingleton<argConfig>::single ();
-	auto workDir = rConfig.workDir ();
-	do {
-		if (workDir) {
-			auto nL = strlen (workDir);
-			if (nL) {
-				break;
-			}
-		}
-		workDir = homeDir();
-	} while (0);
-	return workDir;
-}
-
-const char*  workServerMgr:: homeDir ()
-{
-    return m_homeDir.get ();
-}
-
-void  workServerMgr:: setHomeDir (const char* v)
-{
-    strCpy (v, m_homeDir);
-}
 
 ForLogicFun&  workServerMgr::getForLogicFun()
 {
@@ -341,7 +349,7 @@ int  workServerMgr::runThNum (char* szBuf, int bufSize)
 	for (decltype (nRet) i = 0; i < nRet; i++) {
 		rS<<pH[i]<<" ";
 	}
-	if (!nRet) {
+	if (!nRet && outMemLeak) {
 		outMemLeak (rS);
 	}
 	strNCpy (szBuf, bufSize, rS.str().c_str());
@@ -370,5 +378,20 @@ serverMgr::runThreadIdSet&  workServerMgr:: runThreadIdS ()
 onRecPacketFT      workServerMgr:: onRecPacketFun ()
 {
 	return m_fnRecPacket;
+}
+
+onFrameLagicFT   workServerMgr:: onFrameLogicFun ()
+{
+	return m_fnOnFrameLogic;
+}
+
+onLoopEndFT   workServerMgr:: onLoopEnd ()
+{
+	return m_fnOnLoopEnd;
+}
+
+onLoopBeginFT   workServerMgr:: onLoopBegin ()
+{
+	return m_fnOnLoopBegin;
 }
 

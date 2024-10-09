@@ -7,7 +7,6 @@
 
 CMsgBase::~CMsgBase()
 {
-	//SBD(m_pPacket)
 	releasePack(m_pPacket);
 }
 
@@ -18,40 +17,7 @@ CMsgBase::CMsgBase():m_pPacket(NULL)
 CMsgBase::CMsgBase(packetHead* p):m_pPacket(p)
 {
 }
-/*
-void CMsgBase:: unZip()
-{
-    do {
-		auto pN = P2NHead(m_pPacket);
-		if (NIsZip(pN)) {
-			fromPack ();
-			pN = P2NHead(m_pPacket);
-			NSetUnZip(pN);
-		}
-    } while (0);
-}
 
-void  CMsgBase:: zip()
-{
-	auto pN = P2NHead(m_pPacket);
-    do {
-		if (!NIsZip(pN)) {
-			toPack();
-			pN = P2NHead(m_pPacket);
-			NSetZip(pN);
-		}
-    } while (0);
-}
-int CMsgBase::toPack()
-{
-    return 0;
-}
-
-int CMsgBase::fromPack()
-{
-	return 0;
-}
-*/
 packetHead*  CMsgBase::getPack()const
 {
 	return m_pPacket;
@@ -137,7 +103,4 @@ void setForMsgModuleFunS(ForMsgModuleFunS* pF)
 ForMsgModuleFunS& getForMsgModuleFunS()
 {
 	return *s_pForMsgModuleFunS;
-	// static ForMsgModuleFunS s_ForMsgModuleFunS;
-	// return  s_ForMsgModuleFunS;
-	//return *g_ForMsgModuleFunS;
 }

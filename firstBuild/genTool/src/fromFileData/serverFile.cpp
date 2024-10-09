@@ -312,3 +312,23 @@ void  serverFile:: setTmpNum (uword v)
     m_tmpNum = v;
 }
 
+uword  serverFile:: serverGroupId ()
+{
+    return m_serverGroupId;
+}
+
+void  serverFile:: setServerGroupId (uword v)
+{
+    m_serverGroupId = v;
+}
+
+const char*  serverFile:: strServerGroupId ()
+{
+    return m_strServerGroupId.get ();
+}
+
+void  serverFile:: setStrServerGroupId (const char* v)
+{
+    strCpy (v, m_strServerGroupId);
+}
+

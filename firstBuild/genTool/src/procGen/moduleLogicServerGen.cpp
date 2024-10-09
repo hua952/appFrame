@@ -22,6 +22,9 @@
 #include <string>
 #include <map>
 #include <set>
+#define FMT_HEADER_ONLY
+#include <fmt/core.h>
+#include <fmt/ostream.h>
 #include "configMgr.h"
 
 static bool sIsPathExit  (const char* szFile)
@@ -50,15 +53,17 @@ int   moduleLogicServerGen:: startGen (moduleGen& rMod)
 		auto& rData = rMod.moduleData ();
 		auto modName = rData.moduleName ();
 		int nR = 0;
-		nR = genH (rMod);
+		// nR = genH (rMod);
+		nR = genWorkerMgrH(rMod);
 		if (nR) {
 			rError ("moduleLogicServerGen write h file error modName = "<<modName<<" nR = "<<nR);
 			nRet = 1;
 			break;
 		}
-		nR = genCpp (rMod);
+		// nR = genCpp (rMod);
+		nR = genWorkerMgrCpp (rMod);
 		if (nR) {
-			rError ("moduleLogicServerGen write cpp file error modName = "<<modName<<" nR = "<<nR);
+			rError ("genWorkerMgrCpp write cpp file error modName = "<<modName<<" nR = "<<nR);
 			nRet = 2;
 			break;
 		}
@@ -76,6 +81,37 @@ int   moduleLogicServerGen:: startGen (moduleGen& rMod)
 			auto proc = strRoot;
 			proc += "/proc";
 			myMkdir (proc.c_str ());
+			
+			nR = genWorkerH (rMod, pName);
+			if (nR) {
+				nRet = 5;
+				break;
+			}
+			nR = genWorkerCpp (rMod, pName);
+			if (nR) {
+				nRet = 6;
+				break;
+			}
+			nR = genOnLoopBegin (rMod, pName);
+			if (nR) {
+				nRet = 7;
+				break;
+			}
+			nR = genOnLoopEnd(rMod, pName);
+			if (nR) {
+				nRet = 8;
+				break;
+			}
+			nR = genOnLoopFrame(rMod, pName);
+			if (nR) {
+				nRet = 9;
+				break;
+			}
+			nR = genOnWorkerInitCpp (rMod, pName);
+			if (nR) {
+				nRet = 9;
+				break;
+			}
 			nR = genPackFun (rMod, pName);
 			if (nR) {
 				nRet = 4;
@@ -84,6 +120,142 @@ int   moduleLogicServerGen:: startGen (moduleGen& rMod)
 		}
 	} while (0);
 	return nRet;
+}
+
+int   moduleLogicServerGen:: genOnWorkerInitCpp (moduleGen& rMod, const char* serverName)
+{
+    int   nRet = 0;
+    do {
+		std::string strRoot = rMod.srcPath ();
+		strRoot += "/";
+		strRoot += serverName;
+		auto proc = strRoot;
+		proc += "/proc/onWorkerInit.cpp";
+		if (isPathExit (proc.c_str())) {
+			nRet = 0;
+			break;
+		}
+		std::ofstream os (proc.c_str ());
+		if (!os) {
+			rError ("open file : "<<proc.c_str ());
+			nRet = 1;
+		}
+		fmt::print(os, R"(#include "{serverName}.h"
+
+int {serverName}::onWorkerInit(ForLogicFun* pForLogic)
+{{
+	int nRet = 0;
+	do {{
+	}} while (0);
+	return nRet;
+}}
+
+)", fmt::arg("serverName", serverName));
+
+    } while (0);
+    return nRet;
+}
+
+int   moduleLogicServerGen:: genOnLoopBegin (moduleGen& rMod, const char* serverName)
+{
+    int   nRet = 0;
+    do {
+		std::string strRoot = rMod.srcPath ();
+		strRoot += "/";
+		strRoot += serverName;
+		auto proc = strRoot;
+		proc += "/proc/onLoopBegin.cpp";
+		if (isPathExit (proc.c_str())) {
+			nRet = 0;
+			break;
+		}
+		std::ofstream os (proc.c_str ());
+		if (!os) {
+			rError ("open file : "<<proc.c_str ());
+			nRet = 1;
+		}
+		fmt::print(os, R"(#include "{serverName}.h"
+
+int {serverName}::onLoopBegin()
+{{
+	int nRet = 0;
+	do {{
+	}} while (0);
+	return nRet;
+}}
+
+)", fmt::arg("serverName", serverName));
+
+
+    } while (0);
+    return nRet;
+}
+
+int   moduleLogicServerGen:: genOnLoopEnd(moduleGen& rMod, const char* serverName)
+{
+	int   nRet = 0;
+	do {
+		std::string strRoot = rMod.srcPath ();
+		strRoot += "/";
+		strRoot += serverName;
+		auto proc = strRoot;
+		proc += "/proc/onLoopEnd.cpp";
+		if (isPathExit (proc.c_str())) {
+			nRet = 0;
+			break;
+		}
+		std::ofstream os (proc.c_str ());
+		if (!os) {
+			rError ("open file : "<<proc.c_str ());
+			nRet = 1;
+		}
+		fmt::print(os, R"(#include "{serverName}.h"
+
+int {serverName}::onLoopEnd()
+{{
+	int nRet = 0;
+	do {{
+	}} while (0);
+	return nRet;
+}}
+
+)", fmt::arg("serverName", serverName));
+
+		} while (0);
+return nRet;
+}
+
+int   moduleLogicServerGen:: genOnLoopFrame(moduleGen& rMod, const char* serverName)
+{
+	int   nRet = 0;
+	do {
+		std::string strRoot = rMod.srcPath ();
+		strRoot += "/";
+		strRoot += serverName;
+		auto proc = strRoot;
+		proc += "/proc/onLoopFrame.cpp";
+		if (isPathExit (proc.c_str())) {
+			nRet = 0;
+			break;
+		}
+		std::ofstream os (proc.c_str ());
+		if (!os) {
+			rError ("open file : "<<proc.c_str ());
+			nRet = 1;
+		}
+		fmt::print(os, R"(#include "{serverName}.h"
+
+int {serverName}::onLoopFrame()
+{{
+	int nRet = 0;
+	do {{
+	}} while (0);
+	return nRet;
+}}
+
+)", fmt::arg("serverName", serverName));
+		} while (0);
+return nRet;
 }
 
 int   moduleLogicServerGen:: genMgrCpp (moduleGen& rMod, const char* genPath)
@@ -192,7 +364,7 @@ dword )"<<strMgrClassName<<R"(::afterLoadLogic (int nArgC, char** argS, ForLogic
 			break;
 		}
 		{
-			auto pWorkDir = homeDir(); // rConfig.workDir ();
+			auto pWorkDir = rConfig.homeDir();
 			myAssert (pWorkDir);
 			std::string strFile = pWorkDir;
 			auto frameConfig = rConfig.logicConfigFile ();
@@ -304,6 +476,274 @@ dword )"<<strMgrClassName<<R"(::afterLoadLogic (int nArgC, char** argS, ForLogic
 )";
 	} while (0);
 	return nRet;
+}
+int   moduleLogicServerGen:: genWorkerH (moduleGen& rMod, const char* serverName)
+{
+    int   nRet = 0;
+    do {
+		std::string strFile = rMod.srcPath (); // rMod.genPath ();
+		strFile += "/";
+		strFile += serverName;
+		std::string strProcDir = strFile;
+		strProcDir += "/proc/";
+		strFile += "/gen/";
+		myMkdir (strFile.c_str ());
+		strFile += serverName;
+		strFile += ".h";
+		std::ofstream os (strFile.c_str ());
+		if (!os) {
+			rError ("open file : "<<strFile.c_str ());
+			nRet = 1;
+		}
+
+		auto& rData = rMod.moduleData ();
+		auto pS = rData.findServer (serverName);
+		myAssert (pS);
+		std::set<std::string> procMsgSet;
+		auto& rGlobalFile = tSingleton<globalFile>::single ();
+		auto pPmp = rGlobalFile.findMsgPmp ("defMsg");
+		auto& rRpcFileMgr = pPmp->rpcFileS();
+		auto& rMsgMgr = pPmp->msgFileS();
+		auto& rPMap = pS->procMsgS ();
+		for (auto ite = rPMap.begin(); rPMap.end() != ite; ++ite) {
+			auto& rProcRpc = *(ite);
+			auto rpcFileName = rProcRpc.rpcName;
+			auto pRpc = rRpcFileMgr.findRpc (rpcFileName.c_str ());
+			myAssert (pRpc);
+			auto pG = pRpc->groupName ();
+			procMsgSet.insert (pG);
+		}
+		std::stringstream ssInc;
+		for (auto iter = procMsgSet.begin(); procMsgSet.end() != iter; ++iter) {
+			ssInc<<R"(#include ")"<<iter->c_str()<<R"(Rpc.h")"<<std::endl;
+			std::string strDir = strProcDir;
+			strDir += iter->c_str();
+			myMkdir (strDir.c_str());
+		}
+
+		std::stringstream ssProc;
+		for (auto ite = rPMap.begin(); rPMap.end() != ite; ++ite) {
+			auto& rProcRpc = *(ite);
+			auto rpcFileName = rProcRpc.rpcName;
+			auto pRpc = rRpcFileMgr.findRpc (rpcFileName.c_str ());
+			myAssert (pRpc);
+			auto& rRpc = *pRpc;
+			auto szMsgStructName = rProcRpc.bAsk ? 
+				pRpc->askMsgName () : pRpc->retMsgName ();
+			auto pMsg = rMsgMgr.findMsg (szMsgStructName);
+ 			auto pDec = pMsg->msgFunDec ();
+			ssProc<<"    "<<pDec<<";"<<std::endl;
+		}
+
+		fmt::print(os, R"(#ifndef _{serverName}_h__
+#define _{serverName}_h__
+
+#include <memory>
+#include "mainLoop.h"
+#include "logicWorker.h"
+{include}
+
+class {serverName}:public logicWorker
+{{
+public:
+	int onWorkerInitGen(ForLogicFun* pForLogic) override;
+	int onWorkerInit(ForLogicFun* pForLogic) override;
+	int onLoopBegin() override;
+	int onLoopEnd() override;
+	int onLoopFrame() override;
+	
+	{procMsg}
+private:
+}};
+#endif
+)", fmt::arg("serverName", serverName), fmt::arg("include", ssInc.str().c_str()), fmt::arg("procMsg", ssProc.str().c_str()));
+    } while (0);
+    return nRet;
+}
+
+int   moduleLogicServerGen:: genWorkerCpp (moduleGen& rMod, const char* serverName)
+{
+    int   nRet = 0;
+    do {
+		auto& rData = rMod.moduleData ();
+		std::string strFile = rMod.srcPath (); // rMod.genPath ();
+		strFile += "/";
+		strFile += serverName;
+		strFile += "/gen/";
+		myMkdir (strFile.c_str ());
+		strFile += serverName;
+		strFile += "Gen.cpp";
+		std::ofstream os (strFile.c_str ());
+		if (!os) {
+			rError ("open file : "<<strFile.c_str ());
+			nRet = 1;
+		}
+		auto pS = rData.findServer (serverName);
+		myAssert (pS);
+		fmt::print(os, R"(#include "{serverName}.h"
+
+int {serverName}::onWorkerInitGen(ForLogicFun* pForLogic)
+{{
+
+	{regPackFunDec};
+	{regPackFunName}(pForLogic->fnRegMsg, serverId ());
+	auto nRet = onWorkerInit(pForLogic);
+	return nRet;
+}}
+
+)", fmt::arg("serverName", serverName), fmt::arg("regPackFunDec", pS->regPackFunDec ()), fmt::arg("regPackFunName", pS->regPackFunName ()));
+
+    } while (0);
+    return nRet;
+}
+
+int   moduleLogicServerGen:: genWorkerMgrH (moduleGen& rMod)
+{
+	int   nRet = 0;
+	do {
+		auto modSrcPath = rMod.srcPath ();
+		auto& rData = rMod.moduleData ();
+		auto pModName = rData.moduleName ();
+
+		auto& rGlobalFile = tSingleton<globalFile>::single ();
+		auto pPmp = rGlobalFile.findMsgPmp ("defMsg");
+		auto& rRpcFileMgr = pPmp->rpcFileS();
+		auto& rMsgMgr = pPmp->msgFileS();
+		std::string genMgrH = modSrcPath;
+		std::string strMgrClassName = pModName;
+		strMgrClassName += "WorkerMgr";
+		genMgrH += "/gen/";
+		genMgrH += strMgrClassName;
+		genMgrH += ".h";
+		std::ofstream osMgrH(genMgrH.c_str());
+		if (!osMgrH) {
+			rError ("open file for write error fileName = "<<genMgrH.c_str ());
+			nRet = 2;
+			break;
+		}
+		auto appName = rData.appName ();
+
+		auto pApp = tSingleton<appFileMgr>::single().findApp (appName);
+		myAssert (pApp);
+		auto netType = pApp->netType();
+		if (appNetType_gate == netType ) {
+		}
+		std::stringstream serInc;
+		std::stringstream serVar;
+		auto& rSS = rData.orderS ();
+		auto serverNum = rSS.size ();
+		for (decltype (serverNum) i = 0; i < serverNum; i++) {
+			auto& rServer = *rSS[i];
+			auto pName = rServer.serverName ();
+			serInc<<R"(#include ")"<<pName<<R"(.h")"<<std::endl;
+			serVar<<"    std::pair<std::unique_ptr<"<<pName<<R"([]>, loopHandleType>      m_)"<<pName<<R"(;
+)";
+		}
+		fmt::print(osMgrH, R"(#ifndef _{modName}WorkerMgr_h__
+#define _{modName}WorkerMgr_h__
+
+#include <memory>
+#include "mainLoop.h"
+#include "logicWorkerMgr.h"
+{include}
+
+class {modName}WorkerMgr:public logicWorkerMgr
+{{
+public:
+	int initLogicGen (int cArg, char** argS, ForLogicFun* pForLogic, int cDefArg, char** defArgS) override;
+{serverS}
+private:
+}};
+#endif
+)", fmt::arg("include", serInc.str().c_str()), fmt::arg("modName", pModName), fmt::arg("serverS", serVar.str().c_str()));
+	} while (0);
+	return nRet;
+}
+
+int   moduleLogicServerGen:: genWorkerMgrCpp (moduleGen& rMod)
+{
+    int   nRet = 0;
+    do {
+		auto modSrcPath = rMod.srcPath ();
+		auto& rData = rMod.moduleData ();
+		auto pModName = rData.moduleName ();
+
+		auto& rGlobalFile = tSingleton<globalFile>::single ();
+		auto pPmp = rGlobalFile.findMsgPmp ("defMsg");
+		auto& rRpcFileMgr = pPmp->rpcFileS();
+		auto& rMsgMgr = pPmp->msgFileS();
+		std::string genMgrH = modSrcPath;
+		std::string strMgrClassName = pModName;
+		strMgrClassName += "WorkerMgr";
+		genMgrH += "/gen/";
+		genMgrH += strMgrClassName;
+		genMgrH += ".cpp";
+		std::ofstream osMgrC(genMgrH.c_str());
+		if (!osMgrC) {
+			rError ("open file for write error fileName = "<<genMgrH.c_str ());
+			nRet = 2;
+			break;
+		}
+		auto appName = rData.appName ();
+
+		auto pApp = tSingleton<appFileMgr>::single().findApp (appName);
+		myAssert (pApp);
+		auto netType = pApp->netType();
+		if (appNetType_gate == netType ) {
+		}
+		std::stringstream serVar;
+		auto& rSS = rData.orderS ();
+		auto serverNum = rSS.size ();
+		for (decltype (serverNum) i = 0; i < serverNum; i++) {
+			auto& rServer = *rSS[i];
+			auto pName = rServer.serverName ();
+			auto serverGroupId = rServer.serverGroupId ();	
+			if (i) {
+				serVar<<"else ";
+			}
+			serVar<<R"(if (i == )"<<serverGroupId <<R"() {
+				m_)"<<pName<<R"(.first = std::make_unique<)"<<pName<<R"([]>(serverGroups[i].runNum);
+				for (decltype (serverGroups[i].runNum) j = 0; j < serverGroups[i].runNum; j++) {
+					m_allServers [serverGroups[i].beginId + j] = m_)"<<pName<<R"(.first.get() + j;
+				}
+			} )";
+		}
+		fmt::print(osMgrC, R"(#include "{modName}WorkerMgr.h"
+#include "logicFrameConfig.h"
+#include "tSingleton.h"
+#include "rpcInfo.h"
+
+int {modName}WorkerMgr::initLogicGen (int cArg, char** argS, ForLogicFun* pForLogic, int cDefArg, char** defArgS)
+{{
+	auto& rConfig = tSingleton<logicFrameConfig>::single ();
+	int nRet = 0;
+	do {{
+		auto serverGroupNum = rConfig.serverGroupNum ();
+		auto serverGroups = rConfig.serverGroups ();
+		for (decltype (serverGroupNum) i = 0; i < serverGroupNum; i++) {{
+			{newServers}
+		}}
+		/*
+		auto allServerNum = this->allServerNum ();
+		for (decltype (allServerNum) i = 0; i < allServerNum; i++) {{
+			m_allServers[i]->onWorkerInitGen (pForLogic);
+		}}
+		*/
+		const uword maxPairNum = 0x2000;
+		const uword maxMsgNum = maxPairNum * 2;
+		auto tempBuf = std::make_unique<uword[]>(maxMsgNum);
+		auto nR = getDefProc (tempBuf.get(), maxMsgNum);
+		myAssert (nR < maxMsgNum);
+		nR = m_defProcMap.init((defProcMap::NodeType*)(tempBuf.get()), nR);
+		myAssert (0 == nR);
+	}} while (0);
+	return nRet;
+}}
+
+)", fmt::arg("modName", pModName), fmt::arg("newServers", serVar.str().c_str()));
+
+    } while (0);
+    return nRet;
 }
 
 int   moduleLogicServerGen:: genH (moduleGen& rMod)
@@ -662,8 +1102,9 @@ static void sOutNtfExitByNet (bool bAsk, std::ostream& ps)
 {
 	if (bAsk) {
 		ps<<R"(	gInfo("rec NtfExitByNet ask");
-		ntfExitAskMsg  ask;
+		/* ntfExitAskMsg  ask;
 		sendMsgToAllOtherLocalServer (ask);
+		*/
 		setWillExit (true);
 	)";
 	} else {
@@ -759,7 +1200,7 @@ static int sProcMsgReg (const char* pModName, serverFile* pServer,
 		auto pRetMsg = rMsgMgr.findMsg (retMsgStructName);
 
 		std::string strMgrClassName = pModName;
-		strMgrClassName += "ServerMgr";
+		strMgrClassName += "WorkerMgr";
 		os<<R"(
 static int )"<<pPackFun<<
 				R"((pPacketHead pAsk, pPacketHead& pRet, procPacketArg* pArg)
@@ -781,7 +1222,6 @@ static int )"<<pPackFun<<
 	} else {
 		myAssert (pRetMsg);
 		os<<pRetMsg->msgName ()<<R"( ret (pRet);
-		// ret.unZip();
 		pRet = ret.getPack ();
 	)";
 	}
@@ -799,13 +1239,13 @@ static int )"<<pPackFun<<
 	}
 	
 	os<<R"(
-	loopHandleType level,  onceLv, onceIndex;
-	getLvevlFromSerId (pArg->handle, level, onceLv, onceIndex);
-	myAssert (level < c_serverLevelNum);
-	myAssert (onceLv < c_onceServerLevelNum / c_levelMaxOpenNum[level]);
-	auto& rServerA = tSingleton<)"<<strMgrClassName<<R"(>::single().m_)"<<serverName<<R"(;
-	myAssert (onceIndex < rServerA.second);
-	rServerA.first[onceIndex].)"<<msgProcFun <<R"(()";
+	auto&  workerMgr = tSingleton<)"<<strMgrClassName<<R"(>::single();
+	auto allServerNum = workerMgr.allServerNum ();
+	myAssert (pArg->handle < allServerNum);
+	auto pServer = workerMgr.allServers()[pArg->handle];
+	auto pRealServer = dynamic_cast<)"<<serverName<<R"(*>(pServer);
+	myAssert (pRealServer);
+	pRealServer->)"<<msgProcFun <<R"(()";
 	auto askHasData = pAskMsg->hasData ();
 	if (askHasData) {
 		os<<R"(*ask.pack())";
@@ -873,8 +1313,7 @@ static int )"<<pPackFun<<
 )";
 		}
 
-ps<<R"(#include "logicServer.h"
-#include "logicServerMgr.h"
+ps<<R"(#include "logicWorker.h"
 #include ")"<<strMgrClassName<<R"(.h")"<<std::endl<<R"(
 #include ")"<<pGSrcName<<R"(.h")"<<std::endl<<std::endl
 		<<strDec<<R"(
@@ -922,10 +1361,10 @@ int   moduleLogicServerGen:: genPackFun (moduleGen& rMod, const char* szServerNa
 			rError ("open file : "<<strFile.c_str ());
 			nRet = 1;
 		}
-		// auto procMsgPath = rMod.procMsgPath ();
 		os<<R"(#include "msgGroupId.h")"<<std::endl;
 		os<<R"(#include "msgStruct.h")"<<std::endl;
 		os<<R"(#include "loopHandleS.h")"<<std::endl;
+		os<<R"(#include "logicFrameConfig.h")"<<std::endl;
 		os<<R"(#include "tSingleton.h")"<<std::endl;
 		os<<R"(#include "mainLoop.h")"<<std::endl;
 		auto pServerF = rMod.moduleData ().findServer (szServerName);
@@ -933,13 +1372,9 @@ int   moduleLogicServerGen:: genPackFun (moduleGen& rMod, const char* szServerNa
 		myAssert (pServerF);
 
 		std::string strMgrClassName = pModuleName;
-		strMgrClassName += "ServerMgr";
+		strMgrClassName += "WorkerMgr";
 		os<<R"(#include ")"<<strMgrClassName<<R"(.h")"<<std::endl;
-		/*	
-		std::string strMsgGen = procMsgPath;
-		strMsgGen += "/";
-		strMsgGen += szServerName;
-		*/
+		
 		auto strHandle = pServerF->strHandle ();
 		auto& rMap = pServerF->procMsgS ();
 		using groupSet = std::set<std::string>;
@@ -957,12 +1392,6 @@ int   moduleLogicServerGen:: genPackFun (moduleGen& rMod, const char* szServerNa
 			auto& pGName = *it;
 			os<<R"(#include ")"<<pGName<<R"(MsgId.h")"<<std::endl;
 			os<<R"(#include ")"<<pGName<<R"(Rpc.h")"<<std::endl;
-			/*
-			std::string strMsgFile = strMsgGen;
-			strMsgFile += "/";
-			strMsgFile += pGName;
-			myMkdir (strMsgFile.c_str ());
-			*/
 		}
 		os<<std::endl;
 		auto pRegFunName = pServerF->regPackFunDec ();
@@ -982,11 +1411,7 @@ int   moduleLogicServerGen:: genPackFun (moduleGen& rMod, const char* szServerNa
 			auto pGName = rRpc.groupName ();
 			auto pGroup = rGMgr.findGroup (pGName);
 			myAssert (pGroup);
-			/*
-			std::string strMsgFile = strMsgGen;
-			strMsgFile += "/";
-			strMsgFile += pGName;
-			*/
+			
 			std::string strCppDir = rMod.srcPath ();
 			strCppDir += "/";
 			strCppDir += szServerName;
@@ -1204,4 +1629,5 @@ int )"<<pName<<R"( :: sendAddChannel (udword& token, channelKey& rCh)
     } while (0);
     return nRet;
 }
+
 

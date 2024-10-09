@@ -7,7 +7,7 @@
 workServer:: workServer ()
 {
 	m_sleepSetp = 0;
-	m_id = c_emptyLoopHandle;
+	// m_id = c_emptyLoopHandle;
 	m_frameNum = 0;
 }
 
@@ -26,7 +26,12 @@ int  workServer::initWorkServer ()
 
 void workServer::run()
 {
-	onMidLoopBegin(m_id);
+	auto nRet = onMidLoopBegin(m_serverId);
+
+	if (procPacketFunRetType_exitNow & nRet || procPacketFunRetType_exitAfterLoop & nRet) {
+		mInfo ("onMidLoopBegin ret procPacketFunRetType_exitNow");
+		return;
+	}
 	while(true)
 	{
 		auto bExit = onFrame();
@@ -36,7 +41,7 @@ void workServer::run()
 		}
 		
 	}
-	onMidLoopEnd(m_id);
+	onMidLoopEnd(m_serverId);
 }
 
 void workServer::ThreadFun(workServer* pS)
@@ -46,7 +51,7 @@ void workServer::ThreadFun(workServer* pS)
 
 bool  workServer:: start()
 {
-	mTrace("startThread handle = "<<m_id<<" this = "<<this);
+	mTrace("startThread handle = "<<(int)m_serverId<<" this = "<<this);
 	m_pTh =std::make_unique<std::thread>(workServer::ThreadFun, this);
 	return true;
 }
@@ -72,7 +77,7 @@ bool  workServer:: onFrame()
 	bool bExit = false;
 	m_timerMgr.onFrame ();
 	
-	auto myHandle = m_id; 
+	auto myHandle = m_serverId; 
 	auto nQuit = ::onLoopFrame(myHandle);
 	if (procPacketFunRetType_exitNow & nQuit) {
 		bExit = true;
@@ -90,7 +95,7 @@ bool  workServer:: onFrame()
 			auto p = d->pPer;
 			int nRet =  procPacketFunRetType_del;
 			auto pN = P2NHead (d);
-			nRet = ::processOncePack(m_id, d);
+			nRet = processOncePack(d);
 			if (procPacketFunRetType_doNotDel & nRet) {
 				p->pNext = n;
 				n->pPer = p;
@@ -174,6 +179,7 @@ int workServer:: onLoopBegin()
     do {
 		auto& rMgr = tSingleton<workServerMgr>::single();
 		rMgr.incRunThNum (serverId());
+		rMgr.onLoopBegin ()(m_serverId);
     } while (0);
     return nRet;
 }
@@ -184,6 +190,7 @@ int workServer:: onLoopEnd()
     do {
 		auto& rMgr = tSingleton<workServerMgr>::single();
 		rMgr.subRunThNum (serverId());
+		rMgr.onLoopBegin ()(m_serverId);
     } while (0);
     return nRet;
 }
@@ -192,7 +199,8 @@ int workServer::onLoopFrame()
 {
 	int nRet = procPacketFunRetType_del;
 	do {
-		
+		auto& rMgr = tSingleton<workServerMgr>::single();
+		nRet = rMgr.onFrameLogicFun ()(m_serverId);
 	}while(0);
 	m_frameNum++;
 	return nRet;

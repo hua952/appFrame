@@ -38,6 +38,7 @@ EXPORTS
 	onLoopEnd		@5
 	beforeUnload	@6
 	onFrameLogic	@7
+	onRecPacket     @8
 	)";
 		os<<szCon;
     } while (0);

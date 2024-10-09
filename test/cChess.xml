@@ -225,5 +225,23 @@
 					<txt dataType="char" length="1024" haveSize="1" zeroEnd="1"/>
 				</ask>
 			</roomChatTxt>
+			<localSingle>
+				<ask>
+					<reque dataType="udword" />
+					<member dataType="ubyte" length="64" haveSize="1"/>
+				</ask>
+				<ret>
+					<result dataType="udword" />
+				</ret>
+			</localSingle>
+			<localMult>
+				<ask>
+					<reque dataType="udword" />
+					<member dataType="ubyte" length="64" haveSize="1"/>
+				</ask>
+				<ret>
+					<result dataType="udword" />
+				</ret>
+			</localMult>
 		</CChess>
 	</rpc>

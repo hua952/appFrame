@@ -4,7 +4,7 @@ set(libDir ${firstBuildLib})
 file(GLOB srcS src/*.cpp)
 set(defS)
 set(osSrc)
-set(libS cLog comTcpProNet logicCommon common frameConfig)
+set(libS cLog comTcpProNet common frameConfig)
 
 if (UNIX)
     MESSAGE(STATUS "unix")

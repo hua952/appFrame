@@ -4,6 +4,7 @@
 #include "tSingleton.h"
 #include "workServer.h"
 #include "workServerMgr.h"
+#include "argConfig.h"
 
 int initFun (int cArg, char** argS, int cDefArg, char** defArgS)
 {
@@ -42,4 +43,21 @@ int  onPhyGetRunThreadIdS (char* szBuf, int bufSize)
 
 void afterAllLoopEndBeforeExitApp  ()
 {
+}
+
+int getServerGroupInfo(uword serverG, ubyte* beginIndex, ubyte* runNum)
+{
+	auto& rConfig = tSingleton<argConfig>::single();
+	auto serverGroupNum = rConfig.serverGroupNum ();
+	int nRet = 0;
+	do {
+		if (serverG >= serverGroupNum) {
+			nRet = 1;
+			break;
+		}
+		auto serverGroups = rConfig.serverGroups ();
+		*beginIndex = serverGroups[serverG].beginId;
+		*runNum = serverGroups[serverG].runNum;
+	} while (0);
+	return nRet;
 }

@@ -515,6 +515,7 @@ int   xmlGlobalLoad:: onceAppLoad (rapidxml::xml_node<char>* pApp, std::shared_p
 							if (1 == openNum) {
 								szMain = rIte->strTmpHandle ();
 								rApp->setMainLoopServer (szMain);
+								rApp->setMainLoopGroupId (rIte->strServerGroupId ());
 								rIte->setAutoRun(false);
 								break;
 							}
@@ -821,6 +822,10 @@ int   xmlGlobalLoad:: onceServerLoad (rapidxml::xml_node<char>* pS,
 		auto& rGrobal = tSingleton<globalFile>::single ();
 		auto szServerName = pS->name ();
 		newServer->setServerName (szServerName);
+		std::string strG = rApp.appName ();
+		strG += "ServerTmpID_";
+		strG += szServerName;
+		newServer->setStrServerGroupId (strG.c_str());
 		std::string strH = pS->name ();
 		std::string strTmpHandle = pS->name ();
 		strH += "Handle";
@@ -871,6 +876,7 @@ int   xmlGlobalLoad:: onceServerLoad (rapidxml::xml_node<char>* pS,
 				auto pM = rApp.mainLoopServer();
 				myAssert (!pM);
 				rApp.setMainLoopServer (newServer->strTmpHandle ());
+				rApp.setMainLoopGroupId (newServer->strServerGroupId ());
 				newServer->setAutoRun(false);
 			}
 			// newServer->setRegRoute(dwSetp);
@@ -1015,7 +1021,13 @@ int   xmlGlobalLoad:: onceServerLoad (rapidxml::xml_node<char>* pS,
 					pMsg->setDefProServerId (pHandle);
 					auto pTmpHandle = newServer->strTmpHandle();
 					myAssert (pTmpHandle);
-					pMsg->setDefProServerTmpId (pTmpHandle);
+					// pMsg->setDefProServerTmpId (pTmpHandle);
+					std::string str = "((";
+					str += rApp.appGroupId ();
+					str += "<<8) + ";
+					str += newServer->strServerGroupId ();
+					str += ")";
+					pMsg->setDefProServerTmpId (str.c_str());
 				}
 			}
 		}

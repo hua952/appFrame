@@ -8,6 +8,7 @@
 frameConfig::frameConfig ()
 {
 	m_allocDebug = false;
+	m_appGroupId = 4;
 	m_appNetType = 0;
 	m_clearTag = false;
 	m_delSaveTokenTime = 50000;
@@ -15,7 +16,8 @@ frameConfig::frameConfig ()
 	m_dumpMsg = false;
 	strCpy("", m_endPoint);
 	strCpy("", m_frameConfigFile);
-	strCpy("forClientIp:127.0.0.1*forServerIp:127.0.0.1*startPort:12000*netServerNum:4+forClientIp:127.0.0.1*forServerIp:127.0.0.1*startPort:22000*netServerNum:4", m_gateInfo);
+	strCpy("forClientIp:127.0.0.1*forServerIp:127.0.0.1*startPort:12000+forClientIp:127.0.0.1*forServerIp:127.0.0.1*startPort:22000", m_gateInfo);
+	strCpy("", m_homeDir);
 	strCpy("127.0.0.1", m_ip);
 	strCpy("cppLevel0L", m_level0);
 	strCpy("", m_logFile);
@@ -31,7 +33,6 @@ frameConfig::frameConfig ()
 	m_srand = true;
 	m_startPort = 12000;
 	m_testTag = 1234;
-	strCpy("", m_workDir);
 	
 }
 bool  frameConfig::allocDebug ()
@@ -42,6 +43,16 @@ bool  frameConfig::allocDebug ()
 void  frameConfig::setAllocDebug (bool v)
 {
 	m_allocDebug = v;
+}
+
+uword  frameConfig::appGroupId ()
+{
+    return m_appGroupId;
+}
+
+void  frameConfig::setAppGroupId (uword v)
+{
+	m_appGroupId = v;
 }
 
 word  frameConfig::appNetType ()
@@ -122,6 +133,16 @@ const char*  frameConfig::gateInfo ()
 void  frameConfig::setGateInfo (const char* v)
 {
 	strCpy(v, m_gateInfo);
+}
+
+const char*  frameConfig::homeDir ()
+{
+    return m_homeDir.get();
+}
+
+void  frameConfig::setHomeDir (const char* v)
+{
+	strCpy(v, m_homeDir);
 }
 
 const char*  frameConfig::ip ()
@@ -274,16 +295,6 @@ void  frameConfig::setTestTag (udword v)
 	m_testTag = v;
 }
 
-const char*  frameConfig::workDir ()
-{
-    return m_workDir.get();
-}
-
-void  frameConfig::setWorkDir (const char* v)
-{
-	strCpy(v, m_workDir);
-}
-
 
 
 
@@ -302,6 +313,7 @@ int  frameConfig:: dumpConfig (const char* szFile)
 			break;
 		}
 		ofs<<R"(allocDebug=false)"<<std::endl;
+		ofs<<R"(appGroupId=4)"<<std::endl;
 		ofs<<R"(appNetType=0)"<<std::endl;
 		ofs<<R"(clearTag=false)"<<std::endl;
 		ofs<<R"(delSaveTokenTime=50000)"<<std::endl;
@@ -309,7 +321,8 @@ int  frameConfig:: dumpConfig (const char* szFile)
 		ofs<<R"(dumpMsg=false)"<<std::endl;
 		ofs<<R"(endPoint=)"<<std::endl;
 		ofs<<R"(frameConfigFile=  ## 框架配置文件)"<<std::endl;
-		ofs<<R"(gateInfo=forClientIp:127.0.0.1*forServerIp:127.0.0.1*startPort:12000*netServerNum:4+forClientIp:127.0.0.1*forServerIp:127.0.0.1*startPort:22000*netServerNum:4  ## gate IP 等)"<<std::endl;
+		ofs<<R"(gateInfo=forClientIp:127.0.0.1*forServerIp:127.0.0.1*startPort:12000+forClientIp:127.0.0.1*forServerIp:127.0.0.1*startPort:22000  ## gate IP 等)"<<std::endl;
+		ofs<<R"(homeDir=)"<<std::endl;
 		ofs<<R"(ip=127.0.0.1)"<<std::endl;
 		ofs<<R"(level0=cppLevel0L)"<<std::endl;
 		ofs<<R"(logFile=)"<<std::endl;
@@ -325,7 +338,6 @@ int  frameConfig:: dumpConfig (const char* szFile)
 		ofs<<R"(srand=true)"<<std::endl;
 		ofs<<R"(startPort=12000)"<<std::endl;
 		ofs<<R"(testTag=1234)"<<std::endl;
-		ofs<<R"(workDir=)"<<std::endl;
 
 	} while (0);
 	return nRet;
@@ -388,6 +400,10 @@ int  frameConfig:: procCmdArgS (int nArg, char** argS)
 	m_allocDebug = strVal == "true";
 				continue;
 			}
+				if (strKey == "appGroupId") {
+				ssV>>m_appGroupId;
+				continue;
+			}
 				if (strKey == "appNetType") {
 				ssV>>m_appNetType;
 				continue;
@@ -423,6 +439,11 @@ int  frameConfig:: procCmdArgS (int nArg, char** argS)
 				if (strKey == "gateInfo") {
 				ssV>>strVal;
 	strCpy(strVal.c_str(), m_gateInfo);
+				continue;
+			}
+				if (strKey == "homeDir") {
+				ssV>>strVal;
+	strCpy(strVal.c_str(), m_homeDir);
 				continue;
 			}
 				if (strKey == "ip") {
@@ -493,11 +514,6 @@ int  frameConfig:: procCmdArgS (int nArg, char** argS)
 			}
 				if (strKey == "testTag") {
 				ssV>>m_testTag;
-				continue;
-			}
-				if (strKey == "workDir") {
-				ssV>>strVal;
-	strCpy(strVal.c_str(), m_workDir);
 				continue;
 			}
 		

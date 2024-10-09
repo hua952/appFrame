@@ -389,7 +389,7 @@ int serverMgr::initFun (int cArg, char** argS)
 			break;
 		}
 		{
-			auto pWorkDir = homeDir ();// rConfig.workDir ();
+			auto pWorkDir = rConfig.homeDir ();
 			myAssert (pWorkDir);
 			std::string strFile = pWorkDir;
 			auto frameConfig = rConfig.frameConfigFile ();
@@ -399,7 +399,7 @@ int serverMgr::initFun (int cArg, char** argS)
 		}
 		
 		auto logLevel = rConfig.logLevel ();
-		auto pWorkDir = homeDir (); // rConfig.workDir ();
+		auto pWorkDir = rConfig.homeDir ();
 		myAssert (pWorkDir);
 		std::string strFile = pWorkDir;
 		strFile += "/logs/";
@@ -420,6 +420,7 @@ int serverMgr::initFun (int cArg, char** argS)
 			mError("rConfig.procCmdArgS error nR = "<<nR);
 			break;
 		}
+		pWorkDir = rConfig.homeDir ();
 		auto allocDebug = rConfig.allocDebug ();
 		if (allocDebug) {
 			allocPack = allocPackDebug;
@@ -890,6 +891,8 @@ serializePackFunType  serverMgr:: fromNetPack ()
 
 int serverMgr::init(int nArgC, char** argS)
 {
+	return 1;
+	/*
 	auto& forLogic = getForLogicFun();
 	forLogic.fnCreateLoop = nullptr; // sCreateServer;
 	forLogic.fnAllocPack = allocPack; // sAllocPack; // info.fnAllocPack;
@@ -914,7 +917,7 @@ int serverMgr::init(int nArgC, char** argS)
 	auto& rConfig = tSingleton<argConfig>::single ();
 	do
 	{
-		auto workDir = homeDir (); // rConfig.workDir();
+		auto workDir = rConfig.homeDir (); // rConfig.workDir();
 		std::string strPath;
 		if (workDir) {
 			strPath = workDir;
@@ -1075,6 +1078,7 @@ int serverMgr::init(int nArgC, char** argS)
 		}
 	} while(0);
 	return nRet;
+	*/
 }
 
 msgMgr& serverMgr::defMsgInfoMgr ()
@@ -1336,25 +1340,6 @@ void   serverMgr:: subRunThNum (loopHandleType pThis)
 serverMgr::runThreadIdSet&  serverMgr:: runThreadIdS ()
 {
     return m_runThreadIdS;
-}
-
-
-const char*  serverMgr:: homeDir ()
-{
-	const char* pRet = m_homeDir.get ();
-	auto& rConfig = tSingleton<argConfig>::single ();
-	auto workDir = rConfig.workDir ();
-	do {
-		if (!workDir) {
-			break;
-		}
-		auto nL = strlen (workDir);
-		if (!nL) {
-			break;
-		}
-		pRet = workDir;
-	} while (0);
-    return m_homeDir.get ();
 }
 
 void  serverMgr:: setHomeDir (const char* v)

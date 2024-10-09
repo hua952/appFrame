@@ -39,12 +39,12 @@ public:
 	bool start();
 	bool onFrame();
 private:
-	ubyte  m_serverId;
+	ubyte  m_serverId{0xff};
 	MsgMap  m_MsgMap;
 	uqword    m_frameNum{0};
 	fpsCount  m_fpsC;
 	udword  m_sleepSetp;
-	ServerIDType m_id;
+	// ServerIDType m_id;
 	cTimerMgr          m_timerMgr;
     NetTokenType	   m_nextToken{0};
 	std::unique_ptr<std::thread> m_pTh;

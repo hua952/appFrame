@@ -17,7 +17,7 @@ elseif (WIN32)
 	MESSAGE(STATUS "windows osSrc = ${osSrc}")
 endif ()
 
-set(incS src/argMgr.h src/arrayMap.h src/comFun.h src/cTimer.h src/depOSFun.h
+set(incS src/msg.h src/argMgr.h src/arrayMap.h src/comFun.h src/cTimer.h src/depOSFun.h
 	src/fpsCount.h src/ITcpServer.h src/ISession.h src/loop.h
 	src/mainLoop.h src/modelLoder.h src/msgMgr.h src/myAssert.h src/packet.h
 	src/staticArrayMap.h src/strFun.h src/TAlgorithm.h src/tJumpListNS.h

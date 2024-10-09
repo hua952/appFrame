@@ -126,6 +126,7 @@ target_link_libraries(${prjName} PUBLIC
 	common
 	)"<<configClassName<<R"(
 	logicCommon
+	frameConfig
 	cLog
 )";
 	auto bH = rGlobalFile.haveServer ();

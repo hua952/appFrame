@@ -19,9 +19,6 @@ public:
     workServerMgr ();
     ~workServerMgr ();
 	int initWorkServerMgr (int cArg, char** argS, int cDefArg, char** defArgS);
-	const char*  workDir ();
-	const char*  homeDir ();
-	void  setHomeDir (const char* v);
 	ForLogicFun&  getForLogicFun();
 	void afterAllLoopEndBeforeExitApp  ();
 	workServer*  getServer(loopHandleType id);
@@ -30,9 +27,12 @@ public:
 	void  subRunThNum (loopHandleType pThis);
 	runThreadIdSet&  runThreadIdS ();
 	onRecPacketFT     onRecPacketFun ();
+
+	onFrameLagicFT  onFrameLogicFun ();
+	onLoopEndFT  onLoopEnd ();
+	onLoopBeginFT  onLoopBegin ();
 private:
 	std::unique_ptr<workServer[]>	  m_allServers;
-	std::unique_ptr<char[]>  m_homeDir;
 	uword  m_allServerNum{0};
 	void* m_handle{nullptr};
 	onFrameLagicFT  m_fnOnFrameLogic;

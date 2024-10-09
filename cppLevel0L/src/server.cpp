@@ -14,6 +14,8 @@
 #include "iPackSave.h"
 #include "mLog.h"
 #include "argConfig.h"
+#include "workServer.h"
+#include "workServerMgr.h"
 
 int onLoopFrame(loopHandleType pThis);
 int processOncePack(loopHandleType pThis, packetHead* pPack);
@@ -295,6 +297,7 @@ packetHead* sclonePack(packetHead* p)
 
 int onMidLoopBegin(loopHandleType pThis)
 {
+	/*
 	rInfo(" server: "<<pThis<<" begin ");
 	// auto& rMgr = tSingleton<loopMgr>::single();
 	auto& rMgr = tSingleton<serverMgr>::single();
@@ -303,10 +306,15 @@ int onMidLoopBegin(loopHandleType pThis)
 	rMgr.onLoopBegin(pThis);
 	rMgr.incRunThNum (pThis);
 	return nRet;
+	*/
+	auto pS = tSingleton<workServerMgr>::single().getServer (pThis);
+	myAssert (pS);
+	return pS->onLoopBegin ();
 }
 
 int onMidLoopEnd(loopHandleType pThis)
 {
+	/*
 	// auto& rMgr = tSingleton<loopMgr>::single();
 	auto& rMgr = tSingleton<serverMgr>::single();
 	auto pTH = rMgr.getLoop (pThis);
@@ -315,10 +323,15 @@ int onMidLoopEnd(loopHandleType pThis)
 	rMgr.subRunThNum (pThis);
 	rInfo(" server: "<<pThis<<" end");
 	return nRet;
+	*/
+	auto pS = tSingleton<workServerMgr>::single().getServer (pThis);
+	myAssert (pS);
+	return pS->onLoopEnd();
 }
 
 int onLoopFrame(loopHandleType pThis)
 {
+	/*
 	// auto& rMgr = tSingleton<loopMgr>::single();
 	int nRet = procPacketFunRetType_del;
 	auto& rMgr = tSingleton<serverMgr>::single();
@@ -336,6 +349,10 @@ int onLoopFrame(loopHandleType pThis)
 		nRet =procPacketFunRetType_exitAfterLoop;
 	}
 	return nRet;
+	*/
+	auto pS = tSingleton<workServerMgr>::single().getServer (pThis);
+	myAssert (pS);
+	return pS->onLoopFrame();
 }
 
 int processOncePack(loopHandleType pThis, packetHead* pPack)

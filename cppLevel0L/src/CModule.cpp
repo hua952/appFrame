@@ -50,7 +50,7 @@ int CModule::load(int nArgC, char** argS, ForLogicFun* pForLogic)
 	auto& rServerMgr = tSingleton<serverMgr>::single ();
 	std::string strPath;
 	auto& rConfig = tSingleton<argConfig>::single ();
-	auto workDir = rServerMgr.homeDir (); // rConfig.workDir();
+	auto workDir = rConfig.homeDir (); // rConfig.workDir();
 	if (workDir) {
 		strPath = workDir;
 	} else {

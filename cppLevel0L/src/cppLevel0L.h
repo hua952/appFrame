@@ -7,6 +7,7 @@ extern "C"
 {
 	int initFun (int cArg, char** argS, int cDefArg, char** defArgS);
 	void afterAllLoopEndBeforeExitApp ();
+	int getServerGroupInfo(uword serverG, ubyte* beginIndex, ubyte* runNum);
 }
 
 #endif

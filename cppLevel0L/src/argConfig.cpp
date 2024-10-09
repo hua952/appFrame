@@ -10,20 +10,69 @@
 
 argConfig:: argConfig ()
 {
-	m_modelNum = 0;
+	// m_modelNum = 0;
 }
 
 argConfig:: ~argConfig ()
 {
 }
 
-int  argConfig:: afterAllArgProc ()
+int  argConfig:: procGateNode()
 {
-    int  nRet = 0;
+	int  nRet = 0;
+	do {
+		auto gateSplit = stringSplit (gateInfo(), '+');
+		if (!gateSplit.empty()) {
+			m_gateNodeNum = (ubyte)(gateSplit.size());
+			m_gateNodes = std::make_unique<gateNode[]>(m_gateNodeNum);
+			ubyte cur = 0;
+			for (auto it = gateSplit.begin (); it != gateSplit.end (); it++) {
+				auto& rGate = m_gateNodes[cur++];
+				auto kvs = stringSplit (it->c_str(), '*');
+				for (auto ite = kvs.begin (); ite != kvs.end (); ite++) {
+					auto kv = stringSplit (ite->c_str(), ':');
+					myAssert (2 == kv.size ());
+					auto bC = false;
+					auto bS = false;
+					if (kv[0] == "forClientIp") {
+						strCpy(kv[1].c_str(), rGate.endPoints[0].first);
+						bC = true;
+					} else if (kv[0] == "forServerIp") {
+						strCpy(kv[1].c_str(), rGate.endPoints[1].first);
+						bS = false;
+					} else if (kv[0] == "startPort") {
+						rGate.endPoints[0].second= (uword)(atoi(kv[1].c_str()));
+						rGate.endPoints[1].second= (uword)(atoi(kv[1].c_str()));
+					}
+					if (bC) {
+						rGate.endPointNum = 1;
+					}
+					if (!bC && bS) {
+						strCpy(rGate.endPoints[1].first.get(), rGate.endPoints[0].first);
+						rGate.endPoints[1].first.reset();
+						rGate.endPointNum = 1;
+					}
+					if (bC && bS ) {
+						if (0 == strcmp(rGate.endPoints[0].first.get(), rGate.endPoints[1].first.get())) {
+							rGate.endPoints[1].first.reset();
+							rGate.endPointNum = 1;
+						} else {
+							rGate.endPointNum = 2;
+						}
+					}
+				}
+			}
+		}
+	} while (0);
+	return nRet;
+}
+
+int  argConfig:: procWorkers ()
+{
+	int  nRet = 0;
 	do {
 		auto retSplit = stringSplit (runWorkNum (), '+');
 		auto groupNum = 0;
-		
 		if (retSplit.size ()) {
 			serverIdType routeGroupId = c_emptyLoopHandle;
 			decltype (retSplit.size ()) groupNum = 0;
@@ -38,23 +87,37 @@ int  argConfig:: afterAllArgProc ()
 			auto worksRet = stringSplit (workerRet[1].c_str(), '-');
 			groupNum += worksRet.size();
 			myAssert (routeGroupId < groupNum);
-			m_serverGroups = std::make_unique<serverRunInfo>(groupNum);
+			m_serverGroups = std::make_unique<serverRunInfo[]>(groupNum);
 			auto tags = std::make_unique<bool[]>(groupNum);
 			for (decltype (groupNum) i = 0; i < groupNum; i++) {
 				tags[i] = false;
 			}
 			m_serverGroupNum = groupNum;
 			decltype (routeGroupId) curBeginId = 0;
+			serverIdType  curI = 0;
 			for (auto it = worksRet.begin (); it != worksRet.end (); it++) {
-				serverIdType  workerGroupId = 0xffff;
-				serverIdType  workerNum;
+				serverIdType  workerGroupId = curI++;
+				serverIdType  workerNum{0};
 				int           workerAutoRun = 1;
 				udword		  sleepSetp = 2;
-
+				// auto temp = *it;
 				auto fourRet = stringToFourValue(it->c_str(), '*', workerGroupId, workerNum, workerAutoRun, sleepSetp);
 				myAssert (fourRet);
 				myAssert (workerGroupId < groupNum);
 				myAssert (!tags[workerGroupId]);
+				if (workerGroupId == routeGroupId) {
+					auto appNetType = this->appNetType ();
+					if(appNetType_client == appNetType) {
+						workerNum = 1;
+					} else {
+						auto netNum = this->netNum ();
+						if (appNetType_gate == appNetType) {
+							workerNum = netNum;
+						} else {
+							workerNum = m_gateNodeNum;
+						}
+					}
+				}
 				tags[workerGroupId] = true;
 
 				serverRunInfo& workerGroup = m_serverGroups.get() [workerGroupId];
@@ -65,6 +128,27 @@ int  argConfig:: afterAllArgProc ()
 				curBeginId += workerNum;
 			}
 		}
+	} while (0);
+	return nRet;
+}
+
+int  argConfig:: afterAllArgProc ()
+{
+    int  nRet = 0;
+	do {
+		int nR = procGateNode ();
+		if (nR) {
+			nRet = 1;
+			break;
+		}
+
+		nR = procWorkers ();	
+		if (nR) {
+			nRet = 2;
+			break;
+		}
+		/*
+		break;
 		struct tempInfo
 		{
 			serverIdType first;
@@ -80,7 +164,7 @@ int  argConfig:: afterAllArgProc ()
 		const auto c_retMaxNum = 64;
 		auto retS = std::make_unique<char* []>(c_retMaxNum);
 		auto pRetS = retS.get();
-		auto nR = strR (pBuf, '*', pRetS, c_retMaxNum);
+		nR = strR (pBuf, '*', pRetS, c_retMaxNum);
     	myAssert (nR < c_retMaxNum);
 		if (nR >= c_retMaxNum) {
 			nRet = 1;
@@ -180,10 +264,11 @@ int  argConfig:: afterAllArgProc ()
 				rS.route = ite->second.route;
 			}
 		}
+		*/
     } while (0);
     return nRet;
 }
-
+/*
 argConfig::stModel*  argConfig:: allModelS ()
 {
     return m_modelS.get();
@@ -203,7 +288,7 @@ void  argConfig:: setModelMgrName (const char* v)
 {
     strCpy (v, m_modelMgrName);
 }
-
+*/
 int  argConfig:: serverGroupNum ()
 {
     return m_serverGroupNum;
@@ -217,5 +302,20 @@ void  argConfig:: setServerGroupNum (int v)
 const argConfig::serverRunInfo*   argConfig:: serverGroups ()
 {
 	return m_serverGroups.get();
+}
+
+ubyte  argConfig:: gateNodeNum ()
+{
+    return m_gateNodeNum;
+}
+
+void  argConfig:: setGateNodeNum (ubyte v)
+{
+    m_gateNodeNum = v;
+}
+
+argConfig::gateNode*  argConfig:: gateNodes ()
+{
+    return m_gateNodes.get();
 }
 

@@ -2,11 +2,12 @@
 <config className="frameConfig" projectDir="C:\work\appFrame"  projectName="frameConfig">
 	<ip type="string">127.0.0.1</ip>
 	<runWorkNum type="string" commit="client进程及线程启动的数量"></runWorkNum>
-	<gateInfo type="string" commit="gate IP 等">forClientIp:127.0.0.1*forServerIp:127.0.0.1*startPort:12000*netServerNum:4+forClientIp:127.0.0.1*forServerIp:127.0.0.1*startPort:22000*netServerNum:4</gateInfo>
-	<workDir type="string"></workDir>
+	<gateInfo type="string" commit="gate IP 等">forClientIp:127.0.0.1*forServerIp:127.0.0.1*startPort:12000+forClientIp:127.0.0.1*forServerIp:127.0.0.1*startPort:22000</gateInfo>
+	<homeDir type="string"></homeDir>
 	<modelName type="string"></modelName>
 	<startPort type="uword">12000</startPort>
 	<netNum type="uword">4</netNum>
+	<appGroupId type="uword">4</appGroupId>
 	<logFile type="string"></logFile>
 	<serializePackLib type="string">protobufSer</serializePackLib>
 	<logicModel type="string"></logicModel>

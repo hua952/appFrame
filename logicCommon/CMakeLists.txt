@@ -2,6 +2,8 @@ SET(prjName logicCommon)
 set(srcS)
 set(libDir ${firstBuildLib})
 file(GLOB srcS src/*.cpp)
+
+set(libS comTcpProNet)
 if (UNIX)
 	add_compile_options(-fPIC)
 elseif (WIN32)
@@ -19,12 +21,14 @@ link_directories(
 add_library(${prjName} ${srcS})
 target_include_directories(${prjName} PUBLIC 
 							${firstBuildInc} 
+							${CMAKE_SOURCE_DIR}/frameConfig/src
                            )
 
+target_link_libraries(${prjName} PUBLIC  ${libS})
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 
 install(TARGETS ${prjName} ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
-set(incS src/gLog.h src/msg.h src/logicServer.h src/logicServerMgr.h)
+set(incS src/gLog.h  src/logicFrameConfig.h src/logicWorker.h src/logicWorkerMgr.h)
 
 install(FILES ${incS} DESTINATION include/${myProjectName})

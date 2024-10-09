@@ -66,6 +66,7 @@ extern "C"
 	void logicOnAccept(serverIdType	fId, SessionIDType sessionId, uqword userData);
 	void logicOnConnect(serverIdType fId, SessionIDType sessionId, uqword userData);
 	void  beforeUnload();
+	int   onRecPacket(serverIdType	fId, packetHead* pack);
 }
 #endif)";
 		os<<szCon;
@@ -80,7 +81,7 @@ int   moduleExportFunGen:: genCpp (moduleGen& rMod)
 		auto& rData = rMod.moduleData ();
 		auto pModName = rData.moduleName ();
 		std::string strMgrClassName = pModName;
-		strMgrClassName += "ServerMgr";
+		strMgrClassName += "WorkerMgr";
 
 		std::string strFile = rMod.genPath ();
 		strFile += "/exportFun.cpp";
@@ -97,20 +98,21 @@ int   moduleExportFunGen:: genCpp (moduleGen& rMod)
 #include "exportFun.h"
 #include "msg.h"
 #include "myAssert.h"
-#include "logicServer.h"
-#include "logicServerMgr.h"
+#include "logicWorker.h"
+#include "logicWorkerMgr.h"
 #include "comMsgMsgId.h"
 #include "comMsgRpc.h"
 #include "tSingleton.h"
 #include "gLog.h"
 #include ")"<<strMgrClassName<<R"(.h"
 
-dword afterLoad(int nArgC, char** argS, ForLogicFun* pForLogic)
+dword afterLoad(int nArgC, char** argS, ForLogicFun* pForLogic, int nDefArgC, char** defArgS)
 {
 	setForMsgModuleFunS (pForLogic);
 	tSingleton<)"<<strMgrClassName<<R"(>::createSingleton();
 	auto &rMgr = tSingleton<)"<<strMgrClassName<<R"(>::single();
-	return rMgr.afterLoad(nArgC, argS, pForLogic);
+	logicWorkerMgr::s_mgr = &rMgr;
+	return rMgr.initLogicWorkerMgr (nArgC, argS, pForLogic, nDefArgC, defArgS);
 }
 
 void logicOnAccept(serverIdType	fId, SessionIDType sessionId, uqword userData)
@@ -118,8 +120,6 @@ void logicOnAccept(serverIdType	fId, SessionIDType sessionId, uqword userData)
 	auto &rMgr = tSingleton<)"<<strMgrClassName<<R"(>::single();
 	auto pS = rMgr.findServer(fId);
 	if (pS) {
-		// auto pEN = (serverEndPointInfo*)userData;
-		pS->logicOnAcceptSession(sessionId, userData/*pEN->logicData*/);
 	}
 }
 
@@ -141,7 +141,7 @@ int onFrameLogic	(serverIdType	fId)
 		if (pS->willExit()) {
 			nRet = procPacketFunRetType_exitNow;
 		} else {
-			nRet = pS->onFrameFun();
+			nRet = pS->onLoopFrame();
 		}
 	}
 	return nRet;
@@ -162,13 +162,16 @@ void logicOnConnect(serverIdType fId, SessionIDType sessionId, uqword userData)
 		os<<R"(
 	auto pS = rMgr.findServer(fId);
 	if (pS) {
-		pS->logicOnConnect(sessionId, userData);
 	}
 }
 
 void  beforeUnload()
 {
 	std::cout<<"In   beforeUnload"<<std::endl;
+}
+int   onRecPacket(serverIdType	fId, packetHead* pack)
+{
+	return tSingleton<appClientMWorkerMgr>::single().processOncePack (fId, pack);
 }
 )";
 	} while (0);

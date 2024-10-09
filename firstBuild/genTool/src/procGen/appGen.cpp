@@ -146,6 +146,13 @@ int  appGen:: batFileGen (appFile& rApp)
 			ts<<"appNetType="<<uwT;
 			rMainArgS.push_back(ts.str());
 		}
+		{
+			std::stringstream ts;
+			auto appGroupId  = rApp.appGroupIdInt ();
+			ts<<"appGroupId ="<<appGroupId;
+			rMainArgS.push_back(ts.str());
+		}
+
 		std::string strLogFile = szAppName;
 		strLogFile += ".log";
 		std::string strLogFull = R"(logFile=)";
@@ -167,6 +174,11 @@ int  appGen:: batFileGen (appFile& rApp)
 		if (!rModules.empty()) {
 			std::stringstream ssModelS;
 			ssModelS<<"modelS="<<*(rModules.begin ());
+			{
+				std::stringstream ts;
+				ts<<"modelName="<<*(rModules.begin ());
+				rMainArgS.push_back(ts.str());
+			}
 			auto& rModMgr = tSingleton <moduleFileMgr>::single ();
 			for (auto it = rModules.begin (); rModules.end () != it; ++it) {
 				std::stringstream ts;
@@ -186,7 +198,7 @@ int  appGen:: batFileGen (appFile& rApp)
 					ssModelS<<pS->tmpNum ()<<"-"<<pS->openNum ()<<"-"<<autoRun<<"-"<<route;
 				}
 			}
-			rMainArgS.push_back(ssModelS.str());
+			// rMainArgS.push_back(ssModelS.str());
 		}
 		auto& rV = rApp.argS ();
 		for (auto it = rV.begin(); rV.end() != it; ++it) {

@@ -2,7 +2,7 @@
 #include "strFun.h"
 #include "logicServer.h"
 
-dword logicServerMgr::afterLoad(int nArgC, char** argS, ForLogicFun* pForLogic)
+dword logicServerMgr::afterLoadOld(int nArgC, char** argS, ForLogicFun* pForLogic)
 {
 	dword nRet = 0;
 	do {

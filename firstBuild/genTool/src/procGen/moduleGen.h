@@ -13,19 +13,13 @@ public:
     void  setGenPath (const char* v);
     const char*  srcPath ();
     void  setSrcPath (const char* v);
-	/*
-    const char*  procMsgPath ();
-    void  setProcMsgPath (const char* v);
-	*/
+	
 	moduleFile&               moduleData ();
 	const char*  thisRoot ();
 	void  setThisRoot (const char* v);
 	const char*  genSrcDir ();
 	void  setGenSrcDir (const char* v);
-	/*
-	const char*  frameFunDir ();
-	void  setFrameFunDir (const char* v);
-	*/
+	
 private:
 	std::unique_ptr <char[]>  m_frameFunDir;
 	std::unique_ptr <char[]>  m_thisRoot;

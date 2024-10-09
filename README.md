@@ -24,3 +24,4 @@ genTool.exe defFile=C:\study\vulkan\Khronos\khr9.xml structBadyType=0
 configFile.exe file=C:\work\appFrame\test\frameConfig.xml
 
 
+genTool.exe defFile=C:\work\appFrame\test\localTest.xml structBadyType=1

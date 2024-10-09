@@ -91,15 +91,12 @@ public:
 	void  setTmpNum (uword v);
 	bool  route ();
 	void  setRoute (bool v);
+	const char*  strServerGroupId ();
+	void  setStrServerGroupId (const char* v);
+	uword serverGroupId ();
+	void  setServerGroupId (uword v);
 private:
-	bool  m_route;
-	udword			m_fpsSetp;
-	udword			m_sleepSetp;
-	uword  m_tmpNum;
-	uword  m_openNum;
-	bool  m_regRoute;
-	bool  m_rearEnd;
-	bool  m_autoRun;
+	std::unique_ptr <char[]>  m_strServerGroupId;
 	std::unique_ptr <char[]>  m_frameFunDec;
 	std::unique_ptr <char[]>  m_strTmpHandle;
 	std::unique_ptr <char[]>  m_frameFunName;
@@ -111,6 +108,16 @@ private:
 	std::unique_ptr <char[]>  m_moduleName;
 	std::unique_ptr <char[]>  m_serverName;
 	std::unique_ptr <char[]>  m_commit;
+	udword			m_fpsSetp;
+	udword			m_sleepSetp;
+	uword  m_tmpNum;
+	uword  m_serverGroupId{0};
+	uword  m_openNum;
+	bool  m_regRoute;
+	bool  m_route;
+	bool  m_rearEnd;
+	bool  m_autoRun;
+	
 	toolServerNode  m_serverInfo;
 	rpcMap			m_procMsgS;
 };

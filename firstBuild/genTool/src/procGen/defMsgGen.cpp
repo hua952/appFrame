@@ -76,7 +76,10 @@ enum appTmpID
 			for (int i = 0; i < c_serverLevelNum; i++) {
 				lvI[i] = 0;
 			}
-			appTem<<"    appTmpId_"<<rApp.appName()<<" = "<<appIndex++<<","<<std::endl;
+			// appTem<<"    appTmpId_"<<rApp.appName()<<" = "<<appIndex++<<","<<std::endl;
+			rApp.setAppGroupIdInt (appIndex);
+			appTem<<rApp.appGroupId()<<" = "<<appIndex<<","<<std::endl;
+			appIndex++;
 
 			std::stringstream appThTem;
 			std::stringstream routeThTem;
@@ -118,20 +121,21 @@ enum appTmpID
 					pServer->setTmpNum (tmpNum);
 					ssTem<<R"(#define  )"<<pTmpHandle<<" "<<serId<<std::endl;
 					auto route = pServer->route ();
-					auto runNum = 1;
+					auto runNum = pServer->openNum ();
 					int autoRun = pServer->autoRun () ? 1:0;
 					if (route) {
 						myAssert (!pRouteServer);
 						pRouteServer = pServer;
-						routeThTem<<rApp.appName()<<R"(ServerTmpID_)"<<pServer->serverName();
+						routeThTem<<pServer->strServerGroupId ();
 					} else {
-						appThTem<<R"(    )"<<rApp.appName()<<R"(ServerTmpID_)"<<pServer->serverName()<<" = "<<tmpId<<","<<std::endl;
+						appThTem<<R"(    )"<<pServer->strServerGroupId ()<<" = "<<tmpId<<","<<std::endl;
 						if (firstServer) {
 							firstServer = false;
 						} else {
 							runSS<<"-";
 						}
 						runSS<<tmpId<<"*"<<runNum<<"*"<<autoRun<<"*"<<pServer->sleepSetp();
+						pServer->setServerGroupId (tmpId);
 						tmpId++;
 					}
 					if (appNetType_gate == netType && route) {
@@ -146,6 +150,7 @@ enum appTmpID
 						runSS<<"-";
 					}
 					runSS<<tmpId<<"*"<<runNum<<"*"<<autoRun<<"*"<<pRouteServer->sleepSetp()<<"+routeWorker:"<<tmpId;
+					pRouteServer->setServerGroupId (tmpId);
 				}
 				rApp.setRunWorkNum (runSS.str().c_str());
 			}
