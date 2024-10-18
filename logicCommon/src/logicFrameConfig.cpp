@@ -140,6 +140,7 @@ int  logicFrameConfig:: procWorkers ()
 			workerGroup.sleepSetp = sleepSetp;
 			curBeginId += workerNum;
 		}
+		setRouteGroupId ((ubyte)routeGroupId);
 	} while (0);
 	return nRet;
 }
@@ -178,3 +179,15 @@ logicFrameConfig::gateNode* logicFrameConfig:: gateNodes ()
 {
     return m_gateNodes.get();
 }
+
+
+ubyte  logicFrameConfig:: routeGroupId ()
+{
+    return m_routeGroupId;
+}
+
+void  logicFrameConfig:: setRouteGroupId (ubyte v)
+{
+    m_routeGroupId = v;
+}
+

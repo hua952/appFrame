@@ -29,6 +29,7 @@
 #include "rLog.h"
 #include "mainLoop.h"
 #include "configMgr.h"
+#include <vector>
 
 msgGen::msgGen (msgPmpFile& rPmp):m_rPmp(rPmp)
 {
@@ -530,7 +531,16 @@ int   msgGen:: genOnceMsgClassCpp (msgGroupFile& rG, msgFile& rMsg, bool bRet, s
 
 	auto &rDv = rMsg.dataOrder ();
 
+	std::vector<std::string> zerV;
 	if (!rDv.empty ()) {
+		for (auto it = rDv.begin (); it != rDv.end (); it++) {
+			auto& rD = *(it->get ());
+			auto l = rD.dataLength ();
+			auto z = rD.zeroEnd ();
+			if (l && z) {
+				zerV.push_back(rD.dataName());
+			}
+		}
 		auto& rData = *(rDv.rbegin ()->get ());
 		auto rDN = rData.dataName ();
 		auto len = rData.dataLength ();
@@ -672,17 +682,18 @@ fromSer<<R"(
 	p->m_)"<<rDN<<R"(Num = 0;
 	)";
 			}
-
-			auto zeroEnd = rData.zeroEnd ();
-			if (zeroEnd) {
-
-				ss<<strN<<R"(* p2 = (()"<<strN<<R"++(*)(N2User(pN)));
-	)++";
-				ss<<R"(p2->m_)"<<rDN<<R"([0] = 0;
-	)";
-			}
 		}
 	}
+	if (!zerV.empty()) {
+		ss<<strN<<R"(* p2 = (()"<<strN<<R"++(*)(N2User(pN)));
+	)++";
+				for (auto it = zerV.begin (); it != zerV.end (); it++) {
+					
+				ss<<R"(p2->m_)"<<*it<<R"([0] = 0;
+	)";
+
+				}
+			}
 	ss<<R"(
 }
 )"<<strFunWon<<strClass<<R"( (packetHead* p):CMsgBase(p)

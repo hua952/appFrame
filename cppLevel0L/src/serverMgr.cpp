@@ -37,6 +37,8 @@ packetHead* allocPackDebug(udword udwSize)
 {
 	auto pRet = (packetHead*)(new char [sizeof(packetHead) + sizeof(netPacketHead) + udwSize]);
 	pRet->pAsk = 0;
+	pRet->loopId = c_emptyLocalServerId;
+	pRet->sessionID = EmptySessionID;
 	auto pN = P2NHead(pRet);
 	pN->udwLength = udwSize;
 	pN->uwTag = 0;
@@ -53,7 +55,7 @@ void	freePackDebug(packetHead* pack)
 	PUSH_FUN_CALL
 	lv0LogCallStack (27);
 	if (pack->pAsk) {
-		freePack ((packetHead*)(pack->pAsk));
+		freePackDebug((packetHead*)(pack->pAsk));
 		pack->pAsk = 0;
 	}
 	// auto pN = P2NHead (pack);
@@ -79,6 +81,8 @@ packetHead* allocPackRelease (udword udwSize)
 {
 	auto pRet = (packetHead*)(new char [sizeof(packetHead) + sizeof(netPacketHead) + udwSize]);
 	pRet->pAsk = 0;
+	pRet->loopId = c_emptyLocalServerId;
+	pRet->sessionID = EmptySessionID;
 	auto pN = P2NHead(pRet);
 	pN->udwLength = udwSize;
 	pN->uwTag = 0;
@@ -88,7 +92,7 @@ packetHead* allocPackRelease (udword udwSize)
 void	freePackRelease (packetHead* pack)
 {
 	if (pack->pAsk) {
-		freePack ((packetHead*)(pack->pAsk));
+		freePackRelease ((packetHead*)(pack->pAsk));
 		pack->pAsk = 0;
 	}
 	delete [] ((char*)(pack));

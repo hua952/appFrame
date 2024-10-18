@@ -215,19 +215,26 @@ int  configSrcGen:: writeClassCpp ()
 			auto itemType = pItem->itemType ();
 			auto itemValue = pItem->itemValue ();
 			auto pWordName = pItem->wordItemName();
-			auto dumpItemValue = pItem->itemValue ();
-			if (!dumpItemValue) {
-				dumpItemValue = "";
-			}
-			dumpOs<<R"(		ofs<<R"()"<<itemName<<"="<<itemValue;
-			auto pCommit = pItem->commit();
-			if (pCommit) {
-				dumpOs<<"  ## "<<pCommit;
-			}
-			dumpOs<<R"++()"<<std::endl;)++"<<std::endl;
+			
 			if (BigDataType_string == dataType) {
 				writeDataType = "const char*";
+				dumpOs<<"	int n"<<itemName<<"Len = 0;"<<std::endl
+				<<"	auto "<<itemName<<" = this->"<<itemName<<"();"<<std::endl
+				<<"	if ("<<itemName<<") n"<<itemName<<"Len = strlen("<<itemName<<");"<<std::endl
+				<<"	std::string strT"<<itemName<<R"++( =R"("")";)++"<<std::endl
+				<<"	if (n"<<itemName<<"Len) "<<std::endl
+				<<"		strT"<<itemName<<" = "<<itemName<<";"<<std::endl
+				//<<R"(		ofs<<R"()"<<itemName<<"= <<)"<<"strT"<<itemName;
+				<<R"++(		ofs<<")++"<<itemName<<R"++(="<<strT)++"<<itemName;
+			} else {
+				// dumpOs<<"		ofs<<"""<<itemName<<"=""<<"<<itemName<<"()"<<std::endl;
+				dumpOs<<R"++(		ofs<<")++"<<itemName<<R"++(="<<)++"<<itemName<<"()";
 			}
+			auto pCommit = pItem->commit();
+			if (pCommit) {
+				dumpOs<<R"++(<<R"--(  ## )++"<<pCommit<<R"**(   )--")**";
+			}
+			dumpOs<<"<<std::endl;"<<std::endl;
 			funOs<<writeDataType<<"  "<<pClassName<<"::"<<itemName<<" ()"<<std::endl
 				<<"{"<<std::endl
 				<<"    return "<<memberItemName;
@@ -246,7 +253,7 @@ int  configSrcGen:: writeClassCpp ()
 			}
 			funOs<<";"<<std::endl
 				<<"}"<<std::endl<<std::endl;
-
+			
 			std::stringstream& ssVR = *pSSVr;
 
 			ssVR<<R"(		if (strKey == ")"<<itemName<<R"(") {
@@ -285,6 +292,9 @@ int  configSrcGen:: writeClassCpp ()
 			} else {
 
 				ssVR<<R"(ssV>>strVal;
+				if('"'==strVal.c_str()[0] && '"'==strVal.c_str()[strVal.length()-1]) {
+					strVal = strVal.substr(1,strVal.length()-2);
+				}
 	strCpy(strVal.c_str(), )"<<memberItemName<<");";
 			
 				std::string strV = "";

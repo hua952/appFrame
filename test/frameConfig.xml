@@ -8,6 +8,7 @@
 	<startPort type="uword">12000</startPort>
 	<netNum type="uword">4</netNum>
 	<appGroupId type="uword">4</appGroupId>
+	<appIndex type="uword" commit="第几个实例(从0开始,一个程序运行多个实例时,目前用于 gate)">0</appIndex>
 	<logFile type="string"></logFile>
 	<serializePackLib type="string">protobufSer</serializePackLib>
 	<logicModel type="string"></logicModel>
@@ -15,14 +16,15 @@
 	<level0 type="string">cppLevel0L</level0>
 	<netLib type="string">libeventSession</netLib>
 	<frameConfigFile type="string" commit="框架配置文件"></frameConfigFile>
+	<frameHome type="string" commit="框架的安装目录"></frameHome >
 	<logLevel type="word">2</logLevel>
 	<appNetType type="word">0</appNetType>
-	<detachServerS type="ubyte">1</detachServerS>
 	<clearTag type="bool">false</clearTag>
 	<srand type="bool">true</srand>
 	<dumpMsg type="bool">false</dumpMsg>
 	<allocDebug type="bool">false</allocDebug>
-	<delSaveTokenTime type="udword">50000</delSaveTokenTime >
+	<delSaveTokenTime type="udword" commit="删除token计算器时间间隔(单位毫秒)">30000</delSaveTokenTime >
 	<savePackTag type="udword">0</savePackTag>
 	<testTag type="udword">1234</testTag>
+	<dbgSleep type="uword">0</dbgSleep>
 </config>

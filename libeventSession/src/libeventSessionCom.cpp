@@ -126,18 +126,26 @@ packetHead*  libeventSessionCom:: afterReadBuff(udword nS)
 	if (nullptr == pack) {
 		myAssert (curIndexRead <= sizeof (netPacketHead));	
 		if (curIndexRead == sizeof (netPacketHead)) {
-			auto allFun = serverCom()->allocPackFun ();
-			pack = allFun(netHead.udwLength);
-			auto pN = P2NHead(pack);
-			*pN = netHead;
-			NSetNotOtherNetLoopSend(pN);
-			//nTrace (__FUNCTION__<<" read head msgId = "<<pN->uwMsgID<<" length = "<<pN->udwLength);
-			if (0 == netHead.udwLength) {
-				pRet = pack;
-				pack = nullptr;
-				//nTrace (__FUNCTION__<<" 000 msgId = "<<pN->uwMsgID);
+			ISession* rorwardSession = nullptr;
+			auto neetForwardFun = serverCom()->onRecHeadIsNeetForwardFun ();
+			if (neetForwardFun ) {
+				rorwardSession = neetForwardFun (&netHead);
 			}
-			curIndexRead = 0;
+			if (rorwardSession ) {
+				pack = nullptr;
+				curIndexRead = 0;
+			} else {
+				auto allFun = serverCom()->allocPackFun ();
+				pack = allFun(netHead.udwLength);
+				auto pN = P2NHead(pack);
+				*pN = netHead;
+				NSetNotOtherNetLoopSend(pN);
+				if (0 == netHead.udwLength) {
+					pRet = pack;
+					pack = nullptr;
+				}
+				curIndexRead = 0;
+			}
 		}
 	} else {
 		auto pN = P2NHead (pack);
@@ -233,3 +241,5 @@ void  libeventSessionCom::setId (SessionIDType va)
 {
     m_id = va;
 }
+
+

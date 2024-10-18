@@ -41,6 +41,20 @@ static int sRegMsg(loopHandleType handle, uword uwMsgId, procRpcPacketFunType pF
 	return nRet;
 }
 
+static procRpcPacketFunType sFindMsg(loopHandleType handle, uword uwMsgId)
+{
+	procRpcPacketFunType nRet = nullptr;
+	do 
+	{
+		auto& rMgr = tSingleton<workServerMgr>::single();
+		auto pTH = rMgr.getServer(handle);
+		if (pTH) {
+			nRet = pTH->findMsg(uwMsgId);
+		}
+	} while(0);
+	return nRet;
+}
+
 static int sAddComTimer(loopHandleType pThis, udword firstSetp, udword udwSetp,
 		ComTimerFun pF, void* pUsrData, udword userDataLen)
 {
@@ -122,16 +136,19 @@ int  workServerMgr:: initWorkServerMgr (int cArg, char** argS, int cDefArg, char
 			auto bR = upDir (homeDirPtr.get());
 			myAssert (bR);
 			rConfig.setHomeDir(homeDirPtr.get());
-			pWorkDir = rConfig.homeDir ();
 		}
-		std::string frameConfigFile = pWorkDir;
+		std::string frameConfigFile = rConfig.homeDir ();
 		auto frameConfig = rConfig.frameConfigFile ();
 		frameConfigFile += "/config/";
+		myMkdir (frameConfigFile.c_str());
 		frameConfigFile += frameConfig;
+		if (!isPathExit(frameConfigFile.c_str())) {
+			rConfig.dumpConfig (frameConfigFile.c_str());
+		}
 		rConfig.loadConfig (frameConfigFile.c_str());
 
 		auto logLevel = rConfig.logLevel ();
-		std::string strFile = pWorkDir;
+		std::string strFile = rConfig.homeDir ();
 		strFile += "/logs/";
 		myMkdir (strFile.c_str());
 		auto pLogFile = rConfig.logFile();
@@ -143,15 +160,32 @@ int  workServerMgr:: initWorkServerMgr (int cArg, char** argS, int cDefArg, char
 			break;
 		}
 		rInfo ("Loger init OK");
-
+		
 		nR = rConfig.procCmdArgS (cArg, argS);   /* 再次解析一遍命令行参数, 覆盖配置文件里的项,确保命令行参数的优先级最高  */
 		if (nR) {
 			nRet = 1;
 			mError("rConfig.procCmdArgS error nR = "<<nR);
 			break;
 		}
-
+		udword  sleepL = rConfig.dbgSleep ();
+		if (sleepL) {
+			mInfo("sleep "<<sleepL<<" second for debug");
+			std::this_thread::sleep_for(std::chrono::microseconds (sleepL * 1000 * 1000));
+			mInfo("sleep "<<sleepL<<" sleep for debug end, continue");
+		}
 		pWorkDir = rConfig.homeDir ();
+		workDirLen = 0;
+		if (pWorkDir) {
+			workDirLen = (int)(strlen(pWorkDir));
+		}
+		if (!workDirLen) {
+			std::unique_ptr<char[]>	homeDirPtr;
+			auto nR = getCurModelPath (homeDirPtr);
+			myAssert (0 == nR);
+			auto bR = upDir (homeDirPtr.get());
+			myAssert (bR);
+			rConfig.setHomeDir(homeDirPtr.get());
+		}
 		auto allocDebug = rConfig.allocDebug ();
 		if (allocDebug) {
 			allocPack = allocPackDebug;
@@ -179,6 +213,7 @@ int  workServerMgr:: initWorkServerMgr (int cArg, char** argS, int cDefArg, char
 		forLogic.fnAllocPack = allocPack; // sAllocPack; // info.fnAllocPack;
 		forLogic.fnFreePack = freePack; // sFreePack; //  info.fnFreePack;
 		forLogic.fnRegMsg = sRegMsg;
+		forLogic.fnFindMsg = sFindMsg;
 
 		forLogic.fnSendPackUp =  nullptr;
 		forLogic.fnSendPackToLoop =  nullptr;
@@ -194,9 +229,9 @@ int  workServerMgr:: initWorkServerMgr (int cArg, char** argS, int cDefArg, char
 		forLogic.toNetPack = nullptr;
 		forLogic.fnPushPackToServer = sPushPackToServer;
 
-		mInfo("workDir is : "<<pWorkDir);
+		mInfo("workDir is : "<<rConfig.homeDir ());
 
-		std::string strPath = pWorkDir;// workDir();
+		std::string strPath = rConfig.homeDir ();// workDir();
 		auto modelName = rConfig.modelName();
 		strPath += "/bin/";
 		strPath += modelName;

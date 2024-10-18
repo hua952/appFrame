@@ -128,7 +128,7 @@ void onLoopBegin	(serverIdType	fId)
 	auto &rMgr = tSingleton<)"<<strMgrClassName<<R"(>::single();
 	auto pS = rMgr.findServer(fId);
 	if (pS) {
-		pS->onLoopBegin	();
+		pS->onLoopBeginBase	();
 	}
 }
 
@@ -141,7 +141,7 @@ int onFrameLogic	(serverIdType	fId)
 		if (pS->willExit()) {
 			nRet = procPacketFunRetType_exitNow;
 		} else {
-			nRet = pS->onLoopFrame();
+			nRet = pS->onLoopFrameBase();
 		}
 	}
 	return nRet;
@@ -152,7 +152,7 @@ void onLoopEnd	(serverIdType	fId)
 	auto &rMgr = tSingleton<)"<<strMgrClassName<<R"(>::single();
 	auto pS = rMgr.findServer(fId);
 	if (pS) {
-		pS->onLoopEnd();
+		pS->onLoopEndBase();
 	}
 }
 
@@ -171,7 +171,7 @@ void  beforeUnload()
 }
 int   onRecPacket(serverIdType	fId, packetHead* pack)
 {
-	return tSingleton<appClientMWorkerMgr>::single().processOncePack (fId, pack);
+	return tSingleton<)"<<strMgrClassName<<R"(>::single().processOncePack (fId, pack);
 }
 )";
 	} while (0);

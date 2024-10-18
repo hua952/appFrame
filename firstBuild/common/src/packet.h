@@ -19,8 +19,8 @@ typedef struct _packetHead
 	struct _packetHead*    pNext;
 	struct _packetHead*    pPer;
 	uqword    pAsk;
-	udword    sessionID; /*   处理ret网络消息要用   */
-	uword    loopId;     /*   处理ret网络消息要用   */
+	udword    sessionID;
+	uword    loopId;
 	ubyte    Tag[2];
 }packetHead;
 

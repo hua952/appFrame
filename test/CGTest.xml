@@ -1,0 +1,66 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<servers>
+	<projectDir>C:/work/appFrameProject/project</projectDir>
+	<thirdPartyDir>C:/work/</thirdPartyDir>
+	<frameInstallPath>C:/work/appFrameInstall/</frameInstallPath>
+	<configDef>CGTestConfig.xml</configDef>
+	<defMsg file="cChess.xml"/>
+	<app >
+		<localTest appNetType="0">
+			<appArg>frameConfigFile=clientFrame.txt</appArg>
+			<appArg>logicConfigFile=clientLogicConf.txt</appArg>
+			<module>
+				<appClientM>
+					<server>
+						<chatTh sleepSetp="1" showFps="1" fpsSetp="40000">
+							<procRpc>
+								<manualList askType="ask"/>
+								<regret askType="ret"/>
+								<roomChannel askType="ret"/>
+								<roomChatTxt askType="ask"/>
+								<enterServer askType="ret"/>
+								<wateForGame askType="ret"/>
+							</procRpc>
+						</chatTh>
+						<netTh sleepSetp="1" showFps="1" fpsSetp="40000" route="1">
+							<procRpc>
+								<roomChannel askType="ask"/>
+							</procRpc>
+						</netTh>
+						<muTh sleepSetp="1" rearEnd="0" openNum="2" regRoute="0" showFps="1" fpsSetp="40000">
+							<procRpc>
+								<regret askType="ask"/>
+							</procRpc>
+						</muTh>
+						<appClientConTh mainLoop="1">
+							<procRpc>
+								<manualList askType="ret"/>
+							</procRpc>
+						</appClientConTh>
+					</server>
+				</appClientM>
+			</module>
+		</localTest>
+		<gate appNetType="1">
+			<appArg>frameConfigFile=gateFrame.txt</appArg>
+			<appArg>logicConfigFile=gateLogicConf.txt</appArg>
+			<module>
+				<appGateM>
+					<server>
+						<signleRun sleepSetp="1" showFps="1" fpsSetp="40000">
+							<procRpc>
+								<enterServer askType="ask"/>
+							</procRpc>
+						</signleRun>
+						<mutRun sleepSetp="1" openNum="2" showFps="1" fpsSetp="40000">
+							<procRpc>
+								<wateForGame askType="ask"/>
+							</procRpc>
+						</mutRun>
+					</server>
+				</appGateM>
+			</module>
+		</gate>
+	</app>
+</servers>
+

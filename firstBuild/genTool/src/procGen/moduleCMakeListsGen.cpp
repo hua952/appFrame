@@ -132,6 +132,7 @@ target_link_libraries(${prjName} PUBLIC
 	auto bH = rGlobalFile.haveServer ();
 	if (bH) {
 		os<<R"(defMsg
+		comTcpProNet
 	)";
 	}
 os<<R"(

@@ -230,7 +230,7 @@ int   xmlGlobalLoad:: perProc(rapidxml::xml_document<>& doc)
 					}
 				}
 			}
-			if (allAutoRun && appNameS.size() > 1) {
+			if (allAutoRun) {
 				std::string netServerName = appName;
 				netServerName += "ConTh";
 				auto it = serverNameS.find(netServerName);
@@ -1036,6 +1036,7 @@ int   xmlGlobalLoad:: onceServerLoad (rapidxml::xml_node<char>* pS,
 		}
 		ubyte  netType = rApp.netType ();
 		// bool bIsRoot = newServer->isRoot ();
+		/*
 		if (appNetType_gate == netType ) {
 			int rootRpcNum = 0;
 			auto ppRpc = getRpptRpc (rootRpcNum);
@@ -1048,7 +1049,7 @@ int   xmlGlobalLoad:: onceServerLoad (rapidxml::xml_node<char>* pS,
 				myAssert (inRet.second);
 			}
 		}
-		
+		*/	
 		if (appNetType_gate == netType || appNetType_server == netType) {
 			procRpcNode node;
 			node.retValue = "procPacketFunRetType_stopBroadcast"; /* 特殊情况单独处理 */

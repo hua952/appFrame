@@ -34,6 +34,8 @@ public:
 	void*     userData() override;
 	void      setUserData (void* pData, udword dataSize) override;
 	int       getAllConnector (ISession** ppRec, int recBuffNum) override;
+	void      setOnRecHeadIsNeetForwardFun (onRecHeadIsNeetForwardFT fun) override;
+
 	sessonMap&  getSessonMap();
 	serverSessonMap&  getServerSessonMap ();
 	struct event_base* getBase();
@@ -57,12 +59,14 @@ public:
     void  setOnWritePackFun (onWritePackT va);
 	allocPackFT  allocPackFun ();
 	freePackFT  freePackFun ();
+	onRecHeadIsNeetForwardFT  onRecHeadIsNeetForwardFun ();
 	// using userCallback = std::pair<void*, sigInfo>;
 private:
 	/*
 	freePackFT  m_freePackFun;
 	allocPackFT  m_allocPackFun;
 	*/
+	onRecHeadIsNeetForwardFT  m_onRecHeadIsNeetForwardFun{nullptr};
     onWritePackT  m_onWritePackFun;
 	cTimerMgr   m_timerMgr;
     connectMap  m_connectMap;

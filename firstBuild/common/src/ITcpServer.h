@@ -39,17 +39,17 @@ struct sigInfo
 	void* pUserData;
 };
 
+
+typedef ISession* (*onRecHeadIsNeetForwardFT) (netPacketHead* pHead);
 class ITcpServer
 {
 public:
-	/*
-	virtual int init (callbackS* pCallbackS, endPoint* pLister, udword listerNum,
-			endPoint* pConnector, udword conNum, sigInfo* pInfo, udword sigNum) = 0;*/
 	virtual int onLoopFrame () = 0;
 	virtual ISession* getSession (SessionIDType id) = 0;
 	virtual int       getAllConnector (ISession** ppRec, int recBuffNum) = 0;
 	virtual void*     userData() = 0;
 	virtual void      setUserData (void* pData, udword dataSize) = 0;
+	virtual void      setOnRecHeadIsNeetForwardFun (onRecHeadIsNeetForwardFT fun) = 0;
 };
 
 typedef ITcpServer* (*createTcpServerFT) (callbackS* pCallbackS, endPoint* pLister, udword listerNum,

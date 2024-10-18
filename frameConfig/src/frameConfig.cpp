@@ -9,13 +9,15 @@ frameConfig::frameConfig ()
 {
 	m_allocDebug = false;
 	m_appGroupId = 4;
+	m_appIndex = 0;
 	m_appNetType = 0;
 	m_clearTag = false;
-	m_delSaveTokenTime = 50000;
-	m_detachServerS = 1;
+	m_dbgSleep = 0;
+	m_delSaveTokenTime = 30000;
 	m_dumpMsg = false;
 	strCpy("", m_endPoint);
 	strCpy("", m_frameConfigFile);
+	strCpy("", m_frameHome);
 	strCpy("forClientIp:127.0.0.1*forServerIp:127.0.0.1*startPort:12000+forClientIp:127.0.0.1*forServerIp:127.0.0.1*startPort:22000", m_gateInfo);
 	strCpy("", m_homeDir);
 	strCpy("127.0.0.1", m_ip);
@@ -55,6 +57,16 @@ void  frameConfig::setAppGroupId (uword v)
 	m_appGroupId = v;
 }
 
+uword  frameConfig::appIndex ()
+{
+    return m_appIndex;
+}
+
+void  frameConfig::setAppIndex (uword v)
+{
+	m_appIndex = v;
+}
+
 word  frameConfig::appNetType ()
 {
     return m_appNetType;
@@ -75,6 +87,16 @@ void  frameConfig::setClearTag (bool v)
 	m_clearTag = v;
 }
 
+uword  frameConfig::dbgSleep ()
+{
+    return m_dbgSleep;
+}
+
+void  frameConfig::setDbgSleep (uword v)
+{
+	m_dbgSleep = v;
+}
+
 udword  frameConfig::delSaveTokenTime ()
 {
     return m_delSaveTokenTime;
@@ -83,16 +105,6 @@ udword  frameConfig::delSaveTokenTime ()
 void  frameConfig::setDelSaveTokenTime (udword v)
 {
 	m_delSaveTokenTime = v;
-}
-
-ubyte  frameConfig::detachServerS ()
-{
-    return m_detachServerS;
-}
-
-void  frameConfig::setDetachServerS (ubyte v)
-{
-	m_detachServerS = v;
 }
 
 bool  frameConfig::dumpMsg ()
@@ -123,6 +135,16 @@ const char*  frameConfig::frameConfigFile ()
 void  frameConfig::setFrameConfigFile (const char* v)
 {
 	strCpy(v, m_frameConfigFile);
+}
+
+const char*  frameConfig::frameHome ()
+{
+    return m_frameHome.get();
+}
+
+void  frameConfig::setFrameHome (const char* v)
+{
+	strCpy(v, m_frameHome);
 }
 
 const char*  frameConfig::gateInfo ()
@@ -312,32 +334,118 @@ int  frameConfig:: dumpConfig (const char* szFile)
 			nRet = 1;
 			break;
 		}
-		ofs<<R"(allocDebug=false)"<<std::endl;
-		ofs<<R"(appGroupId=4)"<<std::endl;
-		ofs<<R"(appNetType=0)"<<std::endl;
-		ofs<<R"(clearTag=false)"<<std::endl;
-		ofs<<R"(delSaveTokenTime=50000)"<<std::endl;
-		ofs<<R"(detachServerS=1)"<<std::endl;
-		ofs<<R"(dumpMsg=false)"<<std::endl;
-		ofs<<R"(endPoint=)"<<std::endl;
-		ofs<<R"(frameConfigFile=  ## 框架配置文件)"<<std::endl;
-		ofs<<R"(gateInfo=forClientIp:127.0.0.1*forServerIp:127.0.0.1*startPort:12000+forClientIp:127.0.0.1*forServerIp:127.0.0.1*startPort:22000  ## gate IP 等)"<<std::endl;
-		ofs<<R"(homeDir=)"<<std::endl;
-		ofs<<R"(ip=127.0.0.1)"<<std::endl;
-		ofs<<R"(level0=cppLevel0L)"<<std::endl;
-		ofs<<R"(logFile=)"<<std::endl;
-		ofs<<R"(logLevel=2)"<<std::endl;
-		ofs<<R"(logicModel=)"<<std::endl;
-		ofs<<R"(modelName=)"<<std::endl;
-		ofs<<R"(modelS=)"<<std::endl;
-		ofs<<R"(netLib=libeventSession)"<<std::endl;
-		ofs<<R"(netNum=4)"<<std::endl;
-		ofs<<R"(runWorkNum=  ## client进程及线程启动的数量)"<<std::endl;
-		ofs<<R"(savePackTag=0)"<<std::endl;
-		ofs<<R"(serializePackLib=protobufSer)"<<std::endl;
-		ofs<<R"(srand=true)"<<std::endl;
-		ofs<<R"(startPort=12000)"<<std::endl;
-		ofs<<R"(testTag=1234)"<<std::endl;
+		ofs<<"allocDebug="<<allocDebug()<<std::endl;
+		ofs<<"appGroupId="<<appGroupId()<<std::endl;
+		ofs<<"appIndex="<<appIndex()<<R"--(  ## 第几个实例(从0开始,一个程序运行多个实例时,目前用于 gate)   )--"<<std::endl;
+		ofs<<"appNetType="<<appNetType()<<std::endl;
+		ofs<<"clearTag="<<clearTag()<<std::endl;
+		ofs<<"dbgSleep="<<dbgSleep()<<std::endl;
+		ofs<<"delSaveTokenTime="<<delSaveTokenTime()<<R"--(  ## 删除token计算器时间间隔(单位毫秒)   )--"<<std::endl;
+		ofs<<"dumpMsg="<<dumpMsg()<<std::endl;
+	int nendPointLen = 0;
+	auto endPoint = this->endPoint();
+	if (endPoint) nendPointLen = strlen(endPoint);
+	std::string strTendPoint =R"("")";
+	if (nendPointLen) 
+		strTendPoint = endPoint;
+		ofs<<"endPoint="<<strTendPoint<<std::endl;
+	int nframeConfigFileLen = 0;
+	auto frameConfigFile = this->frameConfigFile();
+	if (frameConfigFile) nframeConfigFileLen = strlen(frameConfigFile);
+	std::string strTframeConfigFile =R"("")";
+	if (nframeConfigFileLen) 
+		strTframeConfigFile = frameConfigFile;
+		ofs<<"frameConfigFile="<<strTframeConfigFile<<R"--(  ## 框架配置文件   )--"<<std::endl;
+	int nframeHomeLen = 0;
+	auto frameHome = this->frameHome();
+	if (frameHome) nframeHomeLen = strlen(frameHome);
+	std::string strTframeHome =R"("")";
+	if (nframeHomeLen) 
+		strTframeHome = frameHome;
+		ofs<<"frameHome="<<strTframeHome<<R"--(  ## 框架的安装目录   )--"<<std::endl;
+	int ngateInfoLen = 0;
+	auto gateInfo = this->gateInfo();
+	if (gateInfo) ngateInfoLen = strlen(gateInfo);
+	std::string strTgateInfo =R"("")";
+	if (ngateInfoLen) 
+		strTgateInfo = gateInfo;
+		ofs<<"gateInfo="<<strTgateInfo<<R"--(  ## gate IP 等   )--"<<std::endl;
+	int nhomeDirLen = 0;
+	auto homeDir = this->homeDir();
+	if (homeDir) nhomeDirLen = strlen(homeDir);
+	std::string strThomeDir =R"("")";
+	if (nhomeDirLen) 
+		strThomeDir = homeDir;
+		ofs<<"homeDir="<<strThomeDir<<std::endl;
+	int nipLen = 0;
+	auto ip = this->ip();
+	if (ip) nipLen = strlen(ip);
+	std::string strTip =R"("")";
+	if (nipLen) 
+		strTip = ip;
+		ofs<<"ip="<<strTip<<std::endl;
+	int nlevel0Len = 0;
+	auto level0 = this->level0();
+	if (level0) nlevel0Len = strlen(level0);
+	std::string strTlevel0 =R"("")";
+	if (nlevel0Len) 
+		strTlevel0 = level0;
+		ofs<<"level0="<<strTlevel0<<std::endl;
+	int nlogFileLen = 0;
+	auto logFile = this->logFile();
+	if (logFile) nlogFileLen = strlen(logFile);
+	std::string strTlogFile =R"("")";
+	if (nlogFileLen) 
+		strTlogFile = logFile;
+		ofs<<"logFile="<<strTlogFile<<std::endl;
+		ofs<<"logLevel="<<logLevel()<<std::endl;
+	int nlogicModelLen = 0;
+	auto logicModel = this->logicModel();
+	if (logicModel) nlogicModelLen = strlen(logicModel);
+	std::string strTlogicModel =R"("")";
+	if (nlogicModelLen) 
+		strTlogicModel = logicModel;
+		ofs<<"logicModel="<<strTlogicModel<<std::endl;
+	int nmodelNameLen = 0;
+	auto modelName = this->modelName();
+	if (modelName) nmodelNameLen = strlen(modelName);
+	std::string strTmodelName =R"("")";
+	if (nmodelNameLen) 
+		strTmodelName = modelName;
+		ofs<<"modelName="<<strTmodelName<<std::endl;
+	int nmodelSLen = 0;
+	auto modelS = this->modelS();
+	if (modelS) nmodelSLen = strlen(modelS);
+	std::string strTmodelS =R"("")";
+	if (nmodelSLen) 
+		strTmodelS = modelS;
+		ofs<<"modelS="<<strTmodelS<<std::endl;
+	int nnetLibLen = 0;
+	auto netLib = this->netLib();
+	if (netLib) nnetLibLen = strlen(netLib);
+	std::string strTnetLib =R"("")";
+	if (nnetLibLen) 
+		strTnetLib = netLib;
+		ofs<<"netLib="<<strTnetLib<<std::endl;
+		ofs<<"netNum="<<netNum()<<std::endl;
+	int nrunWorkNumLen = 0;
+	auto runWorkNum = this->runWorkNum();
+	if (runWorkNum) nrunWorkNumLen = strlen(runWorkNum);
+	std::string strTrunWorkNum =R"("")";
+	if (nrunWorkNumLen) 
+		strTrunWorkNum = runWorkNum;
+		ofs<<"runWorkNum="<<strTrunWorkNum<<R"--(  ## client进程及线程启动的数量   )--"<<std::endl;
+		ofs<<"savePackTag="<<savePackTag()<<std::endl;
+	int nserializePackLibLen = 0;
+	auto serializePackLib = this->serializePackLib();
+	if (serializePackLib) nserializePackLibLen = strlen(serializePackLib);
+	std::string strTserializePackLib =R"("")";
+	if (nserializePackLibLen) 
+		strTserializePackLib = serializePackLib;
+		ofs<<"serializePackLib="<<strTserializePackLib<<std::endl;
+		ofs<<"srand="<<srand()<<std::endl;
+		ofs<<"startPort="<<startPort()<<std::endl;
+		ofs<<"testTag="<<testTag()<<std::endl;
 
 	} while (0);
 	return nRet;
@@ -404,6 +512,10 @@ int  frameConfig:: procCmdArgS (int nArg, char** argS)
 				ssV>>m_appGroupId;
 				continue;
 			}
+				if (strKey == "appIndex") {
+				ssV>>m_appIndex;
+				continue;
+			}
 				if (strKey == "appNetType") {
 				ssV>>m_appNetType;
 				continue;
@@ -413,12 +525,12 @@ int  frameConfig:: procCmdArgS (int nArg, char** argS)
 	m_clearTag = strVal == "true";
 				continue;
 			}
-				if (strKey == "delSaveTokenTime") {
-				ssV>>m_delSaveTokenTime;
+				if (strKey == "dbgSleep") {
+				ssV>>m_dbgSleep;
 				continue;
 			}
-				if (strKey == "detachServerS") {
-				m_detachServerS = (ubyte)(atoi(retS[1]));
+				if (strKey == "delSaveTokenTime") {
+				ssV>>m_delSaveTokenTime;
 				continue;
 			}
 				if (strKey == "dumpMsg") {
@@ -428,36 +540,65 @@ int  frameConfig:: procCmdArgS (int nArg, char** argS)
 			}
 				if (strKey == "endPoint") {
 				ssV>>strVal;
+				if('"'==strVal.c_str()[0] && '"'==strVal.c_str()[strVal.length()-1]) {
+					strVal = strVal.substr(1,strVal.length()-2);
+				}
 	strCpy(strVal.c_str(), m_endPoint);
 				continue;
 			}
 				if (strKey == "frameConfigFile") {
 				ssV>>strVal;
+				if('"'==strVal.c_str()[0] && '"'==strVal.c_str()[strVal.length()-1]) {
+					strVal = strVal.substr(1,strVal.length()-2);
+				}
 	strCpy(strVal.c_str(), m_frameConfigFile);
+				continue;
+			}
+				if (strKey == "frameHome") {
+				ssV>>strVal;
+				if('"'==strVal.c_str()[0] && '"'==strVal.c_str()[strVal.length()-1]) {
+					strVal = strVal.substr(1,strVal.length()-2);
+				}
+	strCpy(strVal.c_str(), m_frameHome);
 				continue;
 			}
 				if (strKey == "gateInfo") {
 				ssV>>strVal;
+				if('"'==strVal.c_str()[0] && '"'==strVal.c_str()[strVal.length()-1]) {
+					strVal = strVal.substr(1,strVal.length()-2);
+				}
 	strCpy(strVal.c_str(), m_gateInfo);
 				continue;
 			}
 				if (strKey == "homeDir") {
 				ssV>>strVal;
+				if('"'==strVal.c_str()[0] && '"'==strVal.c_str()[strVal.length()-1]) {
+					strVal = strVal.substr(1,strVal.length()-2);
+				}
 	strCpy(strVal.c_str(), m_homeDir);
 				continue;
 			}
 				if (strKey == "ip") {
 				ssV>>strVal;
+				if('"'==strVal.c_str()[0] && '"'==strVal.c_str()[strVal.length()-1]) {
+					strVal = strVal.substr(1,strVal.length()-2);
+				}
 	strCpy(strVal.c_str(), m_ip);
 				continue;
 			}
 				if (strKey == "level0") {
 				ssV>>strVal;
+				if('"'==strVal.c_str()[0] && '"'==strVal.c_str()[strVal.length()-1]) {
+					strVal = strVal.substr(1,strVal.length()-2);
+				}
 	strCpy(strVal.c_str(), m_level0);
 				continue;
 			}
 				if (strKey == "logFile") {
 				ssV>>strVal;
+				if('"'==strVal.c_str()[0] && '"'==strVal.c_str()[strVal.length()-1]) {
+					strVal = strVal.substr(1,strVal.length()-2);
+				}
 	strCpy(strVal.c_str(), m_logFile);
 				continue;
 			}
@@ -467,21 +608,33 @@ int  frameConfig:: procCmdArgS (int nArg, char** argS)
 			}
 				if (strKey == "logicModel") {
 				ssV>>strVal;
+				if('"'==strVal.c_str()[0] && '"'==strVal.c_str()[strVal.length()-1]) {
+					strVal = strVal.substr(1,strVal.length()-2);
+				}
 	strCpy(strVal.c_str(), m_logicModel);
 				continue;
 			}
 				if (strKey == "modelName") {
 				ssV>>strVal;
+				if('"'==strVal.c_str()[0] && '"'==strVal.c_str()[strVal.length()-1]) {
+					strVal = strVal.substr(1,strVal.length()-2);
+				}
 	strCpy(strVal.c_str(), m_modelName);
 				continue;
 			}
 				if (strKey == "modelS") {
 				ssV>>strVal;
+				if('"'==strVal.c_str()[0] && '"'==strVal.c_str()[strVal.length()-1]) {
+					strVal = strVal.substr(1,strVal.length()-2);
+				}
 	strCpy(strVal.c_str(), m_modelS);
 				continue;
 			}
 				if (strKey == "netLib") {
 				ssV>>strVal;
+				if('"'==strVal.c_str()[0] && '"'==strVal.c_str()[strVal.length()-1]) {
+					strVal = strVal.substr(1,strVal.length()-2);
+				}
 	strCpy(strVal.c_str(), m_netLib);
 				continue;
 			}
@@ -491,6 +644,9 @@ int  frameConfig:: procCmdArgS (int nArg, char** argS)
 			}
 				if (strKey == "runWorkNum") {
 				ssV>>strVal;
+				if('"'==strVal.c_str()[0] && '"'==strVal.c_str()[strVal.length()-1]) {
+					strVal = strVal.substr(1,strVal.length()-2);
+				}
 	strCpy(strVal.c_str(), m_runWorkNum);
 				continue;
 			}
@@ -500,6 +656,9 @@ int  frameConfig:: procCmdArgS (int nArg, char** argS)
 			}
 				if (strKey == "serializePackLib") {
 				ssV>>strVal;
+				if('"'==strVal.c_str()[0] && '"'==strVal.c_str()[strVal.length()-1]) {
+					strVal = strVal.substr(1,strVal.length()-2);
+				}
 	strCpy(strVal.c_str(), m_serializePackLib);
 				continue;
 			}

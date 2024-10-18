@@ -28,7 +28,10 @@ public:
 	ubyte  gateNodeNum ();
 	void  setGateNodeNum (ubyte v);
 	gateNode* gateNodes ();
+	ubyte  routeGroupId ();
+	void  setRouteGroupId (ubyte v);
 private:
+	ubyte  m_routeGroupId;
 	int procGateNode();
 	int procWorkers ();
 	ubyte  m_gateNodeNum{0};

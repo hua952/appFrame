@@ -40,6 +40,7 @@ typedef void (*logCallStackFT) (loopHandleType pThis, int nL);
 struct  serverNode;
 typedef int (*createLoopFT)(const char* szName, loopHandleType serId, serverNode* pNode, frameFunType funFrame, void* arg);
 typedef  int (*regMsgFT)(loopHandleType serverId, uword uwMsgId, procRpcPacketFunType pFun); // call by level 2
+typedef  procRpcPacketFunType (*findMsgFT)(loopHandleType serverId, uword uwMsgId); // call by level 2
 typedef  int (*removeMsgFT)(loopHandleType handle, uword uwMsgId); // call by level 2
 typedef  void (*popFromCallStackFT) (loopHandleType handle);
 typedef  int    (*regRpcFT) (msgIdType askId, msgIdType retId, serverIdType	askDefProcSer,
@@ -56,6 +57,7 @@ typedef struct _ForLogicFun
 	freePackFT		 fnFreePack; // Thread safety
 	createLoopFT	 fnCreateLoop;
 	regMsgFT		 fnRegMsg;
+	findMsgFT        fnFindMsg;
 	sendPackToLoopFT fnSendPackUp;// Thread safety
 	sendPackToLoopFT fnSendPackToLoop;// Thread safety
 	sendPackToLoopFT fnSendPackToLoopForChannel;// Thread safety

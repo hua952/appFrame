@@ -20,15 +20,15 @@ link_directories(
 
 add_library(${prjName} ${srcS})
 target_include_directories(${prjName} PUBLIC 
-							${firstBuildInc} 
 							${CMAKE_SOURCE_DIR}/frameConfig/src
+							${firstBuildInc} 
                            )
 
-target_link_libraries(${prjName} PUBLIC  ${libS})
+# target_link_libraries(${prjName} PUBLIC  ${libS})
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 
 install(TARGETS ${prjName} ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
-set(incS src/gLog.h  src/logicFrameConfig.h src/logicWorker.h src/logicWorkerMgr.h)
+set(incS src/gLog.h  src/logicFrameConfig.h src/logicWorker.h src/routeWorker.h src/internalRpc.h src/SingleConnectorWorker.h src/gateRouteWorker.h src/logicWorkerMgr.h)
 
 install(FILES ${incS} DESTINATION include/${myProjectName})

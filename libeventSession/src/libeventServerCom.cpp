@@ -341,6 +341,16 @@ void  libeventServerCom::setOnWritePackFun (onWritePackT  va)
     m_onWritePackFun = va;
 }
 
+onRecHeadIsNeetForwardFT   libeventServerCom:: onRecHeadIsNeetForwardFun ()
+{
+    return m_onRecHeadIsNeetForwardFun;
+}
+
+void  libeventServerCom:: setOnRecHeadIsNeetForwardFun (onRecHeadIsNeetForwardFT fun)
+{
+	m_onRecHeadIsNeetForwardFun = fun;
+}
+
 ITcpServer* createTcpServer (callbackS* pCallbackS, endPoint* pLister, udword listerNum,
 	endPoint* pConnector, udword conNum, sigInfo* pInfo, udword sigNum)
 {

@@ -497,6 +497,10 @@ int   moduleLogicServerGen:: genWorkerH (moduleGen& rMod, const char* serverName
 		}
 
 		auto& rData = rMod.moduleData ();
+		auto appName = rData.appName ();
+		auto& rAppMgr = tSingleton<appFileMgr>::single ();
+		auto  pApp = rAppMgr.findApp (appName);
+		myAssert (pApp);
 		auto pS = rData.findServer (serverName);
 		myAssert (pS);
 		std::set<std::string> procMsgSet;
@@ -514,6 +518,18 @@ int   moduleLogicServerGen:: genWorkerH (moduleGen& rMod, const char* serverName
 			procMsgSet.insert (pG);
 		}
 		std::stringstream ssInc;
+		std::string strWorker = "logicWorker";
+		bool route = pS->route ();
+		if (route) {
+			ubyte  netType = pApp->netType ();
+			if (appNetType_client == netType) {
+				strWorker = "SingleConnectorWorker";
+			} else if (appNetType_gate == netType) {
+				strWorker = "gateRouteWorker";
+			} else {
+			}
+		}
+
 		for (auto iter = procMsgSet.begin(); procMsgSet.end() != iter; ++iter) {
 			ssInc<<R"(#include ")"<<iter->c_str()<<R"(Rpc.h")"<<std::endl;
 			std::string strDir = strProcDir;
@@ -534,16 +550,16 @@ int   moduleLogicServerGen:: genWorkerH (moduleGen& rMod, const char* serverName
  			auto pDec = pMsg->msgFunDec ();
 			ssProc<<"    "<<pDec<<";"<<std::endl;
 		}
-
+		
 		fmt::print(os, R"(#ifndef _{serverName}_h__
 #define _{serverName}_h__
 
 #include <memory>
 #include "mainLoop.h"
-#include "logicWorker.h"
+#include "{pubClass}.h"
 {include}
 
-class {serverName}:public logicWorker
+class {serverName}:public {pubClass}
 {{
 public:
 	int onWorkerInitGen(ForLogicFun* pForLogic) override;
@@ -556,7 +572,7 @@ public:
 private:
 }};
 #endif
-)", fmt::arg("serverName", serverName), fmt::arg("include", ssInc.str().c_str()), fmt::arg("procMsg", ssProc.str().c_str()));
+)", fmt::arg("serverName", serverName), fmt::arg("include", ssInc.str().c_str()), fmt::arg("pubClass", strWorker.c_str()), fmt::arg("procMsg", ssProc.str().c_str()));
     } while (0);
     return nRet;
 }
@@ -723,18 +739,13 @@ int {modName}WorkerMgr::initLogicGen (int cArg, char** argS, ForLogicFun* pForLo
 		for (decltype (serverGroupNum) i = 0; i < serverGroupNum; i++) {{
 			{newServers}
 		}}
-		/*
-		auto allServerNum = this->allServerNum ();
-		for (decltype (allServerNum) i = 0; i < allServerNum; i++) {{
-			m_allServers[i]->onWorkerInitGen (pForLogic);
-		}}
-		*/
+
 		const uword maxPairNum = 0x2000;
 		const uword maxMsgNum = maxPairNum * 2;
 		auto tempBuf = std::make_unique<uword[]>(maxMsgNum);
 		auto nR = getDefProc (tempBuf.get(), maxMsgNum);
 		myAssert (nR < maxMsgNum);
-		nR = m_defProcMap.init((defProcMap::NodeType*)(tempBuf.get()), nR);
+		nR = m_defProcMap.init((defProcMap::NodeType*)(tempBuf.get()), nR/2);
 		myAssert (0 == nR);
 	}} while (0);
 	return nRet;
