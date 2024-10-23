@@ -20,8 +20,8 @@ typedef struct _packetHead
 	struct _packetHead*    pPer;
 	uqword    pAsk;
 	udword    sessionID;
-	uword    loopId;
-	ubyte    Tag[2];
+	ubyte     loopId;
+	ubyte    Tag[3];
 }packetHead;
 
 typedef packetHead* pPacketHead;

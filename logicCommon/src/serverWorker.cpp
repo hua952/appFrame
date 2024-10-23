@@ -1,0 +1,121 @@
+#include "serverWorker.h"
+#include "strFun.h"
+#include "logicFrameConfig.h"
+#include "logicWorkerMgr.h"
+#include "tSingleton.h"
+#include "myAssert.h"
+#include "gLog.h"
+#include "internalRpc.h"
+#include "internalMsgId.h"
+#include "internalMsgGroup.h"
+
+
+serverWorker:: serverWorker ()
+{
+}
+
+serverWorker:: ~serverWorker ()
+{
+}
+
+int  serverWorker:: onLoopBeginBase()
+{
+    int  nRet = 0;
+    do {
+		auto& rConfig = tSingleton<logicFrameConfig>::single ();
+		auto netNum = rConfig.netNum ();
+		myAssert (netNum);
+		m_connectors = std::make_unique<ISession*[]>(netNum);
+		auto endPoints = std::make_unique<endPoint []>(netNum);
+
+		auto serverGroup = this->serverGroup ();
+		auto serverGroupNum = rConfig.serverGroupNum ();
+		myAssert (serverGroup < serverGroupNum);
+		auto serverGroups = rConfig.serverGroups ();
+		auto& rRoutGroup = serverGroups[serverGroup];
+
+		auto serId = this->serverId();
+		myAssert (serId >= rRoutGroup.beginId);
+		auto serIndex = serId - rRoutGroup.beginId;
+		myAssert (serIndex < rRoutGroup.runNum);
+
+		auto gateNodeNum = rConfig.gateNodeNum ();
+		myAssert (serIndex < gateNodeNum);
+		auto gateNodes = rConfig.gateNodes ();
+		auto& gateNode = gateNodes[serIndex];
+		myAssert (gateNode.endPointNum <= 2);
+		auto& rEndPoint = gateNode.endPoints[gateNode.endPointNum - 1];  /*    服务器因连最后一个endpoint    */
+		for (decltype (netNum) i = 0; i < netNum; i++) {
+			strNCpy (endPoints[i].ip, sizeof(endPoints[i].ip), rEndPoint.first.get());
+			endPoints[i].port = rEndPoint.second + i;
+			endPoints[i].ppIConnector = &(m_connectors.get()[i]);
+			endPoints[i].userDataLen = 0;
+			endPoints[i].userData = nullptr;
+		}
+	
+		auto nR = initNet (nullptr, 0, endPoints.get(), netNum, nullptr, 0);
+		if (nR) {
+			gError("initNet error nR = "<<nR<<" endpoint[0] = "<<endPoints[0].ip<<" : "<<endPoints[0].port);
+			nRet = 1;
+			break;
+		}
+		for (decltype (netNum) i = 0; i < netNum; i++) {
+			regAppRouteAskMsg ask;
+			auto pAsk = ask.pop();
+			auto pN = P2NHead(pAsk);
+			auto pU =(regAppRouteAsk*)N2User(pN);
+			pU->m_appGrupId = rConfig.appGroupId ();
+			sendPacket (pAsk, rConfig.gateAppGroupId (), rConfig.gateRouteServerGroupId());
+		}
+		nR = logicWorker:: onLoopBeginBase();
+		if (nR) {
+			nRet = 2;
+			break;
+		}
+    } while (0);
+    return nRet;
+}
+
+int  serverWorker:: sendPackToRemoteAskProc(packetHead* pPack, sendPackToRemoteRet& rRet)
+{
+    int  nRet = 0;
+    do {
+		auto& rConfig = tSingleton<logicFrameConfig>::single ();
+		auto netNum = rConfig.netNum ();
+		auto netI = 0;
+		if (netNum > 1) {
+			netI = rand() % netNum;
+		}
+		auto pS = m_connectors[netI];
+		pS->send (pPack);
+		rRet.m_result = 0;
+    } while (0);
+    return nRet;
+}
+
+
+static int regAppRouteRetProcFun (pPacketHead pAsk, pPacketHead& pRet, procPacketArg* pArg)
+{
+	int nRet = procPacketFunRetType_del;
+	gInfo(" rec  regAppRouteRet ");
+	return nRet;
+}
+
+int   serverWorker:: recPacketProcFun (ForLogicFun* pForLogic)
+{
+    int   nRet = 0;
+    do {
+		auto nR = routeWorker::recPacketProcFun (pForLogic);
+		if (nR) {
+			nRet = 1;
+			break;
+		}
+		auto& sMgr = logicWorkerMgr::getMgr();
+		auto fnRegMsg = sMgr.forLogicFun()->fnRegMsg;
+		fnRegMsg (serverId (), internal2FullMsg(internalMsgId_regAppRouteRet), regAppRouteRetProcFun);
+    } while (0);
+    return nRet;
+}
+
+
+

@@ -34,8 +34,8 @@ public:
 	void*     userData() override;
 	void      setUserData (void* pData, udword dataSize) override;
 	int       getAllConnector (ISession** ppRec, int recBuffNum) override;
-	void      setOnRecHeadIsNeetForwardFun (onRecHeadIsNeetForwardFT fun) override;
-
+	void      setAttr(const char* key, const char* value) override;
+	const char*  getAttr(const char* key) override;
 	sessonMap&  getSessonMap();
 	serverSessonMap&  getServerSessonMap ();
 	struct event_base* getBase();
@@ -59,14 +59,9 @@ public:
     void  setOnWritePackFun (onWritePackT va);
 	allocPackFT  allocPackFun ();
 	freePackFT  freePackFun ();
-	onRecHeadIsNeetForwardFT  onRecHeadIsNeetForwardFun ();
-	// using userCallback = std::pair<void*, sigInfo>;
+	onRecHeadIsNeetForwardT  onRecHeadIsNeetForwardFun ();
 private:
-	/*
-	freePackFT  m_freePackFun;
-	allocPackFT  m_allocPackFun;
-	*/
-	onRecHeadIsNeetForwardFT  m_onRecHeadIsNeetForwardFun{nullptr};
+	onRecHeadIsNeetForwardT  m_onRecHeadIsNeetForwardFun;
     onWritePackT  m_onWritePackFun;
 	cTimerMgr   m_timerMgr;
     connectMap  m_connectMap;
@@ -79,13 +74,9 @@ private:
 	serverSessonMap     m_serverSessonMap;
 	struct event_base* m_base;
 	std::unique_ptr <char[]> m_userData;
-	// void*				m_userData;
-	//netMsgFunMap   m_netMsgFunMap;
 	std::unique_ptr<libeventListener[]> m_listerS;
-	//std::unique_ptr<libeventConnector[]> m_connectorS;
 	std::unique_ptr<sigInfo[]>  m_sigInfo;
 	udword    m_listerNum;
-	//udword    m_connectorNum;
 	udword    m_sigInfoNum;
 };
 #endif

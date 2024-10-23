@@ -105,9 +105,9 @@ int  routeWorker:: sendPackToRemoteAskProc(packetHead* pPack, sendPackToRemoteRe
     return nRet;
 }
 
-int routeWorker:: processNetPackFun(ISession* session, packetHead* pack)
+int routeWorker::processNetPackFun(ISession* session, packetHead* pack)
 {
-    int nRet = 0;
+    int nRet = procPacketFunRetType_del;
     do {
 		auto& rConfig = tSingleton<logicFrameConfig>::single ();
 		auto& sMgr = logicWorkerMgr::getMgr();
@@ -143,6 +143,7 @@ int  routeWorker:: localProcessNetPackFun(ISession* session, packetHead* pack, b
     do {
 		bProc = false;
 		auto& rConfig = tSingleton<logicFrameConfig>::single ();
+		auto& sMgr = logicWorkerMgr::getMgr();
 		auto appGroupId = rConfig.appGroupId ();
 		auto pN = P2NHead(pack);
 		auto objAppG = pN->ubyDesServId;
@@ -159,10 +160,13 @@ int  routeWorker:: localProcessNetPackFun(ISession* session, packetHead* pack, b
 
 			if (serverGroup == objServerGroup) {
 				/*   发给路由线程的就本线程处理了, 本线程就是路由线程  */
-				auto& sMgr = logicWorkerMgr::getMgr();
 				sMgr.forLogicFun()->fnPushPackToServer (serverId(), pAsk);
 			} else {
-				pushPacketToLocalServer (pAsk, (ubyte)(pN->ubyDesServId));
+				if (NIsRet(pN)) {
+					sMgr.forLogicFun()->fnPushPackToServer ((ubyte)(pN->ubyDesServId), pAsk);
+				} else {
+					pushPacketToLocalServer (pAsk, (ubyte)(pN->ubyDesServId));
+				}
 			}
 			nRet = procPacketFunRetType_doNotDel;
 		}

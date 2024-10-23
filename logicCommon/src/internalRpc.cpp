@@ -50,10 +50,6 @@ recRemotePackForYouAskMsg ::recRemotePackForYouAskMsg(packetHead* p):CMsgBase(p)
 
 regAppRouteAskMsg ::regAppRouteAskMsg()
 {
-}
-
-regAppRouteAskMsg ::regAppRouteAskMsg (packetHead* p)
-{
 	auto &smgr = logicWorkerMgr::getMgr ();
 	m_pPacket = (packetHead*)smgr.forLogicFun ()->fnAllocPack (sizeof(regAppRouteAsk));
 	netPacketHead* pN = P2NHead(m_pPacket);
@@ -61,15 +57,20 @@ regAppRouteAskMsg ::regAppRouteAskMsg (packetHead* p)
 	pN->uwMsgID = internal2FullMsg(internalMsgId_regAppRouteAsk);
 }
 
-regAppRouteRetMsg ::regAppRouteRetMsg()
+regAppRouteAskMsg ::regAppRouteAskMsg (packetHead* p):CMsgBase(p)
 {
 }
 
-regAppRouteRetMsg ::regAppRouteRetMsg (packetHead* p)
+regAppRouteRetMsg ::regAppRouteRetMsg()
 {
 	auto &smgr = logicWorkerMgr::getMgr ();
 	m_pPacket = (packetHead*)smgr.forLogicFun ()->fnAllocPack (sizeof(regAppRouteRet));
 	netPacketHead* pN = P2NHead(m_pPacket);
 	NSetAddSer(pN);
 	pN->uwMsgID = internal2FullMsg(internalMsgId_regAppRouteRet);
+	NSetRet(pN);
+}
+
+regAppRouteRetMsg ::regAppRouteRetMsg (packetHead* p):CMsgBase(p)
+{
 }

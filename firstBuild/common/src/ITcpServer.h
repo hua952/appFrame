@@ -20,6 +20,7 @@ typedef void (*onConnectT)(ISession* session, void* userData);
 typedef void (*onCloseT)(ISession* session);
 typedef int (*onProcPackT)(ISession* session, packetHead* packet);
 typedef void (*onWritePackT)(ISession* session, packetHead* packet);
+typedef ISession* (*onRecHeadIsNeetForwardT)(ISession* session, netPacketHead* packet);
 
 struct callbackS
 {
@@ -28,6 +29,7 @@ struct callbackS
 	onConnectT			connectFun;
 	onCloseT			closeFun;
 	onWritePackT        onWritePackFun;
+	onRecHeadIsNeetForwardT  onRecHeadIsNeetForwardFun;
 };
 
 // typedef void (*event_callback_FN)(intptr_t, short, void *);
@@ -40,7 +42,6 @@ struct sigInfo
 };
 
 
-typedef ISession* (*onRecHeadIsNeetForwardFT) (netPacketHead* pHead);
 class ITcpServer
 {
 public:
@@ -49,7 +50,8 @@ public:
 	virtual int       getAllConnector (ISession** ppRec, int recBuffNum) = 0;
 	virtual void*     userData() = 0;
 	virtual void      setUserData (void* pData, udword dataSize) = 0;
-	virtual void      setOnRecHeadIsNeetForwardFun (onRecHeadIsNeetForwardFT fun) = 0;
+	virtual const char*  getAttr(const char* key) = 0;
+	virtual void      setAttr(const char* key, const char* value) = 0;
 };
 
 typedef ITcpServer* (*createTcpServerFT) (callbackS* pCallbackS, endPoint* pLister, udword listerNum,

@@ -58,6 +58,13 @@ static void sOnWritePack(ISession* session, packetHead* pack)
 	pU->onWritePack (session, pack);
 }
 
+static ISession* sOnRecHeadIsNeetForward(ISession* session, netPacketHead* pN)
+{
+	auto pITcp = session->getServer ();
+	auto pU = (comTcpNet*)(*(PVoid*)(pITcp->userData()));
+	return pU->onRecHeadIsNeetForward(session, pN);
+}
+
 int   comTcpNet:: initNet (endPoint* pLister,
 		udword listerNum, endPoint* pConnector, udword conNum,
 		sigInfo* pInfo, udword sigNum)
@@ -75,6 +82,7 @@ int   comTcpNet:: initNet (endPoint* pLister,
 		cb.connectFun = sOnConnect;
 		cb.closeFun = sOnClose;
 		cb.onWritePackFun = sOnWritePack;
+		cb.onRecHeadIsNeetForwardFun = sOnRecHeadIsNeetForward;
 		endPoint* pEDS = nullptr;
 		auto endPointNum = listerNum + conNum;
 
@@ -215,6 +223,14 @@ ISession*  comTcpNet:: getSession (SessionIDType id)
     do {
 		auto pSer = tcpServer ();
 		return pSer->getSession (id);
+    } while (0);
+    return nRet;
+}
+
+ISession*  comTcpNet:: onRecHeadIsNeetForward(ISession* session, netPacketHead* pN)
+{
+    ISession*  nRet = nullptr;
+    do {
     } while (0);
     return nRet;
 }

@@ -101,6 +101,7 @@ const char*  exeExtName ();
 bool  upDir (char* szPath);
 
 std::ostream& operator << (std::ostream& os, const packetHead& pack);
+std::ostream& operator << (std::ostream& os, const netPacketHead& pack);
 
 #define SD(p) {delete p;p=nullptr;}
 #define SDA(p) {delete[]p;p=nullptr;}

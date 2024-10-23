@@ -142,6 +142,16 @@ int  appGen:: batFileGen (appFile& rApp)
 		}
 		{
 			std::stringstream ts;
+			ts<<"gateAppGroupId="<<rGlobalFile.gateAppGroupId();
+			rMainArgS.push_back(ts.str());
+		}
+		{
+			std::stringstream ts;
+			ts<<"gateRouteServerGroupId="<<rGlobalFile.gateRouteServerGroupId();
+			rMainArgS.push_back(ts.str());
+		}
+		{
+			std::stringstream ts;
 			uword uwT = rApp.netType ();
 			ts<<"appNetType="<<uwT;
 			rMainArgS.push_back(ts.str());

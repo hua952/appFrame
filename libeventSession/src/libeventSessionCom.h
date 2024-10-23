@@ -24,7 +24,7 @@ public:
 	SessionState state() override;
 	void  setState (SessionState s);
     int send(packetHead* pack) override;
-    //virtual int close() = 0;
+    virtual int close() override;
 	void*			 userData () override;
 	void			 setUserData(void* pData, int len) override;
 	SessionIDType id() override;

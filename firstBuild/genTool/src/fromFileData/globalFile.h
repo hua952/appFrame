@@ -49,7 +49,12 @@ public:
 	void  setXmlDir (const char* v);
 	uword  netNum ();
 	void  setNetNum (uword v);
+	uword  gateAppGroupId ();
+	void  setGateAppGroupId (uword v);
+	uword  gateRouteServerGroupId ();
+	void  setGateRouteServerGroupId (uword v);
 private:
+	uword  m_gateRouteServerGroupId;
 	std::unique_ptr <char[]>  m_xmlDir;
 	std::unique_ptr <char[]>  m_configClassName;
 	std::unique_ptr <char[]>  m_projectDir;
@@ -67,6 +72,7 @@ private:
 	std::unique_ptr <char[]>  m_depIncludeHome;
 	std::unique_ptr <char[]>  m_depLibHome;
 	uword  m_netNum;
+	uword  m_gateAppGroupId;
 	protoDataTypeMap  m_protoDataTypeS;
 	endPointGlobalMap  m_endPointGlobalS;
 	msgFileV  m_msgFileS;

@@ -126,16 +126,13 @@ ISession* libeventServerCom::getSession (SessionIDType id)
 	return getLibeventSessionCom (id);
 }
 
-typedef std::pair<libeventServerCom*, SessionIDType> forConInfo;
 static bool sConnectComTimerFun(void* p)
 {
 	bool bRet = false;
 	auto& info = *((forConInfo*)(p));
-	//nTrace (__FUNCTION__<<" info = "<<p);
 	auto& rServer = *(info.first);
 	auto& rConMap = rServer.getConnectMap ();
 	auto it = rConMap.find (info.second);
-	//nTrace (__FUNCTION__<<" 0000 ");
 	if (rConMap.end () == it) {
 		nTrace ("can'find connector");
 	} else {
@@ -144,6 +141,9 @@ static bool sConnectComTimerFun(void* p)
 		if (SessionState_waitCon == sta) {
 			auto nRet = pL->connect();
 			if (0 == nRet) {
+				auto& rMap = rServer.getSessonMap ();
+				auto id = pL->id();
+				rMap[id] = pL;
 				auto conFun = rServer.connectFun ();
 				auto pU = pL->userData ();
 				auto token = (uqword*)pU;
@@ -158,7 +158,6 @@ static bool sConnectComTimerFun(void* p)
 			nTrace ("connect can not state error");
 		}
 	}
-	//nTrace (__FUNCTION__<<" 5555");
 	return bRet;
 }
 
@@ -186,7 +185,7 @@ int libeventServerCom::init (callbackS* pCallbackS, endPoint* pLister, udword li
 	setCloseFun (pCallbackS->closeFun);
 	setConnectFun (pCallbackS->connectFun);
 	setOnWritePackFun (pCallbackS->onWritePackFun);
-
+	m_onRecHeadIsNeetForwardFun = pCallbackS->onRecHeadIsNeetForwardFun;
 	m_procPackfun = pCallbackS->procPackfun;
 	if (listerNum > 0) {
 		m_listerS = std::make_unique<libeventListener[]> (listerNum);
@@ -198,7 +197,6 @@ int libeventServerCom::init (callbackS* pCallbackS, endPoint* pLister, udword li
 		}
 	}
 	if (conNum > 0) {
-		auto& rConMap = getConnectMap ();
 		for (udword i = 0; i < conNum; i++) {
 			auto pCon = std::make_shared<libeventConnector> ();
 			auto id = nextSessionId ();
@@ -212,7 +210,7 @@ int libeventServerCom::init (callbackS* pCallbackS, endPoint* pLister, udword li
 			}
 			auto& rMap = getSessonMap ();
 			auto& rConMap = getConnectMap ();
-				rMap[id] = pCon.get();// &rSC;
+				// rMap[id] = pCon.get();// &rSC;
 				rConMap [id] = pCon;
 				forConInfo info;
 				info.first = this;
@@ -234,6 +232,18 @@ int libeventServerCom::init (callbackS* pCallbackS, endPoint* pLister, udword li
 	}
 	m_listerNum = listerNum;
 	return nRet;
+}
+
+void      libeventServerCom::setAttr(const char* key, const char* value)
+{
+}
+
+const char*  libeventServerCom::getAttr(const char* key)
+{
+	const char* ret = nullptr;
+	do {
+	} while(0);
+	return ret;
 }
 
 cTimerMgr&  libeventServerCom::   getTimerMgr ()
@@ -277,10 +287,7 @@ int libeventServerCom::closeSession (SessionIDType   id)
 			nWarn ("connector not find id = "<<id);
 		} else {
 			auto rSC = ite->second.get ();
-			auto bev = rSC->getBev ();
-			rSC->setBev (nullptr);
-			bufferevent_free(bev);
-			rConMap.erase (ite);
+			rSC->onOffline();
 		}
 	} else {
 		auto& rSC = *(iter->second.get());
@@ -341,16 +348,6 @@ void  libeventServerCom::setOnWritePackFun (onWritePackT  va)
     m_onWritePackFun = va;
 }
 
-onRecHeadIsNeetForwardFT   libeventServerCom:: onRecHeadIsNeetForwardFun ()
-{
-    return m_onRecHeadIsNeetForwardFun;
-}
-
-void  libeventServerCom:: setOnRecHeadIsNeetForwardFun (onRecHeadIsNeetForwardFT fun)
-{
-	m_onRecHeadIsNeetForwardFun = fun;
-}
-
 ITcpServer* createTcpServer (callbackS* pCallbackS, endPoint* pLister, udword listerNum,
 	endPoint* pConnector, udword conNum, sigInfo* pInfo, udword sigNum)
 {
@@ -366,5 +363,10 @@ ITcpServer* createTcpServer (callbackS* pCallbackS, endPoint* pLister, udword li
 void  delTcpServer (ITcpServer* pServer)
 {
 	delete pServer;
+}
+
+onRecHeadIsNeetForwardT   libeventServerCom:: onRecHeadIsNeetForwardFun ()
+{
+	return m_onRecHeadIsNeetForwardFun;
 }
 

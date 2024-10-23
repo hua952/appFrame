@@ -29,6 +29,6 @@ SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 
 install(TARGETS ${prjName} ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
-set(incS src/gLog.h  src/logicFrameConfig.h src/logicWorker.h src/routeWorker.h src/internalRpc.h src/SingleConnectorWorker.h src/gateRouteWorker.h src/logicWorkerMgr.h)
+set(incS src/gLog.h  src/logicFrameConfig.h src/logicWorker.h src/routeWorker.h src/internalRpc.h src/SingleConnectorWorker.h src/gateRouteWorker.h src/serverWorker.h src/logicWorkerMgr.h)
 
 install(FILES ${incS} DESTINATION include/${myProjectName})

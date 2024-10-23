@@ -129,7 +129,7 @@ packetHead*  libeventSessionCom:: afterReadBuff(udword nS)
 			ISession* rorwardSession = nullptr;
 			auto neetForwardFun = serverCom()->onRecHeadIsNeetForwardFun ();
 			if (neetForwardFun ) {
-				rorwardSession = neetForwardFun (&netHead);
+				rorwardSession = neetForwardFun (this, &netHead);
 			}
 			if (rorwardSession ) {
 				pack = nullptr;
@@ -242,4 +242,14 @@ void  libeventSessionCom::setId (SessionIDType va)
     m_id = va;
 }
 
+int  libeventSessionCom:: close()
+{
+	int  nRet = 0;
+	do {
+		auto nId = id ();
+		auto pServer = serverCom ();
+		return pServer->closeSession (nId);
+	} while (0);
+	return nRet;
+}
 

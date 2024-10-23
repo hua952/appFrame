@@ -66,7 +66,7 @@ int   logicWorker:: sendPacket (packetHead* pPack, loopHandleType appGroupId, lo
 		} else {
 			auto objId = c_emptyLocalServerId;
 			auto routeGroupId = rConfig.routeGroupId ();
-			if (c_emptyLoopHandle == pPack->loopId) {
+			if (c_emptyLocalServerId == (ubyte)(pPack->loopId)) {
 				auto& routeGroup= rConfig.serverGroups ()[routeGroupId];
 				ubyte ubyI = 0;
 				if (routeGroup.runNum) {
@@ -331,7 +331,8 @@ int   logicWorker:: onRecRemotePackNtf (packetHead* pPack)
 		auto procFun = fnFindMsg(serverId(), pN->uwMsgID);
 		procPacketArg arg;
 		arg.handle = serverId ();
-		if (!fnFindMsg) {
+		if (!procFun) {
+			gWarn("can not find proc fun msgID is : "<<pN->uwMsgID);
 			break;
 		}
 
@@ -357,8 +358,13 @@ int   logicWorker:: onRecRemotePackNtf (packetHead* pPack)
 
 				pAsk->loopId = serverId ();
 				auto pAskN = P2NHead(pAsk);
-				pAskN->ubySrcServId = serverId ();
-				pAskN->ubyDesServId = rConfig.routeGroupId ();
+				pAskN->ubySrcServId = rConfig.appGroupId ();
+				pAskN->ubySrcServId <<=8;
+				pAskN->ubySrcServId += serverId ();
+
+				pAskN->ubyDesServId = rConfig.appGroupId ();
+				pAskN->ubyDesServId <<=8;
+				pAskN->ubyDesServId += rConfig.routeGroupId ();
 				forLogicFun->fnPushPackToServer(pPack->loopId, pAsk);
 			}
 		}
@@ -409,5 +415,10 @@ void   logicWorker:: delSendPack (NetTokenType  token)
 			m_tokenMap.erase(it);
 		}
     } while (0);
+}
+
+NetTokenType   logicWorker:: newToken()
+{
+    return logicWorkerMgr::getMgr().forLogicFun()->fnNextToken (serverId());
 }
 

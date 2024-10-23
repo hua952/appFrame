@@ -24,6 +24,7 @@ public:
 	virtual	void onConnect(ISession* session, void* userData);
 	virtual	void onClose(ISession* session);
 	virtual	void onWritePack(ISession* session, packetHead* pack);
+	virtual	ISession* onRecHeadIsNeetForward(ISession* session, netPacketHead* pN);
 
 	ITcpServer*  tcpServer ();
 	void  setTcpServer (ITcpServer* v);

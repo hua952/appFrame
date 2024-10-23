@@ -120,8 +120,8 @@ static void event_cb_con(struct bufferevent *bev, short event, void *arg)
 	} else if (event & BEV_EVENT_ERROR) {
         nError("some other error");
 	}
-	//pConnector->close();
-	pConnector->setState (SessionState_Offline);
+	pConnector->close();
+	// pConnector->setState (SessionState_Offline);
 }
 
 int    libeventConnector::connect()
@@ -147,6 +147,52 @@ int    libeventConnector::connect()
 	} while (0);
 	return nRet;
 }
+
+static bool sConnectComTimerFun(void* p)
+{
+	bool bRet = false;
+	auto& info = *((forConInfo*)(p));
+	auto& rServer = *(info.first);
+	auto& rConMap = rServer.getConnectMap ();
+	auto it = rConMap.find (info.second);
+	if (rConMap.end () == it) {
+		nTrace ("can'find connector");
+	} else {
+		auto pL = it->second.get();
+		auto sta = pL->state ();
+		if (SessionState_Offline == sta) {
+			auto nRet = pL->connect();
+			if (0 == nRet) {
+				auto& rMap = rServer.getSessonMap ();
+				auto id = pL->id();
+				rMap[id] = pL;
+				pL->setState (SessionState_Online);
+				pL->trySend();
+			} else {
+				nRet = true;
+			}
+		} else {
+			nTrace ("connect can not state error");
+		}
+	}
+	return bRet;
+}
+
+void   libeventConnector:: onOffline()
+{
+    do {
+		bufferevent_free(bev);
+		bev = nullptr;
+		setState (SessionState_Offline);
+		auto serverCom = this->serverCom ();
+		forConInfo info;
+		info.first = serverCom;
+		info.second = id();
+		auto& rTimeMgr = serverCom->getTimerMgr ();
+		rTimeMgr.addComTimer (serverCom->c_waitConTime, sConnectComTimerFun, &info, sizeof (info));
+    } while (0);
+}
+
 /*
 uqword  libeventConnector::  userData ()
 {
@@ -171,13 +217,13 @@ int   libeventConnector:: init(libeventServerCom* pServer, const char* ip, uword
 	return nRet;
 }
 
+/*
 int libeventConnector::close()
 {
 	auto nId = id ();
 	auto pServer = serverCom ();
 	return pServer->closeSession (nId);
 }
-/*
 libeventServerCom*   libeventConnector:: server ()
 {
     return m_server;

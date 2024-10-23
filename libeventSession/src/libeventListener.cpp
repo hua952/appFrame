@@ -95,7 +95,8 @@ void event_cb(struct bufferevent *bev, short event, void *arg)
         nError("some other error re = {}"<<EVUTIL_SOCKET_ERROR());
 	}
 	auto pSS = (libeventServerSession*) arg;
-	pSS->setState (SessionState_Offline);
+	// pSS->setState (SessionState_Offline);
+	pSS->close();
 }
 
 static void accept_cb(intptr_t fd, short events, void* arg)

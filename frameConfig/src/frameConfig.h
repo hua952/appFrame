@@ -32,8 +32,12 @@ public:
   void  setFrameConfigFile (const char* v);
   const char*  frameHome ();
   void  setFrameHome (const char* v);
+  uword  gateAppGroupId ();
+  void  setGateAppGroupId (uword v);
   const char*  gateInfo ();
   void  setGateInfo (const char* v);
+  uword  gateRouteServerGroupId ();
+  void  setGateRouteServerGroupId (uword v);
   const char*  homeDir ();
   void  setHomeDir (const char* v);
   const char*  ip ();
@@ -78,7 +82,9 @@ private:
   std::unique_ptr <char[]>  m_endPoint;
   std::unique_ptr <char[]>  m_frameConfigFile;
   std::unique_ptr <char[]>  m_frameHome;
+  uword  m_gateAppGroupId;
   std::unique_ptr <char[]>  m_gateInfo;
+  uword  m_gateRouteServerGroupId;
   std::unique_ptr <char[]>  m_homeDir;
   std::unique_ptr <char[]>  m_ip;
   std::unique_ptr <char[]>  m_level0;

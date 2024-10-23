@@ -527,6 +527,7 @@ int   moduleLogicServerGen:: genWorkerH (moduleGen& rMod, const char* serverName
 			} else if (appNetType_gate == netType) {
 				strWorker = "gateRouteWorker";
 			} else {
+				strWorker = "serverWorker";
 			}
 		}
 

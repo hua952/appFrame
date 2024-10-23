@@ -79,6 +79,10 @@ enum appTmpID
 			// appTem<<"    appTmpId_"<<rApp.appName()<<" = "<<appIndex++<<","<<std::endl;
 			rApp.setAppGroupIdInt (appIndex);
 			appTem<<rApp.appGroupId()<<" = "<<appIndex<<","<<std::endl;
+
+			if (appNetType_gate == netType) {
+				rGlobal.setGateAppGroupId ((uword)appIndex);
+			}
 			appIndex++;
 
 			std::stringstream appThTem;
@@ -151,6 +155,9 @@ enum appTmpID
 					}
 					runSS<<tmpId<<"*"<<runNum<<"*"<<autoRun<<"*"<<pRouteServer->sleepSetp()<<"+routeWorker:"<<tmpId;
 					pRouteServer->setServerGroupId (tmpId);
+					if (appNetType_gate == netType) {
+						rGlobal.setGateRouteServerGroupId (tmpId);
+					}
 				}
 				rApp.setRunWorkNum (runSS.str().c_str());
 			}

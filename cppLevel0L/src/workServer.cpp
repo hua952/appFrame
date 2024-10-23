@@ -160,7 +160,7 @@ int workServer::processOncePack(packetHead* pPack)
 				if (pSendServer) {
 					pSendServer->pushPack (pRet);
 				} else {
-					mWarn("can not find SendServer id : "<<pPack->loopId);
+					mWarn("can not find SendServer id : "<<(int)(pPack->loopId));
 				}
 			}
 		}

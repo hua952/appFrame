@@ -243,5 +243,39 @@
 					<result dataType="udword" />
 				</ret>
 			</localMult>
+			<BackendToGateSin>
+				<ask>
+					<reque dataType="udword" />
+					<member dataType="ubyte" length="64" haveSize="1"/>
+				</ask>
+				<ret>
+					<result dataType="udword" />
+				</ret>
+			</BackendToGateSin>
+			<BackendToGateMut>
+				<ask>
+					<reque dataType="udword" />
+					<member dataType="ubyte" length="64" haveSize="1"/>
+				</ask>
+				<ret>
+					<result dataType="udword" />
+				</ret>
+			</BackendToGateMut>
+			<clientToBackendSin>
+				<ask>
+				</ask>
+				<ret>
+					<result dataType="udword" />
+				</ret>
+			</clientToBackendSin>
+			<clientToBackendMut>
+				<ask>
+					<reque dataType="udword" />
+					<member dataType="ubyte" length="64" haveSize="1"/>
+				</ask>
+				<ret>
+					<result dataType="udword" />
+				</ret>
+			</clientToBackendMut>
 		</CChess>
 	</rpc>

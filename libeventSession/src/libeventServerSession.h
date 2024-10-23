@@ -10,7 +10,7 @@ public:
     ~libeventServerSession ();
     //libeventListener*    listener ();
     //void  setListener (libeventListener* va);
-    int close() override;
+    // int close() override;
 	//ITcpServer* getServer () override;
 private:
     //libeventListener*  m_listener;

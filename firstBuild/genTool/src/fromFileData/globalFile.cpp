@@ -341,3 +341,23 @@ void  globalFile:: setNetNum (uword v)
     m_netNum = v;
 }
 
+uword  globalFile:: gateAppGroupId ()
+{
+    return m_gateAppGroupId;
+}
+
+void  globalFile:: setGateAppGroupId (uword v)
+{
+    m_gateAppGroupId = v;
+}
+
+uword  globalFile:: gateRouteServerGroupId ()
+{
+    return m_gateRouteServerGroupId;
+}
+
+void  globalFile:: setGateRouteServerGroupId (uword v)
+{
+    m_gateRouteServerGroupId = v;
+}
+

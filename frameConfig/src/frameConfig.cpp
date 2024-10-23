@@ -18,7 +18,9 @@ frameConfig::frameConfig ()
 	strCpy("", m_endPoint);
 	strCpy("", m_frameConfigFile);
 	strCpy("", m_frameHome);
+	m_gateAppGroupId = 0;
 	strCpy("forClientIp:127.0.0.1*forServerIp:127.0.0.1*startPort:12000+forClientIp:127.0.0.1*forServerIp:127.0.0.1*startPort:22000", m_gateInfo);
+	m_gateRouteServerGroupId = 0;
 	strCpy("", m_homeDir);
 	strCpy("127.0.0.1", m_ip);
 	strCpy("cppLevel0L", m_level0);
@@ -147,6 +149,16 @@ void  frameConfig::setFrameHome (const char* v)
 	strCpy(v, m_frameHome);
 }
 
+uword  frameConfig::gateAppGroupId ()
+{
+    return m_gateAppGroupId;
+}
+
+void  frameConfig::setGateAppGroupId (uword v)
+{
+	m_gateAppGroupId = v;
+}
+
 const char*  frameConfig::gateInfo ()
 {
     return m_gateInfo.get();
@@ -155,6 +167,16 @@ const char*  frameConfig::gateInfo ()
 void  frameConfig::setGateInfo (const char* v)
 {
 	strCpy(v, m_gateInfo);
+}
+
+uword  frameConfig::gateRouteServerGroupId ()
+{
+    return m_gateRouteServerGroupId;
+}
+
+void  frameConfig::setGateRouteServerGroupId (uword v)
+{
+	m_gateRouteServerGroupId = v;
 }
 
 const char*  frameConfig::homeDir ()
@@ -363,6 +385,7 @@ int  frameConfig:: dumpConfig (const char* szFile)
 	if (nframeHomeLen) 
 		strTframeHome = frameHome;
 		ofs<<"frameHome="<<strTframeHome<<R"--(  ## 框架的安装目录   )--"<<std::endl;
+		ofs<<"gateAppGroupId="<<gateAppGroupId()<<std::endl;
 	int ngateInfoLen = 0;
 	auto gateInfo = this->gateInfo();
 	if (gateInfo) ngateInfoLen = strlen(gateInfo);
@@ -370,6 +393,7 @@ int  frameConfig:: dumpConfig (const char* szFile)
 	if (ngateInfoLen) 
 		strTgateInfo = gateInfo;
 		ofs<<"gateInfo="<<strTgateInfo<<R"--(  ## gate IP 等   )--"<<std::endl;
+		ofs<<"gateRouteServerGroupId="<<gateRouteServerGroupId()<<std::endl;
 	int nhomeDirLen = 0;
 	auto homeDir = this->homeDir();
 	if (homeDir) nhomeDirLen = strlen(homeDir);
@@ -562,12 +586,20 @@ int  frameConfig:: procCmdArgS (int nArg, char** argS)
 	strCpy(strVal.c_str(), m_frameHome);
 				continue;
 			}
+				if (strKey == "gateAppGroupId") {
+				ssV>>m_gateAppGroupId;
+				continue;
+			}
 				if (strKey == "gateInfo") {
 				ssV>>strVal;
 				if('"'==strVal.c_str()[0] && '"'==strVal.c_str()[strVal.length()-1]) {
 					strVal = strVal.substr(1,strVal.length()-2);
 				}
 	strCpy(strVal.c_str(), m_gateInfo);
+				continue;
+			}
+				if (strKey == "gateRouteServerGroupId") {
+				ssV>>m_gateRouteServerGroupId;
 				continue;
 			}
 				if (strKey == "homeDir") {

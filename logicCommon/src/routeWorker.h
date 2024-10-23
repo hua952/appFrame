@@ -21,6 +21,7 @@ public:
 	virtual int localProcessNetPackFun(ISession* session, packetHead* pack, bool& bProc);
 	void onWritePack(ISession* session, packetHead* pack) override;
 	int onLoopFrameBase() override;
+
 private:
 };
 #endif

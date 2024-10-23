@@ -31,11 +31,10 @@ ITcpServer* libeventServerSession::getServer ()
 {
 	return m_listener->getServer ();
 }
-*/
 int libeventServerSession::close()
 {
 	auto pServer = serverCom();// m_listener->getServer ();
 	auto nId = id();
 	return pServer->closeSession (nId);
 }
-
+*/

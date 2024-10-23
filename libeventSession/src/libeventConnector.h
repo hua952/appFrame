@@ -5,27 +5,22 @@
 
 struct event_base;
 class libeventServerCom;
+typedef std::pair<libeventServerCom*, SessionIDType> forConInfo;
 class libeventConnector: public libeventSessionCom
 {
 public:
     libeventConnector ();
     ~libeventConnector ();
 	int    init(libeventServerCom* pServer,  const char* ip, uword port);
-    int close() override;
-    //libeventSessionCom&    sessionCom ();
-    //libeventServerCom*    server ();
+    // int close() override;
 	int      connect();
     uword    port ();
     void  setPort (uword va);
 	const char* ip();
 	void  setIp (const char* szIp);
-    //uqword    userData ();
-    //void  setUserData (uqword va);
+	void  onOffline();
 private:
-    //uqword  m_userData;
 	char   m_ip[16];
     uword  m_port;
-    //libeventServerCom*  m_server;
-    //libeventSessionCom  m_sessionCom;
 };
 #endif

@@ -47,6 +47,7 @@ public:
 	void addTimer(udword firstSetp, udword udwSetp,
 		ComTimerFun pF, void* pUserData, udword udwLength);
 	void  delSendPack (NetTokenType  token);
+	NetTokenType  newToken();
 private:
 	tokenMapType   m_tokenMap;
 	// netMsgProcMap  m_netMsgProcMap;
