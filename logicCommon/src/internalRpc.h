@@ -3,55 +3,106 @@
 
 #include "msg.h"
 
-class sendPackToRemoteAskMsg :public CMsgBase
-{
-public:
-	sendPackToRemoteAskMsg ();
-	sendPackToRemoteAskMsg (packetHead* p);
+#define DEC_MSG(msgName) class msgName##Msg:public CMsgBase {\
+public: \
+	msgName##Msg();\
+	msgName##Msg(packetHead* p);\
 };
 
+struct sendPackToRemoteAsk
+{
+	udword    objSessionId;
+};
+DEC_MSG(sendPackToRemoteAsk)
 struct sendPackToRemoteRet
 {
     udword    m_result;
 };
-class sendPackToRemoteRetMsg :public CMsgBase
-{
-public:
-	sendPackToRemoteRetMsg ();
-	sendPackToRemoteRetMsg (packetHead* p);
-};
+DEC_MSG(sendPackToRemoteRet)
 
-class recRemotePackForYouAskMsg :public CMsgBase
-{
-public:
-	recRemotePackForYouAskMsg ();
-	recRemotePackForYouAskMsg (packetHead* p);
-};
+DEC_MSG(recRemotePackForYouAsk)
+
+DEC_MSG(heartbeatAsk)
+DEC_MSG(heartbeatRet)
 
 struct regAppRouteAsk 
 {
     ubyte m_appGrupId;
 };
-
-class regAppRouteAskMsg :public CMsgBase
-{
-public:
-	regAppRouteAskMsg ();
-	regAppRouteAskMsg (packetHead* p);
-};
-
-
+DEC_MSG(regAppRouteAsk)
 struct regAppRouteRet
 {
     udword    m_result;
 };
+DEC_MSG(regAppRouteRet)
 
-class regAppRouteRetMsg :public CMsgBase
+struct createChannelAsk
 {
-public:
-	regAppRouteRetMsg ();
-	regAppRouteRetMsg (packetHead* p);
+	char channel[16];
+	ubyte     m_sendToMe;
 };
+DEC_MSG(createChannelAsk)
+struct createChannelRet
+{
+    udword    m_result;
+};
+DEC_MSG(createChannelRet)
+
+
+struct deleteChannelAsk
+{
+	char channel[16];
+};
+DEC_MSG(deleteChannelAsk)
+struct deleteChannelRet
+{
+    udword    m_result;
+};
+DEC_MSG(deleteChannelRet)
+
+struct subscribeChannelAsk
+{
+	char channel[16];
+};
+DEC_MSG(subscribeChannelAsk)
+struct subscribeChannelRet
+{
+    udword    m_result;
+};
+DEC_MSG(subscribeChannelRet)
+
+struct sayToChannelAsk
+{
+	char   channel[16];
+	udword  packSize;
+	char   unUse[4];
+	char   pack[1];
+};
+DEC_MSG(sayToChannelAsk)
+struct sayToChannelRet
+{
+    udword    m_result;
+};
+DEC_MSG(sayToChannelRet)
+
+struct leaveChannelAsk
+{
+	char channel[16];
+};
+DEC_MSG(leaveChannelAsk)
+struct leaveChannelRet
+{
+    udword    m_result;
+};
+DEC_MSG(leaveChannelRet)
+
+struct broadcastPacketNtf
+{
+	uqword retPack;
+	udword sessionId;
+	ubyte  srcServer;
+};
+DEC_MSG(broadcastPacketNtf)
 #endif
 
 

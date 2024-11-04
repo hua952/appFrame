@@ -1,5 +1,6 @@
 #ifndef serverMgr_h__
 #define serverMgr_h__
+/*
 #include "server.h"
 #include "msgMgr.h"
 #include "CModule.h"
@@ -47,7 +48,7 @@ public:
 	int pushPackToLoop (loopHandleType pThis, packetHead* pack);// Thread safety
 
 	server*   getLoop(loopHandleType id);
-	int             init(int nArgC, char** argS/*, PhyCallback& info*/);
+	int             init(int nArgC, char** argS);
 	int   initNetServer ();
 	
 	int getAllLoopAndStart(serverNode* pBuff, int nBuffNum);
@@ -103,5 +104,5 @@ private:
 void         lv0PushToCallStack (const char* szTxt);
 void         lv0PopFromCallStack ();
 void         lv0LogCallStack (int nL);
-
+*/
 #endif

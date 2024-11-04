@@ -1,5 +1,6 @@
 #ifndef Module_h_
 #define Module_h_
+/*
 #include <memory>
 #include "mainLoop.h"
 
@@ -34,4 +35,5 @@ private:
 	std::unique_ptr<char[]>	 m_name;
 	void* m_handle;
 };
+*/
 #endif

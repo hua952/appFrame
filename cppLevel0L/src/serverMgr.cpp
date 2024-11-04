@@ -1,3 +1,4 @@
+/*
 #include <iostream>
 #include <sstream>
 #include <thread>
@@ -52,21 +53,17 @@ packetHead* allocPackDebug(udword udwSize)
 
 void	freePackDebug(packetHead* pack)
 {
-	PUSH_FUN_CALL
-	lv0LogCallStack (27);
 	if (pack->pAsk) {
 		freePackDebug((packetHead*)(pack->pAsk));
 		pack->pAsk = 0;
 	}
-	// auto pN = P2NHead (pack);
-	// rTrace (" will delete pack "<<*pack);
 	{
 		std::lock_guard<std::mutex> lock(g_mem_mtx);
 		auto inRet = s_memMap.erase(pack);
+		myAssert(inRet);
 	}
 
 	delete [] ((char*)(pack));
-	POP_FUN_CALL
 }
 
 void outMemLeakDebug (std::ostream& os)
@@ -239,13 +236,7 @@ void serverMgr:: setPackSendInfoTime (udword  va)
 {
     m_packSendInfoTime = va;
 }
-/*
-server*  serverMgr::getOutServer()
-{
-	auto n = rand () % m_outNum;
-	return m_loopS[n].get(); // g_serverS [n];
-}
-*/
+
 serverMgr::~serverMgr()
 {
 }
@@ -270,51 +261,6 @@ void			serverMgr::setGropId(loopHandleType grop)
 {
 	m_gropId = grop;
 }
-
-/*
-serverIdType 	serverMgr::getServerNum()
-{
-	return g_ServerNum;
-}
-pserver* serverMgr::getServerS()
-{
-	return g_serverS.get();
-}
-PhyCallback&  serverMgr::getPhyCallback()
-{
-	return m_PhyCallback;
-}
-
-int serverMgr::procArgS(int nArgC, char** argS)
-{
-	for(int i = 1; i < nArgC; i++)
-	{
-		auto pC = argS[i];
-		auto nL = strlen(pC);
-		std::unique_ptr<char[]>	 name = std::make_unique<char[]>(nL + 1);
-		strcpy(name.get(), pC);
-		const int c_BuffNum = 3;
-		char* buff[c_BuffNum];
-		auto nR = strR(name.get(), '=', buff, c_BuffNum);
-		if(2 == nR)
-		{
-			if(0 == strcmp(buff[0], "gropId")) {
-				int nId = atoi (buff[1]);
-				setGropId (nId);
-			} else if(0 == strcmp(buff[0], "procId")) {
-				int nId = atoi (buff[1]);
-				setProcId(nId);
-			} else if (0 == strcmp(buff[0], "netLib")) {
-				auto nL = strlen (buff[1]);
-				m_netLibName = std::make_unique <char[]>(nL + 1);
-				auto p = m_netLibName.get();
-				strNCpy (p, nL + 1, buff[1]);
-			}
-		}
-	}
-	return 0;
-}
-*/
 
 static NetTokenType   sNextToken(loopHandleType pThis)
 {
@@ -387,7 +333,7 @@ int serverMgr::initFun (int cArg, char** argS)
 	auto bR = upDir (m_homeDir.get());
 	myAssert (bR);
 	do {
-		nR = rConfig.procCmdArgS (cArg, argS);   /* 下一步用到参数里的文件名,所以要先解析一遍命令行参数  */
+		nR = rConfig.procCmdArgS (cArg, argS);
 		if (nR) {
 			nRet = 1;
 			break;
@@ -418,7 +364,7 @@ int serverMgr::initFun (int cArg, char** argS)
 		}
 		rInfo ("Loger init OK");
 
-		nR = rConfig.procCmdArgS (cArg, argS);   /* 再次解析一遍命令行参数, 覆盖配置文件里的项,确保命令行参数的优先级最高  */
+		nR = rConfig.procCmdArgS (cArg, argS);
 		if (nR) {
 			nRet = 1;
 			mError("rConfig.procCmdArgS error nR = "<<nR);
@@ -578,9 +524,8 @@ static int sSendPackToSomeSession(loopHandleType myServerId, netPacketHead* pN, 
 	return nRet;
 }
 
-int midSendPackToLoopForChannelFun(packetHead* pack) /* 返回值貌似没用 */
+int midSendPackToLoopForChannelFun(packetHead* pack)
 {
-	/* 发消息得起点函数 */
 	int nRet = 0; // procPacketFunRetType_del;
 	int nR = 0;
 	auto pN = P2NHead (pack);
@@ -589,18 +534,9 @@ int midSendPackToLoopForChannelFun(packetHead* pack) /* 返回值貌似没用 */
 	pack->pAsk = 0;
 	do {
 		myAssert (pN->ubyDesServId == c_emptyLoopHandle);
-		/*
-		bool bRand = true;
-		if (pN->ubyDesServId != c_emptyLoopHandle) {
-			bRand = !packInOnceProc(pack);
-		}
-		*/
 		
 		NSetUnRet(pN);
-		/*
-		uword netNum = 0;
-		server* pA = rMgr.getNetServerS (netNum);
-		*/
+		
 		auto pSendServer = rMgr.getOnceNetServer ();
 		if (pSendServer) {
 			pSendServer->pushPack (pack);
@@ -612,9 +548,8 @@ int midSendPackToLoopForChannelFun(packetHead* pack) /* 返回值貌似没用 */
 	return nRet;
 }
 
-int midSendPackToLoopFun(packetHead* pack) /* 返回值貌似没用 */
+int midSendPackToLoopFun(packetHead* pack)
 {
-	/* 发消息得起点函数 */
 	int nRet = 0; // procPacketFunRetType_del;
 	int nR = 0;
 	auto pN = P2NHead (pack);
@@ -637,16 +572,13 @@ int midSendPackToLoopFun(packetHead* pack) /* 返回值貌似没用 */
 			rSerMgr.pushPackToLoop (pN->ubyDesServId, pack);
 			break;
 		}
-		myAssert (!bIsRet);    /*   ret包沿ask包路径被动返回,理论上不应调用本函数, 本函数处理主动发送    */
+		myAssert (!bIsRet);
 		if (bIsRet) {
 			if (EmptySessionID == pack->sessionID) {
-				/*
-				auto objSe = rMgr.getOnceUpServer ();
-				myAssert (c_emptyLoopHandle != objSe);
-				*/
+				
 				auto pSendServer = rMgr.getOnceNetServer ();
 				if (!pSendServer) {
-				// if (c_emptyLoopHandle == objSe) {       /*     由于本函数是处理首站发出, 不可能会出现这种情况        */
+				// if (c_emptyLoopHandle == objSe) {
 					mError(" can not find net server whith pack pack is : "<<*pack);
 					freePack (pack);
 				} else {
@@ -666,7 +598,6 @@ int midSendPackToLoopFun(packetHead* pack) /* 返回值貌似没用 */
 			break;
 		}
 		
-		/*  以下处理ask类型消息的发送    */
 		myAssert(EmptySessionID == pack->sessionID);
 
 		bool  bNeetRet = false;
@@ -688,10 +619,7 @@ int midSendPackToLoopFun(packetHead* pack) /* 返回值貌似没用 */
 			pN->dwToKen = pS->nextToken ();
 		}
 		pack->pAsk = 0;
-		/*	
-		auto objSer = rMgr.getOnceUpServer ();
-		myAssert (c_emptyLoopHandle != objSer);
-		*/
+		
 		auto pSendServer = rMgr.getOnceNetServer ();
 		myAssert (pSendServer);
 		if (!pSendServer) {
@@ -709,10 +637,10 @@ int midSendPackToLoopFun(packetHead* pack) /* 返回值貌似没用 */
 
 			packetHead* sclonePack(packetHead* p);
 			if (!pNew) {
-				pNew =  sclonePack (pack);  /*  由于要保存原包,克隆一份 */
+				pNew =  sclonePack (pack);
 			}
 
-			pISave->netTokenPackInsert (pack);  /* 保存pack 因为该函数是通过网络发送的第一站,故在此保存   */
+			pISave->netTokenPackInsert (pack);
 			std::pair<NetTokenType, server*> pa;
 			pa.first = pN->dwToKen;
 			pa.second = pS;
@@ -734,9 +662,8 @@ int midSendPackToLoopFun(packetHead* pack) /* 返回值貌似没用 */
 	return nRet;
 }
 
-int midSendPackUpFun(packetHead* pack) /* 返回值貌似没用 */
+int midSendPackUpFun(packetHead* pack)
 {
-	/* 发消息得起点函数 */
 	int nRet = 0; // procPacketFunRetType_del;
 	int nR = 0;
 	auto pN = P2NHead (pack);
@@ -755,7 +682,6 @@ int midSendPackUpFun(packetHead* pack) /* 返回值貌似没用 */
 		
 		pN->ubyDesServId = c_emptyLoopHandle;
 
-		/*  以下处理ask类型消息的发送    */
 		myAssert(EmptySessionID == pack->sessionID);
 
 		bool  bNeetRet = false;
@@ -789,9 +715,9 @@ int midSendPackUpFun(packetHead* pack) /* 返回值貌似没用 */
 			iPackSave* pISave = pS->getIPackSave ();
 			packetHead* sclonePack(packetHead* p);
 			if (!pNew) {
-				pNew =  sclonePack (pack);  /*  由于要保存原包,克隆一份 */
+				pNew =  sclonePack (pack);
 			}
-			pISave->netTokenPackInsert (pack);  /* 保存pack 因为该函数是通过网络发送的第一站,故在此保存   */
+			pISave->netTokenPackInsert (pack);
 			std::pair<NetTokenType, server*> pa;
 			pa.first = pN->dwToKen;
 			pa.second = pS;
@@ -886,203 +812,10 @@ static int sRegRouteFun(loopHandleType myServerId, loopHandleType objServerId, S
 }
 
 typedef void		(*freePackFT)(packetHead* pack);
-/*
-serializePackFunType  serverMgr:: fromNetPack ()
-{
-    return m_fromNetPack;
-}
-*/
 
 int serverMgr::init(int nArgC, char** argS)
 {
 	return 1;
-	/*
-	auto& forLogic = getForLogicFun();
-	forLogic.fnCreateLoop = nullptr; // sCreateServer;
-	forLogic.fnAllocPack = allocPack; // sAllocPack; // info.fnAllocPack;
-	forLogic.fnFreePack = freePack; // sFreePack; //  info.fnFreePack;
-	forLogic.fnRegMsg = sRegMsg;
-
-	forLogic.fnSendPackUp =  midSendPackUpFun;
-	forLogic.fnSendPackToLoop =  midSendPackToLoopFun;
-	forLogic.fnSendPackToLoopForChannel = midSendPackToLoopForChannelFun;
-	forLogic.fnSendPackToSomeSession = sSendPackToSomeSession;
-	forLogic.fnLogMsg = logMsg; // info.fnLogMsg;
-	forLogic.fnAddComTimer = sAddComTimer;//m_callbackS.fnAddComTimer;
-	forLogic.fnNextToken = sNextToken; //info.fnNextToken;
-	forLogic.fnRegRpc = nullptr; // sRegRpc;
-	forLogic.fnGetDefProcServerId = nullptr; // sGetDefProcServerId;
-	forLogic.fnRegRoute = sRegRouteFun;
-	forLogic.fromNetPack = nullptr;
-	forLogic.toNetPack = nullptr;
-
-	int nR = 0;
-	int nRet = 0;
-	auto& rConfig = tSingleton<argConfig>::single ();
-	do
-	{
-		auto workDir = rConfig.homeDir (); // rConfig.workDir();
-		std::string strPath;
-		if (workDir) {
-			strPath = workDir;
-		} else {
-			std::unique_ptr<char[]> t;
-			getCurModelPath (t);
-			strPath = t.get();
-		}
-		auto serializePackLib = rConfig.serializePackLib ();
-		strPath += "/bin/";
-		strPath += serializePackLib;
-		strPath += dllExtName();
-		auto hdll = loadDll (strPath.c_str());
-		if (hdll) {
-			typedef int  (*getSerializeFunSFT) (serializePackFunType* pFunS, int nNum, ForLogicFun* pForLogic);
-			auto funGetSerializeFunS = (getSerializeFunSFT)(getFun (hdll, "getSerializeFunS"));
-			if (funGetSerializeFunS) {
-
-				const auto cNum = 512;
-				const auto c_bufNUm = cNum * 3;
-				auto pBuf = std::make_unique<serializePackFunType[]>(c_bufNUm);
-				auto funNum = funGetSerializeFunS(pBuf.get(), c_bufNUm, &forLogic);
-				myAssert (funNum < cNum);
-				auto serNum = funNum / 3;
-				if (serNum) {
-					s_SerFunSet.init ((pSerializePackFunType3*)(pBuf.get()), serNum);
-				}
-				forLogic.fromNetPack = fromNetPack;
-				forLogic.toNetPack = toNetPack;
-			}
-
-			typedef int  (*getMsgPairSFT) (uword* pFunS, int nNum);
-			auto fnGetMsgPairS = (getMsgPairSFT)(getFun (hdll, "getMsgPairS"));
-			if (fnGetMsgPairS) {
-				const auto cNum = 512;
-				const auto c_bufNum = cNum * 2;
-				auto pBuf = std::make_unique<uword[]>(c_bufNum);
-				auto pB = pBuf.get();
-				auto rpcNum = fnGetMsgPairS (pB, c_bufNum);
-				myAssert (rpcNum < cNum);
-				auto reNum = rpcNum / 2;
-				for (decltype (reNum) i = 0; i < reNum; i++) {
-					auto j = i * 2;
-					sRegRpc (pB[j], pB[j + 1], c_emptyLoopHandle, c_emptyLoopHandle);
-				}
-			}
-		}
-		auto midNetLibName = rConfig.netLib (); // rArgS.midNetLibName ();
-		if (midNetLibName ) {
-			nR = initNetServer ();
-			if (nR) {
-				mError("initNetServer  return error nR = "<<nR);
-				nRet = 2;
-				break;
-			}
-		}
-
-		auto modelNum = rConfig.modelNum ();
-		auto pAllMod = rConfig.allModelS ();
-		auto nAppNetType = (appNetType)(rConfig.appNetType());
-		auto* pSerA = muServerPairSPtr ();
-		for (decltype (modelNum) i = 0; i < modelNum; i++) {
-			auto& rMod = pAllMod[i];
-			for (decltype (rMod.serverTemNum) j = 0; j < rMod.serverTemNum; j++) {
-				auto& rS = rMod.serverS[j];
-				loopHandleType ubyLv,  onceLv, onceIndex ;
-				getLvevlFromSerId (rS.serverTmpId, ubyLv, onceLv, onceIndex);
-				auto&  rMu = pSerA[ubyLv];
-				rMu.second++;
-			}
-		}
-		for (decltype (c_serverLevelNum) i = 0; i < c_serverLevelNum; i++) {
-			auto& rMu = pSerA[i];
-			if (rMu.second) {
-				rMu.first = std::make_unique<serverPair[]>(rMu.second);
-			}
-		}
-		for (decltype (modelNum) i = 0; i < modelNum; i++) {
-			auto& rMod = pAllMod[i];
-			for (decltype (rMod.serverTemNum) j = 0; j < rMod.serverTemNum; j++) {
-				auto& rS = rMod.serverS[j];
-				loopHandleType ubyLv,  onceLv, onceIndex ;
-				getLvevlFromSerId (rS.serverTmpId, ubyLv, onceLv, onceIndex);
-				auto& rMu = pSerA[ubyLv];
-				auto& rPa = rMu.first[onceLv];
-				rPa.second = rS.openNum;
-				rPa.first = std::make_unique<server[]>(rPa.second);
-				serverNode node;
-				node.sleepSetp = 10;
-				node.fpsSetp = 40000;
-				node.autoRun = rS.autoRun;
-				node.route = rS.route;
-				node.connectorNum = 0;
-				node.listenerNum = 0;
-				serverEndPointInfo	* pEndpoint = &node.connectEndpoint[0];
-				if (node.route) {
-					if (nAppNetType == appNetType_gate) {
-						node.listenerNum = 1;
-						pEndpoint = &node.listenEndpoint[0];
-					} else {
-						node.connectorNum = 1;
-						if (nAppNetType == appNetType_client) {
-							myAssert(1 == rPa.second);
-						} 
-					}
-					strNCpy (pEndpoint->ip, sizeof(pEndpoint->ip), rConfig.ip());
-					auto curNet = netServerTmp ();
-					myAssert (curNet == c_emptyLoopHandle);
-					setNetServerTmp (rS.serverTmpId);
-				}
-				
-				for (decltype (rPa.second) k = 0; k < rPa.second; k++) {
-					auto& rServer = rPa.first[k];
-					auto serId = rS.serverTmpId + k;
-					node.handle = serId;
-					rServer.setAutoRun(node.autoRun);
-					if (node.route) {
-						if (nAppNetType == appNetType_client) {
-							auto netNum = rConfig.netNum();
-							myAssert (netNum);
-							pEndpoint->port = rConfig.startPort() + rand()%netNum;
-						} else {
-							pEndpoint->port = rConfig.startPort() + k;
-							auto netNum = rConfig.netNum();
-							myAssert (netNum == rPa.second);
-						}
-						pEndpoint->userData = k;
-					}
-					rServer.initMid ("", serId, &node);
-				}
-			}
-		}
-		auto szModelMgrName = rConfig.modelMgrName ();
-		if (!szModelMgrName ) {
-			break;
-		}
-		auto& rMM = ModuleMgr ();
-		rMM.init (szModelMgrName);
-		nR = rMM.load (nArgC, argS, &forLogic);
-		if (nR) {
-			mError("rMM.load error nR = "<<nR);
-			nRet = 3;
-			break;
-		}
-		for (int i = 0; i < c_serverLevelNum; i++) {
-			auto& rMu = pSerA[i];
-			for (decltype (rMu.second) j = 0; j < rMu.second; j++) {
-				auto& rPa = rMu.first[j];
-				for (decltype (rPa.second) k = 0; k < rPa.second; k++) {
-					auto& rServer = rPa.first[k];
-					auto autoRun = rServer.autoRun ();
-					if (autoRun) {
-						rServer.start();
-						rServer.detach();
-					}
-				}
-			}
-		}
-	} while(0);
-	return nRet;
-	*/
 }
 
 msgMgr& serverMgr::defMsgInfoMgr ()
@@ -1159,15 +892,6 @@ void  serverMgr:: setCanDownRouteServerNum (uword v)
 
 void serverMgr:: logicOnConnect(serverIdType fId, SessionIDType sessionId, uqword userData)
 {
-	/*
-    do {
-		for (decltype (m_ModuleNum) i = 0; i < m_ModuleNum; i++) {
-			auto& rM = m_ModuleS[i];
-			auto fu = rM.fnLogicOnConnect ();
-			fu (fId, sessionId, userData);
-		}
-    } while (0);
-	*/
 	auto& rM = m_ModuleMgr;
 	auto fu = rM.fnLogicOnConnect ();
 	fu (fId, sessionId, userData);
@@ -1175,15 +899,6 @@ void serverMgr:: logicOnConnect(serverIdType fId, SessionIDType sessionId, uqwor
 
 void  serverMgr:: logicOnAccept(serverIdType	fId, SessionIDType sessionId, uqword userData)
 {
-	/*
-	do {
-		for (decltype (m_ModuleNum) i = 0; i < m_ModuleNum; i++) {
-			auto& rM = m_ModuleS[i];
-			auto fu = rM.fnLogicOnAccept ();
-			fu (fId, sessionId, userData);
-		}
-    } while (0);
-	*/
 	auto& rM = m_ModuleMgr;
 	auto fu = rM.fnLogicOnAccept ();
 	fu (fId, sessionId, userData);
@@ -1191,15 +906,6 @@ void  serverMgr:: logicOnAccept(serverIdType	fId, SessionIDType sessionId, uqwor
 
 void  serverMgr:: onLoopBegin(ServerIDType fId)
 {
-	/*
-    do {
-		for (decltype (m_ModuleNum) i = 0; i < m_ModuleNum; i++) {
-			auto& rM = m_ModuleS[i];
-			auto fu = rM.fnOnLoopBegin ();
-			fu (fId);
-		}
-    } while (0);
-	*/
 	auto& rM = m_ModuleMgr;
 	auto fu = rM.fnOnLoopBegin ();
 	fu (fId);
@@ -1207,31 +913,12 @@ void  serverMgr:: onLoopBegin(ServerIDType fId)
 
 void  serverMgr:: onLoopEnd(ServerIDType fId)
 {
-	/*
-    do {
-		for (decltype (m_ModuleNum) i = 0; i < m_ModuleNum; i++) {
-			auto& rM = m_ModuleS[i];
-			auto fu = rM.fnOnLoopEnd ();
-			fu (fId);
-		}
-    } while (0);
-	*/
 	auto& rM = m_ModuleMgr;
 	auto fu = rM.fnOnLoopEnd ();
 	fu (fId);
 
 }
-/*
-uword  serverMgr:: serverNum ()
-{
-    return m_serverNum;
-}
 
-void  serverMgr:: setServerNum (uword v)
-{
-    m_serverNum = v;
-}
-*/
 CModule&  serverMgr:: ModuleMgr ()
 {
     return m_ModuleMgr;
@@ -1350,4 +1037,4 @@ void  serverMgr:: setHomeDir (const char* v)
 {
     strCpy (v, m_homeDir);
 }
-
+*/

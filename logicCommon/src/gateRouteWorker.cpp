@@ -18,6 +18,11 @@ gateRouteWorker:: ~gateRouteWorker ()
 {
 }
 
+bool gateRouteWorker::cmpChannelKey::operator ()(const channelKey& k1,const channelKey& k2)const
+{
+	return k1.first<k2.first?true:k2.first<k1.first?false:k1.second<k2.second;
+}
+
 int  gateRouteWorker:: onLoopBeginBase()
 {
     int  nRet = 0;
@@ -58,7 +63,8 @@ int  gateRouteWorker:: onLoopBeginBase()
 			nRet = 1;
 			break;
 		}
-		nR = logicWorker:: onLoopBeginBase();
+		gInfo("initNet ok endpointNum is : "<<gateNode.endPointNum<<" endpoint[0] = "<<endP[0].ip<<" : "<<endP[0].port<<" my serverid is : "<<(int)(serverId()));
+		nR = routeWorker:: onLoopBeginBase();
 		if (nR) {
 			nRet = 2;
 			break;
@@ -81,8 +87,294 @@ static int regAppRouteAskProcFun (pPacketHead pAsk, pPacketHead& pRet, procPacke
 	auto pU = (regAppRouteRet*)(P2User(pRet));
 	auto pAU = (regAppRouteAsk*)(P2User(pAsk));
 	pU->m_result = (ubyte)(pGate->regAppRoute (pAU->m_appGrupId, pAsk->sessionID));
-	gInfo(" rec AppRouteAsk app group id is : "<<(int)(pAU->m_appGrupId));
+	gInfo(" rec AppRouteAsk app group id is : "<<(int)(pAU->m_appGrupId)<<" my server id is : "<<(int)(pArg->handle));
+	nRet |= procPacketFunRetType_stopBroadcast;
 	return nRet;
+}
+
+static int recBroadcastPacketNtfProcFun (pPacketHead pAsk, pPacketHead& pRet, procPacketArg* pArg)
+{
+	int nRet = procPacketFunRetType_del;
+	// gDebug(" rec 	BroadcastPacketNtf");
+	auto&  workerMgr = logicWorkerMgr::getMgr();
+	auto pServer = workerMgr.findServer (pArg->handle);
+	myAssert (pServer);
+	auto pGate = dynamic_cast<gateRouteWorker*>(pServer);
+	myAssert (pGate);
+	nRet = pGate->processNtfBroadcastPackFun(pAsk);
+	return nRet;
+}
+
+static int recCreateChannelAskProcFun (pPacketHead pAsk, pPacketHead& pRet, procPacketArg* pArg)
+{
+	int nRet = procPacketFunRetType_del;
+	// gDebug(" rec 	CreateChannelAsk ");
+	auto&  workerMgr = logicWorkerMgr::getMgr();
+	auto pServer = workerMgr.findServer (pArg->handle);
+	myAssert (pServer);
+	auto pGate = dynamic_cast<gateRouteWorker*>(pServer);
+	myAssert (pGate);
+	auto ppRet = pArg->broadcast ? nullptr : &pRet;
+	nRet = pGate->onCreateChannelAsk(pAsk, ppRet);
+	return nRet;
+}
+
+
+static int recDeleteChannelAskProcFun  (pPacketHead pAsk, pPacketHead& pRet, procPacketArg* pArg)
+{
+	int nRet = procPacketFunRetType_del;
+	gDebug(" rec 	DeleteChannelAsk");
+	auto&  workerMgr = logicWorkerMgr::getMgr();
+	auto pServer = workerMgr.findServer (pArg->handle);
+	myAssert (pServer);
+	auto pGate = dynamic_cast<gateRouteWorker*>(pServer);
+	myAssert (pGate);
+	auto ppRet = pArg->broadcast ? nullptr : &pRet;
+	nRet = pGate->onDeleteChannelAsk(pAsk, ppRet);
+	return nRet;
+}
+static int recListenChannelAskProcFun  (pPacketHead pAsk, pPacketHead& pRet, procPacketArg* pArg)
+{
+	int nRet = procPacketFunRetType_del;
+	gDebug(" rec 	ListenChannelAsk");
+	auto&  workerMgr = logicWorkerMgr::getMgr();
+	auto pServer = workerMgr.findServer (pArg->handle);
+	myAssert (pServer);
+	auto pGate = dynamic_cast<gateRouteWorker*>(pServer);
+	myAssert (pGate);
+	auto ppRet = pArg->broadcast ? nullptr : &pRet;
+	nRet = pGate->onSubscribeChannelAsk(pAsk, ppRet);
+	return nRet;
+}
+static int recSayToChannelAskProcFun  (pPacketHead pAsk, pPacketHead& pRet, procPacketArg* pArg)
+{
+	int nRet = procPacketFunRetType_del;
+	gTrace(" rec SayToChannelAsk");
+	auto&  workerMgr = logicWorkerMgr::getMgr();
+	auto pServer = workerMgr.findServer (pArg->handle);
+	myAssert (pServer);
+	auto pGate = dynamic_cast<gateRouteWorker*>(pServer);
+	myAssert (pGate);
+	auto ppRet = pArg->broadcast ? nullptr : &pRet;
+	nRet = pGate->onSayToChannelAsk(pAsk, ppRet);
+	return nRet;
+}
+static int recLeaveChannelAskProcFun  (pPacketHead pAsk, pPacketHead& pRet, procPacketArg* pArg)
+{
+	int nRet = procPacketFunRetType_del;
+	auto&  workerMgr = logicWorkerMgr::getMgr();
+	auto pServer = workerMgr.findServer (pArg->handle);
+	myAssert (pServer);
+	auto pGate = dynamic_cast<gateRouteWorker*>(pServer);
+	myAssert (pGate);
+	auto ppRet = pArg->broadcast ? nullptr : &pRet;
+	nRet = pGate->onLeaveChannelAsk(pAsk, ppRet);
+	gDebug(" rec leaveChannelAsk");
+	return nRet;
+}
+
+int  gateRouteWorker:: onSayToChannelAsk(packetHead* pack, pPacketHead* ppRet)
+{
+	int nRet = procPacketFunRetType_del;
+	udword result = 0;	
+    do {
+		auto& rConfig = tSingleton<logicFrameConfig>::single();
+		auto& rMap = m_channelMap;
+		auto pN = P2NHead(pack);
+		auto pU = (sayToChannelAsk*)(N2User(pN));
+		
+		auto it = rMap.find(*((channelKey*)(pU->channel)));
+		if (rMap.end() == it) {
+			result = 1;
+			break;
+		}
+		auto pUN = (netPacketHead*)(pU->pack );
+		for (auto ite = it->second.begin (); ite != it->second.end (); ite++) {
+			auto desAddr = (serverIdType)(*ite);
+			auto uqwV = *ite;
+			auto ubyDesServId = (serverIdType)(uqwV);
+			uqwV>>=32;
+			auto sessionId = (SessionIDType)(uqwV);
+			auto pS = getSession(sessionId);
+			if (!pS) {
+				gTrace(" can not find session sessionId is : "<<sessionId<<" obj serverId = "<<desAddr);
+				continue;
+			}
+			auto pNew = nClonePack (pUN);
+			auto pNN = P2NHead(pNew);
+			pNN->ubyDesServId = ubyDesServId;
+			pS->send(pNew);
+		}
+	} while (0);
+	if (ppRet) {
+		sayToChannelRetMsg ret;
+		auto pRet = ret.pop();
+		auto pRN = P2NHead(pRet);
+		auto pRU = (sayToChannelRet*)(N2User(pRN));
+		pRU->m_result = result;
+		*ppRet = pRet;
+	}
+    return nRet;
+}
+
+int gateRouteWorker:: onCreateChannelAsk(packetHead* pack, pPacketHead* ppRet)
+{
+	int nRet = procPacketFunRetType_del;
+	udword result = 0;	
+    do {
+		auto& rConfig = tSingleton<logicFrameConfig>::single();
+		auto& rMap = m_channelMap;
+		auto pN = P2NHead(pack);
+		auto pU = (createChannelAsk*)(N2User(pN));
+		auto& rCh = *((channelKey*)(pU->channel));
+		uqword  uqwValue = pack->sessionID;
+		uqwValue <<=32;
+		uqwValue += pN->ubySrcServId;
+		auto inRet = rMap.insert(std::make_pair(rCh , channelValue ()));
+		if (!inRet.second) {
+			result = 1;
+			break;
+		}
+		if (ppRet && pU->m_sendToMe) {
+			inRet.first->second.insert(uqwValue);
+		}
+		gInfo(" create channel : "<<std::hex<<rCh.first<<" "<<rCh.second<<" my id is "<<(int)(serverId())<<" sessionId = "<<pack->sessionID<<" serverId = "<<(int)(pN->ubySrcServId));
+	} while (0);
+	if (ppRet) {
+		createChannelRetMsg ret;
+		auto pRet = ret.pop();
+		auto pRN = P2NHead(pRet);
+		auto pRU = (createChannelRet*)(N2User(pRN));
+		pRU->m_result = result;
+		*ppRet = pRet;
+	}
+	return nRet;
+}
+
+int  gateRouteWorker:: onDeleteChannelAsk(packetHead* pack, pPacketHead* ppRet)
+{
+	int nRet = procPacketFunRetType_del;
+	udword result = 0;	
+    do {
+		auto& rConfig = tSingleton<logicFrameConfig>::single();
+		auto& rMap = m_channelMap;
+		auto pN = P2NHead(pack);
+		auto pU = (deleteChannelAsk*)(N2User(pN));
+		
+		auto erRet = rMap.erase(*((channelKey*)(pU->channel)));
+		if (!erRet) {
+			result = 1;
+			break;
+		}
+		
+    } while (0);
+	if (ppRet) {
+		deleteChannelRetMsg ret;
+		auto pRet = ret.pop();
+		auto pRN = P2NHead(pRet);
+		auto pRU = (deleteChannelRet*)(N2User(pRN));
+		pRU->m_result = result;
+		*ppRet = pRet;
+	}
+    return nRet;
+}
+
+int  gateRouteWorker:: subscribeChannel (const channelKey& rKey, SessionIDType sessionId, serverIdType	serverI)
+{
+    int  nRet = 0;
+    do {
+		auto& rConfig = tSingleton<logicFrameConfig>::single();
+		auto& rMap = m_channelMap;
+		
+		auto it = rMap.find(rKey);
+		if (it == rMap.end()) {
+			nRet = 1;
+			break;
+		}
+		uqword  uqwValue = sessionId;
+		uqwValue <<=32;
+		uqwValue += serverI;
+		auto inRet = it->second.insert(uqwValue);
+		if (!inRet.second) {
+			nRet = 2;
+			break;
+		}
+		gDebug(" subscribeChannel channel : "<<std::hex<<rKey.first<<" "<<rKey.second<<" my id is "<<(int)(serverId())<<" sessionId = "<<sessionId<<" serverId = "<<serverI);
+    } while (0);
+    return nRet;
+}
+
+int  gateRouteWorker:: onSubscribeChannelAsk(packetHead* pack, pPacketHead* ppRet)
+{
+    int  nRet = procPacketFunRetType_del;
+	udword result = 0;
+    do {
+		auto& rConfig = tSingleton<logicFrameConfig>::single();
+		auto& rMap = m_channelMap;
+		auto pN = P2NHead(pack);
+		auto pU = (subscribeChannelAsk*)(N2User(pN));
+		/*	
+		auto it = rMap.find(*((channelKey*)(pU->channel)));
+		if (it == rMap.end()) {
+			result = 1;
+			break;
+		}
+		uqword  uqwValue = pack->sessionID;
+		uqwValue <<=32;
+		uqwValue += pN->ubySrcServId;
+		auto inRet = it->second.insert(uqwValue);
+		if (!inRet.second) {
+			result = 2;
+			break;
+		}
+		*/
+		result = subscribeChannel (*((channelKey*)(pU->channel)), pack->sessionID, pN->ubySrcServId);
+    } while (0);
+	if (ppRet) {
+		subscribeChannelRetMsg ret;
+		auto pRet = ret.pop();
+		auto pRN = P2NHead(pRet);
+		auto pRU = (subscribeChannelRet*)(N2User(pRN));
+		pRU->m_result = result;
+		*ppRet = pRet;
+	}
+	nRet |= procPacketFunRetType_stopBroadcast;
+    return nRet;
+}
+
+int  gateRouteWorker:: onLeaveChannelAsk(packetHead* pack, pPacketHead* ppRet)
+{
+    int  nRet = procPacketFunRetType_del;
+	udword result = 0;	
+    do {
+		auto& rConfig = tSingleton<logicFrameConfig>::single();
+		auto& rMap = m_channelMap;
+		auto pN = P2NHead(pack);
+		auto pU = (leaveChannelAsk*)(N2User(pN));
+		
+		auto it = rMap.find(*((channelKey*)(pU->channel)));
+		if (it == rMap.end()) {
+			result = 1;
+			break;
+		}
+		uqword  uqwValue = pack->sessionID;
+		uqwValue <<=32;
+		uqwValue += pN->ubySrcServId;
+		auto inRet = it->second.erase(uqwValue);
+		if (!inRet) {
+			result = 2;
+			break;
+		}
+    } while (0);
+	if (ppRet) {
+		leaveChannelRetMsg ret;
+		auto pRet = ret.pop();
+		auto pRN = P2NHead(pRet);
+		auto pRU = (leaveChannelRet*)(N2User(pRN));
+		pRU->m_result = result;
+		*ppRet = pRet;
+	}
+    return nRet;
 }
 
 int   gateRouteWorker:: regAppRoute (ubyte group, SessionIDType sessionId)
@@ -116,7 +408,7 @@ int   gateRouteWorker:: regAppRoute (ubyte group, SessionIDType sessionId)
     return nRet;
 }
 
-int  gateRouteWorker:: sendPackToRemoteAskProc(packetHead* pPack, sendPackToRemoteRet& rRet)
+int  gateRouteWorker:: sendPackToRemoteAskProc(packetHead* pPack, sendPackToRemoteRet& rRet, SessionIDType objSession)
 {
     int  nRet = 0;
     do {
@@ -159,7 +451,7 @@ ISession*   gateRouteWorker:: getOnceAppSession(ubyte appGroup)
 		for (auto it = lower; it != upper; it++) {
 			vec.push_back(it->second);
 		}
-		myAssert (!vec.empty());
+		// myAssert (!vec.empty());
 		if (vec.empty()) {
 			break;
 		}
@@ -176,11 +468,12 @@ void  gateRouteWorker:: onClose(ISession* session)
 		if (pKey ) {
 			auto key = *(pKey);
 			auto& rAppMap = m_appMap;
+			gInfo(" server session close sessionId = "<<session->id()<<" key is : "<<std::hex<<key);
 			rAppMap.erase(key);
 		}
     } while (0);
 }
-
+/*
 int  gateRouteWorker:: localProcessNetPackFun(ISession* session, packetHead* pack, bool& bProc)
 {
     int  nRet = 0;
@@ -197,7 +490,7 @@ int  gateRouteWorker:: localProcessNetPackFun(ISession* session, packetHead* pac
     } while (0);
     return nRet;
 }
-
+*/
 int   gateRouteWorker:: recPacketProcFun (ForLogicFun* pForLogic)
 {
     int   nRet = 0;
@@ -210,6 +503,12 @@ int   gateRouteWorker:: recPacketProcFun (ForLogicFun* pForLogic)
 		auto& sMgr = logicWorkerMgr::getMgr();
 		auto fnRegMsg = sMgr.forLogicFun()->fnRegMsg;
 		fnRegMsg (serverId (), internal2FullMsg(internalMsgId_regAppRouteAsk), regAppRouteAskProcFun);
+		fnRegMsg (serverId (), internal2FullMsg(internalMsgId_createChannelAsk), recCreateChannelAskProcFun);
+		fnRegMsg (serverId (), internal2FullMsg(internalMsgId_deleteChannelAsk), recDeleteChannelAskProcFun);
+		fnRegMsg (serverId (), internal2FullMsg(internalMsgId_subscribeChannelAsk), recListenChannelAskProcFun);
+		fnRegMsg (serverId (), internal2FullMsg(internalMsgId_sayToChannelAsk), recSayToChannelAskProcFun);
+		fnRegMsg (serverId (), internal2FullMsg(internalMsgId_leaveChannelAsk), recLeaveChannelAskProcFun);
+		fnRegMsg (serverId (), internal2FullMsg(internalMsgId_broadcastPacketNtf), recBroadcastPacketNtfProcFun);
     } while (0);
     return nRet;
 }
@@ -222,7 +521,7 @@ static bool sDelToken(void* pU)
 
 	auto& rMap = pT->getTokenMap ();
 	auto erRet = rMap.erase(token);
-	myAssert (!erRet);
+	// myAssert (!erRet);
 	if (erRet) {
 		gWarn(" token delete by timer token is : "<<token);
 	}
@@ -233,78 +532,183 @@ gateRouteWorker::tokenMap&   gateRouteWorker:: getTokenMap ()
 {
     return m_tokenMap;
 }
-/*
-ISession*  gateRouteWorker:: onRecHeadIsNeetForward(ISession* session, netPacketHead* pN)
+
+int  gateRouteWorker:: processBroadcastPackFun(ISession* session, packetHead* pack)
 {
-    ISession*  nRet = nullptr;
+    int  nRet = procPacketFunRetType_del;
+	auto& sMgr = logicWorkerMgr::getMgr();
+	auto forLogicFun = sMgr.forLogicFun ();
+	auto& rConfig = tSingleton<logicFrameConfig>::single();
     do {
-		auto& rConfig = tSingleton<logicFrameConfig>::single();
-		auto& rTokenMap = m_tokenMap;
-		auto& sMgr = logicWorkerMgr::getMgr();
-
-		if (c_emptyLoopHandle == pN->ubyDesServId) {
+		gTrace( "BroadcastPack pack is : "<<*pack);
+		pack->sessionID = session->id();
+		auto pN = P2NHead(pack);
+		myAssert (!NIsRet(pN));
+		auto fnFindMsg = forLogicFun->fnFindMsg;
+		auto procFun = fnFindMsg(serverId(), pN->uwMsgID);
+		procPacketArg arg;
+		arg.broadcast = false;
+		arg.handle = serverId ();
+		if (!procFun) {
+			gWarn("can not find proc fun msgID is : "<<pN->uwMsgID);
 			break;
 		}
-		auto objG = pN->ubyDesServId;
-		objG>>=8;
-		auto myG = rConfig.appGroupId ();
-		if (objG == myG) {
+
+		auto netNum = rConfig.netNum ();
+		
+		packetHead* pRet = nullptr;
+		auto nR = procFun(pack, pRet, &arg);
+		bool stopBroadcast = procPacketFunRetType_stopBroadcast & nR || 1 == netNum;
+
+		if (pRet) {
+			pRet->loopId = pack->loopId;
+			pRet->sessionID = pack->sessionID;
+			auto pRN = P2NHead(pRet);
+			pRN->dwToKen = pN->dwToKen;
+			pRN->ubyDesServId = pN->ubySrcServId;
+		}
+
+		if (stopBroadcast) {
+			if (pRet) {
+				session->send(pRet);
+			}
 			break;
 		}
-		if (NIsRet(pN)) {
-			auto it = rTokenMap.find (pN->dwToKen);
-			if (rTokenMap.end() == it) {
-				gWarn(" can not find old token netPacketHead is : "<<*pN);
-				break;
-			}
-			pN->dwToKen = it->second.oldToken;
-			nRet = getSession (it->second.sessionId);
-		} else {
-			auto pKey = (uword*)(session->userData());
-			myAssert (!pKey);
-			tokenSaveInfo info;
-			info.oldToken = pN->dwToKen;
-			info.sessionId = session->id();
-			pN->dwToKen = newToken();
-			auto inRet = rTokenMap.insert(std::make_pair(pN->dwToKen, info));
-			myAssert (inRet.second);
-			if (!inRet.second) {
-				break;
-			}
-			nRet = getOnceAppSession (objG);
-			if (!nRet) {
-				break;
-			}
 
-			auto sept = rConfig.delSaveTokenTime ();
-			uqword uqwA[2];
-			uqwA[0] = (uqword)(this);
-			uqwA[1] = pN->dwToKen;
-			addTimer(sept, sDelToken, uqwA, sizeof(uqwA));
-		}
+		broadcastPacketNtfMsg  ntf;
+		auto pNtf = ntf.pop();
+		auto pNtfN = P2NHead(pNtf);
+		auto pNtfU = (broadcastPacketNtf*)(N2User(pNtfN));
+
+		pNtfU->retPack = (decltype(pNtfU->retPack))(pRet);
+		pNtfU->sessionId = session->id();
+		pNtfU->srcServer = serverId ();
+		// pNtfU->passNum = 0;
+		pNtf->packArg= (decltype(pNtf->packArg))(pack);
+		pNtf->loopId = serverId ();
+
+		pNtfN->ubySrcServId = rConfig.appGroupId ();
+		pNtfN->ubySrcServId <<=8;
+		pNtfN->ubySrcServId += serverId ();
+
+		auto& info = rConfig.serverGroups()[serverGroup ()];
+		myAssert (info.runNum == netNum);
+		auto nextId = serverId();
+		myAssert (nextId >= info.beginId);
+		nextId -= info.beginId;
+		nextId++;
+		nextId %= info.runNum;
+		nextId += info.beginId;
+
+		pNtfN->ubyDesServId = rConfig.appGroupId ();
+		pNtfN->ubyDesServId <<=8;
+		pNtfN->ubyDesServId += nextId;
+		// pNtfN->ubyDesServId += serverId ();
+		forLogicFun->fnPushPackToServer(nextId, pNtf);
+		nRet = procPacketFunRetType_doNotDel;
     } while (0);
     return nRet;
 }
-*/
+
+int  gateRouteWorker:: processNtfBroadcastPackFun(packetHead* pack)
+{
+    int  nRet = procPacketFunRetType_del;
+    do {
+		auto& sMgr = logicWorkerMgr::getMgr();
+		auto forLogicFun = sMgr.forLogicFun();
+		auto& rConfig = tSingleton<logicFrameConfig>::single();
+		auto myServerId = serverId();
+		auto pAsk = (packetHead*)(pack->packArg);
+		auto pN = P2NHead(pack);
+		auto pU = (broadcastPacketNtf*)(N2User(pN));
+		if (pU->srcServer == myServerId ) {
+			auto pSend = (packetHead*)(pU->retPack);
+			if (pSend) {
+				auto pS = getSession(pU->sessionId);
+				myAssert (pS);
+				if (pS) {
+					pS->send(pSend);
+				} else {
+					gWarn("Broadcast ret can not find session sessionId = "<<pU->sessionId);
+					forLogicFun->fnFreePack(pSend);
+				}
+			}
+			break;
+		}
+		auto pAN = P2NHead(pAsk);
+		auto fnFindMsg = forLogicFun->fnFindMsg;
+		auto procFun = fnFindMsg(serverId(), pAN->uwMsgID);
+		auto netNum = rConfig.netNum ();
+		myAssert (procFun);
+		if (!procFun) {
+			gWarn(" can not find proFun pack = "<<*pack);
+			break;
+		}
+
+		procPacketArg arg;
+		arg.broadcast = true;
+		arg.handle = serverId ();
+		packetHead* pRet = nullptr;
+		auto nR = procFun(pAsk, pRet, &arg);
+		myAssert (!pRet);
+		
+		auto& info = rConfig.serverGroups()[serverGroup ()];
+		myAssert (info.runNum == netNum);
+		auto nextId = serverId();
+		myAssert (nextId >= info.beginId);
+		nextId -= info.beginId;
+		nextId++;
+		nextId %= info.runNum;
+		nextId += info.beginId;
+
+		pN->ubyDesServId = rConfig.appGroupId ();
+		pN->ubyDesServId <<=8;
+		pN->ubyDesServId += nextId;
+		
+		forLogicFun->fnPushPackToServer(nextId, pack);
+		nRet = procPacketFunRetType_doNotDel;
+    } while (0);
+    return nRet;
+}
+
+void  gateRouteWorker:: sendHeartbeat ()
+{
+    do {
+		auto& rMap = m_appMap;
+		for (auto it = rMap.begin (); it != rMap.end (); it++) {
+			heartbeatAskMsg msg;
+			auto pack = msg.pop();
+			auto pS = it->second;
+			pS->send (pack);
+		}
+    } while (0);
+}
 
 int  gateRouteWorker:: processNetPackFun(ISession* session, packetHead* pack)
 {
     int  nRet = procPacketFunRetType_del;
     do {
+		nRet = routeWorker::processNetPackFun (session, pack);
+		if (nRet & procPacketFunRetType_stopBroadcast) {
+			break;
+		}
 		auto& rConfig = tSingleton<logicFrameConfig>::single();
 		auto& rTokenMap = m_tokenMap;
 		auto& sMgr = logicWorkerMgr::getMgr();
 		auto pN = P2NHead(pack);
 		if (c_emptyLoopHandle == pN->ubyDesServId) {
+			nRet = processBroadcastPackFun (session, pack);
 			break;
 		}
 		auto objG = pN->ubyDesServId;
 		objG>>=8;
+		/*
 		auto myG = rConfig.appGroupId ();
 		if (objG == myG) {
 			nRet = routeWorker::processNetPackFun (session, pack);
 			break;
 		}
+		*/
 		ISession* pSendSession = nullptr;
 		do {
 			if (NIsRet(pN)) {
@@ -317,8 +721,6 @@ int  gateRouteWorker:: processNetPackFun(ISession* session, packetHead* pack)
 				pSendSession = getSession (it->second.sessionId);
 				rTokenMap.erase(it);
 			} else {
-				auto pKey = (uword*)(session->userData());
-				myAssert (!pKey);  /*   一定是client的session     */
 				tokenSaveInfo info;
 				info.oldToken = pN->dwToKen;
 				info.sessionId = session->id();

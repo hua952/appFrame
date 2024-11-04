@@ -26,7 +26,7 @@ int  workServer::initWorkServer ()
 
 void workServer::run()
 {
-	auto nRet = onMidLoopBegin(m_serverId);
+	auto nRet = onLoopBegin(); // onMidLoopBegin(m_serverId);
 
 	if (procPacketFunRetType_exitNow & nRet || procPacketFunRetType_exitAfterLoop & nRet) {
 		mInfo ("onMidLoopBegin ret procPacketFunRetType_exitNow");
@@ -41,7 +41,7 @@ void workServer::run()
 		}
 		
 	}
-	onMidLoopEnd(m_serverId);
+	onLoopEnd ();// onMidLoopEnd(m_serverId);
 }
 
 void workServer::ThreadFun(workServer* pS)
@@ -75,10 +75,12 @@ procRpcPacketFunType workServer::findMsg(uword uwMsgId)
 bool  workServer:: onFrame()
 {
 	bool bExit = false;
+	try {
 	m_timerMgr.onFrame ();
 	
 	auto myHandle = m_serverId; 
-	auto nQuit = ::onLoopFrame(myHandle);
+	//auto nQuit = ::onLoopFrame(myHandle);
+	auto nQuit = onLoopFrame();
 	if (procPacketFunRetType_exitNow & nQuit) {
 		bExit = true;
 	} else {
@@ -118,6 +120,9 @@ bool  workServer:: onFrame()
 	if (m_sleepSetp) {
 		std::this_thread::sleep_for(std::chrono::microseconds (m_sleepSetp));
 	}
+	} catch (const std::exception& e) {
+		mError (" catch exception : "<<e.what());
+	}
 	return bExit;
 }
 
@@ -126,9 +131,8 @@ int workServer::processOncePack(packetHead* pPack)
 	int  nRet = procPacketFunRetType_del;
 	do {
 		auto& rSerMgr = tSingleton<workServerMgr>::single ();
-		auto alderHandle = rSerMgr.onRecPacketFun ()(serverId(), pPack);
-		if (alderHandle & procPacketFunRetType_alderHandle) {
-			nRet = alderHandle & (~procPacketFunRetType_alderHandle);
+		nRet = rSerMgr.onRecPacketFun ()(serverId(), pPack);
+		if (nRet & procPacketFunRetType_stopBroadcast) {
 			break;
 		}
 		auto pN = P2NHead(pPack);
@@ -142,20 +146,21 @@ int workServer::processOncePack(packetHead* pPack)
 		}
 		procPacketArg argP;
 		argP.handle = serverId();
+		argP.broadcast = false;
 		if (bIsRet) { // pPack->pAsk put by other server
-			auto  pAsk = (pPacketHead)(pPack->pAsk);
-			pPack->pAsk = (decltype (pPack->pAsk))pAsk;
-			nRet = pF((pPacketHead)(pPack->pAsk), pPack, &argP);
+			nRet = pF((pPacketHead)(pPack->packArg), pPack, &argP);
 		} else {
 			packetHead* pRet = nullptr;
-			auto fRet = pF(pPack, pRet, &argP);
+			nRet = pF(pPack, pRet, &argP);
 			if (pRet) {
-				pRet->pAsk = (uqword)pPack;
+				pRet->packArg = (uqword)pPack;
 				nRet = procPacketFunRetType_doNotDel;
 				pRet->loopId = serverId ();
+				/*
 				if (procPacketFunRetType_exitNow == fRet || procPacketFunRetType_exitAfterLoop == fRet) {
 					nRet |= fRet;
 				}
+				*/
 				auto pSendServer = rSerMgr.getServer (pPack->loopId);
 				if (pSendServer) {
 					pSendServer->pushPack (pRet);
@@ -170,6 +175,11 @@ int workServer::processOncePack(packetHead* pPack)
 
 bool workServer::pushPack (packetHead* pack)
 {
+	auto pN = P2NHead(pack);
+	pN->uwMsgID;
+	if (56797 == pN->uwMsgID) {
+		mWarn(" find err pack 56797 pack is : ");
+	}
 	return m_slistMsgQue.pushPack (pack);
 }
 

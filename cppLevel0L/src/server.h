@@ -1,5 +1,6 @@
 #ifndef _server_h__
 #define _server_h__
+/*
 #include <thread>
 #include <memory>
 #include "deListMsgQue.h"
@@ -132,4 +133,5 @@ private:
 	ServerIDType m_id;
 	std::unique_ptr<char[]>	 m_name;
 };
+*/
 #endif

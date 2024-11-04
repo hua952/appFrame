@@ -2,7 +2,7 @@
 #include "strFun.h"
 #include "myAssert.h"
 #include "tSingleton.h"
-#include "serverMgr.h"
+#include "workServerMgr.h"
 
 impPackSave_map:: impPackSave_map ()
 {

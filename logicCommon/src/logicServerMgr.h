@@ -1,5 +1,6 @@
 #ifndef _logicServerMgr_h__
 #define _logicServerMgr_h__
+/*
 #include <memory>
 #include "mainLoop.h"
 #include <set>
@@ -54,4 +55,5 @@ protected:
 	ForLogicFun*     m_pForLogicFun;
 	ubyte  m_serverNum;
 };
+*/
 #endif

@@ -1,3 +1,4 @@
+/*
 #include "logicServerMgr.h"
 #include "strFun.h"
 #include "logicServer.h"
@@ -261,4 +262,4 @@ void  logicServerMgr:: setHomeDir (const char* v)
 {
     strCpy (v, m_homeDir);
 }
-
+*/

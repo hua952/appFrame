@@ -38,6 +38,8 @@ public:
   void  setGateInfo (const char* v);
   uword  gateRouteServerGroupId ();
   void  setGateRouteServerGroupId (uword v);
+  udword  heartbeatSetp ();
+  void  setHeartbeatSetp (udword v);
   const char*  homeDir ();
   void  setHomeDir (const char* v);
   const char*  ip ();
@@ -85,6 +87,7 @@ private:
   uword  m_gateAppGroupId;
   std::unique_ptr <char[]>  m_gateInfo;
   uword  m_gateRouteServerGroupId;
+  udword  m_heartbeatSetp;
   std::unique_ptr <char[]>  m_homeDir;
   std::unique_ptr <char[]>  m_ip;
   std::unique_ptr <char[]>  m_level0;

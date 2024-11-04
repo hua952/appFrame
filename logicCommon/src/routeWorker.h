@@ -15,13 +15,16 @@ public:
     routeWorker ();
     ~routeWorker ();
 	int  recPacketProcFun (ForLogicFun* pForLogic) override;
-	virtual int sendPackToRemoteAskProc(packetHead* pPack, sendPackToRemoteRet& rRet);
+	virtual int sendPackToRemoteAskProc(packetHead* pPack, sendPackToRemoteRet& rRet, SessionIDType objSession);
 	int processNetPackFun(ISession* session, packetHead* pack)override;
 
-	virtual int localProcessNetPackFun(ISession* session, packetHead* pack, bool& bProc);
+	int localProcessNetPackFun(ISession* session, packetHead* pack);
+
+	virtual void sendHeartbeat () = 0;
+
 	void onWritePack(ISession* session, packetHead* pack) override;
 	int onLoopFrameBase() override;
-
+	int onLoopBeginBase() override;
 private:
 };
 #endif

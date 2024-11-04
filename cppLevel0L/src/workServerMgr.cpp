@@ -7,13 +7,82 @@
 #include "argConfig.h"
 #include "modelLoder.h"
 
-packetHead* allocPackDebug(udword udwSize);
-void	freePackDebug(packetHead* pack);
-void outMemLeakDebug (std::ostream& os);
+allocPackFT  allocPack = nullptr;
+freePackFT  freePack = nullptr;
+outMemLeakFunT  outMemLeak = nullptr;
 
-packetHead* allocPackRelease (udword udwSize);
-void	freePackRelease (packetHead* pack);
-void outMemLeakRelease(std::ostream& os);
+static std::mutex g_mem_mtx;
+using memMap = std::map<packetHead*, packetHead*>;
+static memMap s_memMap;
+
+packetHead* allocPackDebug(udword udwSize)
+{
+	auto pRet = (packetHead*)(new char [sizeof(packetHead) + sizeof(netPacketHead) + udwSize]);
+	pRet->packArg = 0;
+	pRet->loopId = c_emptyLocalServerId;
+	pRet->sessionID = EmptySessionID;
+	auto pN = P2NHead(pRet);
+	pN->udwLength = udwSize;
+	pN->uwTag = 0;
+	{
+		std::lock_guard<std::mutex> lock(g_mem_mtx);
+		auto inRet = s_memMap.insert(std::make_pair(pRet, pRet));
+		myAssert (inRet.second);
+	}
+	return pRet;
+}
+
+void	freePackDebug(packetHead* pack)
+{
+	if (pack->packArg) {
+		auto pN = P2NHead(pack);
+		int a = pN->uwMsgID;
+		a++;
+		// mTrace(" free pack have packArg pack is : "<<*pack);
+		freePackDebug((packetHead*)(pack->packArg));
+		pack->packArg= 0;
+	}
+	{
+		std::lock_guard<std::mutex> lock(g_mem_mtx);
+		auto inRet = s_memMap.erase(pack);
+		myAssert(inRet);
+	}
+
+	delete [] ((char*)(pack));
+}
+
+void outMemLeakDebug (std::ostream& os)
+{
+	os<<" leak mem is :"<<std::endl;
+	for (auto it = s_memMap.begin (); it != s_memMap.end (); it++) {
+		os<<" leaf pack : "<<*(it->first)<<std::endl;
+	}
+}
+
+packetHead* allocPackRelease (udword udwSize)
+{
+	auto pRet = (packetHead*)(new char [sizeof(packetHead) + sizeof(netPacketHead) + udwSize]);
+	pRet->packArg= 0;
+	pRet->loopId = c_emptyLocalServerId;
+	pRet->sessionID = EmptySessionID;
+	auto pN = P2NHead(pRet);
+	pN->udwLength = udwSize;
+	pN->uwTag = 0;
+	return pRet;
+}
+
+void	freePackRelease (packetHead* pack)
+{
+	if (pack->packArg) {
+		freePackRelease ((packetHead*)(pack->packArg));
+		pack->packArg= 0;
+	}
+	delete [] ((char*)(pack));
+}
+
+void outMemLeakRelease(std::ostream& os)
+{
+}
 
 workServerMgr:: workServerMgr ()
 {
@@ -81,14 +150,14 @@ static NetTokenType   sNextToken(loopHandleType pThis)
 	}
 	return nRet;
 }
-
+/*
 static int    sRegRpc(msgIdType askId, msgIdType retId, serverIdType	askDefProcSer,
 			serverIdType	retDefProcSer)
 {
 	auto& rMgr = tSingleton<serverMgr>::single().defMsgInfoMgr();
 	return rMgr.regRpc (askId, retId, askDefProcSer, retDefProcSer);
 }
-
+*/
 static int sPushPackToServer(loopHandleType desServerId, packetHead* pack)
 {
 	int nRet = 0;
@@ -405,7 +474,7 @@ void   workServerMgr:: subRunThNum (loopHandleType pThis)
 	rIdS.erase(pThis);
 }
 
-serverMgr::runThreadIdSet&  workServerMgr:: runThreadIdS ()
+workServerMgr::runThreadIdSet&  workServerMgr:: runThreadIdS ()
 {
     return m_runThreadIdS;
 }

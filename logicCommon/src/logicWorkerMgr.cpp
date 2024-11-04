@@ -43,7 +43,7 @@ int logicWorkerMgr::fromNetPack (netPacketHead* pN, pPacketHead& pNew)
 					nRet = 2;
 				}
 				if (pNew) {
-					pNew->pAsk = 0;
+					pNew->packArg = 0;
 				}
 			}
 		}
@@ -63,7 +63,7 @@ int logicWorkerMgr::toNetPack (netPacketHead* pN, pPacketHead& pNew)
 				nRet = 2;
 			}
 			if (pNew) {
-				pNew->pAsk = 0;
+				pNew->packArg = 0;
 			}
 		}
 	} while (0);

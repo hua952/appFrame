@@ -37,6 +37,16 @@ int  SingleConnectorWorker:: getGateServerEndpoint(endPoint& endP)
     return nRet;
 }
 
+
+void   SingleConnectorWorker:: sendHeartbeat ()
+{
+    do {
+		heartbeatAskMsg msg;
+		auto pack = msg.pop();
+		m_session->send (pack);
+    } while (0);
+}
+
 int  SingleConnectorWorker:: onLoopBeginBase()
 {
     int  nRet = 0;
@@ -52,7 +62,7 @@ int  SingleConnectorWorker:: onLoopBeginBase()
 			nRet = 1;
 			break;
 		}
-		nR = logicWorker:: onLoopBeginBase();
+		nR = routeWorker:: onLoopBeginBase();
 		if (nR) {
 			nRet = 2;
 			break;
@@ -61,7 +71,7 @@ int  SingleConnectorWorker:: onLoopBeginBase()
     return nRet;
 }
 
-int  SingleConnectorWorker:: sendPackToRemoteAskProc(packetHead* pPack, sendPackToRemoteRet& rRet)
+int  SingleConnectorWorker:: sendPackToRemoteAskProc(packetHead* pPack, sendPackToRemoteRet& rRet, SessionIDType objSession)
 {
     int  nRet = 0;
     do {

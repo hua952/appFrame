@@ -1,6 +1,6 @@
 #ifndef logicServerMgr_h__
 #define logicServerMgr_h__
-
+/*
 #include "mainLoop.h"
 #include <set>
 #include <map>
@@ -13,6 +13,7 @@ class logicServer
 public:
 	using exitHandleSet = std::set<serverIdType>;
 	using channelKey =  keyValue <uqword, uqword>;
+	
 	class cmpChannelKey
 	{
 	public:
@@ -81,5 +82,5 @@ private:
 	serverNode   m_serverInfo;
 	std::unique_ptr <char[]>  m_serverName;
 };
-
+*/
 #endif

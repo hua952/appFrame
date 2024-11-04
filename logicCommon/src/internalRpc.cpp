@@ -3,74 +3,63 @@
 #include "internalMsgId.h"
 #include "logicWorkerMgr.h"
 
-sendPackToRemoteAskMsg :: sendPackToRemoteAskMsg ()
-{
-	auto &smgr = logicWorkerMgr::getMgr ();
-	m_pPacket = (packetHead*)smgr.forLogicFun ()->fnAllocPack (0);
-	netPacketHead* pN = P2NHead(m_pPacket);
-	NSetAddSer(pN);
-	pN->uwMsgID = internal2FullMsg(internalMsgId_sendPackToRemoteAsk);
-	
+#define IMP_MSG_PART1(msgName, msgSize) msgName##Msg::msgName##Msg() {\
+	auto &smgr = logicWorkerMgr::getMgr ();\
+	m_pPacket = (packetHead*)smgr.forLogicFun ()->fnAllocPack (msgSize);\
+	netPacketHead* pN = P2NHead(m_pPacket);\
+	NSetAddSer(pN);\
+	pN->uwMsgID = internal2FullMsg(internalMsgId_##msgName);
+
+#define IMP_MSG_PART2(msgName) }\
+msgName##Msg::msgName##Msg(packetHead* p):CMsgBase(p){\
 }
 
-sendPackToRemoteAskMsg :: sendPackToRemoteAskMsg (packetHead* p):CMsgBase(p)
-{
-}
-
-sendPackToRemoteRetMsg:: sendPackToRemoteRetMsg()
-{
-	m_pPacket = (packetHead*)allocPacket(sizeof (sendPackToRemoteRet));
-	netPacketHead* pN = P2NHead(m_pPacket);
-	NSetAddSer(pN);
-	pN->uwMsgID = internal2FullMsg(internalMsgId_sendPackToRemoteRet);
-	NSetRet(pN);
-	auto p = ((sendPackToRemoteRet*)(N2User(pN)));
-	p->m_result= 0;
-	
-}
-
-sendPackToRemoteRetMsg:: sendPackToRemoteRetMsg(packetHead* p):CMsgBase(p)
-{
-}
+#define IMP_ASK_MSG(msgName) IMP_MSG_PART1(msgName, sizeof(msgName))\
+IMP_MSG_PART2(msgName)
 
 
-recRemotePackForYouAskMsg ::recRemotePackForYouAskMsg ()
-{
-	auto &smgr = logicWorkerMgr::getMgr ();
-	m_pPacket = (packetHead*)smgr.forLogicFun ()->fnAllocPack (0);
-	netPacketHead* pN = P2NHead(m_pPacket);
-	NSetAddSer(pN);
-	pN->uwMsgID = internal2FullMsg(internalMsgId_recRemotePackForYouAsk);
-}
+#define IMP_RET_MSG(msgName) IMP_MSG_PART1(msgName, sizeof(msgName))\
+	NSetRet(pN);\
+IMP_MSG_PART2(msgName)
 
-recRemotePackForYouAskMsg ::recRemotePackForYouAskMsg(packetHead* p):CMsgBase(p)
-{
-}
+#define IMP_ASK_MSG_Z(msgName) IMP_MSG_PART1(msgName, 0)\
+IMP_MSG_PART2(msgName)
 
 
-regAppRouteAskMsg ::regAppRouteAskMsg()
-{
-	auto &smgr = logicWorkerMgr::getMgr ();
-	m_pPacket = (packetHead*)smgr.forLogicFun ()->fnAllocPack (sizeof(regAppRouteAsk));
-	netPacketHead* pN = P2NHead(m_pPacket);
-	NSetAddSer(pN);
-	pN->uwMsgID = internal2FullMsg(internalMsgId_regAppRouteAsk);
-}
+#define IMP_RET_MSG_Z(msgName) IMP_MSG_PART1(msgName, 0)\
+	NSetRet(pN);\
+IMP_MSG_PART2(msgName)
 
-regAppRouteAskMsg ::regAppRouteAskMsg (packetHead* p):CMsgBase(p)
-{
-}
+IMP_MSG_PART1(sendPackToRemoteAsk, sizeof(sendPackToRemoteAsk))\
+	auto pU = (sendPackToRemoteAsk*)(N2User(pN));
+	pU->objSessionId = EmptySessionID;
+IMP_MSG_PART2(sendPackToRemoteAsk)
+IMP_RET_MSG(sendPackToRemoteRet)
 
-regAppRouteRetMsg ::regAppRouteRetMsg()
-{
-	auto &smgr = logicWorkerMgr::getMgr ();
-	m_pPacket = (packetHead*)smgr.forLogicFun ()->fnAllocPack (sizeof(regAppRouteRet));
-	netPacketHead* pN = P2NHead(m_pPacket);
-	NSetAddSer(pN);
-	pN->uwMsgID = internal2FullMsg(internalMsgId_regAppRouteRet);
-	NSetRet(pN);
-}
+IMP_ASK_MSG_Z(recRemotePackForYouAsk)
 
-regAppRouteRetMsg ::regAppRouteRetMsg (packetHead* p):CMsgBase(p)
-{
-}
+IMP_ASK_MSG_Z(heartbeatAsk)
+IMP_ASK_MSG_Z(heartbeatRet)
+
+IMP_ASK_MSG(regAppRouteAsk)
+IMP_RET_MSG(regAppRouteRet)
+
+IMP_MSG_PART1(createChannelAsk, sizeof(createChannelAsk))\
+	auto pU = (createChannelAsk*)(N2User(pN));
+	pU->m_sendToMe = 1;
+IMP_MSG_PART2(createChannelAsk)
+IMP_RET_MSG(createChannelRet)
+
+IMP_ASK_MSG(deleteChannelAsk)
+IMP_RET_MSG(deleteChannelRet)
+
+IMP_ASK_MSG(subscribeChannelAsk)
+IMP_RET_MSG(subscribeChannelRet)
+
+IMP_ASK_MSG(sayToChannelAsk)
+IMP_RET_MSG(sayToChannelRet)
+
+IMP_ASK_MSG(leaveChannelAsk)
+IMP_RET_MSG(leaveChannelRet)
+
+IMP_ASK_MSG(broadcastPacketNtf)

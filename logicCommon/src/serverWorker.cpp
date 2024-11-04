@@ -63,11 +63,15 @@ int  serverWorker:: onLoopBeginBase()
 			regAppRouteAskMsg ask;
 			auto pAsk = ask.pop();
 			auto pN = P2NHead(pAsk);
+			
 			auto pU =(regAppRouteAsk*)N2User(pN);
 			pU->m_appGrupId = rConfig.appGroupId ();
-			sendPacket (pAsk, rConfig.gateAppGroupId (), rConfig.gateRouteServerGroupId());
+			auto sessionId = m_connectors[i]->id();
+			sendBroadcastPack (pAsk, sessionId);
+			// sendPacket (pAsk, rConfig.gateAppGroupId (), rConfig.gateRouteServerGroupId (), m_connectors[i]->id());
+			gDebug("send regAppRouteAskMsg sessionId is : "<<sessionId<<" packHead is : "<<*pAsk);
 		}
-		nR = logicWorker:: onLoopBeginBase();
+		nR = routeWorker:: onLoopBeginBase();
 		if (nR) {
 			nRet = 2;
 			break;
@@ -76,19 +80,39 @@ int  serverWorker:: onLoopBeginBase()
     return nRet;
 }
 
-int  serverWorker:: sendPackToRemoteAskProc(packetHead* pPack, sendPackToRemoteRet& rRet)
+int  serverWorker:: sendPackToRemoteAskProc(packetHead* pPack, sendPackToRemoteRet& rRet, SessionIDType objSession)
 {
     int  nRet = 0;
     do {
 		auto& rConfig = tSingleton<logicFrameConfig>::single ();
 		auto netNum = rConfig.netNum ();
-		auto netI = 0;
-		if (netNum > 1) {
-			netI = rand() % netNum;
-		}
-		auto pS = m_connectors[netI];
-		pS->send (pPack);
+		auto pN = P2NHead(pPack);
+		ISession* pS = nullptr;
 		rRet.m_result = 0;
+		if (NIsRet(pN)) {
+			pS = getSession (pPack->sessionID);
+		} else {
+			if (objSession == EmptySessionID) {
+				if (serverWorkerState_unReg == m_state) {
+					m_unRegSendV->push_back(pPack);
+					gTrace( " when unReg state rec sendPackToRemoteAsk pack is : "<<*pPack);
+					break;
+				}
+				auto netI = 0;
+				if (netNum > 1) {
+					netI = rand() % netNum;
+				}
+				pS = m_connectors[netI];
+			} else {
+				pS = getSession (objSession);
+			}
+		}
+		myAssert (pS);
+		if (pS) {
+			pS->send (pPack);
+		} else {
+			gWarn(" can not find session sessionID = "<<objSession<<" pack is : "<<*pPack);
+		}
     } while (0);
     return nRet;
 }
@@ -97,8 +121,51 @@ int  serverWorker:: sendPackToRemoteAskProc(packetHead* pPack, sendPackToRemoteR
 static int regAppRouteRetProcFun (pPacketHead pAsk, pPacketHead& pRet, procPacketArg* pArg)
 {
 	int nRet = procPacketFunRetType_del;
-	gInfo(" rec  regAppRouteRet ");
+	auto&  workerMgr = logicWorkerMgr::getMgr();
+	auto pServer = workerMgr.findServer (pArg->handle);
+	myAssert (pServer);
+	auto pSer = dynamic_cast<serverWorker*>(pServer);
+	myAssert (pSer);
+	pSer->onRecRegAppRet ();
 	return nRet;
+}
+
+void   serverWorker:: onRecRegAppRet ()
+{
+    do {
+		m_regRetNum++;
+		gDebug(" rec  regAppRouteRet cur regRetNum is "<<(int)(m_regRetNum));
+		auto& rConfig = tSingleton<logicFrameConfig>::single ();
+		auto netNum = rConfig.netNum();
+		if (m_regRetNum == netNum) {
+			gInfo(" all reg ret ");
+			m_state = serverWorkerState_Reged;
+			auto& rV = *(m_unRegSendV.get());
+			for (auto it = rV.begin (); it != rV.end (); it++) {
+				auto netI = 0;
+				if (netNum > 1) {
+					netI = rand() % netNum;
+				}
+				auto pS = m_connectors[netI];
+				pS->send(*it);
+			}
+			m_unRegSendV.reset();
+		}
+    } while (0);
+}
+
+void   serverWorker:: sendHeartbeat ()
+{
+    do {
+		auto& rConfig = tSingleton<logicFrameConfig>::single ();
+		auto netNum = rConfig.netNum();
+		for (decltype (netNum) i = 0; i < netNum; i++) {
+			heartbeatAskMsg msg;
+			auto pack = msg.pop();
+			auto pS = m_connectors[i];
+			pS->send(pack);
+		}
+    } while (0);
 }
 
 int   serverWorker:: recPacketProcFun (ForLogicFun* pForLogic)

@@ -21,6 +21,7 @@ frameConfig::frameConfig ()
 	m_gateAppGroupId = 0;
 	strCpy("forClientIp:127.0.0.1*forServerIp:127.0.0.1*startPort:12000+forClientIp:127.0.0.1*forServerIp:127.0.0.1*startPort:22000", m_gateInfo);
 	m_gateRouteServerGroupId = 0;
+	m_heartbeatSetp = 900000;
 	strCpy("", m_homeDir);
 	strCpy("127.0.0.1", m_ip);
 	strCpy("cppLevel0L", m_level0);
@@ -177,6 +178,16 @@ uword  frameConfig::gateRouteServerGroupId ()
 void  frameConfig::setGateRouteServerGroupId (uword v)
 {
 	m_gateRouteServerGroupId = v;
+}
+
+udword  frameConfig::heartbeatSetp ()
+{
+    return m_heartbeatSetp;
+}
+
+void  frameConfig::setHeartbeatSetp (udword v)
+{
+	m_heartbeatSetp = v;
 }
 
 const char*  frameConfig::homeDir ()
@@ -394,6 +405,7 @@ int  frameConfig:: dumpConfig (const char* szFile)
 		strTgateInfo = gateInfo;
 		ofs<<"gateInfo="<<strTgateInfo<<R"--(  ## gate IP 等   )--"<<std::endl;
 		ofs<<"gateRouteServerGroupId="<<gateRouteServerGroupId()<<std::endl;
+		ofs<<"heartbeatSetp="<<heartbeatSetp()<<R"--(  ## 删除token计算器时间间隔(单位毫秒)   )--"<<std::endl;
 	int nhomeDirLen = 0;
 	auto homeDir = this->homeDir();
 	if (homeDir) nhomeDirLen = strlen(homeDir);
@@ -529,7 +541,7 @@ int  frameConfig:: procCmdArgS (int nArg, char** argS)
 			std::stringstream ssV (retS[1]);
 		if (strKey == "allocDebug") {
 				ssV>>strVal;
-	m_allocDebug = strVal == "true";
+	m_allocDebug = (strVal == "true") || (atoi(strVal.c_str()));
 				continue;
 			}
 				if (strKey == "appGroupId") {
@@ -546,7 +558,7 @@ int  frameConfig:: procCmdArgS (int nArg, char** argS)
 			}
 				if (strKey == "clearTag") {
 				ssV>>strVal;
-	m_clearTag = strVal == "true";
+	m_clearTag = (strVal == "true") || (atoi(strVal.c_str()));
 				continue;
 			}
 				if (strKey == "dbgSleep") {
@@ -559,7 +571,7 @@ int  frameConfig:: procCmdArgS (int nArg, char** argS)
 			}
 				if (strKey == "dumpMsg") {
 				ssV>>strVal;
-	m_dumpMsg = strVal == "true";
+	m_dumpMsg = (strVal == "true") || (atoi(strVal.c_str()));
 				continue;
 			}
 				if (strKey == "endPoint") {
@@ -600,6 +612,10 @@ int  frameConfig:: procCmdArgS (int nArg, char** argS)
 			}
 				if (strKey == "gateRouteServerGroupId") {
 				ssV>>m_gateRouteServerGroupId;
+				continue;
+			}
+				if (strKey == "heartbeatSetp") {
+				ssV>>m_heartbeatSetp;
 				continue;
 			}
 				if (strKey == "homeDir") {
@@ -696,7 +712,7 @@ int  frameConfig:: procCmdArgS (int nArg, char** argS)
 			}
 				if (strKey == "srand") {
 				ssV>>strVal;
-	m_srand = strVal == "true";
+	m_srand = (strVal == "true") || (atoi(strVal.c_str()));
 				continue;
 			}
 				if (strKey == "startPort") {

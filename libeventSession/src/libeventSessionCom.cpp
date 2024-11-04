@@ -139,7 +139,7 @@ packetHead*  libeventSessionCom:: afterReadBuff(udword nS)
 				pack = allFun(netHead.udwLength);
 				auto pN = P2NHead(pack);
 				*pN = netHead;
-				NSetNotOtherNetLoopSend(pN);
+				// NSetNotOtherNetLoopSend(pN);
 				if (0 == netHead.udwLength) {
 					pRet = pack;
 					pack = nullptr;

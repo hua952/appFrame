@@ -1,3 +1,4 @@
+/*
 #include "logicServer.h"
 #include "myAssert.h"
 #include "gLog.h"
@@ -422,10 +423,7 @@ void  logicServer:: logicOnConnect(SessionIDType sessionId, uqword userData)
 void logicServer:: sLogicOnAcceptSession(serverIdType	fId, SessionIDType sessionId, uqword userData)
 {
     do {
-		/*
-		auto pThis = logicServer::findServer(fId);
-		pThis->logicOnAcceptSession(sessionId, userData);
-		*/
+		
     } while (0);
 }
 
@@ -476,3 +474,4 @@ void logicServer::setUserData (void* v)
 {
     m_userData = v;
 }
+*/

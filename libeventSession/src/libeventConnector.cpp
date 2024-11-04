@@ -163,9 +163,11 @@ static bool sConnectComTimerFun(void* p)
 		if (SessionState_Offline == sta) {
 			auto nRet = pL->connect();
 			if (0 == nRet) {
+				/*
 				auto& rMap = rServer.getSessonMap ();
 				auto id = pL->id();
 				rMap[id] = pL;
+				*/
 				pL->setState (SessionState_Online);
 				pL->trySend();
 			} else {
@@ -229,4 +231,5 @@ libeventServerCom*   libeventConnector:: server ()
     return m_server;
 }
 */
+
 

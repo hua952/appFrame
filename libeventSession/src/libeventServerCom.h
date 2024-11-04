@@ -27,7 +27,7 @@ public:
     libeventServerCom ();
     ~libeventServerCom ();
 	void  clean();
-	typedef std::unordered_map<SessionIDType, libeventSessionCom*> sessonMap;
+	// typedef std::unordered_map<SessionIDType, libeventSessionCom*> sessonMap;
 	typedef std::unordered_map<SessionIDType, std::shared_ptr<libeventServerSession>> serverSessonMap;
 	typedef std::map<SessionIDType, std::shared_ptr<libeventConnector>>  connectMap;
 	int onLoopFrame () override;
@@ -36,7 +36,7 @@ public:
 	int       getAllConnector (ISession** ppRec, int recBuffNum) override;
 	void      setAttr(const char* key, const char* value) override;
 	const char*  getAttr(const char* key) override;
-	sessonMap&  getSessonMap();
+	// sessonMap&  getSessonMap();
 	serverSessonMap&  getServerSessonMap ();
 	struct event_base* getBase();
 	libeventSessionCom* getLibeventSessionCom (SessionIDType id);
@@ -70,7 +70,7 @@ private:
     onConnectT  m_connectFun;
     onProcPackT m_procPackfun;
     SessionIDType  m_nextSession;
-	sessonMap m_sessonMap;
+	// sessonMap m_sessonMap;
 	serverSessonMap     m_serverSessonMap;
 	struct event_base* m_base;
 	std::unique_ptr <char[]> m_userData;

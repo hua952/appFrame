@@ -121,8 +121,8 @@ static void accept_cb(intptr_t fd, short events, void* arg)
 	auto& rSSM = pServer->getServerSessonMap ();
 	rSSM[id] = pSSS;
 	auto pRS = pSS;
-	auto& rSM =  pServer->getSessonMap();
-	rSM[id] = pRS;
+	// auto& rSM =  pServer->getSessonMap();
+	// rSM[id] = pRS;
     bufferevent_setcb(bev, socket_read_cb, NULL, event_cb, pRS);
     bufferevent_enable(bev, EV_READ | EV_PERSIST);
 	auto fun = pServer->acceptFun ();

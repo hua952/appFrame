@@ -10,8 +10,13 @@ class logicWorker
 public:
 	using tokenMapType = std::unordered_map<NetTokenType, packetHead*>;
 	// using netMsgProcMap = std::unordered_map<uword, procRpcPacketFunType>;
+	// using channelKey =  keyValue <uqword, uqword>;
 
-	using channelKey =  keyValue <uqword, uqword>;
+	struct channelKey 
+	{
+		uqword  first;
+		uqword  second;
+	};
     logicWorker ();
     ~logicWorker ();
 
@@ -20,6 +25,7 @@ public:
 
 	int  sendPacket (packetHead* pPack);
 	int  sendPacket (packetHead* pPack, loopHandleType appGroupId, loopHandleType threadGroupId);
+	int  sendPacket (packetHead* pPack, loopHandleType appGroupId, loopHandleType threadGroupId, SessionIDType sessionId);
 	int  pushPacketToLocalServer(packetHead* pPack, loopHandleType threadGroupId);
 	virtual int  recPacketProcFun (ForLogicFun* pForLogic); /*   注册一些数据包的处理函数   */
 	int  onSendPackToRemoteRet (packetHead* pPack);
@@ -30,6 +36,7 @@ public:
 	virtual int onLoopBegin();
 	virtual int onLoopEnd();
 	virtual int onLoopFrame();
+	virtual int onCreateChannelRet(const channelKey& rKey, udword result) = 0;
 
 	virtual int onLoopBeginBase();
 	virtual int onLoopEndBase();
@@ -48,7 +55,19 @@ public:
 		ComTimerFun pF, void* pUserData, udword udwLength);
 	void  delSendPack (NetTokenType  token);
 	NetTokenType  newToken();
+	int  createChannel (const channelKey& rKey);
+	int  deleteChannel (const channelKey& rKey);
+	int  subscribeChannel (const channelKey& rKey);
+	int  sayToChannel (const channelKey& rKey, packetHead* pack);
+
+	int  leaveChannel (const channelKey& rKey);
+	void*  userData ();
+	void  setUserData (void* v);
+protected:
+	int  sendBroadcastPack (packetHead* pack);
+	int  sendBroadcastPack (packetHead* pack, SessionIDType sessionId);
 private:
+	void*  m_userData;
 	tokenMapType   m_tokenMap;
 	// netMsgProcMap  m_netMsgProcMap;
 	bool  m_willExit{false};

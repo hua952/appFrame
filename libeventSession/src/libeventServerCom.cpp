@@ -99,12 +99,12 @@ onProcPackT libeventServerCom::procPackfun()
 {
     return m_procPackfun;
 }
-
+/*
 libeventServerCom::sessonMap&  libeventServerCom::getSessonMap()
 {
 	return  m_sessonMap;
 }
-
+*/
 struct event_base* libeventServerCom::getBase()
 {
 	return m_base;
@@ -113,10 +113,15 @@ struct event_base* libeventServerCom::getBase()
 libeventSessionCom* libeventServerCom::getLibeventSessionCom (SessionIDType id)
 {
 	libeventSessionCom* pRet = nullptr;
-	auto& rM = getSessonMap();
+	auto& rM = getServerSessonMap ();
 	auto it = rM.find (id);
-	if (rM.end () != it) {
-		pRet = it->second;
+	if (rM.end () == it) {
+		auto itc = m_connectMap.find(id);
+		if (m_connectMap.end() != itc) {
+			pRet = itc->second.get();
+		}
+	} else {
+		pRet = it->second.get();
 	}
 	return pRet;
 }
@@ -141,9 +146,9 @@ static bool sConnectComTimerFun(void* p)
 		if (SessionState_waitCon == sta) {
 			auto nRet = pL->connect();
 			if (0 == nRet) {
-				auto& rMap = rServer.getSessonMap ();
+				// auto& rMap = rServer.getSessonMap ();
 				auto id = pL->id();
-				rMap[id] = pL;
+				// rMap[id] = pL;
 				auto conFun = rServer.connectFun ();
 				auto pU = pL->userData ();
 				auto token = (uqword*)pU;
@@ -208,7 +213,7 @@ int libeventServerCom::init (callbackS* pCallbackS, endPoint* pLister, udword li
 			if (ep.ppIConnector) {
 				*ep.ppIConnector = pCon.get();
 			}
-			auto& rMap = getSessonMap ();
+			// auto& rMap = getSessonMap ();
 			auto& rConMap = getConnectMap ();
 				// rMap[id] = pCon.get();// &rSC;
 				rConMap [id] = pCon;
@@ -271,6 +276,7 @@ int libeventServerCom:: getAllConnector (ISession** ppRec, int recBuffNum)
 int libeventServerCom::closeSession (SessionIDType   id)
 {
 	int nRet = 0;
+	/*
 	auto& rSM = getSessonMap();
 	auto it = rSM.find(id);
 	if (rSM.end() != it) {
@@ -278,6 +284,7 @@ int libeventServerCom::closeSession (SessionIDType   id)
 		fun(it->second);
 		rSM.erase(it);
 	}
+	*/
 	auto& rServerMap = getServerSessonMap ();
 	auto iter = rServerMap.find (id);
 	if (rServerMap.end () == iter) {

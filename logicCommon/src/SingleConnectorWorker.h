@@ -12,7 +12,8 @@ public:
 	int onLoopBeginBase() override;
 
 	int getGateServerEndpoint(endPoint& endP);
-	int sendPackToRemoteAskProc(packetHead* pPack, sendPackToRemoteRet& rRet) override;
+	int sendPackToRemoteAskProc(packetHead* pPack, sendPackToRemoteRet& rRet, SessionIDType objSession) override;
+	void  sendHeartbeat () override;
 private:
 	ISession*  m_session{nullptr};
 

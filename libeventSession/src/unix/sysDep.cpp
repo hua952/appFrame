@@ -11,6 +11,7 @@
 #include "event2/bufferevent.h"
 #include "event2/bufferevent_compat.h"
 
+/*
 void socket_read_cb(bufferevent* bev, void* arg);
 void event_cb(struct bufferevent *bev, short event, void *arg);
 void accept_cb(int fd, short events, void* arg)
@@ -43,7 +44,7 @@ void accept_cb(int fd, short events, void* arg)
 	pSS->setState (SessionState_Online);
 	fun (pSS, token);
 }
-
+*/
 void event_callback_com(int, short sig, void * pArg)
 {
 	auto pSig = (sigInfo*)pArg;

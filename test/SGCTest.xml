@@ -25,7 +25,6 @@
 						</chatTh>
 						<netTh sleepSetp="1" showFps="1" fpsSetp="40000" route="1">
 							<procRpc>
-								<roomChannel askType="ask"/>
 							</procRpc>
 						</netTh>
 						<muTh sleepSetp="1" rearEnd="0" openNum="2" regRoute="0" showFps="1" fpsSetp="40000">
@@ -75,12 +74,16 @@
 							<procRpc>
 								<BackendToGateSin askType="ret"/>
 								<clientToBackendSin askType="ask"/>
+								<roomChannel askType="ask"/>
+								<roomChatTxt askType="ask"/>
 							</procRpc>
 						</BsignleRun>
 						<BmutRun sleepSetp="1" openNum="2" showFps="1" fpsSetp="40000">
 							<procRpc>
 								<BackendToGateMut askType="ret"/>
 								<clientToBackendMut askType="ask"/>
+								<roomChannel askType="ret"/>
+								<roomChatTxt askType="ask"/>
 							</procRpc>
 						</BmutRun>
 					</server>

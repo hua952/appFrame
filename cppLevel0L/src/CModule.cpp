@@ -1,3 +1,4 @@
+/*
 #include"CModule.h"
 #include <stdlib.h>
 #include <memory>
@@ -154,4 +155,4 @@ onFrameLagicFT  CModule::fnOnFrameLogic ()
 {
 	return m_fnOnFrameLogic;
 }
-
+*/
