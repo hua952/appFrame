@@ -18,7 +18,8 @@ typedef struct _packetHead
 {
 	struct _packetHead*    pNext;
 	struct _packetHead*    pPer;
-	uqword    pAsk;
+	// uqword    pAsk;
+	uqword    packArg;
 	udword    sessionID;
 	ubyte     loopId;
 	ubyte    Tag[3];
@@ -48,16 +49,22 @@ typedef struct  _netPacketHead
 
 #define     NIsExtPH(p) ((p->uwTag&0x40))
 #define     NSetExtPH(p) ((p->uwTag|=0x40))
-#define     NIsRet(p) ((p->uwTag&0x80))
-#define     NSetRet(p) ((p->uwTag|=0x80))
 
+#define     NIsRet(p) (p->uwTag&0x01)
+#define     NSetRet(p) (p->uwTag|=0x01)
+
+#define     NIsDesOnce(p) (p->uwTag&0x02)
+#define     NSetDesOnce(p) (p->uwTag|=0x02)
+
+/*
 #define     NIsOtherNetLoopSend(p) ((p->uwTag&0x20))
 #define     NSetOtherNetLoopSend(p) ((p->uwTag|=0x20))
 #define     NSetNotOtherNetLoopSend(p) ((p->uwTag&=~0x20))
+*/
 
-#define     NNeetRet(p) ((p->uwTag&0x10))
-#define     NSetNeetRet(p) ((p->uwTag|=0x10))
-#define     NSetUnRet(p) ((p->uwTag&=~0x10))
+#define     NNeetRet(p) ((p->uwTag&0x80))
+#define     NSetNeetRet(p) ((p->uwTag|=0x80))
+#define     NSetUnRet(p) ((p->uwTag&=~0x80))
 
 /*
 #define     NIsAskSave(p) ((p->uwTag&0x40))

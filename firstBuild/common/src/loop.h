@@ -10,12 +10,13 @@ enum procPacketFunRetType
 	procPacketFunRetType_stopBroadcast = 2,
 	procPacketFunRetType_exitNow = 4,
 	procPacketFunRetType_exitAfterLoop = 8,
-	procPacketFunRetType_alderHandle = 16
+	// procPacketFunRetType_alderHandle = 16
 };
 
 typedef struct _procPacketArg
 {
 	loopHandleType handle;
+	bool           broadcast{false};
 } procPacketArg;
 
 typedef int (*frameFunType)(void* arg);

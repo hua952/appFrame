@@ -27,7 +27,7 @@ std::ostream& operator << (std::ostream& os, const packetHead& pack)
 {
 	auto pp = &pack;
 	auto& p = *(P2NHead(pp));
-    os<<"pAsk = "<<pack.pAsk<<" sessionID = " <<pack.sessionID<<" loopId = "<<(int)(pack.loopId)<< " udwLength = " << p.udwLength<< "  dwToKen = " << p.dwToKen
+    os<<"pAsk = "<<pack.packArg<<" sessionID = " <<pack.sessionID<<" loopId = "<<(int)(pack.loopId)<< " udwLength = " << p.udwLength<< "  dwToKen = " << p.dwToKen
 		<<" ubySrcServId = "<<(int)(p.ubySrcServId) <<" ubyDesServId = "<<(int)(p.ubyDesServId)
 		<<" uwMsgID = "<<p.uwMsgID<<" uwTag = "<<std::hex<<(int)(p.uwTag)<<std::dec<<"pack = "<<pp;
     return os;

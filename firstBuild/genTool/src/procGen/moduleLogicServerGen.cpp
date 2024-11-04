@@ -107,6 +107,13 @@ int   moduleLogicServerGen:: startGen (moduleGen& rMod)
 				nRet = 9;
 				break;
 			}
+
+			nR = genOnCreateChannelRet (rMod, pName);
+			if (nR) {
+				nRet = 9;
+				break;
+			}
+
 			nR = genOnWorkerInitCpp (rMod, pName);
 			if (nR) {
 				nRet = 9;
@@ -177,6 +184,41 @@ int   moduleLogicServerGen:: genOnLoopBegin (moduleGen& rMod, const char* server
 		fmt::print(os, R"(#include "{serverName}.h"
 
 int {serverName}::onLoopBegin()
+{{
+	int nRet = 0;
+	do {{
+	}} while (0);
+	return nRet;
+}}
+
+)", fmt::arg("serverName", serverName));
+
+
+    } while (0);
+    return nRet;
+}
+
+int   moduleLogicServerGen:: genOnCreateChannelRet (moduleGen& rMod, const char* serverName)
+{
+    int   nRet = 0;
+    do {
+		std::string strRoot = rMod.srcPath ();
+		strRoot += "/";
+		strRoot += serverName;
+		auto proc = strRoot;
+		proc += "/proc/OnCreateChannelRet.cpp";
+		if (isPathExit (proc.c_str())) {
+			nRet = 0;
+			break;
+		}
+		std::ofstream os (proc.c_str ());
+		if (!os) {
+			rError ("open file : "<<proc.c_str ());
+			nRet = 1;
+		}
+		fmt::print(os, R"(#include "{serverName}.h"
+
+int {serverName}::onCreateChannelRet(const channelKey& rKey, udword result)
 {{
 	int nRet = 0;
 	do {{
@@ -568,7 +610,7 @@ public:
 	int onLoopBegin() override;
 	int onLoopEnd() override;
 	int onLoopFrame() override;
-	
+	int onCreateChannelRet(const channelKey& rKey, udword result) override;
 	{procMsg}
 private:
 }};

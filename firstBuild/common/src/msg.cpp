@@ -61,7 +61,7 @@ packetHead* allocPacket(udword udwS)
 	pNetPacketHead pN = P2NHead(pRet);
 	memset(pN, 0, NetHeadSize);
 	pN->udwLength = udwS;
-	pRet->pAsk = 0;
+	pRet->packArg= 0;
 	pRet->sessionID = EmptySessionID;
 	pRet->loopId = c_emptyLoopHandle;
 	return pRet;
@@ -82,7 +82,7 @@ packetHead* clonePack(packetHead* p)
 	auto pN = P2NHead(p);
 	udword extNum = NIsExtPH(pN)?1:0;
 	auto pRet = allocPacketExt (pN->udwLength, extNum);
-	pRet->pAsk = 0;
+	pRet->packArg = 0;
 	pRet->sessionID = p->sessionID;
 	auto pRN = P2NHead(pRet);
 	auto udwLength = pN->udwLength;

@@ -192,7 +192,6 @@ int  configSrcGen:: writeClassCpp ()
 
 		auto pSSVr = std::make_unique<std::stringstream>();
 		std::stringstream& ssProcCmdArgS = *pSSVr;
-		// std::stringstream ssProcCmdArgS;
 		std::stringstream ssInit;
 
 		os<<R"(#include ")"<<pConfigFileName<<R"(.h"
@@ -281,7 +280,7 @@ int  configSrcGen:: writeClassCpp ()
 
 				ssVR<<R"(ssV>>strVal;
 	)";
-				ssVR<<memberItemName<<R"( = strVal == "true";)";
+				ssVR<<memberItemName<<R"( = (strVal == "true") || (atoi(strVal.c_str()));)";
 
 				std::string strV = "false";
 				if (itemValue) {

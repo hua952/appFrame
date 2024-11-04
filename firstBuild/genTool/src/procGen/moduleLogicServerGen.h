@@ -18,6 +18,7 @@ private:
 	int  genOnLoopBegin (moduleGen& rMod, const char* serverName);
 	int  genOnLoopEnd(moduleGen& rMod, const char* serverName);
 	int  genOnLoopFrame(moduleGen& rMod, const char* serverName);
+	int  genOnCreateChannelRet (moduleGen& rMod, const char* serverName);
 
 	int  genWorkerMgrH (moduleGen& rMod);
 	int  genWorkerMgrCpp (moduleGen& rMod);

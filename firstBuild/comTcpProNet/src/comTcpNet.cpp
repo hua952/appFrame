@@ -25,6 +25,7 @@ static int sProcessNetPackFun(ISession* session, packetHead* pack)
 	do {
 		auto pITcp = session->getServer ();
 		auto pU = (comTcpNet*)(*(PVoid*)(pITcp->userData()));
+		pack->sessionID = session->id();
 		nRet = pU->processNetPackFun (session, pack);
 	} while (0);
 	return nRet;
