@@ -5,7 +5,6 @@
 #include <string>
 #include "myAssert.h"
 #include "mainLoop.h"
-#include "serverMgr.h"
 #include "tSingleton.h"
 
 argConfig:: argConfig ()

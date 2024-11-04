@@ -10,7 +10,6 @@
 #include "typeDef.h"
 #include "cTimer.h"
 #include "fpsCount.h"
-#include "impPackSave_map.h"
 
 class workServer
 {

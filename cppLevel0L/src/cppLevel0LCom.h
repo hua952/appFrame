@@ -2,7 +2,6 @@
 #define cppLevel0LCom_h__
 #include <sstream>
 #include <cLog.h>
-#include "serverMgr.h"
 
 #define  LOG_MSG(nLevel,...) {std::stringstream ss;ss<<__FILE__<<":"<<__FUNCTION__<<":"<<__LINE__<<" "<<__VA_ARGS__;logMsg("appFrame",ss.str().c_str(),nLevel);}
 #define rTrace(...) LOG_MSG(0, __VA_ARGS__)
