@@ -3,7 +3,7 @@
 #include <sstream>
 #include <cLog.h>
 
-#define  LOG_MSG(nLevel,...) {std::stringstream ss;ss<<__FILE__<<":"<<__FUNCTION__<<":"<<__LINE__<<" "<<__VA_ARGS__;logMsg("appFrame",ss.str().c_str(),nLevel);}
+#define  LOG_MSG(nLevel,...) {std::stringstream ss;ss<<__VA_ARGS__<<" "<<__FILE__<<":"<<__FUNCTION__<<":"<<__LINE__;logMsg("appFrame",ss.str().c_str(),nLevel);}
 #define rTrace(...) LOG_MSG(0, __VA_ARGS__)
 #define rDebug(...) LOG_MSG(1, __VA_ARGS__)
 #define rInfo(...) LOG_MSG(2, __VA_ARGS__)

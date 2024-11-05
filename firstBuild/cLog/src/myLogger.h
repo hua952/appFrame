@@ -28,6 +28,8 @@ public:
 	bool  logThreId ();
 	void  setLogThreId (bool v);
 private:
+	void  writeToCon(const char* txt);
+	void  writeToFile(const char* txt);
 	bool  m_logThreId;
 	bool  m_logToFile;
 	bool  m_logToCon;

@@ -12,7 +12,7 @@
 			<module>
 				<appClientM>
 					<server>
-						<chatTh sleepSetp="1" showFps="1" fpsSetp="40000">
+						<chatTh sleepSetp="1" showFps="1" showFpsSetp="40000">
 							<procRpc>
 								<manualList askType="ask"/>
 								<regret askType="ret"/>
@@ -22,12 +22,12 @@
 								<wateForGame askType="ret"/>
 							</procRpc>
 						</chatTh>
-						<netTh sleepSetp="1" showFps="1" fpsSetp="40000" route="1">
+						<netTh sleepSetp="1" showFps="1" showFpsSetp="40000" route="1">
 							<procRpc>
 								<roomChannel askType="ask"/>
 							</procRpc>
 						</netTh>
-						<muTh sleepSetp="1" rearEnd="0" openNum="2" regRoute="0" showFps="1" fpsSetp="40000">
+						<muTh sleepSetp="1" rearEnd="0" openNum="2" regRoute="0" showFps="1" showFpsSetp="40000">
 							<procRpc>
 								<regret askType="ask"/>
 							</procRpc>
@@ -47,12 +47,12 @@
 			<module>
 				<appGateM>
 					<server>
-						<signleRun sleepSetp="1" showFps="1" fpsSetp="40000">
+						<signleRun sleepSetp="1" showFps="1" showFpsSetp="40000">
 							<procRpc>
 								<enterServer askType="ask"/>
 							</procRpc>
 						</signleRun>
-						<mutRun sleepSetp="1" openNum="2" showFps="1" fpsSetp="40000">
+						<mutRun sleepSetp="1" openNum="2" showFps="1" showFpsSetp="40000">
 							<procRpc>
 								<wateForGame askType="ask"/>
 							</procRpc>

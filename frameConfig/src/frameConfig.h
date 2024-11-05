@@ -46,6 +46,8 @@ public:
   void  setIp (const char* v);
   const char*  level0 ();
   void  setLevel0 (const char* v);
+  bool  logCon ();
+  void  setLogCon (bool v);
   const char*  logFile ();
   void  setLogFile (const char* v);
   word  logLevel ();
@@ -91,6 +93,7 @@ private:
   std::unique_ptr <char[]>  m_homeDir;
   std::unique_ptr <char[]>  m_ip;
   std::unique_ptr <char[]>  m_level0;
+  bool  m_logCon;
   std::unique_ptr <char[]>  m_logFile;
   word  m_logLevel;
   std::unique_ptr <char[]>  m_logicModel;

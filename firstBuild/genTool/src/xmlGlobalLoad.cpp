@@ -832,9 +832,19 @@ int   xmlGlobalLoad:: onceServerLoad (rapidxml::xml_node<char>* pS,
 		newServer->setStrHandle (strH.c_str());
 		strTmpHandle += "Tmp";
 		strTmpHandle += "Handle";
+		auto& attrs = newServer->attrs ();
 		newServer->setStrTmpHandle (strTmpHandle.c_str());
-		auto pFpsA = pS->first_attribute("fpsSetp");
+		auto pFpsSA = pS->first_attribute("showFps");
+		if (pFpsSA) {
+			std::string str = "showFps=";
+			str += pFpsSA->value();
+			attrs.push_back(str);
+		}
+		auto pFpsA = pS->first_attribute("showFpsSetp");
 		if (pFpsA) {
+			std::string str = "showFpsSetp=";
+			str += pFpsA->value();
+			attrs.push_back(str);
 			auto dwSetp = atoi (pFpsA->value());
 			newServer->setFpsSetp (dwSetp);
 		}
@@ -852,6 +862,9 @@ int   xmlGlobalLoad:: onceServerLoad (rapidxml::xml_node<char>* pS,
 		if (pSleepA) {
 			auto dwSetp = atoi (pSleepA->value());
 			newServer->setSleepSetp (dwSetp);
+			std::string str = "sleepSetp=";
+			str += pSleepA->value();
+			attrs.push_back(str);
 		}
 		auto pRearEnd = pS->first_attribute("rearEnd");
 		if (pRearEnd) {

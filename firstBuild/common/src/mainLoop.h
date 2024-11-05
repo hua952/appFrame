@@ -22,8 +22,6 @@
 extern ServerIDType		c_levelMaxOpenNum[c_serverLevelNum];
 #define c_onceServerLevelNum  (256/c_serverLevelNum)
 
-typedef int (*sendPackToLoopFT)(packetHead*);
-typedef int (*pushPackToLoopFT)(loopHandleType pThis, packetHead*);
 typedef void (*stopLoopSFT)();
 typedef packetHead* (*allocPackFT)(udword udwSize);
 typedef void		(*freePackFT)(packetHead* pack);
@@ -38,38 +36,24 @@ typedef void (*popFromCallStackFT)(loopHandleType pThis);
 typedef void (*logCallStackFT) (loopHandleType pThis, int nL);
 
 struct  serverNode;
-typedef int (*createLoopFT)(const char* szName, loopHandleType serId, serverNode* pNode, frameFunType funFrame, void* arg);
 typedef  int (*regMsgFT)(loopHandleType serverId, uword uwMsgId, procRpcPacketFunType pFun); // call by level 2
 typedef  procRpcPacketFunType (*findMsgFT)(loopHandleType serverId, uword uwMsgId); // call by level 2
 typedef  int (*removeMsgFT)(loopHandleType handle, uword uwMsgId); // call by level 2
 typedef  void (*popFromCallStackFT) (loopHandleType handle);
-typedef  int    (*regRpcFT) (msgIdType askId, msgIdType retId, serverIdType	askDefProcSer,
-			serverIdType	retDefProcSer);
-typedef  serverIdType (*getDefProcServerIdFT) (msgIdType msgId);
 
-typedef int (*regRouteFT)(loopHandleType myServerId, loopHandleType objServerId, SessionIDType sessionId, udword onlyId);
-typedef int (*sendPackToSomeSessionFT)(loopHandleType myServerId,  netPacketHead* pN, uqword* pSessS, udword sessionNum);
 typedef int (*pushPackToServerFT)(loopHandleType desServerId, packetHead* pack);
+typedef void (*setAttrFT)(loopHandleType desServerId, const char* szTxt);
 
 typedef struct _ForLogicFun
 {
 	allocPackFT		 fnAllocPack; // Thread safety
 	freePackFT		 fnFreePack; // Thread safety
-	createLoopFT	 fnCreateLoop;
 	regMsgFT		 fnRegMsg;
 	findMsgFT        fnFindMsg;
-	sendPackToLoopFT fnSendPackUp;// Thread safety
-	sendPackToLoopFT fnSendPackToLoop;// Thread safety
-	sendPackToLoopFT fnSendPackToLoopForChannel;// Thread safety
-	sendPackToSomeSessionFT		fnSendPackToSomeSession; // Thread safety
 	logMsgFT		 fnLogMsg;
     addComTimerFT    fnAddComTimer;// Thread safety
 	nextTokenFT      fnNextToken;
-	regRpcFT               fnRegRpc;
-    getDefProcServerIdFT   fnGetDefProcServerId;
-	regRouteFT             fnRegRoute;
-	serializePackFunType   fromNetPack;   // rec
-	serializePackFunType   toNetPack;   // rec
+	setAttrFT        fnSetAttr;
 	pushPackToServerFT     fnPushPackToServer;
 } ForLogicFun;
 

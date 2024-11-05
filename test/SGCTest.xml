@@ -12,7 +12,7 @@
 			<module>
 				<appClientM>
 					<server>
-						<chatTh sleepSetp="1" showFps="1" fpsSetp="40000">
+						<chatTh sleepSetp="1"  showFpsSetp="40000">
 							<procRpc>
 								<manualList askType="ask"/>
 								<regret askType="ret"/>
@@ -23,11 +23,11 @@
 								<clientToBackendSin askType="ret"/>
 							</procRpc>
 						</chatTh>
-						<netTh sleepSetp="1" showFps="1" fpsSetp="40000" route="1">
+						<netTh sleepSetp="1"  showFpsSetp="40000" route="1">
 							<procRpc>
 							</procRpc>
 						</netTh>
-						<muTh sleepSetp="1" rearEnd="0" openNum="2" regRoute="0" showFps="1" fpsSetp="40000">
+						<muTh sleepSetp="1" rearEnd="0" openNum="2" regRoute="0"  showFpsSetp="40000">
 							<procRpc>
 								<regret askType="ask"/>
 								<clientToBackendMut askType="ret"/>
@@ -48,13 +48,13 @@
 			<module>
 				<appGateM>
 					<server>
-						<signleRun sleepSetp="1" showFps="1" fpsSetp="40000">
+						<signleRun sleepSetp="1"  showFpsSetp="40000">
 							<procRpc>
 								<enterServer askType="ask"/>
 								<BackendToGateSin askType="ask"/>
 							</procRpc>
 						</signleRun>
-						<mutRun sleepSetp="1" openNum="2" showFps="1" fpsSetp="40000">
+						<mutRun sleepSetp="1" openNum="2"  showFpsSetp="40000">
 							<procRpc>
 								<wateForGame askType="ask"/>
 								<BackendToGateMut askType="ask"/>
@@ -70,7 +70,7 @@
 			<module>
 				<BackendM>
 					<server>
-						<BsignleRun sleepSetp="1" showFps="1" fpsSetp="40000">
+						<BsignleRun sleepSetp="1" showFps="1" showFpsSetp="30000">
 							<procRpc>
 								<BackendToGateSin askType="ret"/>
 								<clientToBackendSin askType="ask"/>
@@ -78,7 +78,7 @@
 								<roomChatTxt askType="ask"/>
 							</procRpc>
 						</BsignleRun>
-						<BmutRun sleepSetp="1" openNum="2" showFps="1" fpsSetp="40000">
+						<BmutRun sleepSetp="1" openNum="2" showFpsSetp="40000">
 							<procRpc>
 								<BackendToGateMut askType="ret"/>
 								<clientToBackendMut askType="ask"/>

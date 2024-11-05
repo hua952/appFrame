@@ -25,6 +25,7 @@ frameConfig::frameConfig ()
 	strCpy("", m_homeDir);
 	strCpy("127.0.0.1", m_ip);
 	strCpy("cppLevel0L", m_level0);
+	m_logCon = true;
 	strCpy("", m_logFile);
 	m_logLevel = 2;
 	strCpy("", m_logicModel);
@@ -218,6 +219,16 @@ const char*  frameConfig::level0 ()
 void  frameConfig::setLevel0 (const char* v)
 {
 	strCpy(v, m_level0);
+}
+
+bool  frameConfig::logCon ()
+{
+    return m_logCon;
+}
+
+void  frameConfig::setLogCon (bool v)
+{
+	m_logCon = v;
 }
 
 const char*  frameConfig::logFile ()
@@ -427,6 +438,7 @@ int  frameConfig:: dumpConfig (const char* szFile)
 	if (nlevel0Len) 
 		strTlevel0 = level0;
 		ofs<<"level0="<<strTlevel0<<std::endl;
+		ofs<<"logCon="<<logCon()<<std::endl;
 	int nlogFileLen = 0;
 	auto logFile = this->logFile();
 	if (logFile) nlogFileLen = strlen(logFile);
@@ -640,6 +652,11 @@ int  frameConfig:: procCmdArgS (int nArg, char** argS)
 					strVal = strVal.substr(1,strVal.length()-2);
 				}
 	strCpy(strVal.c_str(), m_level0);
+				continue;
+			}
+				if (strKey == "logCon") {
+				ssV>>strVal;
+	m_logCon = (strVal == "true") || (atoi(strVal.c_str()));
 				continue;
 			}
 				if (strKey == "logFile") {

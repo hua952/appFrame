@@ -91,19 +91,37 @@ int    myLogger:: logTxt (const char* szTxt, uword uwLevel)
 
 		}
 		ss<<szTxt<<" "<<std::endl;
-		auto& ws = std::cout;
-		if (logToCon () ) {
+		// auto& ws = std::cout;
+		if (logToCon ()) {
+			/*
 			std::lock_guard<std::mutex> lock(m_mtxCon);
 			ws<<ss.str();
+			*/
+			writeToCon (ss.str().c_str());
 		}
 
-		auto& os = m_os;
+		// auto& os = m_os;
 		if (logToFile ()) {
-			std::lock_guard<std::mutex> lock(m_mtxCon);
+			/*
+			std::lock_guard<std::mutex> lock(m_mtxFile);
 			os<<ss.str();
+			*/
+			writeToFile (ss.str().c_str());
 		}
     } while (0);
     return nRet;
+}
+
+void   myLogger:: writeToCon(const char* txt)
+{
+	std::lock_guard<std::mutex> lock(m_mtxCon);
+	std::cout<<txt;
+}
+
+void   myLogger:: writeToFile(const char* txt)
+{
+	std::lock_guard<std::mutex> lock(m_mtxFile);
+	m_os<<txt;
 }
 
 bool  myLogger:: logToCon ()

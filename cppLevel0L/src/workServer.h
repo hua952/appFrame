@@ -24,7 +24,7 @@ public:
 	int onLoopEnd();
 	int onLoopFrame();
 
-	void showFps ();
+	void logFps ();
 
 	udword  sleepSetp ();
 	void  setSleepSetp (udword v);
@@ -37,13 +37,19 @@ public:
 	procRpcPacketFunType findMsg(uword uwMsgId);
 	bool start();
 	bool onFrame();
+	bool  showFps ();
+	void  setShowFps (bool v);
+	udword  showFpsSetp ();
+	void  setShowFpsSetp (udword v);
+	void   setAttr(const char* txt);
 private:
+	udword  m_showFpsSetp{300000};
+	bool  m_showFps{false};
 	ubyte  m_serverId{0xff};
 	MsgMap  m_MsgMap;
 	uqword    m_frameNum{0};
 	fpsCount  m_fpsC;
 	udword  m_sleepSetp;
-	// ServerIDType m_id;
 	cTimerMgr          m_timerMgr;
     NetTokenType	   m_nextToken{0};
 	std::unique_ptr<std::thread> m_pTh;

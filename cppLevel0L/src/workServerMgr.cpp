@@ -176,6 +176,20 @@ static int sPushPackToServer(loopHandleType desServerId, packetHead* pack)
 	return nRet;
 }
 
+static void sSetAttr(loopHandleType desServerId, const char* txt)
+{
+	do 
+	{
+		auto& rMgr = tSingleton<workServerMgr>::single();
+		auto pS = rMgr.getServer(desServerId);
+		if (!pS) {
+			mError("can not find server id is : "<<(int)desServerId);
+			break;
+		}
+		pS->setAttr(txt);
+	} while(0);
+}
+
 int  workServerMgr:: initWorkServerMgr (int cArg, char** argS, int cDefArg, char** defArgS)
 {
 	int  nRet = 0;
@@ -222,8 +236,9 @@ int  workServerMgr:: initWorkServerMgr (int cArg, char** argS, int cDefArg, char
 		myMkdir (strFile.c_str());
 		auto pLogFile = rConfig.logFile();
 		strFile += pLogFile;
+		auto logCon = rConfig.logCon();
 		initLogGlobal ();
-		auto nInitLog = initLog ("appFrame", strFile.c_str(), logLevel);
+		auto nInitLog = initLog ("appFrame", strFile.c_str(), logLevel, logCon);
 		if (0 != nInitLog) {
 			std::cout<<"initLog error nInitLog = "<<nInitLog<<std::endl;
 			break;
@@ -278,25 +293,17 @@ int  workServerMgr:: initWorkServerMgr (int cArg, char** argS, int cDefArg, char
 			srand(time(NULL));
 		}
 		auto& forLogic = getForLogicFun();
-		forLogic.fnCreateLoop = nullptr; // sCreateServer;
+
 		forLogic.fnAllocPack = allocPack; // sAllocPack; // info.fnAllocPack;
 		forLogic.fnFreePack = freePack; // sFreePack; //  info.fnFreePack;
 		forLogic.fnRegMsg = sRegMsg;
 		forLogic.fnFindMsg = sFindMsg;
 
-		forLogic.fnSendPackUp =  nullptr;
-		forLogic.fnSendPackToLoop =  nullptr;
-		forLogic.fnSendPackToLoopForChannel = nullptr;
-		forLogic.fnSendPackToSomeSession = nullptr;
 		forLogic.fnLogMsg = logMsg; // info.fnLogMsg;
 		forLogic.fnAddComTimer = sAddComTimer;//m_callbackS.fnAddComTimer;
 		forLogic.fnNextToken = sNextToken; //info.fnNextToken;
-		forLogic.fnRegRpc = nullptr; // sRegRpc;
-		forLogic.fnGetDefProcServerId = nullptr; // sGetDefProcServerId;
-		forLogic.fnRegRoute = nullptr; // sRegRouteFun;
-		forLogic.fromNetPack = nullptr;
-		forLogic.toNetPack = nullptr;
 		forLogic.fnPushPackToServer = sPushPackToServer;
+		forLogic.fnSetAttr = sSetAttr;
 
 		mInfo("workDir is : "<<rConfig.homeDir ());
 

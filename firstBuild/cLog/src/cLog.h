@@ -6,7 +6,8 @@
 #include <memory>
 
 int initLogGlobal ();
-int initLog (const char* logName, const char* logfileName, uword minLevel);
+// int initLog (const char* logName, const char* logfileName, uword minLevel);
+int initLog (const char* logName, const char* logfileName, uword minLevel, bool logCon = true);
 int logMsg (const char* logName, const char* szMsg, uword wLevel);
 void loggerDrop();
 /*

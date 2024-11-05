@@ -87,7 +87,7 @@ int initLogGlobal ()
 	return nRet;
 }
 
-int initLog (const char* logName, const char* logfileName, uword minLevel)
+int initLog (const char* logName, const char* logfileName, uword minLevel, bool logCon)
 {
 	int nRet = 0;
 	do {
@@ -96,14 +96,22 @@ int initLog (const char* logName, const char* logfileName, uword minLevel)
 			nRet = 1;
 			break;
 		}
-		auto pLog = std::make_shared <myLogger>(logfileName);
-		pLog->setMinLevel (myLogger::s_comLevel[minLevel] - 1000);
 		auto& logs = tSingleton<myLoggerMgr>::single();
-		nRet = logs.addLogger (logName, pLog);
+		logs.m_myLogger = std::make_unique<myLogger>(logfileName);
+		//auto pLog = std::make_shared <myLogger>(logfileName);
+		auto pLog = logs.m_myLogger.get(); //std::make_shared <myLogger>(logfileName);
+		pLog->setMinLevel (myLogger::s_comLevel[minLevel] - 1000);
+		pLog->setLogToCon (logCon);
+		// nRet = logs.addLogger (logName, pLog);
 	} while (0);
 	return nRet;
 }
-
+/*
+int initLog (const char* logName, const char* logfileName, uword minLevel)
+{
+	return 	initLog (logName, logfileName, minLevel, true);
+}
+*/
 int logMsg (const char* logName, const char* szMsg, uword wLevel)
 {
 	int nRet = 0;

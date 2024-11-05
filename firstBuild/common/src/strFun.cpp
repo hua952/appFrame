@@ -126,3 +126,13 @@ std::vector<std::string> stringSplit (std::istream& src, const char delim, bool 
 	}
 	return ret;
 }
+
+template<> void stringToValue<bool>(const char* str,  bool& v)
+{
+	{std::stringstream s2(str);int a;s2>>a;v=a;}
+}
+
+template<> void stringToValue<unsigned char>(const char* str, unsigned char& v)
+{
+	{std::stringstream s2(str);int a;s2>>a;v=(unsigned char)a;}
+}

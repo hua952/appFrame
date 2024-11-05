@@ -639,6 +639,11 @@ int   moduleLogicServerGen:: genWorkerCpp (moduleGen& rMod, const char* serverNa
 		}
 		auto pS = rData.findServer (serverName);
 		myAssert (pS);
+		auto& attrs = pS->attrs ();
+		std::stringstream ssAttrs;
+		for (auto it = attrs.begin (); it != attrs.end (); it++) {
+			ssAttrs<<R"(setAttrFun(serverId (),")"<<*it<<R"(");)"<<std::endl;
+		}
 		fmt::print(os, R"(#include "{serverName}.h"
 
 int {serverName}::onWorkerInitGen(ForLogicFun* pForLogic)
@@ -646,11 +651,14 @@ int {serverName}::onWorkerInitGen(ForLogicFun* pForLogic)
 
 	{regPackFunDec};
 	{regPackFunName}(pForLogic->fnRegMsg, serverId ());
+	auto setAttrFun = pForLogic->fnSetAttr;
 	auto nRet = onWorkerInit(pForLogic);
+
+	{attrs}
 	return nRet;
 }}
 
-)", fmt::arg("serverName", serverName), fmt::arg("regPackFunDec", pS->regPackFunDec ()), fmt::arg("regPackFunName", pS->regPackFunName ()));
+)", fmt::arg("serverName", serverName), fmt::arg("regPackFunDec", pS->regPackFunDec ()), fmt::arg("regPackFunName", pS->regPackFunName ()), fmt::arg("attrs", ssAttrs.str()));
 
     } while (0);
     return nRet;
@@ -799,7 +807,7 @@ int {modName}WorkerMgr::initLogicGen (int cArg, char** argS, ForLogicFun* pForLo
     } while (0);
     return nRet;
 }
-
+/*
 int   moduleLogicServerGen:: genH (moduleGen& rMod)
 {
 	int   nRet = 0;
@@ -1018,7 +1026,6 @@ int )"<<pName<<R"( :: onServerInit(ForLogicFun* pForLogic)
 	} while (0);
 	return nRet;
 }
-
 int   moduleLogicServerGen:: genCpp (moduleGen& rMod)
 {
     int   nRet = 0;
@@ -1040,7 +1047,7 @@ int   moduleLogicServerGen:: genCpp (moduleGen& rMod)
 	} while (0);
     return nRet;
 }
-
+*/
 static void   sOutListenChannel (bool bAsk, std::ostream& ps)
 {
 	if (bAsk) {
@@ -1105,10 +1112,12 @@ static void   sOutSendToChannel (bool bAsk, std::ostream& ps)
 }
 static void   sOutRegRoute(bool bAsk, std::ostream& ps)
 {
+	/*
 	if (bAsk) {
 			ps<<R"(auto fnRegRoute  =  getForMsgModuleFunS ().fnRegRoute;
 	fnRegRoute  (serverId(), srcSer, seId, 0);)";
 		}
+		*/
 }
 
 static void   sOutQuitChannel (bool bAsk, std::ostream& ps)
@@ -1541,13 +1550,13 @@ int )"<<pName<<R"( :: onServerInitGen(ForLogicFun* pForLogic)
 		
 		os<<R"(
 	auto &rMgr = tSingleton<)"<<strMgrClassName<<R"(>::single();
-	auto fun = rMgr.forLogicFunSt().fnSendPackUp;
+	// auto fun = rMgr.forLogicFunSt().fnSendPackUp;
 	regRouteAskMsg askMsg;
 	auto p = askMsg.getPack ();
 	auto pN = P2NHead(p);
 	pN->ubySrcServId = serverId ();
 	askMsg.pop();
-	fun (p);
+	// fun (p);
 	)";
 	}
 		os<<R"(

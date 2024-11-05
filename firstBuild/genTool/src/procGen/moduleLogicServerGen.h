@@ -9,7 +9,7 @@ public:
     ~moduleLogicServerGen ();
 	int  startGen (moduleGen& rMod);
 private:
-	int  genH (moduleGen& rMod);
+	// int  genH (moduleGen& rMod);
 
 	int  genWorkerH (moduleGen& rMod, const char* serverName);
 	int  genWorkerCpp (moduleGen& rMod, const char* serverName);
@@ -23,7 +23,7 @@ private:
 	int  genWorkerMgrH (moduleGen& rMod);
 	int  genWorkerMgrCpp (moduleGen& rMod);
 
-	int  genCpp (moduleGen& rMod);
+	// int  genCpp (moduleGen& rMod);
 	int  genMgrCpp (moduleGen& rMod, const char* genPath);
 	int  genServerReadOnlyCpp (moduleGen& rMod);
 	// int  genOnFrameFun (moduleGen& rMod, const char* szServerName);

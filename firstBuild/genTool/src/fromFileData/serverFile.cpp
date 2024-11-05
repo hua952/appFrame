@@ -46,6 +46,11 @@ serverFile:: ~serverFile ()
 {
 }
 
+std::vector<std::string>& serverFile:: attrs ()
+{
+    return m_attrs;
+}
+
 bool  serverFile:: route ()
 {
     return m_route;

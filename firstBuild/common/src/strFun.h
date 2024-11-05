@@ -24,26 +24,45 @@ void strCpy (const wchar_t* szSrc, std::unique_ptr<wchar_t[]>& pDec);
 void wstrCpy (const wchar_t* szSrc, std::unique_ptr<wchar_t[]>& pDec);
 
 
-template<class T1, class T2> bool stringToTwoValue(const char* src, const char delim, T1& first, T2& second)
+template<class T> void stringToValue(const char* str,  T& v)
+{
+	std::stringstream ss(str);
+	ss>>v;
+}
+
+template<> extern void stringToValue<bool>(const char* str,  bool& v);
+template<> extern void stringToValue<unsigned char>(const char* str, unsigned char& v);
+
+template<class T2> bool stringMatchValue(const char* srcKey, const char* srcValue, const char* key, T2& v)
 {
 	bool bRet = false;
-	auto ret = stringSplit (src, delim, false);
-	if (2 == ret.size()) {
-		{std::stringstream s1(ret[0]);s1>>first;}
-		{std::stringstream s2(ret[1]);s2>>second;}
+	if (strcmp(srcKey, key) == 0) {
+		stringToValue(srcValue, v);
 		bRet = true;
 	}
 	return bRet;
 }
 
-template<class T1, class T2, class T3> bool stringToThreadValue(const char* src, const char delim, T1& first, T2& second, T3& thread)
+template<class T1, class T2> bool stringToTwoValue(const char* src, const char delim, T1& first, T2& second)
+{
+	bool bRet = false;
+	auto ret = stringSplit (src, delim, false);
+	if (2 == ret.size()) {
+		stringToValue(ret[0].c_str(), first);
+		stringToValue(ret[1].c_str(), second);
+		bRet = true;
+	}
+	return bRet;
+}
+
+template<class T1, class T2, class T3> bool stringToThreadValue(const char* src, const char delim, T1& first, T2& second, T3& three)
 {
 	bool bRet = false;
 	auto ret = stringSplit (src, delim, false);
 	if (3 == ret.size()) {
-		{std::stringstream s1(ret[0]);s1>>first;}
-		{std::stringstream s2(ret[1]);s2>>second;}
-		{std::stringstream s3(ret[2]);s3>>thread;}
+		stringToValue(ret[0].c_str(), first);
+		stringToValue(ret[1].c_str(), second);
+		stringToValue(ret[2].c_str(), three);
 		bRet = true;
 	}
 	return bRet;
@@ -52,25 +71,12 @@ template<class T1, class T2, class T3> bool stringToThreadValue(const char* src,
 template<class T1, class T2, class T3, class T4> bool stringToFourValue(const char* src, const char delim, T1& first, T2& second, T3& three, T4& four)
 {
 	bool bRet = false;
-	/*
-	std::unique_ptr<char[]>	tempBuf;
-	strCpy(src, tempBuf);
-	auto retS = std::make_unique<char*[]>(5);
-	auto nR = strR (tempBuf.get(), delim, retS.get(), 5);
-	if(4 == nR) {
-		{auto p = std::make_unique<std::stringstream>(retS[0]); *p>>first;}
-		{auto p = std::make_unique<std::stringstream>(retS[1]); *p>>second;}
-		{auto p = std::make_unique<std::stringstream>(retS[2]); *p>>three;}
-		{auto p = std::make_unique<std::stringstream>(retS[3]); *p>>four;}
-		bRet = true;
-	}
-	*/
 	auto ret = stringSplit (src, delim, false);
 	if (4 == ret.size()) {
-		{std::stringstream ss(ret[0].c_str()); ss>>first;}
-		{std::stringstream ss(ret[1].c_str()); ss>>second;}
-		{std::stringstream ss(ret[2].c_str()); ss>>three;}
-		{std::stringstream ss(ret[3].c_str()); ss>>four;}
+		stringToValue(ret[0].c_str(), first);
+		stringToValue(ret[1].c_str(), second);
+		stringToValue(ret[2].c_str(), three);
+		stringToValue(ret[3].c_str(), four);
 		bRet = true;
 	}
 	return bRet;

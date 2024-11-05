@@ -5,6 +5,8 @@
 #include <string>
 #include "mainLoop.h"
 
+#include <vector>
+
 struct procRpcNode
 {
 	std::string  rpcName;
@@ -95,7 +97,9 @@ public:
 	void  setStrServerGroupId (const char* v);
 	uword serverGroupId ();
 	void  setServerGroupId (uword v);
+	std::vector<std::string>&     attrs ();
 private:
+	std::vector<std::string>  m_attrs;
 	std::unique_ptr <char[]>  m_strServerGroupId;
 	std::unique_ptr <char[]>  m_frameFunDec;
 	std::unique_ptr <char[]>  m_strTmpHandle;

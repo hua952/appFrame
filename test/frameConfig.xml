@@ -29,5 +29,6 @@
 	<savePackTag type="udword">0</savePackTag>
 	<testTag type="udword">1234</testTag>
 	<dbgSleep type="uword">0</dbgSleep>
+	<logCon type="bool">true</logCon>
 	<heartbeatSetp type="udword" commit="删除token计算器时间间隔(单位毫秒)">900000</heartbeatSetp>
 </config>

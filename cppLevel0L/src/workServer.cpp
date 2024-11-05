@@ -75,7 +75,7 @@ procRpcPacketFunType workServer::findMsg(uword uwMsgId)
 bool  workServer:: onFrame()
 {
 	bool bExit = false;
-	try {
+	// try {
 	m_timerMgr.onFrame ();
 	
 	auto myHandle = m_serverId; 
@@ -120,9 +120,11 @@ bool  workServer:: onFrame()
 	if (m_sleepSetp) {
 		std::this_thread::sleep_for(std::chrono::microseconds (m_sleepSetp));
 	}
+	/*
 	} catch (const std::exception& e) {
 		mError (" catch exception : "<<e.what());
 	}
+	*/
 	return bExit;
 }
 
@@ -183,10 +185,19 @@ bool workServer::pushPack (packetHead* pack)
 	return m_slistMsgQue.pushPack (pack);
 }
 
+static bool logFpsFun (void* pData)
+{
+	auto pT = (workServer**)(pData);
+	(*pT)->logFps();
+	return true;
+}
+
 int workServer:: onLoopBegin()
 {
     int  nRet = 0;
     do {
+		void* pT = this;
+		m_timerMgr.addComTimer(showFpsSetp (), logFpsFun, &pT, sizeof(pT));
 		auto& rMgr = tSingleton<workServerMgr>::single();
 		rMgr.incRunThNum (serverId());
 		rMgr.onLoopBegin ()(m_serverId);
@@ -216,10 +227,51 @@ int workServer::onLoopFrame()
 	return nRet;
 }
 
-void workServer:: showFps ()
+bool  workServer:: showFps ()
+{
+    return m_showFps;
+}
+
+void  workServer:: setShowFps (bool v)
+{
+    m_showFps = v;
+}
+
+udword  workServer:: showFpsSetp ()
+{
+    return m_showFpsSetp;
+}
+
+void  workServer:: setShowFpsSetp (udword v)
+{
+    m_showFpsSetp = v;
+}
+
+void    workServer:: setAttr(const char* txt)
 {
     do {
+		std::string strKey;
+		std::string strValue;
+		auto twoRet = stringToTwoValue (txt, '=', strKey, strValue);
+		if (!twoRet) {
+			break;
+		}
+		stringMatchValue(strKey.c_str(), strValue.c_str(), "showFps", m_showFps);
+		stringMatchValue(strKey.c_str(), strValue.c_str(), "showFpsSetp", m_showFpsSetp);
+		stringMatchValue(strKey.c_str(), strValue.c_str(), "sleepSetp", m_sleepSetp);
+		
+    } while (0);
+}
+
+void workServer:: logFps ()
+{
+    do {
+		auto show = showFps ();
+		if (!show) {
+			break;
+		}
 		auto& fps = m_fpsC;
+		mDebug(" begin update fps ");
 		auto dFps = fps.update (m_frameNum);
 		mInfo(" FPS : "<<dFps);
     } while (0);
