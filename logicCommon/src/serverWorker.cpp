@@ -67,9 +67,18 @@ int  serverWorker:: onLoopBeginBase()
 			auto pU =(regAppRouteAsk*)N2User(pN);
 			pU->m_appGrupId = rConfig.appGroupId ();
 			auto sessionId = m_connectors[i]->id();
-			sendBroadcastPack (pAsk, sessionId);
+			pAsk->loopId = serverId();
+			pAsk->sessionID = sessionId;
+
+			serverIdType	ubyDesServId = c_emptyLoopHandle;
+			auto serverG = (ubyte)(ubyDesServId );
+			ubyDesServId >>= 8;
+			auto appG = (ubyte)(ubyDesServId);
+			sendPacket(pAsk, appG, serverG);
+
+			// sendBroadcastPack (pAsk/*, sessionId*/);
 			// sendPacket (pAsk, rConfig.gateAppGroupId (), rConfig.gateRouteServerGroupId (), m_connectors[i]->id());
-			gDebug("send regAppRouteAskMsg sessionId is : "<<sessionId<<" packHead is : "<<*pAsk);
+			gDebug("send regAppRouteAskMsg sessionId is : "<<sessionId<<" my id is : " <<(int)(serverId())<<" serIndex = "<<(int)serIndex<<" packHead is : "<<*pAsk);
 		}
 		nR = routeWorker:: onLoopBeginBase();
 		if (nR) {
@@ -84,6 +93,7 @@ int  serverWorker:: sendPackToRemoteAskProc(packetHead* pPack, sendPackToRemoteR
 {
     int  nRet = 0;
     do {
+		auto&  workerMgr = logicWorkerMgr::getMgr();
 		auto& rConfig = tSingleton<logicFrameConfig>::single ();
 		auto netNum = rConfig.netNum ();
 		auto pN = P2NHead(pPack);
@@ -112,6 +122,8 @@ int  serverWorker:: sendPackToRemoteAskProc(packetHead* pPack, sendPackToRemoteR
 			pS->send (pPack);
 		} else {
 			gWarn(" can not find session sessionID = "<<objSession<<" pack is : "<<*pPack);
+			auto fnFreePack = workerMgr.forLogicFun()->fnFreePack;
+			fnFreePack (pPack);
 		}
     } while (0);
     return nRet;
@@ -184,5 +196,37 @@ int   serverWorker:: recPacketProcFun (ForLogicFun* pForLogic)
     return nRet;
 }
 
+
+int   serverWorker:: sendBroadcastPack (packetHead* pack)
+{
+    int   nRet = 0;
+    do {
+		auto& rConfig = tSingleton<logicFrameConfig>::single();
+		auto gateNodeNum = rConfig.gateNodeNum ();
+		auto routeGroupId = rConfig.routeGroupId ();
+		auto& routeGroup= rConfig.serverGroups ()[routeGroupId];
+		myAssert (gateNodeNum == routeGroup.runNum);
+
+		auto nIndex = serverId ();
+		nIndex -= routeGroup.beginId;
+		auto pSN = P2NHead(pack);
+		for (decltype (routeGroup.runNum) i = 0; i < routeGroup.runNum; i++) {
+			auto serIndex = nIndex + i;
+			serIndex %= routeGroup.runNum;
+			serIndex += routeGroup.beginId;
+			
+			auto pAsk = nClonePack(pSN);
+			pAsk->loopId = serIndex;
+			auto pAN = P2NHead(pAsk);
+			pAN->dwToKen = newToken ();
+			serverIdType	ubyDesServId = c_emptyLoopHandle;
+			auto serverG = (ubyte)(ubyDesServId );
+			ubyDesServId >>= 8;
+			auto appG = (ubyte)(ubyDesServId);
+			sendPacket(pAsk, appG, serverG);
+		}
+    } while (0);
+    return nRet;
+}
 
 

@@ -19,6 +19,7 @@ public:
 	int  recPacketProcFun (ForLogicFun* pForLogic) override;
 	void  sendHeartbeat () override;
 	void  onRecRegAppRet ();
+	int  sendBroadcastPack (packetHead* pack) override;
 protected:
 	std::unique_ptr<ISession*[]>	m_connectors;
 	serverWorkerState  m_state{serverWorkerState_unReg};

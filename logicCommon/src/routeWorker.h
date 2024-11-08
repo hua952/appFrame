@@ -6,8 +6,6 @@
 #include "logicWorker.h"
 #include "comTcpNet.h"
 
-packetHead* nClonePack(netPacketHead* pN);
-packetHead* clonePack(packetHead* p);
 
 class routeWorker:public logicWorker, public comTcpNet
 {
@@ -25,6 +23,8 @@ public:
 	void onWritePack(ISession* session, packetHead* pack) override;
 	int onLoopFrameBase() override;
 	int onLoopBeginBase() override;
+
+	virtual int  sendBroadcastPack (packetHead* pack) = 0;
 private:
 };
 #endif

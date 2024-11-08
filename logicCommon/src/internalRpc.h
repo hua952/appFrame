@@ -39,12 +39,13 @@ DEC_MSG(regAppRouteRet)
 struct createChannelAsk
 {
 	char channel[16];
-	ubyte     m_sendToMe;
+	ubyte  m_sendToMe;
 };
 DEC_MSG(createChannelAsk)
 struct createChannelRet
 {
     udword    m_result;
+	uword     m_gateIndex;
 };
 DEC_MSG(createChannelRet)
 
@@ -57,6 +58,7 @@ DEC_MSG(deleteChannelAsk)
 struct deleteChannelRet
 {
     udword    m_result;
+	uword     m_gateIndex;
 };
 DEC_MSG(deleteChannelRet)
 
@@ -82,6 +84,7 @@ DEC_MSG(sayToChannelAsk)
 struct sayToChannelRet
 {
     udword    m_result;
+	uword     m_gateIndex;
 };
 DEC_MSG(sayToChannelRet)
 
@@ -103,6 +106,14 @@ struct broadcastPacketNtf
 	ubyte  srcServer;
 };
 DEC_MSG(broadcastPacketNtf)
+
+
+DEC_MSG(sendToAllGateAsk)
+struct sendToAllGateRet
+{
+    udword    m_result;
+};
+DEC_MSG(sendToAllGateRet)
 #endif
 
 

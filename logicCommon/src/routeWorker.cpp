@@ -26,10 +26,39 @@ static int sendPackToRemoteAskProcFun (pPacketHead pAsk, pPacketHead& pRet, proc
 	if (!pNew) {
 		pNew = nClonePack (pSN);
 	}
+	// pAsk->packArg = (decltype(pAsk->packArg))(pNew);
 	pNew->loopId = pSend->loopId;
 	pNew->sessionID = pSend->sessionID;
 	auto pAU = (sendPackToRemoteAsk*)(P2User(pAsk));
 	pRoute->sendPackToRemoteAskProc(pNew, *pU, pAU->objSessionId);
+	return nRet;
+}
+
+static int sendToAllGateAskProcFun (pPacketHead pAsk, pPacketHead& pRet, procPacketArg* pArg)
+{
+	int nRet = procPacketFunRetType_del;
+	auto&  workerMgr = logicWorkerMgr::getMgr();
+	auto pServer = workerMgr.findServer (pArg->handle);
+	myAssert (pServer);
+	auto pRoute = dynamic_cast<routeWorker*>(pServer);
+	myAssert (pRoute);
+	sendToAllGateRetMsg ret;
+	pRet = ret.pop();
+	auto pU = (sendPackToRemoteRet*)(P2User(pRet));
+	pU->m_result = 0;
+	auto pSend = (pPacketHead)(pAsk->packArg);
+	// pPacketHead pNew = nullptr;
+	auto pSN = P2NHead(pSend);
+	pSN->ubyDesServId = c_emptyLoopHandle;
+	/*
+	workerMgr.toNetPack ( pSN, pNew);
+	if (!pNew) {
+		pNew = nClonePack (pSN);
+	}
+	pNew->loopId = pSend->loopId;
+	pNew->sessionID = pSend->sessionID;
+	*/
+	pRoute->sendBroadcastPack (pSend);
 	return nRet;
 }
 
@@ -54,6 +83,7 @@ int  routeWorker:: recPacketProcFun (ForLogicFun* pForLogic)
 		auto& sMgr = logicWorkerMgr::getMgr();
 		auto fnRegMsg = sMgr.forLogicFun()->fnRegMsg;
 		fnRegMsg (serverId (), internal2FullMsg(internalMsgId_sendPackToRemoteAsk), sendPackToRemoteAskProcFun);
+		fnRegMsg (serverId (), internal2FullMsg(internalMsgId_sendToAllGateAsk), sendToAllGateAskProcFun);
     } while (0);
     return nRet;
 }
@@ -88,6 +118,7 @@ packetHead* nClonePack(netPacketHead* pN)
 	auto pRet = sallocPacketExt (pN->udwLength, extNum);
 	pRet->packArg = 0;
 	pRet->sessionID = EmptySessionID;
+	pRet->loopId = c_emptyLocalServerId;
 	auto pRN = P2NHead(pRet);
 	auto udwLength = pN->udwLength;
 	*pRN++ = *pN++;
@@ -124,6 +155,7 @@ int routeWorker::processNetPackFun(ISession* session, packetHead* pack)
 			nRet |= procPacketFunRetType_stopBroadcast;
 			break;
 		}
+		/*
 		packetHead* pNew = nullptr;
 		sMgr.fromNetPack (pN, pNew);
 		if (pNew) {
@@ -137,6 +169,8 @@ int routeWorker::processNetPackFun(ISession* session, packetHead* pack)
 		} else {
 			nRet = localProcessNetPackFun (session, pack);
 		}
+		*/
+		nRet = localProcessNetPackFun (session, pack);
     } while (0);
     return nRet;
 }
@@ -156,21 +190,57 @@ int  routeWorker:: localProcessNetPackFun(ISession* session, packetHead* pack)
     do {
 		auto& rConfig = tSingleton<logicFrameConfig>::single ();
 		auto& sMgr = logicWorkerMgr::getMgr();
+		auto fnFreePack = sMgr.forLogicFun()->fnFreePack;
 		auto appGroupId = rConfig.appGroupId ();
 		auto pN = P2NHead(pack);
 		auto objAppG = pN->ubyDesServId;
 		objAppG>>=8;
 		if (appGroupId == objAppG) {
 			nRet |= procPacketFunRetType_stopBroadcast;
+			packetHead* pNew = nullptr;
+			if (pN->udwLength) {
+				sMgr.fromNetPack (pN, pNew);
+				if (pNew) {
+					pack = pNew;
+					pN = P2NHead(pack);
+				}
+			}
+			ubyte objServerGroup = 0xff;
+			bool desIsGroup = !NIsRet(pN) && !NIsDesOnce(pN);
+			if (desIsGroup ) {
+				objServerGroup = (ubyte)(pN->ubyDesServId);
+			} else {
+				auto objServerId = (ubyte)(pN->ubyDesServId);
+				auto pObjServer = sMgr.findServer(objServerId);
+				myAssert (pObjServer);
+				if (!pObjServer) {
+					gWarn("can net find server id is : "<<(int)(objServerGroup));
+					if (pNew ) {
+						fnFreePack (pNew);
+						pNew = nullptr;
+					}
+					break;
+				}
+				objServerGroup  = pObjServer->serverGroup ();
+			}
+			/*
 			auto objServerGroup = (ubyte)(pN->ubyDesServId);
 			if (NIsRet(pN)) {
 				auto pObjServer = sMgr.findServer(objServerGroup);
 				myAssert (pObjServer);
 				if (!pObjServer) {
 					gWarn("can net find server id is : "<<(int)(objServerGroup));
+					if (pNew ) {
+						fnFreePack (pNew);
+						pNew = nullptr;
+					}
 					break;
 				}
 				objServerGroup  = pObjServer->serverGroup ();
+			}
+			*/
+			if (!pNew) {
+				nRet |= procPacketFunRetType_doNotDel;
 			}
 			auto serverGroup = this->serverGroup ();
 			pack->sessionID = session->id ();
@@ -178,9 +248,19 @@ int  routeWorker:: localProcessNetPackFun(ISession* session, packetHead* pack)
 			recRemotePackForYouAskMsg  ask;
 			auto pAsk = ask.pop ();
 			pAsk->packArg = (decltype(pAsk->packArg))(pack);
-
-			if (serverGroup == objServerGroup) {
-				/*   发给路由线程的就本线程处理了, 本线程就是路由线程  */
+			if (desIsGroup) {
+				if (serverGroup == objServerGroup) {
+					/*   发给路由线程的就本线程处理了, 本线程就是路由线程  */
+					// gTrace(" rec to gate rout msg pack is"<<*pack);
+					sMgr.forLogicFun()->fnPushPackToServer (serverId(), pAsk);
+				} else {
+					pushPacketToLocalServer (pAsk, (ubyte)(pN->ubyDesServId));
+				}
+			} else {
+				sMgr.forLogicFun()->fnPushPackToServer ((ubyte)(pN->ubyDesServId), pAsk);
+			}
+			/*
+			if (serverGroup == objServerGroup && desIsGroup) {
 				// gTrace(" rec to gate rout msg pack is"<<*pack);
 				sMgr.forLogicFun()->fnPushPackToServer (serverId(), pAsk);
 			} else {
@@ -190,7 +270,7 @@ int  routeWorker:: localProcessNetPackFun(ISession* session, packetHead* pack)
 					pushPacketToLocalServer (pAsk, (ubyte)(pN->ubyDesServId));
 				}
 			}
-			nRet |= procPacketFunRetType_doNotDel;
+			*/
 		}
     } while (0);
     return nRet;

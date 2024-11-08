@@ -154,18 +154,6 @@ packetHead*  libeventSessionCom:: afterReadBuff(udword nS)
 			pRet = pack;
 			pack = nullptr;
 			curIndexRead = 0;
-			/*
-			nTrace (__FUNCTION__<<" read pack msgId = "<<pN->uwMsgID<<" length = "<<pN->udwLength
-					<<" pack = "<<pRet);
-					*/
-			/*
-			auto pN = P2NHead (pRet);
-			if (pN->uwMsgID == toFramMsgId (enFramMsgId_regMyHandleRet)) {
-				auto pU = (regMyHandleRetPack*)(N2User(pN));
-				nTrace ("rec result = "<<pU->result<<"  myHandle = "<<(int)pU->myHandle
-						<<" length = "<<pN->udwLength<< "pU = "<<pU );
-			}
-			*/
 		}
 	}
 	return pRet;
@@ -186,8 +174,6 @@ void libeventSessionCom::trySend ()
 			auto nS = sizeof(netPacketHead) + pN->udwLength;
 			auto nRet = bufferevent_write(bevL, pN, nS);
 			if (0 == nRet) {
-				nTrace (__FUNCTION__<<" msgId = "<<pN->uwMsgID<<" length = "<<pN->udwLength<<" nS = "<<nS);
-				
 				pCur = pCur->pNext;
 				d->pPer->pNext = pCur;
 				pCur->pPer = d->pPer;

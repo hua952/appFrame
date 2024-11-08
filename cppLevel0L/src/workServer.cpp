@@ -150,7 +150,11 @@ int workServer::processOncePack(packetHead* pPack)
 		argP.handle = serverId();
 		argP.broadcast = false;
 		if (bIsRet) { // pPack->pAsk put by other server
-			nRet = pF((pPacketHead)(pPack->packArg), pPack, &argP);
+			auto pAskPack = (pPacketHead)(pPack->packArg);
+			nRet = pF(pAskPack, pPack, &argP);
+			if (!(nRet & procPacketFunRetType_doNotDel)) {
+				freePack (pAskPack);
+			}
 		} else {
 			packetHead* pRet = nullptr;
 			nRet = pF(pPack, pRet, &argP);
@@ -271,7 +275,6 @@ void workServer:: logFps ()
 			break;
 		}
 		auto& fps = m_fpsC;
-		mDebug(" begin update fps ");
 		auto dFps = fps.update (m_frameNum);
 		mInfo(" FPS : "<<dFps);
     } while (0);

@@ -30,5 +30,8 @@ enum comMsgMsgId
 
     internalMsgId_heartbeatAsk = 16,
     internalMsgId_heartbeatRet = 17,
+
+	internalMsgId_sendToAllGateAsk = 18,
+	internalMsgId_sendToAllGateRet = 19,
 };
 #endif

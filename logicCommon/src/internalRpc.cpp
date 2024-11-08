@@ -44,10 +44,7 @@ IMP_ASK_MSG_Z(heartbeatRet)
 IMP_ASK_MSG(regAppRouteAsk)
 IMP_RET_MSG(regAppRouteRet)
 
-IMP_MSG_PART1(createChannelAsk, sizeof(createChannelAsk))\
-	auto pU = (createChannelAsk*)(N2User(pN));
-	pU->m_sendToMe = 1;
-IMP_MSG_PART2(createChannelAsk)
+IMP_ASK_MSG(createChannelAsk)
 IMP_RET_MSG(createChannelRet)
 
 IMP_ASK_MSG(deleteChannelAsk)
@@ -63,3 +60,6 @@ IMP_ASK_MSG(leaveChannelAsk)
 IMP_RET_MSG(leaveChannelRet)
 
 IMP_ASK_MSG(broadcastPacketNtf)
+
+IMP_ASK_MSG_Z(sendToAllGateAsk)
+IMP_RET_MSG(sendToAllGateRet)

@@ -8,7 +8,6 @@
 	<startPort type="uword">12000</startPort>
 	<netNum type="uword">4</netNum>
 	<appGroupId type="uword">4</appGroupId>
-	<appIndex type="uword" commit="第几个实例(从0开始,一个程序运行多个实例时,目前用于 gate)">0</appIndex>
 	<logFile type="string"></logFile>
 	<serializePackLib type="string">protobufSer</serializePackLib>
 	<logicModel type="string"></logicModel>
@@ -30,5 +29,6 @@
 	<testTag type="udword">1234</testTag>
 	<dbgSleep type="uword">0</dbgSleep>
 	<logCon type="bool">true</logCon>
+	<gateIndex type="uword">0xffff</gateIndex>
 	<heartbeatSetp type="udword" commit="删除token计算器时间间隔(单位毫秒)">900000</heartbeatSetp>
 </config>

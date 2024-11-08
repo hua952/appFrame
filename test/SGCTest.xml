@@ -31,6 +31,8 @@
 							<procRpc>
 								<regret askType="ask"/>
 								<clientToBackendMut askType="ret"/>
+								<roomChannel askType="ret"/>
+								<roomChatTxt askType="ask"/>
 							</procRpc>
 						</muTh>
 						<appClientConTh mainLoop="1">

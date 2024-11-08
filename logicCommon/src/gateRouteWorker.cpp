@@ -18,11 +18,6 @@ gateRouteWorker:: ~gateRouteWorker ()
 {
 }
 
-bool gateRouteWorker::cmpChannelKey::operator ()(const channelKey& k1,const channelKey& k2)const
-{
-	return k1.first<k2.first?true:k2.first<k1.first?false:k1.second<k2.second;
-}
-
 int  gateRouteWorker:: onLoopBeginBase()
 {
     int  nRet = 0;
@@ -30,11 +25,11 @@ int  gateRouteWorker:: onLoopBeginBase()
 		int nR = 0;	
 		endPoint endP[2];
 		auto& rConfig = tSingleton<logicFrameConfig>::single();
-		auto appIndex = rConfig.appIndex ();
+		auto appIndex = rConfig.gateIndex();
 		auto gateNodeNum = rConfig.gateNodeNum ();
+		myAssert (gateNodeNum);
 		if (appIndex >= gateNodeNum) {
-			nRet = 1;
-			break;
+			appIndex = 0;
 		}
 		myAssert (appIndex < gateNodeNum);
 		auto gateNodes = rConfig.gateNodes ();
@@ -177,8 +172,8 @@ int  gateRouteWorker:: onSayToChannelAsk(packetHead* pack, pPacketHead* ppRet)
 {
 	int nRet = procPacketFunRetType_del;
 	udword result = 0;	
+	auto& rConfig = tSingleton<logicFrameConfig>::single();
     do {
-		auto& rConfig = tSingleton<logicFrameConfig>::single();
 		auto& rMap = m_channelMap;
 		auto pN = P2NHead(pack);
 		auto pU = (sayToChannelAsk*)(N2User(pN));
@@ -212,6 +207,7 @@ int  gateRouteWorker:: onSayToChannelAsk(packetHead* pack, pPacketHead* ppRet)
 		auto pRN = P2NHead(pRet);
 		auto pRU = (sayToChannelRet*)(N2User(pRN));
 		pRU->m_result = result;
+		pRU->m_gateIndex = rConfig.gateIndex();
 		*ppRet = pRet;
 	}
     return nRet;
@@ -221,8 +217,8 @@ int gateRouteWorker:: onCreateChannelAsk(packetHead* pack, pPacketHead* ppRet)
 {
 	int nRet = procPacketFunRetType_del;
 	udword result = 0;	
+	auto& rConfig = tSingleton<logicFrameConfig>::single();
     do {
-		auto& rConfig = tSingleton<logicFrameConfig>::single();
 		auto& rMap = m_channelMap;
 		auto pN = P2NHead(pack);
 		auto pU = (createChannelAsk*)(N2User(pN));
@@ -235,9 +231,11 @@ int gateRouteWorker:: onCreateChannelAsk(packetHead* pack, pPacketHead* ppRet)
 			result = 1;
 			break;
 		}
-		if (ppRet && pU->m_sendToMe) {
+		/*
+		if (ppRet) {
 			inRet.first->second.insert(uqwValue);
 		}
+		*/
 		gInfo(" create channel : "<<std::hex<<rCh.first<<" "<<rCh.second<<" my id is "<<(int)(serverId())<<" sessionId = "<<pack->sessionID<<" serverId = "<<(int)(pN->ubySrcServId));
 	} while (0);
 	if (ppRet) {
@@ -246,6 +244,7 @@ int gateRouteWorker:: onCreateChannelAsk(packetHead* pack, pPacketHead* ppRet)
 		auto pRN = P2NHead(pRet);
 		auto pRU = (createChannelRet*)(N2User(pRN));
 		pRU->m_result = result;
+		pRU->m_gateIndex = rConfig.gateIndex();
 		*ppRet = pRet;
 	}
 	return nRet;
@@ -255,8 +254,8 @@ int  gateRouteWorker:: onDeleteChannelAsk(packetHead* pack, pPacketHead* ppRet)
 {
 	int nRet = procPacketFunRetType_del;
 	udword result = 0;	
+	auto& rConfig = tSingleton<logicFrameConfig>::single();
     do {
-		auto& rConfig = tSingleton<logicFrameConfig>::single();
 		auto& rMap = m_channelMap;
 		auto pN = P2NHead(pack);
 		auto pU = (deleteChannelAsk*)(N2User(pN));
@@ -274,6 +273,7 @@ int  gateRouteWorker:: onDeleteChannelAsk(packetHead* pack, pPacketHead* ppRet)
 		auto pRN = P2NHead(pRet);
 		auto pRU = (deleteChannelRet*)(N2User(pRN));
 		pRU->m_result = result;
+		pRU->m_gateIndex = rConfig.gateIndex();
 		*ppRet = pRet;
 	}
     return nRet;
@@ -425,6 +425,7 @@ int  gateRouteWorker:: sendPackToRemoteAskProc(packetHead* pPack, sendPackToRemo
 		} else {
 			pSession = getOnceAppSession(pN->ubyDesServId>>8);
 			if (!pSession) {
+				logicWorkerMgr::getMgr().forLogicFun ()->fnFreePack(pPack);
 				gWarn("can not find app session for pack :"<<*pPack);
 				rRet.m_result = 1;
 				break;
@@ -566,6 +567,10 @@ int  gateRouteWorker:: processBroadcastPackFun(ISession* session, packetHead* pa
 			auto pRN = P2NHead(pRet);
 			pRN->dwToKen = pN->dwToKen;
 			pRN->ubyDesServId = pN->ubySrcServId;
+
+			pRN->ubySrcServId = rConfig.appGroupId ();
+			pRN->ubySrcServId <<= 8;
+			pRN->ubySrcServId |= serverId ();
 		}
 
 		if (stopBroadcast) {
@@ -633,6 +638,7 @@ int  gateRouteWorker:: processNtfBroadcastPackFun(packetHead* pack)
 					forLogicFun->fnFreePack(pSend);
 				}
 			}
+			forLogicFun->fnFreePack(pAsk);
 			break;
 		}
 		auto pAN = P2NHead(pAsk);
@@ -747,6 +753,15 @@ int  gateRouteWorker:: processNetPackFun(ISession* session, packetHead* pack)
 				gWarn(" can not find session to forward pack is : "<<*pack);
 			}
 		} while (0);
+    } while (0);
+    return nRet;
+}
+
+int   gateRouteWorker:: sendBroadcastPack (packetHead* pack)
+{
+    int   nRet = 0;
+    do {
+		myAssert (0);
     } while (0);
     return nRet;
 }

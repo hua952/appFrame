@@ -9,7 +9,6 @@ frameConfig::frameConfig ()
 {
 	m_allocDebug = false;
 	m_appGroupId = 4;
-	m_appIndex = 0;
 	m_appNetType = 0;
 	m_clearTag = false;
 	m_dbgSleep = 0;
@@ -19,6 +18,7 @@ frameConfig::frameConfig ()
 	strCpy("", m_frameConfigFile);
 	strCpy("", m_frameHome);
 	m_gateAppGroupId = 0;
+	m_gateIndex = 0xffff;
 	strCpy("forClientIp:127.0.0.1*forServerIp:127.0.0.1*startPort:12000+forClientIp:127.0.0.1*forServerIp:127.0.0.1*startPort:22000", m_gateInfo);
 	m_gateRouteServerGroupId = 0;
 	m_heartbeatSetp = 900000;
@@ -59,16 +59,6 @@ uword  frameConfig::appGroupId ()
 void  frameConfig::setAppGroupId (uword v)
 {
 	m_appGroupId = v;
-}
-
-uword  frameConfig::appIndex ()
-{
-    return m_appIndex;
-}
-
-void  frameConfig::setAppIndex (uword v)
-{
-	m_appIndex = v;
 }
 
 word  frameConfig::appNetType ()
@@ -159,6 +149,16 @@ uword  frameConfig::gateAppGroupId ()
 void  frameConfig::setGateAppGroupId (uword v)
 {
 	m_gateAppGroupId = v;
+}
+
+uword  frameConfig::gateIndex ()
+{
+    return m_gateIndex;
+}
+
+void  frameConfig::setGateIndex (uword v)
+{
+	m_gateIndex = v;
 }
 
 const char*  frameConfig::gateInfo ()
@@ -380,7 +380,6 @@ int  frameConfig:: dumpConfig (const char* szFile)
 		}
 		ofs<<"allocDebug="<<allocDebug()<<std::endl;
 		ofs<<"appGroupId="<<appGroupId()<<std::endl;
-		ofs<<"appIndex="<<appIndex()<<R"--(  ## 第几个实例(从0开始,一个程序运行多个实例时,目前用于 gate)   )--"<<std::endl;
 		ofs<<"appNetType="<<appNetType()<<std::endl;
 		ofs<<"clearTag="<<clearTag()<<std::endl;
 		ofs<<"dbgSleep="<<dbgSleep()<<std::endl;
@@ -408,6 +407,7 @@ int  frameConfig:: dumpConfig (const char* szFile)
 		strTframeHome = frameHome;
 		ofs<<"frameHome="<<strTframeHome<<R"--(  ## 框架的安装目录   )--"<<std::endl;
 		ofs<<"gateAppGroupId="<<gateAppGroupId()<<std::endl;
+		ofs<<"gateIndex="<<gateIndex()<<std::endl;
 	int ngateInfoLen = 0;
 	auto gateInfo = this->gateInfo();
 	if (gateInfo) ngateInfoLen = strlen(gateInfo);
@@ -560,10 +560,6 @@ int  frameConfig:: procCmdArgS (int nArg, char** argS)
 				ssV>>m_appGroupId;
 				continue;
 			}
-				if (strKey == "appIndex") {
-				ssV>>m_appIndex;
-				continue;
-			}
 				if (strKey == "appNetType") {
 				ssV>>m_appNetType;
 				continue;
@@ -612,6 +608,10 @@ int  frameConfig:: procCmdArgS (int nArg, char** argS)
 			}
 				if (strKey == "gateAppGroupId") {
 				ssV>>m_gateAppGroupId;
+				continue;
+			}
+				if (strKey == "gateIndex") {
+				ssV>>m_gateIndex;
 				continue;
 			}
 				if (strKey == "gateInfo") {

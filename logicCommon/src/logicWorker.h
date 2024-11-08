@@ -2,9 +2,11 @@
 #define _logicWorker_h__
 #include <memory>
 #include <unordered_map>
+#include <map>
 #include "packet.h"
 #include "msg.h"
 
+packetHead* nClonePack(netPacketHead* pN);
 class logicWorker
 {
 public:
@@ -17,6 +19,13 @@ public:
 		uqword  first;
 		uqword  second;
 	};
+	class cmpChannelKey
+	{
+	public:
+		bool operator ()(const channelKey& k1,const channelKey& k2)const;
+	};
+
+	using createChannelMap = std::map<channelKey, uword, cmpChannelKey>;
     logicWorker ();
     ~logicWorker ();
 
@@ -25,7 +34,7 @@ public:
 
 	int  sendPacket (packetHead* pPack);
 	int  sendPacket (packetHead* pPack, loopHandleType appGroupId, loopHandleType threadGroupId);
-	int  sendPacket (packetHead* pPack, loopHandleType appGroupId, loopHandleType threadGroupId, SessionIDType sessionId);
+	// int  sendPacket (packetHead* pPack, loopHandleType appGroupId, loopHandleType threadGroupId, SessionIDType sessionId);
 	int  pushPacketToLocalServer(packetHead* pPack, loopHandleType threadGroupId);
 	virtual int  recPacketProcFun (ForLogicFun* pForLogic); /*   注册一些数据包的处理函数   */
 	int  onSendPackToRemoteRet (packetHead* pPack);
@@ -56,6 +65,7 @@ public:
 	void  delSendPack (NetTokenType  token);
 	NetTokenType  newToken();
 	int  createChannel (const channelKey& rKey);
+	int  createChannel (const channelKey& rKey, bool sayToMe);
 	int  deleteChannel (const channelKey& rKey);
 	int  subscribeChannel (const channelKey& rKey);
 	int  sayToChannel (const channelKey& rKey, packetHead* pack);
@@ -63,12 +73,13 @@ public:
 	int  leaveChannel (const channelKey& rKey);
 	void*  userData ();
 	void  setUserData (void* v);
+	createChannelMap&  getCreateChannelMap (); 
 protected:
-	int  sendBroadcastPack (packetHead* pack);
-	int  sendBroadcastPack (packetHead* pack, SessionIDType sessionId);
+	int  sendToAllGate (packetHead* pack);
 private:
 	void*  m_userData;
 	tokenMapType   m_tokenMap;
+	createChannelMap  m_createChannelMap;
 	// netMsgProcMap  m_netMsgProcMap;
 	bool  m_willExit{false};
 	ubyte  m_serverGroup {0};

@@ -23,6 +23,7 @@ packetHead* allocPackDebug(udword udwSize)
 	pRet->sessionID = EmptySessionID;
 	auto pN = P2NHead(pRet);
 	pN->udwLength = udwSize;
+	pN->ubySrcServId = c_emptyLoopHandle;
 	pN->uwTag = 0;
 	{
 		std::lock_guard<std::mutex> lock(g_mem_mtx);
@@ -34,6 +35,7 @@ packetHead* allocPackDebug(udword udwSize)
 
 void	freePackDebug(packetHead* pack)
 {
+	/*
 	if (pack->packArg) {
 		auto pN = P2NHead(pack);
 		int a = pN->uwMsgID;
@@ -42,6 +44,7 @@ void	freePackDebug(packetHead* pack)
 		freePackDebug((packetHead*)(pack->packArg));
 		pack->packArg= 0;
 	}
+	*/
 	{
 		std::lock_guard<std::mutex> lock(g_mem_mtx);
 		auto inRet = s_memMap.erase(pack);
@@ -68,15 +71,18 @@ packetHead* allocPackRelease (udword udwSize)
 	auto pN = P2NHead(pRet);
 	pN->udwLength = udwSize;
 	pN->uwTag = 0;
+	pN->ubySrcServId = c_emptyLoopHandle;
 	return pRet;
 }
 
 void	freePackRelease (packetHead* pack)
 {
+	/*
 	if (pack->packArg) {
 		freePackRelease ((packetHead*)(pack->packArg));
 		pack->packArg= 0;
 	}
+	*/
 	delete [] ((char*)(pack));
 }
 

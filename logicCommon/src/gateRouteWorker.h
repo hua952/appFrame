@@ -18,11 +18,7 @@ public:
 		NetTokenType  oldToken;
 	};
 
-	class cmpChannelKey
-	{
-	public:
-		bool operator ()(const channelKey& k1,const channelKey& k2)const;
-	};
+	
 	using channelValue = std::set<uqword>;
 	using channelMap = std::map<channelKey, channelValue, cmpChannelKey>;
 
@@ -52,6 +48,7 @@ public:
 	int onLeaveChannelAsk(packetHead* pack, pPacketHead* ppRet);
 	// ISession* onRecHeadIsNeetForward(ISession* session, netPacketHead* pN) override;
 	tokenMap&  getTokenMap ();
+	int  sendBroadcastPack (packetHead* pack) override;
 private:
 	channelMap  m_channelMap;
 	tokenMap   m_tokenMap;

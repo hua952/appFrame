@@ -56,6 +56,8 @@ typedef struct  _netPacketHead
 #define     NIsDesOnce(p) (p->uwTag&0x02)
 #define     NSetDesOnce(p) (p->uwTag|=0x02)
 
+#define     NIsToAllGate(p) (p->uwTag&0x04)
+#define     NSetToAllGate(p) (p->uwTag|=0x04)
 /*
 #define     NIsOtherNetLoopSend(p) ((p->uwTag&0x20))
 #define     NSetOtherNetLoopSend(p) ((p->uwTag|=0x20))

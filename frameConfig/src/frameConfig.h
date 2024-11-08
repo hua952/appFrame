@@ -14,8 +14,6 @@ public:
   void  setAllocDebug (bool v);
   uword  appGroupId ();
   void  setAppGroupId (uword v);
-  uword  appIndex ();
-  void  setAppIndex (uword v);
   word  appNetType ();
   void  setAppNetType (word v);
   bool  clearTag ();
@@ -34,6 +32,8 @@ public:
   void  setFrameHome (const char* v);
   uword  gateAppGroupId ();
   void  setGateAppGroupId (uword v);
+  uword  gateIndex ();
+  void  setGateIndex (uword v);
   const char*  gateInfo ();
   void  setGateInfo (const char* v);
   uword  gateRouteServerGroupId ();
@@ -77,7 +77,6 @@ public:
 private:
   bool  m_allocDebug;
   uword  m_appGroupId;
-  uword  m_appIndex;
   word  m_appNetType;
   bool  m_clearTag;
   uword  m_dbgSleep;
@@ -87,6 +86,7 @@ private:
   std::unique_ptr <char[]>  m_frameConfigFile;
   std::unique_ptr <char[]>  m_frameHome;
   uword  m_gateAppGroupId;
+  uword  m_gateIndex;
   std::unique_ptr <char[]>  m_gateInfo;
   uword  m_gateRouteServerGroupId;
   udword  m_heartbeatSetp;

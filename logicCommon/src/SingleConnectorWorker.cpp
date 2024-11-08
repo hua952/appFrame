@@ -24,11 +24,18 @@ int  SingleConnectorWorker:: getGateServerEndpoint(endPoint& endP)
 		auto& rConfig = tSingleton<logicFrameConfig>::single ();
 		auto gateNodeNum = rConfig.gateNodeNum ();
 		auto gateNodes = rConfig.gateNodes ();
+		auto gateIndex = rConfig.gateIndex ();
+
 		myAssert (gateNodeNum);
 		int n = 0;
-		if (gateNodeNum > 1) {
-			n = rand () % gateNodeNum;
+		if (gateIndex < gateNodeNum) {
+			n = gateIndex;
+		} else {
+			if (gateNodeNum > 1) {
+				n = rand () % gateNodeNum;
+			}
 		}
+		
 		strNCpy(endP.ip, sizeof(endP.ip), gateNodes[n].endPoints[0].first.get()); 
 		endP.port = gateNodes[n].endPoints[0].second;
 		endP.userDataLen = 0;
@@ -81,4 +88,11 @@ int  SingleConnectorWorker:: sendPackToRemoteAskProc(packetHead* pPack, sendPack
     } while (0);
     return nRet;
 }
-
+int   SingleConnectorWorker:: sendBroadcastPack (packetHead* pack)
+{
+    int   nRet = 0;
+    do {
+		myAssert (0);
+    } while (0);
+    return nRet;
+}

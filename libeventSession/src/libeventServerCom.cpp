@@ -298,6 +298,8 @@ int libeventServerCom::closeSession (SessionIDType   id)
 		}
 	} else {
 		auto& rSC = *(iter->second.get());
+		auto fun = closeFun();
+		fun(&rSC);
 		auto bev = rSC.getBev ();
 		rSC.setBev (nullptr);
 		bufferevent_free(bev);
