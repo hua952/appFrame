@@ -69,8 +69,8 @@ public:
 	int  deleteChannel (const channelKey& rKey);
 	int  subscribeChannel (const channelKey& rKey);
 	int  sayToChannel (const channelKey& rKey, packetHead* pack);
-
 	int  leaveChannel (const channelKey& rKey);
+
 	void*  userData ();
 	void  setUserData (void* v);
 	createChannelMap&  getCreateChannelMap (); 

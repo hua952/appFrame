@@ -17,13 +17,19 @@ public:
 		SessionIDType sessionId;
 		NetTokenType  oldToken;
 	};
-
-	
+	using sessionChannelKey = std::pair<uqword, channelKey>;
+	class cmpSessionChannelKey
+	{
+	public:
+		bool operator ()(const sessionChannelKey& k1,const sessionChannelKey& k2)const;
+	};
 	using channelValue = std::set<uqword>;
 	using channelMap = std::map<channelKey, channelValue, cmpChannelKey>;
+	// using channelSet = std::set<channelKey, cmpChannelKey>;
 
-	using appMap = std::map<uword, ISession*>;
+	using appMap = std::map<uqword, ISession*>;
 	using tokenMap = std::unordered_map<NetTokenType, tokenSaveInfo>;
+	using sessionChannelMap = std::set<sessionChannelKey, cmpSessionChannelKey>;
 
 	int  regAppRoute (ubyte group, SessionIDType sessionId);
 	ISession*  getOnceAppSession(ubyte appGroup);
@@ -50,6 +56,8 @@ public:
 	tokenMap&  getTokenMap ();
 	int  sendBroadcastPack (packetHead* pack) override;
 private:
+	int leaveChannel (const channelKey& rKey, SessionIDType sessionId, serverIdType	serverId);
+	sessionChannelMap  m_sessionChannelMap;
 	channelMap  m_channelMap;
 	tokenMap   m_tokenMap;
 	appMap  m_appMap;

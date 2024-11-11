@@ -10,6 +10,22 @@
 #include "internalMsgId.h"
 #include "internalMsgGroup.h"
 
+bool gateRouteWorker::cmpSessionChannelKey::operator ()(const sessionChannelKey& k1,const sessionChannelKey& k2)const
+{
+	bool bRet = true;
+	do {
+		if (k1.first < k2.first) {
+			break;
+		}
+		if (k2.first < k1.first) {
+			bRet = false;
+			break;
+		}
+		cmpChannelKey funCom;
+		bRet = funCom (k1.second, k2.second);
+	} while(0);
+	return bRet;
+}
 gateRouteWorker:: gateRouteWorker ()
 {
 }
@@ -257,15 +273,21 @@ int  gateRouteWorker:: onDeleteChannelAsk(packetHead* pack, pPacketHead* ppRet)
 	auto& rConfig = tSingleton<logicFrameConfig>::single();
     do {
 		auto& rMap = m_channelMap;
+		auto& rSessChMap = m_sessionChannelMap;
 		auto pN = P2NHead(pack);
 		auto pU = (deleteChannelAsk*)(N2User(pN));
-		
-		auto erRet = rMap.erase(*((channelKey*)(pU->channel)));
-		if (!erRet) {
+		auto& rCh = *((channelKey*)(pU->channel));
+		auto iter = rMap.find (rCh);
+		if (iter == rMap.end()) {
 			result = 1;
 			break;
 		}
-		
+		auto& rSet = iter->second;
+		for (auto it = rSet.begin (); it != rSet.end (); it++) {
+			auto pa = std::make_pair(*it, rCh);
+			rSessChMap.erase(pa);
+		}
+		rMap.erase(iter);
     } while (0);
 	if (ppRet) {
 		deleteChannelRetMsg ret;
@@ -276,6 +298,30 @@ int  gateRouteWorker:: onDeleteChannelAsk(packetHead* pack, pPacketHead* ppRet)
 		pRU->m_gateIndex = rConfig.gateIndex();
 		*ppRet = pRet;
 	}
+    return nRet;
+}
+
+int  gateRouteWorker:: leaveChannel (const channelKey& rKey, SessionIDType sessionId, serverIdType	serverId)
+{
+    int  nRet = 0;
+    do {
+		auto& rMap = m_channelMap;
+		auto it = rMap.find(rKey);
+		if (it == rMap.end()) {
+			nRet = 1;
+			break;
+		}
+		uqword  uqwValue = sessionId;
+		uqwValue <<=32;
+		uqwValue += serverId;
+		auto& rSet = it->second;
+		rSet.erase (uqwValue);
+		auto& rSessChMap = m_sessionChannelMap;
+
+		auto pa = std::make_pair(uqwValue, rKey);
+		rSessChMap.erase(pa);
+		gDebug(" level channel sessionId = "<<sessionId<<std::hex<<" serverId = "<<serverId<<" channel = "<<rKey.first<<" "<<rKey.second);
+    } while (0);
     return nRet;
 }
 
@@ -299,6 +345,8 @@ int  gateRouteWorker:: subscribeChannel (const channelKey& rKey, SessionIDType s
 			nRet = 2;
 			break;
 		}
+		auto& rSessChMap = m_sessionChannelMap;
+		rSessChMap.insert (std::make_pair(uqwValue, rKey));
 		gDebug(" subscribeChannel channel : "<<std::hex<<rKey.first<<" "<<rKey.second<<" my id is "<<(int)(serverId())<<" sessionId = "<<sessionId<<" serverId = "<<serverI);
     } while (0);
     return nRet;
@@ -351,7 +399,8 @@ int  gateRouteWorker:: onLeaveChannelAsk(packetHead* pack, pPacketHead* ppRet)
 		auto& rMap = m_channelMap;
 		auto pN = P2NHead(pack);
 		auto pU = (leaveChannelAsk*)(N2User(pN));
-		
+		result = leaveChannel (*((channelKey*)(pU->channel)), pack->sessionID, pN->ubySrcServId);
+		/*
 		auto it = rMap.find(*((channelKey*)(pU->channel)));
 		if (it == rMap.end()) {
 			result = 1;
@@ -365,6 +414,7 @@ int  gateRouteWorker:: onLeaveChannelAsk(packetHead* pack, pPacketHead* ppRet)
 			result = 2;
 			break;
 		}
+		*/
     } while (0);
 	if (ppRet) {
 		leaveChannelRetMsg ret;
@@ -382,14 +432,13 @@ int   gateRouteWorker:: regAppRoute (ubyte group, SessionIDType sessionId)
     int   nRet = 0;
     do {
 		auto& rAppMap = m_appMap;
-		uword fk = group;
-		fk<<=8;
-		auto endK = fk;
-		endK += 254;
-
+		uqword fk = group;
+		auto endK = fk + 1;
+		fk<<=32;
+		endK<<=32;
 		auto lower = rAppMap.lower_bound(fk); 
 		auto upper = rAppMap.upper_bound(endK);
-		ubyte last = 0;
+		udword last = 0;
 		for (auto it = lower; it != upper; it++) {
 			last = (ubyte)(it->first);
 		}
@@ -412,7 +461,7 @@ int  gateRouteWorker:: sendPackToRemoteAskProc(packetHead* pPack, sendPackToRemo
 {
     int  nRet = 0;
     do {
-		auto& rAppMap = m_appMap;
+		// auto& rAppMap = m_appMap;
 		auto pN = P2NHead(pPack);
 		ISession* pSession = nullptr;
 		if (NIsRet(pN)) {
@@ -441,10 +490,10 @@ ISession*   gateRouteWorker:: getOnceAppSession(ubyte appGroup)
 {
 	ISession*   nRet = nullptr;
 	do {
-		uword fk = appGroup;
-		fk<<=8;
-		auto endK = fk;
-		endK += 254;
+		uqword fk = appGroup;
+		auto endK = fk + 1;
+		fk<<=32;
+		endK<<=32;
 		auto& rAppMap = m_appMap;
 		auto lower = rAppMap.lower_bound(fk); 
 		auto upper = rAppMap.upper_bound(endK);
@@ -465,12 +514,30 @@ ISession*   gateRouteWorker:: getOnceAppSession(ubyte appGroup)
 void  gateRouteWorker:: onClose(ISession* session)
 {
     do {
-		auto pKey = (uword*)(session->userData());
+		auto pKey = (uqword*)(session->userData());
 		if (pKey ) {
 			auto key = *(pKey);
 			auto& rAppMap = m_appMap;
 			gInfo(" server session close sessionId = "<<session->id()<<" key is : "<<std::hex<<key);
 			rAppMap.erase(key);
+		}
+		auto sessionId = session->id();
+		sessionChannelKey beginKey;
+		sessionChannelKey endKey;
+		beginKey.first = sessionId;
+		endKey.first = beginKey.first + 1;
+		beginKey.first <<= 32;
+		endKey.first <<= 32;
+
+		std::vector<sessionChannelKey> delV;
+		auto& rSM = m_sessionChannelMap;
+		auto beginIter = rSM.lower_bound (beginKey);
+		auto endIter = rSM.upper_bound (endKey);
+		for (auto it = beginIter; it != endIter; ++it) {
+			delV.push_back(*it);
+		}
+		for (auto it = delV.begin (); it != delV.end (); it++) {
+			leaveChannel (it->second, sessionId, (serverIdType)(it->first));
 		}
     } while (0);
 }
