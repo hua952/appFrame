@@ -57,7 +57,7 @@ public:
 	rpcMap&  procMsgS ();
 	const char*  moduleName ();
 	void  setModuleName (const char* v);
-	appFile* getApp ();
+	// appFile* getApp ();
 	const char*  strHandle ();
 	void  setStrHandle (const char* v);
 	toolServerNode&  serverInfo ();

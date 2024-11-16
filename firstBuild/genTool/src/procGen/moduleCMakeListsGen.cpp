@@ -7,6 +7,7 @@
 #include "fromFileData/rpcFile.h"
 #include "fromFileData/rpcFileMgr.h"
 #include "fromFileData/msgPmpFile.h"
+#include "fromFileData/appFile.h"
 #include "moduleGen.h"
 #include <string>
 #include "rLog.h"
@@ -21,15 +22,18 @@ moduleCMakeListsGen:: ~moduleCMakeListsGen ()
 {
 }
 
-int   moduleCMakeListsGen:: startGen (moduleGen& rModel)
+int   moduleCMakeListsGen:: startGen (appFile& rAppData)
 {
 	int   nRet = 0;
 	do {
+		/*
 		auto& rMod = rModel.moduleData ();
 		auto moduleName = rMod.moduleName ();
+		*/
 		auto& rGlobalFile = tSingleton<globalFile>::single ();
-		auto appName = rMod.appName ();
-
+		auto appName = rAppData. appName (); // rMod.appName ();
+		std::string moduleName = appName;
+		moduleName += "M";
 		std::string strFile = rGlobalFile.projectHome ();
 		strFile += "/";
 		strFile += appName;
@@ -51,8 +55,8 @@ int   moduleCMakeListsGen:: startGen (moduleGen& rModel)
 			<<R"(set(serSrcS))"<<std::endl;
 
 		std::string strPer = " src/procMsg/";
-		auto& rData = rMod;
-		auto& rSS = rData.orderS ();
+		// auto& rData = rMod;
+		auto& rSS = rAppData.orderS ();
 		std::stringstream incS;
 		std::stringstream cppS;
 
@@ -65,7 +69,7 @@ int   moduleCMakeListsGen:: startGen (moduleGen& rModel)
 			cppS<<"src/"<<pName<<"/gen/*.cpp"<<" "<<"src/"<<pName<<"/proc/*.cpp"<<" "<<"src/"<<pName<<"/userLogic/*.cpp ";
 			groupSet  groupS;
 			auto serverName = pName;
-			auto pServerF = rData.findServer (pName);
+			auto pServerF = rAppData.findServer (pName);
 			myAssert (pServerF);
 			auto& rMap = pServerF->procMsgS ();
 			auto pPmp = rGlobalFile.findMsgPmp ("defMsg");

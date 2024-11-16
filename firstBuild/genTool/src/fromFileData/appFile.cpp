@@ -29,12 +29,12 @@ void  appFile::setAppName (const char* v)
 	str += v;
 	setAppGroupId (str.c_str());
 }
-
+/*
 appFile::moduleFileNameSet&  appFile:: moduleFileNameS ()
 {
     return m_moduleFileNameS;
 }
-
+*/
 int  appFile:: procId ()
 {
     return m_procId;
@@ -77,17 +77,29 @@ void appFile:: setMainLoopServer (const char* v)
 
 bool   appFile:: haveServer ()
 {
+	return !m_serverS.empty ();
+	/*
     bool   nRet = 0;
     do {
 		auto& rMs =  moduleFileNameS ();
 		nRet = !rMs.empty ();
     } while (0);
     return nRet;
+	*/
 }
 
 bool   appFile:: haveNetServer ()
 {
-    bool   nRet = false;
+	bool   nRet = false;
+	auto& rSS =  orderS ();
+	for (auto ite = rSS.begin (); ite != rSS.end (); ite++) {
+		auto pS = ite->get();
+		if (pS->route()) {
+			nRet = true;
+			break;
+		}
+	}
+	/*
     do {
 		auto& rMs =  moduleFileNameS ();
 		auto& rModMgr = tSingleton <moduleFileMgr>::single ();
@@ -108,6 +120,7 @@ bool   appFile:: haveNetServer ()
 			}
 		}
     } while (0);
+	*/
     return nRet;
 }
 
@@ -160,5 +173,48 @@ uword  appFile:: appGroupIdInt ()
 void  appFile:: setAppGroupIdInt (uword v)
 {
     m_appGroupIdInt = v;
+}
+
+serverFile*   appFile:: findServer (const char* szName)
+{
+	serverFile*   nRet = 0;
+	do {
+		auto& rSS = serverS ();
+		auto it = rSS.find (szName);
+		if (rSS.end () != it) {
+			nRet = it->second.get ();
+		}
+	} while (0);
+    return nRet;
+}
+
+appFile::serverMap&   appFile:: serverS ()
+{
+	return m_serverS;
+}
+
+appFile::serverOrder&   appFile:: orderS ()
+{
+	return m_orderS;
+}
+
+const char*  appFile:: genPath ()
+{
+    return m_genPath.get ();
+}
+
+void  appFile:: setGenPath (const char* v)
+{
+    strCpy (v, m_genPath);
+}
+
+const char*  appFile:: srcPath ()
+{
+    return m_srcPath.get ();
+}
+
+void  appFile:: setSrcPath (const char* v)
+{
+    strCpy (v, m_srcPath);
 }
 

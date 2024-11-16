@@ -2,15 +2,15 @@
 #define _moduleExportFunGen_h__
 #include <memory>
 
-class moduleGen;
+class appFile;
 class moduleExportFunGen
 {
 public:
     moduleExportFunGen ();
     ~moduleExportFunGen ();
-	int  startGen (moduleGen& rMod);
+	int  startGen (appFile& rApp);
 private:
-	int  genH (moduleGen& rMod);
-	int  genCpp (moduleGen& rMod);
+	int  genH (appFile& rApp);
+	int  genCpp (appFile& rApp);
 };
 #endif

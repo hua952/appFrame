@@ -27,3 +27,4 @@ configFile.exe file=C:\work\appFrame\test\frameConfig.xml
 genTool.exe defFile=C:\work\appFrame\test\localTest.xml structBadyType=1
 genTool.exe defFile=C:\work\appFrame\test\CGTest.xml structBadyType=1
 genTool.exe defFile=C:\work\appFrame\test\SGCTest.xml structBadyType=1
+genTool.exe defFile=C:\work\appFrame\test\testGen.xml structBadyType=1

@@ -1,3 +1,4 @@
+/*
 #ifndef _moduleFile_h__
 #define _moduleFile_h__
 #include <memory>
@@ -29,3 +30,4 @@ private:
 	serverMap  m_serverS;
 };
 #endif
+*/

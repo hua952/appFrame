@@ -65,7 +65,7 @@ const char*  serverFile::serverName ()
 {
     return m_serverName.get ();
 }
-
+/*
 appFile*  serverFile:: getApp ()
 {
     appFile*  nRet = nullptr;
@@ -84,7 +84,7 @@ appFile*  serverFile:: getApp ()
     } while (0);
     return nRet;
 }
-
+*/
 bool   serverFile:: isRoot ()
 {
     bool   nRet = 0;

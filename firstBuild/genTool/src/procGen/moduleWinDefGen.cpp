@@ -1,6 +1,6 @@
 #include "moduleWinDefGen.h"
 #include "strFun.h"
-#include "fromFileData/moduleFile.h"
+#include "fromFileData/appFile.h"
 #include "moduleGen.h"
 #include "rLog.h"
 #include <string>
@@ -14,12 +14,12 @@ moduleWinDefGen:: ~moduleWinDefGen ()
 {
 }
 
-int   moduleWinDefGen:: startGen (moduleGen&  rMod)
+int   moduleWinDefGen:: startGen (appFile& rApp)
 {
     int   nRet = 0;
     do {
 		
-		std::string win = rMod.genPath ();
+		std::string win = rApp.genPath ();
 		win += "/win";
 		auto defFun = win;
 		defFun += "/defFun.def";

@@ -32,14 +32,16 @@ xmlGlobalLoad:: ~xmlGlobalLoad ()
 int   xmlGlobalLoad:: secondProcess ()
 {
     int   nRet = 0;
+	auto& rAppMgr = tSingleton<appFileMgr>::single ();
+	auto& rMap = rAppMgr.appS ();
     do {
 		auto& rGrobal = tSingleton<globalFile>::single ();
 		auto& rRootV = rGrobal.rootServerS ();
 
-		auto& rMap = tSingleton<moduleFileMgr>::single ().moduleS ();
+		// auto& rMap = tSingleton<moduleFileMgr>::single ().moduleS ();
 		for (auto it = rMap.begin (); rMap.end () != it; ++it) {
-			auto& rMod = *(it->second.get());
-			auto& rSS = rMod.orderS ();
+			// auto& rMod = *(it->second.get());
+			auto& rSS =it->second->orderS ();
 			for (auto ite = rSS.begin (); rSS.end () != ite; ++ite) {
 				auto& rN = ite->get ()->serverInfo ();
 				bool bFindDefLis = false;
@@ -64,6 +66,7 @@ int   xmlGlobalLoad:: secondProcess ()
     } while (0);
     return nRet;
 }
+/*
 static const char* s_comMsg = R"(<?xml version='1.0' encoding='utf-8' ?>
 	<powerCom>0</powerCom>
 	<struct>
@@ -126,7 +129,7 @@ static const char* s_comMsg = R"(<?xml version='1.0' encoding='utf-8' ?>
 		</comMsg >
 	</rpc>
 )";
-
+*/
 int   xmlGlobalLoad:: perProc(rapidxml::xml_document<>& doc)
 {
     int   nRet = 0;
@@ -177,20 +180,23 @@ int   xmlGlobalLoad:: perProc(rapidxml::xml_document<>& doc)
 			frameConfig += "LogicConf.txt";
 			pArg = doc.allocate_node(rapidxml::node_element, "appArg", doc.allocate_string(frameConfig.c_str()));
 			pGateNode->append_node(pArg);
-
 			pGateNode->append_attribute(doc.allocate_attribute("appNetType", "1"));
+			/*
 			rapidxml::xml_node<>* pModuleS = doc.allocate_node(rapidxml::node_element, "module");
 			myAssert (pModuleS);
 			pGateNode->append_node(pModuleS);
 			rapidxml::xml_node<>* pM= doc.allocate_node(rapidxml::node_element, "gateAutoM");
 			pModuleS->append_node(pM);
+			*/
 			rapidxml::xml_node<>* pServerS = doc.allocate_node(rapidxml::node_element, "server");
-			pM->append_node(pServerS);
+			// pM->append_node(pServerS);
+			pGateNode->append_node(pServerS);
 		}
 		pAppS = root->first_node("app");
 		
 		for(rapidxml::xml_node<char> * pApp = pAppS->first_node();  NULL != pApp; pApp= pApp->next_sibling()) {
 			auto appName = pApp->name();
+			/*
 			auto pModuleS = pApp->first_node("module");
 			if (!pModuleS) {
 				break;
@@ -200,7 +206,9 @@ int   xmlGlobalLoad:: perProc(rapidxml::xml_document<>& doc)
 				break;
 			}
 			myAssert (!pM->next_sibling());
-			auto pServerS = pM->first_node("server");
+			*/
+			// auto pServerS = pM->first_node("server");
+			auto pServerS = pApp->first_node("server");
 			if (!pServerS) {
 				break;
 			}
@@ -365,12 +373,14 @@ int  xmlGlobalLoad::xmlLoad (const char* szFile)
 				nR = msgFileLoader.xmlLoad (it->first.c_str(), strFile.c_str (), *pPmp);
 				myAssert (0 == nR);
 			}
+			/*
 			if (0 == strcmp (it->first.c_str(), "defMsg")) {
 				std::unique_ptr<char[]> comMsgBuf;
 				strCpy (s_comMsg, comMsgBuf);
 				nR = msgFileLoader.xmlLoadFromStr (it->first.c_str(), comMsgBuf.get(), *pPmp);
 				myAssert (0 == nR);
 			}
+			*/
 		}
 		if (!pAppS) {
 			rError ("can not find appS node");
@@ -482,6 +492,7 @@ int   xmlGlobalLoad:: onceAppLoad (rapidxml::xml_node<char>* pApp, std::shared_p
 			}
 			rV.push_back (pArg->value ());
 		}
+		/*
 		rapidxml::xml_node<char>* pModuleS = pApp->first_node("module");
 		if (!pModuleS) {
 			rInfo ("app : "<<pApp->name ()<<" not find moduleS ");
@@ -493,6 +504,17 @@ int   xmlGlobalLoad:: onceAppLoad (rapidxml::xml_node<char>* pApp, std::shared_p
 			nRet = 2;
 			break;
 		}
+		*/
+		rapidxml::xml_node<char>* pServerS = pApp->first_node("server");
+		if (pServerS) {
+			auto nR = serverSLoad (pServerS, *pA);
+			if (nR) {
+				rError(" serverSLoad error ret nR = "<<nR);
+				nRet = 1;
+				break;
+			}
+		}
+		/*
 		auto& rMS = rApp->moduleFileNameS ();
 		auto haveNetServer = rApp->haveNetServer ();
 		auto haveServer = rApp->haveServer ();
@@ -501,9 +523,23 @@ int   xmlGlobalLoad:: onceAppLoad (rapidxml::xml_node<char>* pApp, std::shared_p
 			myAssert (pM);
 			
 		}
+		*/
 		auto pM = rApp->mainLoopServer ();
 		if (!pM) {
 			const char* szMain = nullptr;
+			auto& pO = pA->orderS ();
+			for (auto ite = pO.begin (); ite != pO.end (); ite++) {
+				auto rIte = ite->get();
+				auto openNum = rIte->openNum ();
+				if (1 == openNum) {
+					szMain = rIte->strTmpHandle ();
+					rApp->setMainLoopServer (szMain);
+					rApp->setMainLoopGroupId (rIte->strServerGroupId ());
+					rIte->setAutoRun(false);
+					break;
+				}
+			}
+			/*
 			if (!rMS.empty()) {
 				for (auto it = rMS.begin (); it != rMS.end (); it++) {
 					auto pM = tSingleton<moduleFileMgr>::single().findModule (it->c_str());
@@ -527,11 +563,12 @@ int   xmlGlobalLoad:: onceAppLoad (rapidxml::xml_node<char>* pApp, std::shared_p
 				}
 				
 			}
+			*/
 		}
     } while (0);
     return nRet;
 }
-
+/*
 int   xmlGlobalLoad:: moduleSLoad (rapidxml::xml_node<char>* pModuleS, appFile& rApp)
 {
 	int   nRet = 0;
@@ -604,7 +641,7 @@ int   xmlGlobalLoad:: onceModuleLoad (rapidxml::xml_node<char>* pM, std::shared_
 	} while (0);
 	return nRet;
 }
-
+*/
 static bool findDefCon (toolServerNode& node)
 {
 	bool bFind = false;
@@ -617,7 +654,7 @@ static bool findDefCon (toolServerNode& node)
 	}
 	return bFind;
 }
-static bool moveFirst (moduleFile::serverOrder& rSS, int nSt)
+static bool moveFirst (appFile::serverOrder& rSS, int nSt)
 {
 	bool bFind = false;
 	for (decltype (rSS.size()) i = nSt + 1; i < rSS.size(); i++) {
@@ -633,7 +670,7 @@ static bool moveFirst (moduleFile::serverOrder& rSS, int nSt)
 	}
 	return bFind;
 }
-static bool moveFirstListen (moduleFile::serverOrder& rSS, int nSt)
+static bool moveFirstListen (appFile::serverOrder& rSS, int nSt)
 {
 	bool bFind = false;
 	for (decltype (rSS.size()) i = nSt + 1; i < rSS.size(); i++) {
@@ -686,18 +723,17 @@ serverFile*  xmlGlobalLoad:: getServerByListenEndPointName(const char* szEnName)
     return nRet;
 }
 
-int   xmlGlobalLoad:: serverSLoad (rapidxml::xml_node<char>* pServerS,
-		moduleFile& rM, appFile& rApp)
+int   xmlGlobalLoad:: serverSLoad (rapidxml::xml_node<char>* pServerS, appFile& rApp)
 {
     int   nRet = 0;
 	do {
-		auto& rMap = rM.serverS ();
-		auto& rSS = rM.orderS ();
-		moduleFile::serverMap& tmp = rMap;
+		auto& rMap = rApp.serverS ();
+		auto& rSS = rApp.orderS ();
+		appFile::serverMap& tmp = rMap;
 		auto& ssMap = allServer();
 		for(rapidxml::xml_node<char> * pS = pServerS->first_node();  pS; pS = pS->next_sibling()) {
 			auto rS = std::make_shared <serverFile>();
-			rS->setModuleName (rM.moduleName());
+			// rS->setModuleName (rM.moduleName());
 			rS->setServerName (pS->name ());
 			auto nR = onceServerLoad(pS, rS, rApp);
 			if (nR) {
@@ -801,14 +837,15 @@ static int procEndPoint (rapidxml::xml_node<char>* pXmlListen
 	// auto& rEndPointS = tSingleton<toolServerEndPointInfoMgr>::single().endPointS ();
 	return nRet;
 }
+/*
 const char* szRootRpc[] = {"addChannel", "delChannel", "listenChannel"
-			,"quitChannel", "sendToChannel"/*, "regRoute"*/};
+			,"quitChannel", "sendToChannel"};
 const char** getRpptRpc (int &num)
 {
 	num = sizeof (szRootRpc) / sizeof (szRootRpc[0]);
 	return szRootRpc;
 }
-
+*/
 xmlGlobalLoad::allServerMap&  xmlGlobalLoad:: allServer ()
 {
     return m_allServer;
@@ -1063,9 +1100,10 @@ int   xmlGlobalLoad:: onceServerLoad (rapidxml::xml_node<char>* pS,
 			}
 		}
 		*/	
+		/*
 		if (appNetType_gate == netType || appNetType_server == netType) {
 			procRpcNode node;
-			node.retValue = "procPacketFunRetType_stopBroadcast"; /* 特殊情况单独处理 */
+			node.retValue = "procPacketFunRetType_stopBroadcast";
 			node.bAsk = appNetType_gate == netType;
 			node.rpcName = "regRoute";
 			auto inRet = rProcS.insert (node);
@@ -1073,7 +1111,7 @@ int   xmlGlobalLoad:: onceServerLoad (rapidxml::xml_node<char>* pS,
 		}
 		{
 			procRpcNode node;
-			node.retValue = "procPacketFunRetType_exitNow"; /* 特殊情况单独处理 */
+			node.retValue = "procPacketFunRetType_exitNow";
 			node.bAsk = true;
 			node.rpcName = "ntfExit";
 			auto inRet = rProcS.insert (node);
@@ -1087,7 +1125,7 @@ int   xmlGlobalLoad:: onceServerLoad (rapidxml::xml_node<char>* pS,
 		{
 			procRpcNode node;
 			if (route) {
-				node.retValue = "procPacketFunRetType_stopBroadcast"; /* 特殊情况单独处理 */
+				node.retValue = "procPacketFunRetType_stopBroadcast";
 				node.bAsk = true;
 				node.rpcName = "ntfExitByNet";
 				auto inRet = rProcS.insert (node);
@@ -1100,6 +1138,7 @@ int   xmlGlobalLoad:: onceServerLoad (rapidxml::xml_node<char>* pS,
 			auto inRet = rProcS.insert (node);
 			myAssert (inRet.second);
 		}
+		*/
     } while (0);
     return nRet;
 }

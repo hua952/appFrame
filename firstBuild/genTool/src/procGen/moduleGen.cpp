@@ -12,7 +12,7 @@
 #include <string>
 #include "rLog.h"
 
-moduleGen:: moduleGen (moduleFile& rModuleData):m_moduleData (rModuleData)
+moduleGen:: moduleGen (appFile& rAppData):m_appData(rAppData)
 {
 }
 
@@ -24,13 +24,15 @@ int   moduleGen:: startGen ()
 {
     int   nRet = 0;
     do {
-		auto& rMod = moduleData ();
-		auto moduleName = rMod.moduleName ();
+		// auto& rMod = moduleData ();
+		// auto moduleName = rMod.moduleName ();
+		std::string moduleName = m_appData.appName(); // rMod.moduleName ();
+		moduleName += "M";
 		// rInfo ("start "<<moduleName<<" module proc");
 		auto& rGlobalFile = tSingleton<globalFile>::single ();
 		auto  projectHome = rGlobalFile.projectHome ();
 		std::string strDir = projectHome;
-		auto appName = rMod.appName ();
+		auto appName = m_appData.appName(); // rMod.appName ();
 		strDir += "/";
 		strDir += appName;
 		strDir += "/";
@@ -41,12 +43,13 @@ int   moduleGen:: startGen ()
 		nR = myMkdir (strDir.c_str ());
 		auto src = moduleDir;
 		src += "/src";
-		setSrcPath (src.c_str ());
+		// setSrcPath (src.c_str ());
+		m_appData.setSrcPath (src.c_str ());
 		nR = myMkdir (src.c_str ());
 
 		auto gen = src;
 		gen += "/gen";
-		setGenPath (gen.c_str ());
+		m_appData.setGenPath (gen.c_str ());
 		nR = myMkdir (gen.c_str ());
 		auto win= gen;
 		win += "/win";
@@ -56,28 +59,28 @@ int   moduleGen:: startGen ()
 		myMkdir (userLogic.c_str ());
 		
 		moduleCMakeListsGen cmakeGen;
-		nR = cmakeGen.startGen (*this);
+		nR = cmakeGen.startGen (m_appData);
 		if (nR) {
 			rError ("moduleCMakeListsGen error nR = "<<nR);
 			nRet = 2;
 			break;
 		}
 		moduleWinDefGen  defGen;
-		nR = defGen.startGen (*this);
+		nR = defGen.startGen (m_appData);
 		if (nR) {
 			rError ("defGen.startGen error nR = "<<nR);
 			nRet = 3;
 			break;
 		}
 		moduleExportFunGen mefGen;
-		nR = mefGen.startGen (*this);
+		nR = mefGen.startGen (m_appData);
 		if (nR) {
 			rError ("moduleExportFunGen startGen error nR = "<<nR);
 			nRet = 4;
 			break;
 		}
 		moduleLogicServerGen  logicGen;
-		nR = logicGen.startGen (*this);
+		nR = logicGen.startGen (m_appData);
 		if (nR) {
 			rError ("moduleLogicServerGen startGen error nR = "<<nR);
 			nRet = 5;
@@ -87,6 +90,7 @@ int   moduleGen:: startGen ()
     return nRet;
 }
 
+/*
 const char*  moduleGen:: genPath ()
 {
     return m_genPath.get ();
@@ -111,7 +115,7 @@ moduleFile& moduleGen:: moduleData ()
 {
     return m_moduleData;
 }
-
+*/
 const char*  moduleGen:: thisRoot ()
 {
     return m_thisRoot.get ();
@@ -120,5 +124,10 @@ const char*  moduleGen:: thisRoot ()
 void  moduleGen:: setThisRoot (const char* v)
 {
     strCpy (v, m_thisRoot);
+}
+
+appFile&  moduleGen:: appData ()
+{
+    return m_appData;
 }
 

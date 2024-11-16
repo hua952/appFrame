@@ -40,11 +40,13 @@ int   appCMakeListsGen:: startGen (appFile& rApp)
 set(BUILD_USE_64BITS on)
 set(CMAKE_CXX_STANDARD 20) 
 set(CMAKE_CXX_STANDARD_REQUIRED True))"<<std::endl;
-
+			os<<R"(add_subdirectory ()"<<rApp.appName ()<<"M)"<<std::endl;
+			/*
 			auto& moduleS =  rApp.moduleFileNameS ();
 			for (auto it = moduleS.begin (); moduleS.end () != it; ++it) {
 				os<<R"(add_subdirectory ()"<<*it<<")"<<std::endl;
 			}
+			*/
 		// }
 	} while (0);
 	return nRet;

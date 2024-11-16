@@ -18,20 +18,21 @@ moduleExportFunGen:: ~moduleExportFunGen ()
 {
 }
 
-int  moduleExportFunGen:: startGen (moduleGen& rMod)
+int  moduleExportFunGen:: startGen (appFile& rApp)
 {
 	int nRet = 0;
 	do {
 		int nR = 0;
-		auto& rData = rMod.moduleData ();
-		auto modName = rData.moduleName ();
-		nR = genH (rMod);
+		// auto& rData = rMod.moduleData ();
+		std::string modName = rApp.appName();// rData.moduleName ();
+		modName += "M";
+		nR = genH (rApp);
 		if (nR) {
 			rError (" moduleExportFunGen write h file error modName = "<<modName<<" nR = "<<nR);
 			nRet = 1;
 			break;
 		}
-		nR = genCpp (rMod);
+		nR = genCpp (rApp);
 		if (nR) {
 			rError (" moduleExportFunGen write cpp file error modName = "<<modName<<" nR = "<<nR);
 			nRet = 2;
@@ -41,11 +42,11 @@ int  moduleExportFunGen:: startGen (moduleGen& rMod)
 	return nRet;
 }
 
-int   moduleExportFunGen:: genH (moduleGen& rMod)
+int   moduleExportFunGen:: genH (appFile& rApp)
 {
 	int   nRet = 0;
 	do {
-		std::string strFile = rMod.genPath ();
+		std::string strFile = rApp.genPath ();
 		strFile += "/exportFun.h";
 		std::ofstream os (strFile.c_str ());
 		if (!os) {
@@ -74,16 +75,16 @@ extern "C"
 return nRet;
 }
 
-int   moduleExportFunGen:: genCpp (moduleGen& rMod)
+int   moduleExportFunGen:: genCpp (appFile& rApp)
 {
 	int   nRet = 0;
 	do {
-		auto& rData = rMod.moduleData ();
-		auto pModName = rData.moduleName ();
-		std::string strMgrClassName = pModName;
-		strMgrClassName += "WorkerMgr";
+		// auto& rData = rMod.moduleData ();
+		// auto pModName = rData.moduleName ();
+		std::string strMgrClassName = rApp.appName (); // pModName;
+		strMgrClassName += "MWorkerMgr";
 
-		std::string strFile = rMod.genPath ();
+		std::string strFile = rApp.genPath ();
 		strFile += "/exportFun.cpp";
 		std::ofstream os (strFile.c_str ());
 		if (!os) {

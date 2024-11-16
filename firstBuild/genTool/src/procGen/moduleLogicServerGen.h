@@ -1,32 +1,28 @@
 #ifndef _moduleLogicServerGen_h__
 #define _moduleLogicServerGen_h__
 #include <memory>
-class moduleGen;
+class appFile;
 class moduleLogicServerGen
 {
 public:
     moduleLogicServerGen ();
     ~moduleLogicServerGen ();
-	int  startGen (moduleGen& rMod);
+	int  startGen (appFile& rApp);
 private:
-	// int  genH (moduleGen& rMod);
+	int  genWorkerH (appFile& rApp, const char* serverName);
+	int  genWorkerCpp (appFile& rApp, const char* serverName);
 
-	int  genWorkerH (moduleGen& rMod, const char* serverName);
-	int  genWorkerCpp (moduleGen& rMod, const char* serverName);
+	int  genOnWorkerInitCpp (appFile& rApp, const char* serverName);
+	int  genOnLoopBegin (appFile& rApp, const char* serverName);
+	int  genOnLoopEnd(appFile& rApp, const char* serverName);
+	int  genOnLoopFrame(appFile& rApp, const char* serverName);
+	int  genOnCreateChannelRet (appFile& rApp, const char* serverName);
 
-	int  genOnWorkerInitCpp (moduleGen& rMod, const char* serverName);
-	int  genOnLoopBegin (moduleGen& rMod, const char* serverName);
-	int  genOnLoopEnd(moduleGen& rMod, const char* serverName);
-	int  genOnLoopFrame(moduleGen& rMod, const char* serverName);
-	int  genOnCreateChannelRet (moduleGen& rMod, const char* serverName);
+	int  genWorkerMgrH (appFile& rApp);
+	int  genWorkerMgrCpp (appFile& rApp);
 
-	int  genWorkerMgrH (moduleGen& rMod);
-	int  genWorkerMgrCpp (moduleGen& rMod);
-
-	// int  genCpp (moduleGen& rMod);
-	int  genMgrCpp (moduleGen& rMod, const char* genPath);
-	int  genServerReadOnlyCpp (moduleGen& rMod);
-	// int  genOnFrameFun (moduleGen& rMod, const char* szServerName);
-	int  genPackFun (moduleGen& rMod, const char* szServerName);
+	int  genMgrCpp (appFile& rApp, const char* genPath);
+	int  genServerReadOnlyCpp (appFile& rApp);
+	int  genPackFun (appFile& rApp, const char* szServerName);
 };
 #endif

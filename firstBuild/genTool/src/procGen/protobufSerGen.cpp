@@ -118,7 +118,7 @@ int   protobufSerGen:: mkDir ()
 		auto& rGlobal = tSingleton <globalFile>::single ();
 		auto projectHome = rGlobal.projectHome ();
 		std::string strDir = projectHome;
-		strDir += "/protobufSer";
+		strDir += "/gen/protobufSer";
 		setRootDir (strDir.c_str());
 		strDir += "/src";
 		myMkdir (strDir.c_str ());

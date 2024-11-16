@@ -12,5 +12,6 @@ public:
 	int  configLibGen ();
 private:
 	int  makePath ();
+	int  writeGenCmakelist ();
 };
 #endif

@@ -48,7 +48,7 @@ int  msgGen:: startGen ()
 		auto projectHome = rGlobal.projectHome ();
 		std::string strFilename = projectHome;
 		auto pPmpName = rPmp.pmpName ();
-		strFilename += "/";
+		strFilename += "/gen/";
 		strFilename += pPmpName;
 		strFilename += "/src";
 		myMkdir (strFilename.c_str ());
@@ -59,7 +59,8 @@ int  msgGen:: startGen ()
 		auto& proOs = protoOs ();
 		
 		std::string strDir = projectHome;
-		strDir += "/protobufSer/src";
+		strDir += "/gen/protobufSer/src";
+		myMkdir (strDir.c_str());
 		setProtobufSerSrcDir (strDir.c_str());
 
 		proOs<<R"(syntax = "proto3";
@@ -1242,7 +1243,7 @@ int  msgGen:: CMakeListGen ()
 		auto projectHome = rGlobal.projectHome ();
 		std::string strFilename = projectHome;
 		auto pPmpName = rPmp.pmpName ();
-		strFilename += "/";
+		strFilename += "/gen/";
 		strFilename += pPmpName;
 		strFilename += "/CMakeLists.txt";
 		std::ofstream os(strFilename);
@@ -1394,7 +1395,7 @@ int  msgGen:: mkDir ()
 		auto& rPmp = m_rPmp;
 		auto pmpName = rPmp.pmpName ();
 		std::string strFilename = projectHome;
-			strFilename += "/";
+			strFilename += "/gen/";
 			strFilename += pmpName;
 			strFilename += "/src";
 		setSrcDir (strFilename.c_str ());

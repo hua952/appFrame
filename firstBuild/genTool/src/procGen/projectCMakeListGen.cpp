@@ -25,7 +25,6 @@ int   projectCMakeListGen:: startGen ()
 		auto structBadyType = rConfig.structBadyType ();
 		std::string strAddProSer;
 		std::stringstream ssAdd;
-		// if (structBadyTime_proto == structBadyType) {
 			ssAdd<< R"(add_subdirectory (protobufSer)
 add_subdirectory ()"<<szPrjName<<R"(Config)
  )";
@@ -59,7 +58,7 @@ set (firstBuildLib )"<<frameInstallDir<<R"(lib  CACHE INTERNAL "Shared variable"
 SET(CMAKE_INSTALL_PREFIX )"<<strInstall<<R"()
 )";
 if (bH) {
-	os<<strAddProSer<<std::endl<<R"(add_subdirectory (defMsg)
+	os<<R"(add_subdirectory (gen)
 	)";
 }
 os<<R"(

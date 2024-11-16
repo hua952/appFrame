@@ -2,13 +2,13 @@
 #define _moduleWinDefGen_h__
 #include <memory>
 
-class moduleGen;
+class appFile;
 class moduleWinDefGen
 {
 public:
     moduleWinDefGen ();
     ~moduleWinDefGen ();
-	int  startGen (moduleGen&  rMod);
+	int  startGen (appFile& rApp);
 private:
 };
 #endif

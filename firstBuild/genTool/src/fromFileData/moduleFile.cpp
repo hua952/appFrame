@@ -1,3 +1,4 @@
+/*
 #include "moduleFile.h"
 #include "strFun.h"
 #include "serverFile.h"
@@ -68,5 +69,5 @@ moduleFile::serverOrder&  moduleFile:: orderS ()
 {
     return m_orderS;
 }
-
+*/
 

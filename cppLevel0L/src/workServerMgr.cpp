@@ -202,6 +202,7 @@ int  workServerMgr:: initWorkServerMgr (int cArg, char** argS, int cDefArg, char
 	tSingleton <argConfig>::createSingleton ();
 	auto& rConfig = tSingleton<argConfig>::single ();
 	do {
+		// std::this_thread::sleep_for(std::chrono::microseconds (16* 1000 * 1000));
 		int nR = rConfig.procCmdArgS (cDefArg, defArgS);   /* 下一步用到参数里的文件名,所以要先解析一遍命令行参数  */
 		if (nR) {
 			nRet = 1;

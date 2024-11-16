@@ -10,6 +10,8 @@
 #include "msgGen.h"
 #include "defMsgGen.h"
 #include "projectCMakeListGen.h"
+#include "appLibGen.h"
+#include "appModuleGen.h"
 #include "rLog.h"
 #include <vector>
 
@@ -19,6 +21,38 @@ globalGen:: globalGen ()
 
 globalGen:: ~globalGen ()
 {
+}
+
+int   globalGen:: writeGenCmakelist ()
+{
+    int   nRet = 0;
+	do {
+		auto &rGlobalFile = tSingleton<globalFile>::single();
+		auto  projectHome = rGlobalFile.projectHome ();
+		std::string strFile = projectHome;
+		strFile += "gen";
+		myMkdir(strFile.c_str());
+		strFile += "/CMakeLists.txt";
+
+		std::ofstream os(strFile.c_str ());
+		if (!os) {
+			nRet = 1;
+			rError ("writeGenCmakelist error file name is : "<<strFile.c_str ());
+			break;
+		}
+		auto szPrjName = rGlobalFile.projectName ();
+		os<<R"(
+add_subdirectory (protobufSer)
+add_subdirectory (defMsg)
+add_subdirectory ()"<<szPrjName <<R"(Config))"<<std::endl;
+		auto& rAppS = tSingleton<appFileMgr>::single ().appS ();
+		for (auto it = rAppS.begin (); rAppS.end () != it; ++it) {
+			auto& rApp = *(it->second.get ());
+			auto appName = rApp.appName ();
+			os<<R"(add_subdirectory ()"<<appName<<R"())"<<std::endl;
+		}
+	} while (0);
+    return nRet;
 }
 
 int   globalGen:: startGen ()
@@ -38,6 +72,12 @@ int   globalGen:: startGen ()
 		if (nR) {
 			rError ("projectGen.configLibGen error nR = "<<nR);
 			nRet = 2;
+			break;
+		}
+		nR = writeGenCmakelist ();
+		if (nR) {
+			rError ("writeGenCmakelist  error nR = "<<nR);
+			nRet = 3;
 			break;
 		}
 		nR = 0;
@@ -80,13 +120,27 @@ int   globalGen:: startGen ()
 		auto& rAppS = tSingleton<appFileMgr>::single ().appS ();
 		for (auto it = rAppS.begin (); rAppS.end () != it; ++it) {
 			auto& rApp = *(it->second.get ());
-
+			/*
 			appGen gen;
-			// rInfo ("will proc app: "<<it->second->appName ());
 			nR = gen.startGen (rApp);
 			if (nR) {
 				nRet = 7;
 				rError ("appGen error nR = "<<nR<<" appName = "<<it->first.c_str());
+				break;
+			}
+			*/
+			appLibGen libGen (rApp);
+			nR = libGen.startGen ();
+			if (nR) {
+				rError(" libGen.startGen error nR = "<<nR);
+				nRet = 8;
+				break;
+			}
+			appModuleGen moduleGen (rApp);
+			nR = moduleGen.startGen ();
+			if (nR) {
+				rError(" moduleGen.startGen error nR = "<<nR);
+				nRet = 9;
 				break;
 			}
 		}
@@ -129,7 +183,7 @@ int   globalGen:: configLibGen ()
 		auto projectDir = rGlobalFile.projectHome ();
 		// auto projectName = rGlobalFile.projectName ();
 		auto  strPrjConfig = rGlobalFile.configClassName ();
-		cmdOs<<"projectDir="<<projectDir<<" projectName="<<strPrjConfig<<" className="<<strPrjConfig;
+		cmdOs<<"projectDir="<<projectDir<<"/gen projectName="<<strPrjConfig<<" className="<<strPrjConfig;
 		system (cmdOs.str().c_str());
     } while (0);
     return nRet;

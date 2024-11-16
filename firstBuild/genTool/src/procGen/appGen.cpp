@@ -37,6 +37,7 @@ int  appGen:: startGen (appFile& rApp)
 		int nR = myMkdir (strAppPath.c_str ());
 		// appCMakeListsGen cmakeGen;
 		// nR = cmakeGen.startGen (rApp);
+		/*
 		nR = CMakeListGen (rApp);
 		rInfo (""<<szAppName<<" cmake file gen OK nR = "<<nR);
 		if (nR) {
@@ -44,6 +45,7 @@ int  appGen:: startGen (appFile& rApp)
 			rError ("cmakeGen.startGen ret error nR = "<<nR);
 			break;
 		}
+		*/
 		/*
 		moduleMgrGen   mgrGen;
 		std::string mgrName = thisRoot ();
@@ -66,6 +68,7 @@ int  appGen:: startGen (appFile& rApp)
 			nRet = 4;
 			break;
 		}
+		/*
 		auto& rModules = rApp.moduleFileNameS ();
 		auto& rModMgr = tSingleton <moduleFileMgr>::single ();
 		for (auto it = rModules.begin (); rModules.end () != it; ++it) {
@@ -86,11 +89,20 @@ int  appGen:: startGen (appFile& rApp)
 		if (nRet) {
 			break;
 		}
+		*/
+		moduleGen   gen (rApp);
+		nR = gen.startGen ();
+		if (nR) {
+			nRet = 3;
+			break;
+		}
+		/*
 		auto dS = rApp.detachServerS ();
 		if (dS) {
 			mainGen mg;
 			nR = mg.startGen (rApp);
 		}
+		*/
     } while (0);
     return nRet;
 }
@@ -179,7 +191,7 @@ int  appGen:: batFileGen (appFile& rApp)
 	
 		os<<"procId="<<procId
 			<<" logFile="<<strLogFile;
-
+		/*
 		auto& rModules = rApp.moduleFileNameS ();
 		if (!rModules.empty()) {
 			std::stringstream ssModelS;
@@ -208,8 +220,9 @@ int  appGen:: batFileGen (appFile& rApp)
 					ssModelS<<pS->tmpNum ()<<"-"<<pS->openNum ()<<"-"<<autoRun<<"-"<<route;
 				}
 			}
-			// rMainArgS.push_back(ssModelS.str());
+			rMainArgS.push_back(ssModelS.str());
 		}
+		*/
 		auto& rV = rApp.argS ();
 		for (auto it = rV.begin(); rV.end() != it; ++it) {
 			os<<" "<<*it;
@@ -254,11 +267,14 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 		if (ds) {
 			os<<R"(add_subdirectory (main))"<<std::endl;
 		}
+
+		os<<R"(add_subdirectory ()"<<rApp.appName ()<<"M)"<<std::endl;
+		/*
 		auto& moduleS =  rApp.moduleFileNameS ();
 		for (auto it = moduleS.begin (); moduleS.end () != it; ++it) {
 			os<<R"(add_subdirectory ()"<<*it<<")"<<std::endl;
 		}
-
+		*/
     } while (0);
     return nRet;
 }

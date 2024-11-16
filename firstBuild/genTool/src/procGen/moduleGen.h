@@ -2,19 +2,22 @@
 #define _moduleGen_h__
 #include <memory>
 
-class moduleFile;
+class appFile;
 class moduleGen
 {
 public:
-    moduleGen (moduleFile& rModuleData);
+    moduleGen (appFile& rAppData);
     ~moduleGen ();
 	int  startGen ();
+	/*
     const char*  genPath ();
     void  setGenPath (const char* v);
     const char*  srcPath ();
     void  setSrcPath (const char* v);
+	*/
 	
-	moduleFile&               moduleData ();
+	// moduleFile&               moduleData ();
+	appFile&                  appData ();
 	const char*  thisRoot ();
 	void  setThisRoot (const char* v);
 	const char*  genSrcDir ();
@@ -24,8 +27,9 @@ private:
 	std::unique_ptr <char[]>  m_frameFunDir;
 	std::unique_ptr <char[]>  m_thisRoot;
     std::unique_ptr <char[]>  m_procMsgPath;
-    std::unique_ptr <char[]>  m_srcPath;
+    // std::unique_ptr <char[]>  m_srcPath;
     std::unique_ptr <char[]>  m_genPath;
-	moduleFile&               m_moduleData;
+	// moduleFile&               m_moduleData;
+	appFile&                  m_appData;
 };
 #endif

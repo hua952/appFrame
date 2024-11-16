@@ -2,13 +2,13 @@
 #define _moduleCMakeListsGen_h__
 #include <memory>
 
-class moduleGen;
+class appFile;
 class moduleCMakeListsGen
 {
 public:
     moduleCMakeListsGen ();
     ~moduleCMakeListsGen ();
-	int  startGen (moduleGen& rModel);
+	int  startGen (appFile& rAppData);
 private:
 };
 #endif

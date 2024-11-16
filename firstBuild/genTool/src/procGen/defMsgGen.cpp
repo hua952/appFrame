@@ -69,7 +69,7 @@ enum appTmpID
 			int is = ip++ * LoopNum;
 			rApp.setProcId (is);
 			auto netType = rApp.netType ();
-			auto& rModNameS = rApp.moduleFileNameS ();
+			// auto& rModNameS = rApp.moduleFileNameS ();
 			int mutI = 0;
 			int sinI = 0;
 			int lvI[c_serverLevelNum];
@@ -93,12 +93,14 @@ enum appTmpID
 
 			auto tmpId = 0;
 			serverFile* pRouteServer = nullptr;
+			/*
 			for (auto ite = rModNameS.begin ();
 					rModNameS.end () != ite; ++ite) {
 				auto& rMName = *ite;
 				auto pMod = rModMgr.findModule (rMName.c_str ());
 				myAssert (pMod);
-				auto& rSS = pMod->orderS ();
+				*/
+				auto& rSS = rApp.orderS ();
 				bool firstServer = true;
 				auto pRunSS = std::make_unique<std::stringstream>();
 				auto& runSS = *pRunSS;
@@ -160,7 +162,7 @@ enum appTmpID
 					}
 				}
 				rApp.setRunWorkNum (runSS.str().c_str());
-			}
+			//}
 			appThTem<<R"(    )"<<routeThTem.str()<<" = "<<tmpId<<","<<std::endl;
 			tmpId++;
 			appThTem<<R"(    )"<<rApp.appName()<<R"(ServerTmpID_serverTmpNum
@@ -193,7 +195,7 @@ int  defMsgGen:: startGen ()
 		myAssert (pDefPmp);
 		auto projectHome = rGlobal.projectHome ();
 		std::string strFilename = projectHome;
-		strFilename += "/defMsg/src";
+		strFilename += "/gen/defMsg/src";
 		myMkdir (strFilename.c_str ());
 		nR = mkDir ();
 		if (nR) {
@@ -226,7 +228,7 @@ int  defMsgGen:: mkDir ()
 		auto& rGlobal = tSingleton <globalFile>::single ();
 		auto projectHome = rGlobal.projectHome ();
 		std::string strFilename = projectHome;
-		strFilename += "/defMsg/src";
+		strFilename += "/gen/defMsg/src";
 		setSrcDir (strFilename.c_str ());
 		myMkdir (strFilename.c_str ());
     } while (0);

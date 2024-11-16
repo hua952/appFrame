@@ -46,32 +46,33 @@ moduleLogicServerGen:: ~moduleLogicServerGen ()
 {
 }
 
-int   moduleLogicServerGen:: startGen (moduleGen& rMod)
+int   moduleLogicServerGen:: startGen (appFile& rApp)
 {
     int   nRet = 0;
 	do {
-		auto& rData = rMod.moduleData ();
-		auto modName = rData.moduleName ();
+		// auto& rData = rMod.moduleData ();
+		std::string modName = rApp.appName (); // rData.moduleName ();
+		modName += "M";
 		int nR = 0;
 		// nR = genH (rMod);
-		nR = genWorkerMgrH(rMod);
+		nR = genWorkerMgrH(rApp);
 		if (nR) {
 			rError ("moduleLogicServerGen write h file error modName = "<<modName<<" nR = "<<nR);
 			nRet = 1;
 			break;
 		}
 		// nR = genCpp (rMod);
-		nR = genWorkerMgrCpp (rMod);
+		nR = genWorkerMgrCpp (rApp);
 		if (nR) {
 			rError ("genWorkerMgrCpp write cpp file error modName = "<<modName<<" nR = "<<nR);
 			nRet = 2;
 			break;
 		}
 
-		auto& rSS = rData.orderS ();
+		auto& rSS = rApp.orderS ();
 		for (auto it = rSS.begin (); rSS.end () != it; ++it) {
 			auto pName = it->get()->serverName ();
-			std::string strRoot = rMod.srcPath ();
+			std::string strRoot = rApp.srcPath ();
 			strRoot += "/";
 			strRoot += pName;
 			myMkdir (strRoot.c_str ());
@@ -82,44 +83,44 @@ int   moduleLogicServerGen:: startGen (moduleGen& rMod)
 			proc += "/proc";
 			myMkdir (proc.c_str ());
 			
-			nR = genWorkerH (rMod, pName);
+			nR = genWorkerH (rApp, pName);
 			if (nR) {
 				nRet = 5;
 				break;
 			}
-			nR = genWorkerCpp (rMod, pName);
+			nR = genWorkerCpp (rApp, pName);
 			if (nR) {
 				nRet = 6;
 				break;
 			}
-			nR = genOnLoopBegin (rMod, pName);
+			nR = genOnLoopBegin (rApp, pName);
 			if (nR) {
 				nRet = 7;
 				break;
 			}
-			nR = genOnLoopEnd(rMod, pName);
+			nR = genOnLoopEnd(rApp, pName);
 			if (nR) {
 				nRet = 8;
 				break;
 			}
-			nR = genOnLoopFrame(rMod, pName);
+			nR = genOnLoopFrame(rApp, pName);
 			if (nR) {
 				nRet = 9;
 				break;
 			}
 
-			nR = genOnCreateChannelRet (rMod, pName);
+			nR = genOnCreateChannelRet (rApp, pName);
 			if (nR) {
 				nRet = 9;
 				break;
 			}
 
-			nR = genOnWorkerInitCpp (rMod, pName);
+			nR = genOnWorkerInitCpp (rApp, pName);
 			if (nR) {
 				nRet = 9;
 				break;
 			}
-			nR = genPackFun (rMod, pName);
+			nR = genPackFun (rApp, pName);
 			if (nR) {
 				nRet = 4;
 				break;
@@ -129,11 +130,11 @@ int   moduleLogicServerGen:: startGen (moduleGen& rMod)
 	return nRet;
 }
 
-int   moduleLogicServerGen:: genOnWorkerInitCpp (moduleGen& rMod, const char* serverName)
+int   moduleLogicServerGen:: genOnWorkerInitCpp (appFile& rApp, const char* serverName)
 {
     int   nRet = 0;
     do {
-		std::string strRoot = rMod.srcPath ();
+		std::string strRoot = rApp.srcPath ();
 		strRoot += "/";
 		strRoot += serverName;
 		auto proc = strRoot;
@@ -163,11 +164,11 @@ int {serverName}::onWorkerInit(ForLogicFun* pForLogic)
     return nRet;
 }
 
-int   moduleLogicServerGen:: genOnLoopBegin (moduleGen& rMod, const char* serverName)
+int   moduleLogicServerGen:: genOnLoopBegin (appFile& rApp, const char* serverName)
 {
     int   nRet = 0;
     do {
-		std::string strRoot = rMod.srcPath ();
+		std::string strRoot = rApp.srcPath ();
 		strRoot += "/";
 		strRoot += serverName;
 		auto proc = strRoot;
@@ -198,11 +199,11 @@ int {serverName}::onLoopBegin()
     return nRet;
 }
 
-int   moduleLogicServerGen:: genOnCreateChannelRet (moduleGen& rMod, const char* serverName)
+int   moduleLogicServerGen:: genOnCreateChannelRet (appFile& rApp, const char* serverName)
 {
     int   nRet = 0;
     do {
-		std::string strRoot = rMod.srcPath ();
+		std::string strRoot = rApp.srcPath ();
 		strRoot += "/";
 		strRoot += serverName;
 		auto proc = strRoot;
@@ -233,11 +234,11 @@ int {serverName}::onCreateChannelRet(const channelKey& rKey, udword result)
     return nRet;
 }
 
-int   moduleLogicServerGen:: genOnLoopEnd(moduleGen& rMod, const char* serverName)
+int   moduleLogicServerGen:: genOnLoopEnd(appFile& rApp, const char* serverName)
 {
 	int   nRet = 0;
 	do {
-		std::string strRoot = rMod.srcPath ();
+		std::string strRoot = rApp.srcPath ();
 		strRoot += "/";
 		strRoot += serverName;
 		auto proc = strRoot;
@@ -267,11 +268,11 @@ int {serverName}::onLoopEnd()
 return nRet;
 }
 
-int   moduleLogicServerGen:: genOnLoopFrame(moduleGen& rMod, const char* serverName)
+int   moduleLogicServerGen:: genOnLoopFrame(appFile& rApp, const char* serverName)
 {
 	int   nRet = 0;
 	do {
-		std::string strRoot = rMod.srcPath ();
+		std::string strRoot = rApp.srcPath ();
 		strRoot += "/";
 		strRoot += serverName;
 		auto proc = strRoot;
@@ -300,12 +301,12 @@ int {serverName}::onLoopFrame()
 return nRet;
 }
 
-int   moduleLogicServerGen:: genMgrCpp (moduleGen& rMod, const char* genPath)
+int   moduleLogicServerGen:: genMgrCpp (appFile& rApp, const char* genPath)
 {
 	int   nRet = 0;
 	do {
-		auto& rData = rMod.moduleData();
-		auto& rSS = rData.orderS ();
+		// auto& rData = rMod.moduleData();
+		auto& rSS = rApp.orderS ();
 		auto& rGloble = tSingleton<xmlGlobalLoad>::single ();
 		auto& rGlobleFile = tSingleton<globalFile>::single ();
 		auto& rConfig = tSingleton<configMgr>::single ();
@@ -345,7 +346,8 @@ int   moduleLogicServerGen:: genMgrCpp (moduleGen& rMod, const char* genPath)
 		}
 		auto serverNum = rSS.size ();
 		std::string strFilename = genPath;
-		auto pModName = rData.moduleName ();
+		std::string pModName = rApp.appName(); // rData.moduleName ();
+		pModName += "M";
 		std::string strMgrClassName = pModName;
 		strMgrClassName += "ServerMgr";
 		std::string genMgrCpp = genPath;
@@ -519,11 +521,11 @@ dword )"<<strMgrClassName<<R"(::afterLoadLogic (int nArgC, char** argS, ForLogic
 	} while (0);
 	return nRet;
 }
-int   moduleLogicServerGen:: genWorkerH (moduleGen& rMod, const char* serverName)
+int   moduleLogicServerGen:: genWorkerH (appFile& rApp, const char* serverName)
 {
     int   nRet = 0;
     do {
-		std::string strFile = rMod.srcPath (); // rMod.genPath ();
+		std::string strFile = rApp.srcPath (); // rMod.genPath ();
 		strFile += "/";
 		strFile += serverName;
 		std::string strProcDir = strFile;
@@ -537,13 +539,14 @@ int   moduleLogicServerGen:: genWorkerH (moduleGen& rMod, const char* serverName
 			rError ("open file : "<<strFile.c_str ());
 			nRet = 1;
 		}
-
+		/*
 		auto& rData = rMod.moduleData ();
 		auto appName = rData.appName ();
 		auto& rAppMgr = tSingleton<appFileMgr>::single ();
 		auto  pApp = rAppMgr.findApp (appName);
 		myAssert (pApp);
-		auto pS = rData.findServer (serverName);
+		*/
+		auto pS = rApp.findServer (serverName);
 		myAssert (pS);
 		std::set<std::string> procMsgSet;
 		auto& rGlobalFile = tSingleton<globalFile>::single ();
@@ -563,7 +566,7 @@ int   moduleLogicServerGen:: genWorkerH (moduleGen& rMod, const char* serverName
 		std::string strWorker = "logicWorker";
 		bool route = pS->route ();
 		if (route) {
-			ubyte  netType = pApp->netType ();
+			ubyte  netType = rApp.netType ();
 			if (appNetType_client == netType) {
 				strWorker = "SingleConnectorWorker";
 			} else if (appNetType_gate == netType) {
@@ -620,12 +623,12 @@ private:
     return nRet;
 }
 
-int   moduleLogicServerGen:: genWorkerCpp (moduleGen& rMod, const char* serverName)
+int   moduleLogicServerGen:: genWorkerCpp (appFile& rApp, const char* serverName)
 {
     int   nRet = 0;
     do {
-		auto& rData = rMod.moduleData ();
-		std::string strFile = rMod.srcPath (); // rMod.genPath ();
+		// auto& rData = rMod.moduleData ();
+		std::string strFile = rApp.srcPath (); // rMod.genPath ();
 		strFile += "/";
 		strFile += serverName;
 		strFile += "/gen/";
@@ -637,7 +640,7 @@ int   moduleLogicServerGen:: genWorkerCpp (moduleGen& rMod, const char* serverNa
 			rError ("open file : "<<strFile.c_str ());
 			nRet = 1;
 		}
-		auto pS = rData.findServer (serverName);
+		auto pS = rApp.findServer (serverName);
 		myAssert (pS);
 		auto& attrs = pS->attrs ();
 		std::stringstream ssAttrs;
@@ -664,14 +667,14 @@ int {serverName}::onWorkerInitGen(ForLogicFun* pForLogic)
     return nRet;
 }
 
-int   moduleLogicServerGen:: genWorkerMgrH (moduleGen& rMod)
+int   moduleLogicServerGen:: genWorkerMgrH (appFile& rApp)
 {
 	int   nRet = 0;
 	do {
-		auto modSrcPath = rMod.srcPath ();
-		auto& rData = rMod.moduleData ();
-		auto pModName = rData.moduleName ();
-
+		auto modSrcPath = rApp.srcPath ();
+		// auto& rData = rMod.moduleData ();
+		std::string pModName = rApp.appName(); // rData.moduleName ();
+		pModName += "M";
 		auto& rGlobalFile = tSingleton<globalFile>::single ();
 		auto pPmp = rGlobalFile.findMsgPmp ("defMsg");
 		auto& rRpcFileMgr = pPmp->rpcFileS();
@@ -688,16 +691,16 @@ int   moduleLogicServerGen:: genWorkerMgrH (moduleGen& rMod)
 			nRet = 2;
 			break;
 		}
-		auto appName = rData.appName ();
+		// auto appName = rData.appName ();
 
-		auto pApp = tSingleton<appFileMgr>::single().findApp (appName);
-		myAssert (pApp);
-		auto netType = pApp->netType();
+		// auto pApp = tSingleton<appFileMgr>::single().findApp (appName);
+		// myAssert (pApp);
+		auto netType = rApp.netType();
 		if (appNetType_gate == netType ) {
 		}
 		std::stringstream serInc;
 		std::stringstream serVar;
-		auto& rSS = rData.orderS ();
+		auto& rSS = rApp.orderS ();
 		auto serverNum = rSS.size ();
 		for (decltype (serverNum) i = 0; i < serverNum; i++) {
 			auto& rServer = *rSS[i];
@@ -727,14 +730,14 @@ private:
 	return nRet;
 }
 
-int   moduleLogicServerGen:: genWorkerMgrCpp (moduleGen& rMod)
+int   moduleLogicServerGen:: genWorkerMgrCpp (appFile& rApp)
 {
     int   nRet = 0;
     do {
-		auto modSrcPath = rMod.srcPath ();
-		auto& rData = rMod.moduleData ();
-		auto pModName = rData.moduleName ();
-
+		auto modSrcPath = rApp.srcPath ();
+		// auto& rData = rMod.moduleData ();
+		std::string pModName = rApp.appName (); // rData.moduleName ();
+		pModName += "M";
 		auto& rGlobalFile = tSingleton<globalFile>::single ();
 		auto pPmp = rGlobalFile.findMsgPmp ("defMsg");
 		auto& rRpcFileMgr = pPmp->rpcFileS();
@@ -751,15 +754,16 @@ int   moduleLogicServerGen:: genWorkerMgrCpp (moduleGen& rMod)
 			nRet = 2;
 			break;
 		}
-		auto appName = rData.appName ();
-
+		auto appName = rApp.appName ();
+		/*
 		auto pApp = tSingleton<appFileMgr>::single().findApp (appName);
 		myAssert (pApp);
-		auto netType = pApp->netType();
+		*/
+		auto netType = rApp.netType();
 		if (appNetType_gate == netType ) {
 		}
 		std::stringstream serVar;
-		auto& rSS = rData.orderS ();
+		auto& rSS = rApp.orderS ();
 		auto serverNum = rSS.size ();
 		for (decltype (serverNum) i = 0; i < serverNum; i++) {
 			auto& rServer = *rSS[i];
@@ -1408,11 +1412,11 @@ ps<<R"(
 	return nRet;
 }
 
-int   moduleLogicServerGen:: genPackFun (moduleGen& rMod, const char* szServerName)
+int   moduleLogicServerGen:: genPackFun (appFile& rApp, const char* szServerName)
 {
     int   nRet = 0;
     do {
-		std::string strFile = rMod.srcPath (); // rMod.genPath ();
+		std::string strFile = rApp.srcPath (); // rMod.genPath ();
 		strFile += "/";
 		strFile += szServerName;
 		strFile += "/gen/";
@@ -1430,8 +1434,9 @@ int   moduleLogicServerGen:: genPackFun (moduleGen& rMod, const char* szServerNa
 		os<<R"(#include "logicFrameConfig.h")"<<std::endl;
 		os<<R"(#include "tSingleton.h")"<<std::endl;
 		os<<R"(#include "mainLoop.h")"<<std::endl;
-		auto pServerF = rMod.moduleData ().findServer (szServerName);
-		auto pModuleName = rMod.moduleData ().moduleName ();
+		auto pServerF = rApp.findServer (szServerName);
+		std::string pModuleName = rApp.appName (); //rMod.moduleData ().moduleName ();
+		pModuleName += "M";
 		myAssert (pServerF);
 
 		std::string strMgrClassName = pModuleName;
@@ -1475,7 +1480,7 @@ int   moduleLogicServerGen:: genPackFun (moduleGen& rMod, const char* szServerNa
 			auto pGroup = rGMgr.findGroup (pGName);
 			myAssert (pGroup);
 			
-			std::string strCppDir = rMod.srcPath ();
+			std::string strCppDir = rApp.srcPath ();
 			strCppDir += "/";
 			strCppDir += szServerName;
 			auto userLogic = strCppDir;
@@ -1483,7 +1488,7 @@ int   moduleLogicServerGen:: genPackFun (moduleGen& rMod, const char* szServerNa
 			myMkdir (userLogic.c_str());
 			strCppDir += "/proc/";
 			strCppDir += pGName;
-			sProcMsgReg (pModuleName, pServerF, rProcRpc,
+			sProcMsgReg (pModuleName.c_str(), pServerF, rProcRpc,
 					strHandle, strCppDir.c_str (), os, ss);
 		} // for
 		ss<<R"(    return nRet;
@@ -1495,17 +1500,17 @@ int   moduleLogicServerGen:: genPackFun (moduleGen& rMod, const char* szServerNa
 }
 
 
-int   moduleLogicServerGen:: genServerReadOnlyCpp (moduleGen& rMod)
+int   moduleLogicServerGen:: genServerReadOnlyCpp (appFile& rApp)
 {
     int   nRet = 0;
     do {
-		auto& rData = rMod.moduleData ();
-		std::string genPath = rMod.srcPath();
+		// auto& rData = rMod.moduleData ();
+		std::string genPath = rApp.srcPath();
 		genPath += "/gen";
 		myMkdir(genPath.c_str());
-		auto& rSS = rData.orderS ();
+		auto& rSS = rApp.orderS ();
 		auto serverNum = rSS.size ();
-		auto srcPath = rMod.srcPath();
+		auto srcPath = rApp.srcPath();
 		for (decltype (serverNum) i = 0; i < serverNum; i++) {
 			auto& rServer = *rSS[i];
 			auto pName = rServer.serverName ();
@@ -1518,7 +1523,8 @@ int   moduleLogicServerGen:: genServerReadOnlyCpp (moduleGen& rMod)
 			strFile += "Gen.cpp";
 			auto regPackFunName = rServer.regPackFunName ();
 			auto regPackFunDec = rServer.regPackFunDec ();
-		auto pModName = rData.moduleName();
+			std::string pModName = rApp.appName(); //rData.moduleName();
+			pModName += "M";
 		std::string strMgrClassName = pModName;
 		strMgrClassName += "ServerMgr";
 			std::ofstream os (strFile.c_str ());
@@ -1540,11 +1546,13 @@ int )"<<pName<<R"( :: onServerInitGen(ForLogicFun* pForLogic)
 		)"<<regPackFunName<<R"( (pForLogic->fnRegMsg, serverId ());
 		nRet = onServerInit(pForLogic);
 		)";
+	/*
 	auto appName = rData.appName ();
 	auto& rMap = tSingleton<appFileMgr>::single ();
 	auto pApp = rMap.findApp (appName);
 	myAssert (pApp);
-	auto netType = pApp->netType(); 
+	*/
+	auto netType = rApp.netType(); 
 	auto route = rServer.route ();
 	if (appNetType_server == netType && route) {
 		
