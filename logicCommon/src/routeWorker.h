@@ -12,19 +12,16 @@ class routeWorker:public logicWorker, public comTcpNet
 public:
     routeWorker ();
     ~routeWorker ();
-	int  recPacketProcFun (ForLogicFun* pForLogic) override;
 	virtual int sendPackToRemoteAskProc(packetHead* pPack, sendPackToRemoteRet& rRet, SessionIDType objSession);
-	int processNetPackFun(ISession* session, packetHead* pack)override;
-
-	int localProcessNetPackFun(ISession* session, packetHead* pack);
-
 	virtual void sendHeartbeat () = 0;
+	// virtual int  sendBroadcastPack (packetHead* pack) = 0;
 
+	int  recPacketProcFun (ForLogicFun* pForLogic) override;
+	int processNetPackFun(ISession* session, packetHead* pack)override;
 	void onWritePack(ISession* session, packetHead* pack) override;
 	int onLoopFrameBase() override;
 	int onLoopBeginBase() override;
-
-	virtual int  sendBroadcastPack (packetHead* pack) = 0;
 private:
+	int localProcessNetPackFun(ISession* session, packetHead* pack);
 };
 #endif

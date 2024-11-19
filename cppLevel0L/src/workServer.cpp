@@ -181,11 +181,13 @@ int workServer::processOncePack(packetHead* pPack)
 
 bool workServer::pushPack (packetHead* pack)
 {
+	/*
 	auto pN = P2NHead(pack);
 	pN->uwMsgID;
 	if (56797 == pN->uwMsgID) {
 		mWarn(" find err pack 56797 pack is : ");
 	}
+	*/
 	return m_slistMsgQue.pushPack (pack);
 }
 
@@ -215,7 +217,7 @@ int workServer:: onLoopEnd()
     do {
 		auto& rMgr = tSingleton<workServerMgr>::single();
 		rMgr.subRunThNum (serverId());
-		rMgr.onLoopBegin ()(m_serverId);
+		rMgr.onLoopEnd()(m_serverId);
     } while (0);
     return nRet;
 }

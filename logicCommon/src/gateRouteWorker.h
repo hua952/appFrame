@@ -41,6 +41,7 @@ public:
 	// int localProcessNetPackFun(ISession* session, packetHead* pack, bool& bProc) override;
 	int processNetPackFun(ISession* session, packetHead* pack)override;
 	void  sendHeartbeat () override;
+	int processOncePack(packetHead* pPack)override;
 
 	int processBroadcastPackFun(ISession* session, packetHead* pack);
 	int processNtfBroadcastPackFun(packetHead* pack);
@@ -54,7 +55,9 @@ public:
 	int onLeaveChannelAsk(packetHead* pack, pPacketHead* ppRet);
 	// ISession* onRecHeadIsNeetForward(ISession* session, netPacketHead* pN) override;
 	tokenMap&  getTokenMap ();
-	int  sendBroadcastPack (packetHead* pack) override;
+	// int  sendBroadcastPack (packetHead* pack) override;
+	int  addChannel (const channelKey& rCh);
+	int  sendPacket (packetHead* pPack, loopHandleType appGroupId, loopHandleType threadGroupId) override;
 private:
 	int leaveChannel (const channelKey& rKey, SessionIDType sessionId, serverIdType	serverId);
 	sessionChannelMap  m_sessionChannelMap;

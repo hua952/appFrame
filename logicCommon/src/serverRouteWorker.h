@@ -1,28 +1,29 @@
-#ifndef _serverWorker_h__
-#define _serverWorker_h__
+#ifndef _serverRouteWorker_h__
+#define _serverRouteWorker_h__
 #include <memory>
 #include "routeWorker.h"
 
 struct ISession;
-class serverWorker: public routeWorker
+class serverRouteWorker: public routeWorker
 {
 public:
-	enum serverWorkerState
+	enum serverRouteWorkerState
 	{
-		serverWorkerState_unReg,
-		serverWorkerState_Reged
+		serverRouteWorkerState_unReg,
+		serverRouteWorkerState_Reged
 	};
-    serverWorker ();
-    ~serverWorker ();
+    serverRouteWorker ();
+    ~serverRouteWorker ();
 	int onLoopBeginBase() override;
 	int sendPackToRemoteAskProc(packetHead* pPack, sendPackToRemoteRet& rRet, SessionIDType objSession) override;
 	int  recPacketProcFun (ForLogicFun* pForLogic) override;
 	void  sendHeartbeat () override;
 	void  onRecRegAppRet ();
-	int  sendBroadcastPack (packetHead* pack) override;
+	// int  sendBroadcastPack (packetHead* pack) override;
+	int  sendPacket (packetHead* pPack, loopHandleType appGroupId, loopHandleType threadGroupId) override;
 protected:
 	std::unique_ptr<ISession*[]>	m_connectors;
-	serverWorkerState  m_state{serverWorkerState_unReg};
+	serverRouteWorkerState  m_state{serverRouteWorkerState_unReg};
 private:
 	std::unique_ptr<std::vector<packetHead*>>	m_unRegSendV{std::make_unique<std::vector<packetHead*>>()};
 	ubyte     m_regRetNum{0};

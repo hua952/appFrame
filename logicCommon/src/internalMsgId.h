@@ -18,7 +18,7 @@ enum comMsgMsgId
     internalMsgId_deleteChannelRet = 8,
 
     internalMsgId_subscribeChannelAsk = 9,
-    internalMsgId_subscribeChannelRet = 9,
+    internalMsgId_subscribeChannelRet = 10,
 
     internalMsgId_sayToChannelAsk = 11,
     internalMsgId_sayToChannelRet = 12,
@@ -33,5 +33,8 @@ enum comMsgMsgId
 
 	internalMsgId_sendToAllGateAsk = 18,
 	internalMsgId_sendToAllGateRet = 19,
+
+    internalMsgId_exitAppNtfByNet = 20,
+    internalMsgId_exitAppNtf = 21,
 };
 #endif

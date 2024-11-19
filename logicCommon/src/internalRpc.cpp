@@ -63,3 +63,11 @@ IMP_ASK_MSG(broadcastPacketNtf)
 
 IMP_ASK_MSG_Z(sendToAllGateAsk)
 IMP_RET_MSG(sendToAllGateRet)
+
+IMP_MSG_PART1(exitAppNtfByNet, sizeof(exitAppNtfByNet))\
+	auto pU = (exitAppNtfByNet*)(N2User(pN));
+	pU->resultNum = 1;
+	pU->result[0]= 0;
+IMP_MSG_PART2(exitAppNtfByNet)
+
+IMP_ASK_MSG(exitAppNtf)

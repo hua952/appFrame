@@ -9,6 +9,7 @@ int initLogGlobal ();
 // int initLog (const char* logName, const char* logfileName, uword minLevel);
 int initLog (const char* logName, const char* logfileName, uword minLevel, bool logCon = true);
 int logMsg (const char* logName, const char* szMsg, uword wLevel);
+int setLogAttr(const char* logName, const char* szKey, const char* szVal); // Not Thread safety, when you neet it, you shuld call it before start log
 void loggerDrop();
 /*
 #define rTrace(...) SPDLOG_LOGGER_TRACE(spdlog::default_logger_raw(), __VA_ARGS__);SPDLOG_LOGGER_TRACE(spdlog::get("cppLevel0"), __VA_ARGS__)

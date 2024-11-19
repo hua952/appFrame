@@ -634,7 +634,7 @@ int   msgGen:: genOnceMsgClassCpp (msgGroupFile& rG, msgFile& rMsg, bool bRet, s
 	)"<<fromFuName<<R"((*pU, msgPb);
 )";
 	if (haveSize) {
-		fromSer<<R"(	pN->udwLength = sizeof()"<<strN<<R"() - sizeof(pU->m_)"
+		fromSer<<R"(	pNN->udwLength = sizeof()"<<strN<<R"() - sizeof(pU->m_)"
 				<<rDN<<R"([0]) * ()"<<len<<R"( - pU->m_)"<<rDN<<R"(Num);)";
 	}
 fromSer<<R"(

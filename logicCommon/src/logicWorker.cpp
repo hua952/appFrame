@@ -1,4 +1,5 @@
 #include <cmath>
+#include <sstream>
 #include "logicWorker.h"
 #include "logicWorkerMgr.h"
 #include "strFun.h"
@@ -96,11 +97,9 @@ int   logicWorker:: sendPacket (packetHead* pPack, loopHandleType appGroupId, lo
 			
 			auto forLogicFun  = rMgr.forLogicFun ();
 			
-			// if (c_emptyLoopHandle == pN->ubySrcServId) {
-				pN->ubySrcServId = rConfig.appGroupId ();
-				pN->ubySrcServId <<= 8;
-				pN->ubySrcServId |= serverId ();
-			// }
+			pN->ubySrcServId = rConfig.appGroupId ();
+			pN->ubySrcServId <<= 8;
+			pN->ubySrcServId |= serverId ();
 			
 			pN->ubyDesServId = appGroupId;
 			pN->ubyDesServId <<= 8;
@@ -116,30 +115,6 @@ int   logicWorker:: sendPacket (packetHead* pPack, loopHandleType appGroupId, lo
 			pAskN->ubySrcServId = serverId ();
 			pAskN->ubyDesServId = routeGroupId;
 			forLogicFun->fnPushPackToServer (objId, pAsk);
-
-			if (c_emptyLoopHandle == pN->ubyDesServId && NIsToAllGate(pN)) {
-				auto bIndex = objId - routeGroup.beginId;
-				for (decltype (routeGroup.runNum) i = 1; i < routeGroup.runNum; i++) {
-					auto sIndex = bIndex + i;
-					sIndex %= routeGroup.runNum;
-					sIndex += routeGroup.beginId;
-
-					auto pAsk = nClonePack(pN);
-					auto pAN = P2NHead(pAsk);
-					pAN->dwToKen = newToken ();
-					
-					sendPackToRemoteAskMsg send;
-					auto pSend = send.pop ();
-					pSend->packArg = (decltype(pAsk->packArg))(pAsk);
-					pSend->loopId = serverId ();
-					auto pSendN = P2NHead(pSend);
-					auto pSendU= (sendPackToRemoteAsk*)(N2User(pSendN));
-					pSendU->objSessionId = EmptySessionID;
-					pSendN->ubySrcServId = serverId ();
-					pSendN->ubyDesServId = routeGroupId;
-					forLogicFun->fnPushPackToServer (sIndex, pSend);	
-				}
-			}
 		}
     } while (0);
     return nRet;
@@ -312,6 +287,11 @@ int  logicWorker:: onLoopFrameBase()
     int  nRet = 0;
     do {
 		nRet = onLoopFrame ();
+		/*
+		if (willExit ()) {
+			nRet |= procPacketFunRetType_exitNow;
+		}
+		*/
     } while (0);
     return nRet;
 }
@@ -440,6 +420,16 @@ static int recSendToAllGateRetProcFun  (pPacketHead pAsk, pPacketHead& pRet, pro
 	return nRet;
 }
 
+static int exitAppNtfProcFun  (pPacketHead pAsk, pPacketHead& pRet, procPacketArg* pArg)
+{
+	int nRet = procPacketFunRetType_exitNow;
+	auto pU = (exitAppNtf*)(P2User(pAsk));
+	if (pU->exitType == 1) {
+		nRet = procPacketFunRetType_exitAfterLoop;
+	}
+	return nRet;
+}
+
 static bool sDelToken (void* pU)
 {
 	auto ppU = (void**)pU;
@@ -543,10 +533,11 @@ int   logicWorker:: recPacketProcFun (ForLogicFun* pForLogic)
 
 		fnRegMsg (serverId (), internal2FullMsg(internalMsgId_createChannelRet), recCreateChannelRetProcFun);
 		fnRegMsg (serverId (), internal2FullMsg(internalMsgId_deleteChannelRet), recDeleteChannelRetProcFun);
-		fnRegMsg (serverId (), internal2FullMsg(internalMsgId_subscribeChannelAsk), recListenChannelRetProcFun);
+		fnRegMsg (serverId (), internal2FullMsg(internalMsgId_subscribeChannelRet), recListenChannelRetProcFun);
 		fnRegMsg (serverId (), internal2FullMsg(internalMsgId_sayToChannelRet), recSayToChannelRetProcFun);
 		fnRegMsg (serverId (), internal2FullMsg(internalMsgId_leaveChannelRet), recLeaveChannelRetProcFun);
 		fnRegMsg (serverId (), internal2FullMsg(internalMsgId_sendToAllGateRet), recSendToAllGateRetProcFun);
+		fnRegMsg (serverId (), internal2FullMsg(internalMsgId_exitAppNtf), exitAppNtfProcFun);
 
     } while (0);
     return nRet;
@@ -767,5 +758,11 @@ int   logicWorker:: sendToAllGate (packetHead* pack)
 		sendPacket (pAsk, myAppGroupId, routeGroupId);
     } while (0);
     return nRet;
+}
+
+void  logicWorker:: stringToChannel (const char* szCh, channelKey& rCh)
+{
+	std::stringstream ss(szCh);
+	ss>>std::hex>>rCh.first>>rCh.second;
 }
 

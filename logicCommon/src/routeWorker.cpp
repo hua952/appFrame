@@ -3,6 +3,7 @@
 #include "logicWorkerMgr.h"
 #include "internalRpc.h"
 #include "internalMsgId.h"
+#include "internalChannel.h"
 #include "internalMsgGroup.h"
 #include "tSingleton.h"
 #include "logicFrameConfig.h"
@@ -33,7 +34,7 @@ static int sendPackToRemoteAskProcFun (pPacketHead pAsk, pPacketHead& pRet, proc
 	pRoute->sendPackToRemoteAskProc(pNew, *pU, pAU->objSessionId);
 	return nRet;
 }
-
+/*
 static int sendToAllGateAskProcFun (pPacketHead pAsk, pPacketHead& pRet, procPacketArg* pArg)
 {
 	int nRet = procPacketFunRetType_del;
@@ -50,15 +51,31 @@ static int sendToAllGateAskProcFun (pPacketHead pAsk, pPacketHead& pRet, procPac
 	// pPacketHead pNew = nullptr;
 	auto pSN = P2NHead(pSend);
 	pSN->ubyDesServId = c_emptyLoopHandle;
-	/*
-	workerMgr.toNetPack ( pSN, pNew);
-	if (!pNew) {
-		pNew = nClonePack (pSN);
-	}
-	pNew->loopId = pSend->loopId;
-	pNew->sessionID = pSend->sessionID;
-	*/
+	
 	pRoute->sendBroadcastPack (pSend);
+	return nRet;
+}
+*/
+static int exitAppNtfByNetProcFun (pPacketHead pAsk, pPacketHead& pRet, procPacketArg* pArg)
+{
+	int nRet = procPacketFunRetType_exitNow;
+	auto pU = (exitAppNtfByNet*)(P2User(pAsk));
+	gInfo(" rec exitAppNtfByNet exitType = "<<(int)(pU->exitType));
+	if (pU->exitType == 1) {
+		nRet = procPacketFunRetType_exitAfterLoop;
+	}
+
+	auto& sMgr = logicWorkerMgr::getMgr();
+	auto fnRegMsg = sMgr.forLogicFun()->fnRegMsg;
+	auto allServerNum = sMgr.allServerNum ();
+	for (decltype (allServerNum) i = 0; i < allServerNum; i++) {
+		exitAppNtfMsg  msg;
+		auto pExitPack = msg.pop();
+		auto pEN = P2NHead(pExitPack);
+		pEN->ubySrcServId = pArg->handle;
+		pEN->ubyDesServId = i;
+		sMgr.forLogicFun()->fnPushPackToServer (i, pExitPack);
+	}
 	return nRet;
 }
 
@@ -83,7 +100,8 @@ int  routeWorker:: recPacketProcFun (ForLogicFun* pForLogic)
 		auto& sMgr = logicWorkerMgr::getMgr();
 		auto fnRegMsg = sMgr.forLogicFun()->fnRegMsg;
 		fnRegMsg (serverId (), internal2FullMsg(internalMsgId_sendPackToRemoteAsk), sendPackToRemoteAskProcFun);
-		fnRegMsg (serverId (), internal2FullMsg(internalMsgId_sendToAllGateAsk), sendToAllGateAskProcFun);
+		// fnRegMsg (serverId (), internal2FullMsg(internalMsgId_sendToAllGateAsk), sendToAllGateAskProcFun);
+		fnRegMsg (serverId (), internal2FullMsg(internalMsgId_exitAppNtfByNet), exitAppNtfByNetProcFun);
     } while (0);
     return nRet;
 }
@@ -299,6 +317,14 @@ int  routeWorker:: onLoopBeginBase()
 		auto& rConfig = tSingleton<logicFrameConfig>::single ();
 		auto  heartbeatSetp = rConfig.heartbeatSetp ();
 		addTimer(heartbeatSetp, sSendHeartbeat, this);
+
+		auto routeGroupId = rConfig.routeGroupId ();
+		auto& routeGroup= rConfig.serverGroups ()[routeGroupId];
+		if (serverId () == routeGroup.beginId) {
+			channelKey ch;
+			stringToChannel (GM_CHANNEL, ch);
+			subscribeChannel (ch);
+		}
 		nRet = logicWorker::onLoopBeginBase();
     } while (0);
     return nRet;

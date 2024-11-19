@@ -297,15 +297,20 @@ int   appLibGen:: genWorkerH (serverFile& rServer)
 		}
 		std::stringstream ssInc;
 		std::string strWorker = "logicWorker";
+		ubyte  netType = m_appData.netType ();
+		if (appNetType_gate == netType) {
+			strWorker = "gateCommonWorker";
+		} else if (appNetType_server == netType) {
+			strWorker = "serverCommonWorker";
+		}
 		bool route = rServer.route ();
 		if (route) {
-			ubyte  netType = m_appData.netType ();
 			if (appNetType_client == netType) {
 				strWorker = "SingleConnectorWorker";
 			} else if (appNetType_gate == netType) {
 				strWorker = "gateRouteWorker";
 			} else {
-				strWorker = "serverWorker";
+				strWorker = "serverRouteWorker";
 			}
 		}
 

@@ -6,7 +6,6 @@
 #include "fromFileData/appFileMgr.h"
 #include "protobufSerGen.h"
 #include "tSingleton.h"
-#include "appGen.h"
 #include "msgGen.h"
 #include "defMsgGen.h"
 #include "projectCMakeListGen.h"

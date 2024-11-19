@@ -11,8 +11,6 @@ class logicWorker
 {
 public:
 	using tokenMapType = std::unordered_map<NetTokenType, packetHead*>;
-	// using netMsgProcMap = std::unordered_map<uword, procRpcPacketFunType>;
-	// using channelKey =  keyValue <uqword, uqword>;
 
 	struct channelKey 
 	{
@@ -33,7 +31,7 @@ public:
 	int    sendMsg (CMsgBase& rMsg, loopHandleType appGroupId, loopHandleType threadGroupId);
 
 	int  sendPacket (packetHead* pPack);
-	int  sendPacket (packetHead* pPack, loopHandleType appGroupId, loopHandleType threadGroupId);
+	virtual int  sendPacket (packetHead* pPack, loopHandleType appGroupId, loopHandleType threadGroupId);
 	// int  sendPacket (packetHead* pPack, loopHandleType appGroupId, loopHandleType threadGroupId, SessionIDType sessionId);
 	int  pushPacketToLocalServer(packetHead* pPack, loopHandleType threadGroupId);
 	virtual int  recPacketProcFun (ForLogicFun* pForLogic); /*   注册一些数据包的处理函数   */
@@ -74,13 +72,13 @@ public:
 	void*  userData ();
 	void  setUserData (void* v);
 	createChannelMap&  getCreateChannelMap (); 
+	static void stringToChannel (const char* szCh, channelKey& rCh);
 protected:
 	int  sendToAllGate (packetHead* pack);
 private:
 	void*  m_userData;
 	tokenMapType   m_tokenMap;
 	createChannelMap  m_createChannelMap;
-	// netMsgProcMap  m_netMsgProcMap;
 	bool  m_willExit{false};
 	ubyte  m_serverGroup {0};
 	ubyte  m_serverId;

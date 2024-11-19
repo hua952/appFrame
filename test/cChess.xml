@@ -246,7 +246,7 @@
 			<BackendToGateSin>
 				<ask>
 					<reque dataType="udword" />
-					<member dataType="ubyte" length="64" haveSize="1"/>
+					<chKey dataType="ubyte" length="16" haveSize="0"/>
 				</ask>
 				<ret>
 					<result dataType="udword" />

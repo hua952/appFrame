@@ -1,4 +1,4 @@
-#include "serverWorker.h"
+#include "serverRouteWorker.h"
 #include "strFun.h"
 #include "logicFrameConfig.h"
 #include "logicWorkerMgr.h"
@@ -10,15 +10,15 @@
 #include "internalMsgGroup.h"
 
 
-serverWorker:: serverWorker ()
+serverRouteWorker:: serverRouteWorker ()
 {
 }
 
-serverWorker:: ~serverWorker ()
+serverRouteWorker:: ~serverRouteWorker ()
 {
 }
 
-int  serverWorker:: onLoopBeginBase()
+int  serverRouteWorker:: onLoopBeginBase()
 {
     int  nRet = 0;
     do {
@@ -89,7 +89,7 @@ int  serverWorker:: onLoopBeginBase()
     return nRet;
 }
 
-int  serverWorker:: sendPackToRemoteAskProc(packetHead* pPack, sendPackToRemoteRet& rRet, SessionIDType objSession)
+int  serverRouteWorker:: sendPackToRemoteAskProc(packetHead* pPack, sendPackToRemoteRet& rRet, SessionIDType objSession)
 {
     int  nRet = 0;
     do {
@@ -103,7 +103,7 @@ int  serverWorker:: sendPackToRemoteAskProc(packetHead* pPack, sendPackToRemoteR
 			pS = getSession (pPack->sessionID);
 		} else {
 			if (objSession == EmptySessionID) {
-				if (serverWorkerState_unReg == m_state) {
+				if (serverRouteWorkerState_unReg == m_state) {
 					m_unRegSendV->push_back(pPack);
 					gTrace( " when unReg state rec sendPackToRemoteAsk pack is : "<<*pPack);
 					break;
@@ -136,13 +136,13 @@ static int regAppRouteRetProcFun (pPacketHead pAsk, pPacketHead& pRet, procPacke
 	auto&  workerMgr = logicWorkerMgr::getMgr();
 	auto pServer = workerMgr.findServer (pArg->handle);
 	myAssert (pServer);
-	auto pSer = dynamic_cast<serverWorker*>(pServer);
+	auto pSer = dynamic_cast<serverRouteWorker*>(pServer);
 	myAssert (pSer);
 	pSer->onRecRegAppRet ();
 	return nRet;
 }
 
-void   serverWorker:: onRecRegAppRet ()
+void   serverRouteWorker:: onRecRegAppRet ()
 {
     do {
 		m_regRetNum++;
@@ -151,7 +151,7 @@ void   serverWorker:: onRecRegAppRet ()
 		auto netNum = rConfig.netNum();
 		if (m_regRetNum == netNum) {
 			gInfo(" all reg ret ");
-			m_state = serverWorkerState_Reged;
+			m_state = serverRouteWorkerState_Reged;
 			auto& rV = *(m_unRegSendV.get());
 			for (auto it = rV.begin (); it != rV.end (); it++) {
 				auto netI = 0;
@@ -166,7 +166,7 @@ void   serverWorker:: onRecRegAppRet ()
     } while (0);
 }
 
-void   serverWorker:: sendHeartbeat ()
+void   serverRouteWorker:: sendHeartbeat ()
 {
     do {
 		auto& rConfig = tSingleton<logicFrameConfig>::single ();
@@ -180,7 +180,7 @@ void   serverWorker:: sendHeartbeat ()
     } while (0);
 }
 
-int   serverWorker:: recPacketProcFun (ForLogicFun* pForLogic)
+int   serverRouteWorker:: recPacketProcFun (ForLogicFun* pForLogic)
 {
     int   nRet = 0;
     do {
@@ -196,8 +196,8 @@ int   serverWorker:: recPacketProcFun (ForLogicFun* pForLogic)
     return nRet;
 }
 
-
-int   serverWorker:: sendBroadcastPack (packetHead* pack)
+/*
+int   serverRouteWorker:: sendBroadcastPack (packetHead* pack)
 {
     int   nRet = 0;
     do {
@@ -228,5 +228,43 @@ int   serverWorker:: sendBroadcastPack (packetHead* pack)
     } while (0);
     return nRet;
 }
+*/
 
+int   serverRouteWorker:: sendPacket (packetHead* pPack, loopHandleType appGroupId, loopHandleType threadGroupId)
+{
+	int   nRet = 0;
+	do {
+		auto pN = P2NHead(pPack);
+		if (c_emptyLoopHandle == pN->ubyDesServId && NIsToAllGate(pN)) {
+			auto& rConfig = tSingleton<logicFrameConfig>::single();
+			auto gateNodeNum = rConfig.gateNodeNum ();
+			auto routeGroupId = rConfig.routeGroupId ();
+			auto& routeGroup= rConfig.serverGroups ()[routeGroupId];
+			myAssert (gateNodeNum == routeGroup.runNum);
+
+			auto& sMgr = logicWorkerMgr::getMgr();
+			auto forLogicFun = sMgr.forLogicFun();
+			for (decltype (routeGroup.runNum) i = 0; i < routeGroup.runNum; i++) {
+
+				auto pAsk = routeGroup.runNum - 1 == i ? pPack : nClonePack(pN);
+				auto pAN = P2NHead(pAsk);
+				pAN->dwToKen = newToken ();
+
+				sendPackToRemoteAskMsg send;
+				auto pSend = send.pop ();
+				pSend->packArg = (decltype(pAsk->packArg))(pAsk);
+				pSend->loopId = serverId ();
+				auto pSendN = P2NHead(pSend);
+				auto pSendU= (sendPackToRemoteAsk*)(N2User(pSendN));
+				pSendU->objSessionId = EmptySessionID;
+				pSendN->ubySrcServId = serverId ();
+				pSendN->ubyDesServId = routeGroupId;
+				forLogicFun->fnPushPackToServer (i, pSend);	
+			}
+		} else {
+			nRet = logicWorker::sendPacket(pPack, appGroupId, threadGroupId);
+		}
+	} while (0);
+	return nRet;
+}
 

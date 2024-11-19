@@ -134,6 +134,27 @@ int logMsg (const char* logName, const char* szMsg, uword wLevel)
 	return nRet;
 }
 
+int setLogAttr(const char* logName, const char* szKey, const char* szVal) // Not Thread safety, when you neet it, you shuld call it before start log
+{
+	int nRet = 0;
+	do {
+		auto& logs = tSingleton<myLoggerMgr>::single();
+		auto pL = logs.findLogger(logName);
+		if (!pL) {
+			nRet = 1;
+			break;
+		}
+		if (strcmp(szKey, "minLevel") == 0) {
+			pL->setMinLevel((uword)(atoi(szVal)));
+		} else if (strcmp(szKey, "logToCon") == 0) {
+			pL->setLogToCon(atoi(szVal));
+		} else {
+			nRet = 2;
+		}
+	} while (0);
+	return nRet;
+}
+
 void loggerDrop()
 {
 }

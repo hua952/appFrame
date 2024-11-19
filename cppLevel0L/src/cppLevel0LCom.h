@@ -10,6 +10,8 @@
 #define rWarn(...) LOG_MSG(3, __VA_ARGS__)
 #define rError(...) LOG_MSG(4, __VA_ARGS__)
 
+#define setLogMinLevel(lev) setLogAttr("appFrame","minLevel",#lev)
+#define setLogLogToCon(log) setLogAttr("appFrame","logToCon",#log)
 // #define PUSH_FUN_CALL {std::stringstream ss;ss<<__FILE__<<":"<<__FUNCTION__<<":"<<__LINE__;lv0PushToCallStack(ss.str().c_str());}
 // #define POP_FUN_CALL {lv0PopFromCallStack();}
 

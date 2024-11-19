@@ -88,6 +88,7 @@ int  SingleConnectorWorker:: sendPackToRemoteAskProc(packetHead* pPack, sendPack
     } while (0);
     return nRet;
 }
+/*
 int   SingleConnectorWorker:: sendBroadcastPack (packetHead* pack)
 {
     int   nRet = 0;
@@ -96,3 +97,4 @@ int   SingleConnectorWorker:: sendBroadcastPack (packetHead* pack)
     } while (0);
     return nRet;
 }
+*/

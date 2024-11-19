@@ -114,6 +114,20 @@ struct sendToAllGateRet
     udword    m_result;
 };
 DEC_MSG(sendToAllGateRet)
+
+struct exitAppNtfByNet
+{
+	ubyte exitType;
+	uword resultNum;
+	char  result[128];
+};
+DEC_MSG(exitAppNtfByNet)
+
+struct exitAppNtf
+{
+	ubyte exitType;
+};
+DEC_MSG(exitAppNtf)
 #endif
 
 
