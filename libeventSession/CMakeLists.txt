@@ -5,6 +5,12 @@ file(GLOB srcS src/*.cpp)
 set(defS)
 set(srcH)
 set(osSrc)
+
+find_package(Libevent REQUIRED
+	PATHS $ENV{VCPKG_HOME}/packages/libevent_$ENV{VCPKG_STATIC}/share/libevent
+	NO_DEFAULT_PATH
+)
+	
 if (UNIX)
 	set(srcH src/unix)
 	file(GLOB osSrc src/unix/*.cpp)
@@ -19,15 +25,13 @@ elseif (WIN32)
 	ADD_DEFINITIONS(/W2)
 	include_directories(
 							${CMAKE_SOURCE_DIR}/../include
-							$ENV{depInclude}
+							# $ENV{depInclude}
 							)
-	list(APPEND libDir $ENV{depLib})
+	# list(APPEND libDir	$ENV{depLib})
 	file(GLOB defS src/*.def)
 endif ()
 
-link_directories(
-		${libDir}
-		)
+link_directories(${libDir})
 
 add_library(${prjName} SHARED ${srcS} ${osSrc} ${defS})
 
@@ -35,10 +39,13 @@ target_include_directories(${prjName} PUBLIC
 							${srcH}
 							${firstBuildInc} 
                            )
-target_link_libraries(${prjName} PUBLIC  common event)
+target_link_libraries(${prjName} PUBLIC  common
+	PRIVATE libevent::core libevent::extra
+	)
 
 if (WIN32)
-	target_link_libraries(${prjName} PUBLIC ws2_32)
+	target_link_libraries(${prjName} PUBLIC ws2_32
+	)
 endif ()
 
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)

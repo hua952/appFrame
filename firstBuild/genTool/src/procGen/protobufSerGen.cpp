@@ -48,6 +48,8 @@ int   protobufSerGen:: CMakeListGen ()
 		auto thirdPartyDir = rGlobal.thirdPartyDir ();
 		auto appFrameInstall = rGlobal.frameInstallPath ();
 		os<<R"(SET(prjName protobufSer)
+# find_package(protobuf REQUIRED	PATHS $ENV{VCPKG_HOME}/packages/protobuf_$ENV{VCPKG_STATIC}/share/protobuf	NO_DEFAULT_PATH)
+find_package(protobuf CONFIG REQUIRED)
 set(defS)
 set(osSrc)
 set(libPath)
@@ -64,8 +66,8 @@ elseif (WIN32)
 	ADD_DEFINITIONS(/W2)
 	add_compile_definitions(PROTOBUF_USE_DLLS)
 	file(GLOB defS src/*.def)
-	include_directories()"<<thirdPartyDir<<R"(/include/)
-list(APPEND libDep )"<<thirdPartyDir<<R"(/lib/)
+	# include_directories()"<<thirdPartyDir<<R"(/include/)
+# list(APPEND libDep )"<<thirdPartyDir<<R"(/lib/)
 endif ()
 	include_directories(
 	)"<<appFrameInstall<<R"(/include/appFrame
@@ -77,9 +79,9 @@ link_directories(${libPath} ${libDep})
 	common
 	logicCommon
 	cLog
-	abseil_dll
-	libprotobufd
 	defMsg
+# PRIVATE protobuf::libprotoc protobuf::libprotobuf protobuf::libprotobuf-lite
+ PRIVATE protobuf::libprotobuf
 	)
 	SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 	install(TARGETS ${prjName} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})

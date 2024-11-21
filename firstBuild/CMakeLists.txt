@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.16) 
+set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_HOME}/scripts/buildsystems/vcpkg.cmake")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(BUILD_USE_64BITS on)
 set(CMAKE_CXX_STANDARD 20) 

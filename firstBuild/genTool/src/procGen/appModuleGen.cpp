@@ -321,7 +321,7 @@ if (WIN32)
 	os<<depInc<<")"<<std::endl;
 	auto depLib = rGlobalFile.depLibHome ();
 
-	os<<"list(APPEND libDep "<<depLib<<")"<<std::endl;
+	// os<<"list(APPEND libDep "<<depLib<<")"<<std::endl;
 	const char* szC2 = R"(endif ()
 	include_directories(
 	)";

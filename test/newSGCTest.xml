@@ -19,6 +19,7 @@
 						<enterServer askType="ret"/>
 						<wateForGame askType="ret"/>
 						<clientToBackendSin askType="ret"/>
+						<clientToMutApp askType="ret"/>
 					</procRpc>
 				</chatTh>
 				<netTh sleepSetp="1"  showFpsSetp="40000" route="1">
@@ -89,6 +90,17 @@
 			<server>
 			</server>
 		</gmTool>
+		<mutServer appNetType="2">
+			<appArg>frameConfigFile=mutServerFrame.txt</appArg>
+			<appArg>logicConfigFile=mutServerLogicConf.txt</appArg>
+			<server>
+				<mutTest sleepSetp="1" openNum="2" showFpsSetp="40000">
+					<procRpc>
+						<clientToMutApp askType="ask"/>
+					</procRpc>
+				</mutTest>
+			</server>
+		</mutServer>
 	</app>
 </servers>
 

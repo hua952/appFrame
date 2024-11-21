@@ -135,7 +135,10 @@ int  msgGen:: startGen ()
 		protoOsF<<proOs.str();
 		protoOsF.close ();
 		std::stringstream protocOs;
-		protocOs<<"protoc --cpp_out="<<aProtoFile<<" --proto_path="<<aProtoFile<<" "<<pPmpName<<".proto";
+		auto vcpkg_tool = std::getenv("VCPKG_HOME");
+		auto vcpkg_dll = std::getenv("VCPKG_DLL");
+		protocOs<<vcpkg_tool<<"/packages/protobuf_"<<vcpkg_dll<<"/tools/protobuf/protoc --cpp_out="<<aProtoFile<<" --proto_path="<<aProtoFile<<" "<<pPmpName<<".proto";
+		rInfo(" will exc : "<<protocOs.str());
 		system (protocOs.str().c_str());
 
 		auto& rConfig = tSingleton<configMgr>::single ();

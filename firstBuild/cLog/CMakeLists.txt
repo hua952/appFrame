@@ -21,8 +21,7 @@ add_library(${prjName} ${srcS} )
 target_include_directories(${prjName} PUBLIC 
 							${CMAKE_SOURCE_DIR}/common/src
                            )
-target_link_libraries(${prjName} PUBLIC  common
-	)
+					   # target_link_libraries(${prjName} PUBLIC  common)
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 
 install(TARGETS ${prjName} ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
