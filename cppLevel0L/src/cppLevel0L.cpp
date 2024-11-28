@@ -6,6 +6,8 @@
 #include "workServerMgr.h"
 #include "argConfig.h"
 
+extern "C"
+{
 int initFun (int cArg, char** argS, int cDefArg, char** defArgS)
 {
 	tSingleton<workServerMgr>::createSingleton();
@@ -60,4 +62,5 @@ int getServerGroupInfo(uword serverG, ubyte* beginIndex, ubyte* runNum)
 		*runNum = serverGroups[serverG].runNum;
 	} while (0);
 	return nRet;
+}
 }

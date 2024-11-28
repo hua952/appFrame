@@ -25,13 +25,18 @@ link_directories(
 		)
 
 add_library(${prjName} SHARED ${srcS} ${defS} ${osSrc})
-target_include_directories(${prjName} PUBLIC
+target_include_directories(${prjName} PRIVATE
 							${CMAKE_SOURCE_DIR}/logicCommon/src
 							${CMAKE_SOURCE_DIR}/frameConfig/src
 							${firstBuildInc}
                            )
-target_link_libraries(${prjName} PUBLIC  ${libS})
+target_link_libraries(${prjName} PRIVATE  ${libS})
 
+if (UNIX)
+    set(VERSION_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/src/unix/lib.vers")
+	target_compile_options(${prjName} PRIVATE -fPIC)	
+	target_link_options(${prjName} PRIVATE -Wl,-version-script,${VERSION_SCRIPT})
+endif ()
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 install(TARGETS ${prjName} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 

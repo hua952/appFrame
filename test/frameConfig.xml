@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<config className="frameConfig" projectDir="C:\work\appFrame"  projectName="frameConfig">
+<config className="frameConfig"  projectName="frameConfig">
 	<ip type="string">127.0.0.1</ip>
 	<runWorkNum type="string" commit="client进程及线程启动的数量"></runWorkNum>
 	<gateInfo type="string" commit="gate IP 等">forClientIp:127.0.0.1*forServerIp:127.0.0.1*startPort:12000+forClientIp:127.0.0.1*forServerIp:127.0.0.1*startPort:22000</gateInfo>
@@ -16,6 +16,7 @@
 	<netLib type="string">libeventSession</netLib>
 	<frameConfigFile type="string" commit="框架配置文件"></frameConfigFile>
 	<frameHome type="string" commit="框架的安装目录"></frameHome>
+	<projectInstallDir type="string" commit="安装目录"></projectInstallDir>
 	<logLevel type="word">2</logLevel>
 	<appNetType type="word">0</appNetType>
 	<gateAppGroupId  type="uword">0</gateAppGroupId>

@@ -33,7 +33,7 @@ add_subdirectory ()"<<szPrjName<<R"(Config)
 		auto bH = rGlobalFile.haveServer ();
 		auto& rAppS = tSingleton<appFileMgr>::single ().appS ();
 			std::string strFile = rGlobalFile.projectHome ();
-			strFile += "CMakeLists.txt";
+			strFile += "/CMakeLists.txt";
 
 			std::ofstream os(strFile.c_str ());
 			if (!os) {
@@ -49,13 +49,21 @@ add_subdirectory ()"<<szPrjName<<R"(Config)
 			// rGlobalFile.getRealInstallPath (strInstall);
 			os<<R"(cmake_minimum_required(VERSION 3.16) 
 set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_HOME}/scripts/buildsystems/vcpkg.cmake")
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Debug)
+endif()
 set(BUILD_USE_64BITS on)
 set(CMAKE_CXX_STANDARD 20) 
 set(CMAKE_CXX_STANDARD_REQUIRED True) 
+if (UNIX)
+	MESSAGE(STATUS "unix add -Wl,-Bsymbolic")
+	set(CMAKE_CXX_LINK_OPTIONS "${CMAKE_CXX_LINK_OPTIONS} -Wl,-Bsymbolic")
+endif ()
+
 set (myProjectName )"<<szPrjName <<R"()
 project(${myProjectName})
-set (firstBuildInc )"<<frameInstallDir<<R"(include/appFrame  CACHE INTERNAL "Shared variable")
-set (firstBuildLib )"<<frameInstallDir<<R"(lib  CACHE INTERNAL "Shared variable")
+set (firstBuildInc )"<<frameInstallDir<<R"(/include/appFrame  CACHE INTERNAL "Shared variable")
+set (firstBuildLib )"<<frameInstallDir<<R"(/lib  CACHE INTERNAL "Shared variable")
 SET(CMAKE_INSTALL_PREFIX )"<<strInstall<<R"()
 )";
 if (bH) {

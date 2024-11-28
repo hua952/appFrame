@@ -25,8 +25,10 @@ private:
 	int  onWorkerInitGen (serverFile& rServer);
 	int genServer (serverFile& rServer);
 	int genExportFunH ();
+	int genBashFile ();
 	int genExportFunCpp ();
 	int genWinDef ();
+	int  versFileGen ();
 	int procMsgReg (serverFile* pServer, const procRpcNode& rProcRpc, const char* szMsgDir);
 	std::unique_ptr <char[]>  m_homeDir;
 	std::unique_ptr <char[]>  m_srcDir;

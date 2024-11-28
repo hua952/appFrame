@@ -98,7 +98,7 @@ void event_cb(struct bufferevent *bev, short event, void *arg)
 	// pSS->setState (SessionState_Offline);
 	pSS->close();
 }
-
+/*
 static void accept_cb(intptr_t fd, short events, void* arg)
 {
 	auto pL = (libeventListener*) arg;
@@ -130,7 +130,7 @@ static void accept_cb(intptr_t fd, short events, void* arg)
 	pSS->setState (SessionState_Online);
 	fun (pSS, token);
 }
-
+*/
 udword  libeventListener:: userDataLen ()
 {
     return m_userDataLen;

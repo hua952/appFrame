@@ -10,8 +10,10 @@
 #include <signal.h>
 #include "mainLoop.h"
 #include "cTimer.h"
-
+extern"C"
+{
 int initGlobal (allocPackFT  allocPackFun, freePackFT	freePackFun, logMsgFT  argLogMsgFun);
+};
 allocPackFT    allocPackFun ();
 freePackFT    freePackFun ();
 logMsgFT logMsgFun ();

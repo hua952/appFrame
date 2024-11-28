@@ -19,6 +19,9 @@
 #include "tSingleton.h"
 #include "rLog.h"
 
+#include<filesystem>
+using namespace std::filesystem;
+
 appLibGen:: appLibGen (appFile&  rAppData):m_appData(rAppData)
 {
 	auto& rGlobalFile = tSingleton<globalFile>::single ();
@@ -82,10 +85,11 @@ int  appLibGen:: batFileGen ()
 		}
 
 		auto netType = rApp.netType ();
+		/*
 		if (appNetType_gate == netType) {
 			rMainArgS.push_back("ip=0.0.0.0");
 		}
-		
+		*/	
 		{
 			std::stringstream ts;
 			ts<<"netNum="<<rGlobalFile.netNum();
@@ -118,7 +122,12 @@ int  appLibGen:: batFileGen ()
 			ts<<"appGroupId ="<<appGroupId;
 			rMainArgS.push_back(ts.str());
 		}
-
+		{
+			std::stringstream ts;
+			auto projectInstallDir = rGlobalFile.projectInstallDir ();
+			ts<<"projectInstallDir="<<projectInstallDir;
+			rMainArgS.push_back(ts.str());
+		}
 		std::string strLogFile = szAppName;
 		strLogFile += ".log";
 		std::string strLogFull = R"(logFile=)";
@@ -272,6 +281,7 @@ int   appLibGen:: genWorkerH (serverFile& rServer)
 		std::string strFile = srcDir (); // rMod.genPath ();
 		strFile += "/";
 		strFile += serverName;
+		create_directories (strFile);
 		strFile += "/";
 		strFile += serverName;
 		strFile += ".h";
@@ -647,8 +657,8 @@ set(mainLibS)
 set(osSrc)
 if (UNIX)
     MESSAGE(STATUS "unix")
-	#add_definitions(-w)
 	file(GLOB osSrc src/unix/*.cpp)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 elseif (WIN32)
 	MESSAGE(STATUS "windows")
 	ADD_DEFINITIONS(/Zi)
@@ -656,9 +666,9 @@ elseif (WIN32)
 	file(GLOB osSrc src/win/*.cpp)
 	list(APPEND mainLibS ws2_32)
 	include_directories( )";
-	auto depInc = rGlobalFile.depIncludeHome ();
-	os<<depInc<<")"<<std::endl;
-	auto depLib = rGlobalFile.depLibHome ();
+	// auto depInc = rGlobalFile.depIncludeHome ();
+	os<<")"<<std::endl;
+	// auto depLib = rGlobalFile.depLibHome ();
 
 	// os<<"list(APPEND libDep "<<depLib<<")"<<std::endl;
 	const char* szC2 = R"(endif ()
@@ -683,21 +693,9 @@ elseif (WIN32)
 	<<R"(link_directories(${libPath} ${libDep})
 	add_library(${prjName} ${genSrcS})
 	add_executable ()"<<appName<<R"( ${mainSrcS} ${osSrc})
-target_link_libraries()"<<appName<<R"( PUBLIC
+target_link_libraries()"<<appName<<R"( PRIVATE
 	common
 	${mainLibS}
-	)"<<configClassName<<R"(
-	logicCommon
-	frameConfig
-	cLog
-)";
-	auto bH = rGlobalFile.haveServer ();
-	if (bH) {
-		os<<R"(defMsg
-		comTcpProNet
-	)";
-	}
-os<<R"(
 	)
 
 	SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
@@ -935,16 +933,15 @@ int main(int cArg, char** argS)
 			std::string strDll;
 			if (!strFrameHome.empty()) {
 				strDll += strFrameHome;
-				strDll += "/bin/";
+				strDll += "/";
 			}
-			strDll += pLevel0Name;
-			strDll += dllExtName ();
+			strDll += getDllPath (pLevel0Name.c_str());
 			auto handle = loadDll (strDll.c_str());
 			myAssert(handle);
 			do {
 				if(!handle) {
 					nRet = 11;
-					ws<<"load module "<<pLevel0Name<<" error"<<std::endl;
+					ws<<"load module "<<strDll<<" error"<<std::endl;
 					break;
 				}
 				typedef int (*initFunType) (int cArg, char** argS, int cDArg, char** argDS);

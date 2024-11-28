@@ -1,3 +1,5 @@
+#include <vector>
+#include<filesystem>
 #include "globalGen.h"
 #include "strFun.h"
 #include "comFun.h"
@@ -12,7 +14,8 @@
 #include "appLibGen.h"
 #include "appModuleGen.h"
 #include "rLog.h"
-#include <vector>
+#include<filesystem>
+using namespace std::filesystem;
 
 globalGen:: globalGen ()
 {
@@ -29,7 +32,7 @@ int   globalGen:: writeGenCmakelist ()
 		auto &rGlobalFile = tSingleton<globalFile>::single();
 		auto  projectHome = rGlobalFile.projectHome ();
 		std::string strFile = projectHome;
-		strFile += "gen";
+		strFile += "/gen";
 		myMkdir(strFile.c_str());
 		strFile += "/CMakeLists.txt";
 
@@ -170,8 +173,13 @@ int   globalGen:: configLibGen ()
 		auto configDef = rGlobalFile.configDef ();
 		std::string strFile = rGlobalFile.xmlDir ();
 		strFile += "/";
+		std::unique_ptr<char[]> temp;
+		auto nR = getCurModelPath (temp);
+		myAssert(!nR);
+		std::filesystem::path entry(temp.get());
+
 		std::stringstream cmdOs;
-		cmdOs<<"configFile ";
+		cmdOs<<entry.parent_path().string()<<"/configFile ";
 		if (configDef) {
 			strFile += configDef;
 			auto bE = isPathExit (strFile.c_str());
@@ -182,7 +190,9 @@ int   globalGen:: configLibGen ()
 		auto projectDir = rGlobalFile.projectHome ();
 		// auto projectName = rGlobalFile.projectName ();
 		auto  strPrjConfig = rGlobalFile.configClassName ();
+		// create_directories (strPrjConfig);
 		cmdOs<<"projectDir="<<projectDir<<"/gen projectName="<<strPrjConfig<<" className="<<strPrjConfig;
+		rInfo(" will exc : "<<cmdOs.str());
 		system (cmdOs.str().c_str());
     } while (0);
     return nRet;

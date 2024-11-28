@@ -25,10 +25,22 @@ public:
 	void  setStructBadyType (dword v);
 	bool  installThreadDll ();
 	void  setInstallThreadDll (bool v);
+	const char*  projectDir ();
+	void  setProjectDir (const char* v);
+	const char*  projectName ();
+	void  setProjectName (const char* v);
+    const char*  frameInstallPath ();
+    void  setFrameInstallPath (const char* v);
+	const char*  projectInstallDir ();
+	void  setProjectInstallDir (const char* v);
 private:
-	bool  m_installThreadDll;
-	dword  m_structBadyType;
-	bool  m_reProc;
+	std::unique_ptr <char[]>  m_projectInstallDir;
+    std::unique_ptr <char[]>  m_frameInstallPath;
+	std::unique_ptr <char[]>  m_projectName;
+	std::unique_ptr <char[]>  m_projectDir;
 	std::unique_ptr<char[]>  m_defFile;
+	dword  m_structBadyType;
+	bool  m_installThreadDll;
+	bool  m_reProc;
 };
 #endif

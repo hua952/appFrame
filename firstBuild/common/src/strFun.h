@@ -4,6 +4,7 @@
 #include <string>
 #include <sstream>
 #include <vector>
+#include <cstring>
 extern "C"
 {
 void strNCpy(char* szD, int nSize, const char* szS);
@@ -30,8 +31,8 @@ template<class T> void stringToValue(const char* str,  T& v)
 	ss>>v;
 }
 
-template<> extern void stringToValue<bool>(const char* str,  bool& v);
-template<> extern void stringToValue<unsigned char>(const char* str, unsigned char& v);
+void stringToValue(const char* str,  bool& v);
+void stringToValue(const char* str, unsigned char& v);
 
 template<class T2> bool stringMatchValue(const char* srcKey, const char* srcValue, const char* key, T2& v)
 {
@@ -122,5 +123,6 @@ template<class T1, class T2> bool  getTwoValueFromArgS (int argC, char** argS, c
 	return b1&&b2;
 }
 
+void getStringValuesFromArgS (int argC, char** argS, void** keyValues, int keyNum);
 //void TraceStack(std::stringstream& oss);
 #endif

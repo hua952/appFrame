@@ -30,6 +30,8 @@
 #include "mainLoop.h"
 #include "configMgr.h"
 #include <vector>
+#include<filesystem>
+using namespace std::filesystem;
 
 msgGen::msgGen (msgPmpFile& rPmp):m_rPmp(rPmp)
 {
@@ -39,7 +41,7 @@ msgGen:: ~msgGen ()
 {
 }
 
-int  msgGen:: startGen ()
+int  msgGen::startGen ()
 {
     int  nRet = 0;
     do {
@@ -123,6 +125,7 @@ int  msgGen:: startGen ()
 		}
 		std::string aProtoFile = protobufSerSrcDir ();
 		std::string strProtoFile = aProtoFile;
+		create_directories (strProtoFile);
 		strProtoFile += "/";
 		strProtoFile += pPmpName;
 		strProtoFile += ".proto"; 
@@ -136,7 +139,7 @@ int  msgGen:: startGen ()
 		protoOsF.close ();
 		std::stringstream protocOs;
 		auto vcpkg_tool = std::getenv("VCPKG_HOME");
-		auto vcpkg_dll = std::getenv("VCPKG_DLL");
+		auto vcpkg_dll = std::getenv("VCPKG_OS");
 		protocOs<<vcpkg_tool<<"/packages/protobuf_"<<vcpkg_dll<<"/tools/protobuf/protoc --cpp_out="<<aProtoFile<<" --proto_path="<<aProtoFile<<" "<<pPmpName<<".proto";
 		rInfo(" will exc : "<<protocOs.str());
 		system (protocOs.str().c_str());
@@ -224,6 +227,8 @@ packetHead* allocPacketExt(udword udwS, udword ExtNum);
 			ofPro<<incOs.str()<<R"(#include ")"<<serializePackFunStName<<R"(.h"
 
 )"<<strSerializeOut.str()<<R"(
+extern "C"
+{
 int  getSerializeFunS (serializePackFunType* pFunS, int maxNum, ForLogicFun* pForLogic)
 {
 	int nRet = 0;
@@ -251,7 +256,9 @@ int  getSerializeFunS (serializePackFunType* pFunS, int maxNum, ForLogicFun* pFo
 	}
 	ofPro<<R"(	} while (0);
 	return nRet;
-})";
+}
+}
+)";
 		// } // if
     } while (0);
     return nRet;
@@ -348,7 +355,10 @@ int  checkStructS (const char* szFile)
 			break;
 		}
 		)";
-	regOs<<R"(int getMsgPairS (uword* pBuff, int buffNum)
+	regOs<<R"(
+extern "C"
+{
+int getMsgPairS (uword* pBuff, int buffNum)
 {
 	myAssert(buffNum%2==0);
 	int nRet = 0;
@@ -442,6 +452,7 @@ int  checkStructS (const char* szFile)
 	regOs<<R"(
 	} while (0);
 	return nRet;
+}
 })";
 
 defProcOs<<R"(
@@ -658,7 +669,7 @@ fromSer<<R"(
 	auto pU = ()"<<strN<<R"(*)(N2User(pN));
 	)"<<strN<<R"(Proto  msgPb;
 	)"<<toPbFu<<R"((*pU, msgPb);
-	auto newLen = msgPb.ByteSize ();
+	auto newLen = msgPb.ByteSizeLong();
 	pNew = (packetHead*)allocPacket(newLen);
 	auto pNN = P2NHead(pNew);
 	auto pNU = ()"<<strN<<R"(*)(N2User(pNN));
@@ -1252,14 +1263,14 @@ int  msgGen:: CMakeListGen ()
 		std::ofstream os(strFilename);
 		auto& rTool = rGlobal;
 		// auto outPutPath = rTool.outPutPath ();
-		auto depIncludeHome = rTool.depIncludeHome ();
-		auto depLibHome = rTool.depLibHome ();
+		// auto depIncludeHome = rTool.depIncludeHome ();
+		// auto depLibHome = rTool.depLibHome ();
 		// auto frameHome = rTool.frameHome ();
 		auto frameLibPath = rTool.frameLibPath ();
 		std::string framePath = rTool.frameInstallPath ();
 		os<<"SET(prjName defMsg)"<<std::endl
-			<<"SET(depIncludeHome "<<depIncludeHome<<")"<<std::endl
-			<<"SET(depLibHome "<<depLibHome<<")"<<std::endl
+			// <<"SET(depIncludeHome "<<depIncludeHome<<")"<<std::endl
+			// <<"SET(depLibHome "<<depLibHome<<")"<<std::endl
 			// <<"SET(frameHome "<<frameHome<<")"<<std::endl
 			<<"SET(frameLibPath "<<frameLibPath<<")"<<std::endl
 			// <<"SET(outPutPath "<<outPutPath<<")"<<std::endl
@@ -1300,11 +1311,11 @@ elseif (WIN32)
 		)
 endif ()
 add_library(${prjName} ${genSrcS} ${srcS} ${srcOS} ${defS} ${pbFileS})
-target_include_directories(${prjName} PUBLIC 
+target_include_directories(${prjName} PRIVATE 
 							src
 							${CMAKE_SOURCE_DIR}/protobufSer/src
 							)";
-							os<<framePath<<"include/appFrame"<<std::endl;
+							os<<framePath<<"/include/appFrame"<<std::endl;
 
 	bool bWProto = ((structBadyTime_proto == bt));
 	if (bWProto) {
@@ -1313,8 +1324,6 @@ target_include_directories(${prjName} PUBLIC
 	}
                            os<<R"(
 						   )
-target_link_libraries(${prjName} PUBLIC
-common logicCommon)
 
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 )";
@@ -1328,6 +1337,7 @@ int  msgGen:: msgGroupIdGen ()
     int  nRet = 0;
 	do {
 		std::string strFile = srcDir ();
+		create_directories (strFile);
 		strFile += "/msgGroupId.h";
 		std::ofstream os(strFile);
 		if (!os) {

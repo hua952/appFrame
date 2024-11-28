@@ -24,10 +24,10 @@ link_directories(
 		)
 add_executable (${prjName} ${srcS} ${osSrc})
 
-target_include_directories(${prjName} PUBLIC 
+target_include_directories(${prjName} PRIVATE 
 							${firstBuildInc} 
                            )
-target_link_libraries(${prjName} PUBLIC  ${libS})
+target_link_libraries(${prjName} PRIVATE  ${libS})
 
 SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 

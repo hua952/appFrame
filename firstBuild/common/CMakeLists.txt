@@ -1,4 +1,5 @@
 SET(prjName common)
+set(CMAKE_CXX_STANDARD 20) 
 set(srcS)
 file(GLOB srcS src/*.cpp)
 set(osSrc)
@@ -23,17 +24,20 @@ set(incS src/msg.h src/argMgr.h src/arrayMap.h src/comFun.h src/cTimer.h src/dep
 	src/staticArrayMap.h src/strFun.h src/TAlgorithm.h src/tJumpListNS.h
 	src/tJumpListNSAuto.h src/tSingleton.h src/typeDef.h)
 
-add_library(${prjName} ${srcS} ${osSrc})
 
-target_include_directories(${prjName} PUBLIC 
-							src
-                           )
 
 if (WIN32)
 	list(APPEND libS Dbghelp)
-	# target_link_libraries(${prjName} PUBLIC ${libS})
+	add_library(${prjName} ${srcS} ${osSrc})
+elseif (UNIX)
+	#add_library(${prjName} ${srcS} ${osSrc})
+	add_library(${prjName} SHARED ${srcS} ${osSrc})
+	target_compile_options(${prjName} PRIVATE -fPIC)
 endif ()
 
+target_include_directories(${prjName} PRIVATE 
+							src
+                           )
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 
 install(TARGETS ${prjName}

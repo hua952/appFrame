@@ -17,6 +17,7 @@
 #include "loop.h"
 #include "nLog.h"
 #include "sysinc.h"
+#include "ITcpServer.h"
 
 static allocPackFT         g_allocPackFun = nullptr;
 static freePackFT			g_freePackFun = nullptr;
@@ -31,15 +32,6 @@ freePackFT    freePackFun () {
 
 logMsgFT logMsgFun () {
 	return g_logMsgFun;
-}
-
-int initGlobal (allocPackFT  allocPackFun, freePackFT  freePackFun, logMsgFT argLogMsgFun)
-{
-	int nRet = 0;
-	g_allocPackFun = allocPackFun;
-	g_freePackFun = freePackFun;
-	g_logMsgFun = argLogMsgFun;
-	return nRet;
 }
 
 allocPackFT   libeventServerCom:: allocPackFun ()
@@ -372,6 +364,15 @@ ITcpServer* createTcpServer (callbackS* pCallbackS, endPoint* pLister, udword li
 void  delTcpServer (ITcpServer* pServer)
 {
 	delete pServer;
+}
+
+int initGlobal (allocPackFT  allocPackFun, freePackFT  freePackFun, logMsgFT argLogMsgFun)
+{
+	int nRet = 0;
+	g_allocPackFun = allocPackFun;
+	g_freePackFun = freePackFun;
+	g_logMsgFun = argLogMsgFun;
+	return nRet;
 }
 
 onRecHeadIsNeetForwardT   libeventServerCom:: onRecHeadIsNeetForwardFun ()

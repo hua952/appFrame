@@ -18,13 +18,20 @@ link_directories(
 		${libDir}
 		)
 
-add_library(${prjName} ${srcS})
-target_include_directories(${prjName} PUBLIC 
+if (WIN32)
+	add_library(${prjName} ${srcS})
+elseif (UNIX)
+	#add_library(${prjName} SHARED ${srcS})
+	add_library(${prjName} ${srcS})
+endif ()
+
+
+target_include_directories(${prjName} PRIVATE 
 							${CMAKE_SOURCE_DIR}/frameConfig/src
 							${firstBuildInc} 
                            )
 
-# target_link_libraries(${prjName} PUBLIC  ${libS})
+# target_link_libraries(${prjName} PRIVATE  ${libS})
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 
 install(TARGETS ${prjName} ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})

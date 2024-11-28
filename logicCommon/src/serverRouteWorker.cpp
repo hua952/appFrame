@@ -8,7 +8,27 @@
 #include "internalRpc.h"
 #include "internalMsgId.h"
 #include "internalMsgGroup.h"
+/*
+static std::ostream& operator << (std::ostream& os, const packetHead& pack)
+{
+	auto pp = &pack;
+	auto& p = *(P2NHead(pp));
+    os<<"pAsk = "<<pack.packArg<<" sessionID = " <<pack.sessionID<<" loopId = "<<(int)(pack.loopId)<< " udwLength = " << p.udwLength<< "  dwToKen = " << p.dwToKen
+		<<" ubySrcServId = "<<(int)(p.ubySrcServId) <<" ubyDesServId = "<<(int)(p.ubyDesServId)
+		<<" uwMsgID = "<<p.uwMsgID<<" uwTag = "<<std::hex<<(int)(p.uwTag)<<std::dec<<"pack = "<<pp;
+    return os;
+}
 
+static std::ostream& operator << (std::ostream& os, const netPacketHead& pack)
+{
+	auto pp = &pack;
+	auto& p = pack;
+    os << " udwLength = " << p.udwLength<< "  dwToKen = " << p.dwToKen
+		<<" ubySrcServId = "<<(int)(p.ubySrcServId) <<" ubyDesServId = "<<(int)(p.ubyDesServId)
+		<<" uwMsgID = "<<p.uwMsgID<<" uwTag = "<<std::hex<<(int)(p.uwTag)<<std::dec<<"pN = "<<pp;
+    return os;
+}
+*/
 
 serverRouteWorker:: serverRouteWorker ()
 {

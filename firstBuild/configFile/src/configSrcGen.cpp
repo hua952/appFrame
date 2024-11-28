@@ -151,7 +151,7 @@ elseif (WIN32)
 endif ()
 
 add_library(${prjName} ${srcS})
-target_include_directories(${prjName} PUBLIC 
+target_include_directories(${prjName} PRIVATE 
 							)"<<includeDir<<R"(
                            )
 

@@ -4,7 +4,7 @@
 #include "packet.h"
 #include "ISession.h"
 
-struct endPoint
+typedef struct _endPoint
 {
 	// uqword userLogicData[4];	
 	char ip[16];
@@ -13,7 +13,7 @@ struct endPoint
 	udword   userDataLen;
 	uword    port;
 	uword    unUse;
-};
+}endPoint;
 
 typedef void (*onAcceptSessionT)(ISession* session, void* userData);
 typedef void (*onConnectT)(ISession* session, void* userData);
@@ -22,7 +22,7 @@ typedef int (*onProcPackT)(ISession* session, packetHead* packet);
 typedef void (*onWritePackT)(ISession* session, packetHead* packet);
 typedef ISession* (*onRecHeadIsNeetForwardT)(ISession* session, netPacketHead* packet);
 
-struct callbackS
+typedef struct _callbackS
 {
 	onProcPackT			 procPackfun;
 	onAcceptSessionT     acceptFun;
@@ -30,16 +30,16 @@ struct callbackS
 	onCloseT			closeFun;
 	onWritePackT        onWritePackFun;
 	onRecHeadIsNeetForwardT  onRecHeadIsNeetForwardFun;
-};
+}callbackS;
 
 // typedef void (*event_callback_FN)(intptr_t, short, void *);
 typedef void (*event_callback_FN)(/*intptr_t, */short, void *);
-struct sigInfo
+typedef struct _sigInfo
 {
 	int first;
 	event_callback_FN second;
 	void* pUserData;
-};
+}sigInfo;
 
 
 class ITcpServer

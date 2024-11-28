@@ -1,7 +1,6 @@
 <?xml version='1.0' encoding='utf-8' ?>
 <servers>
 	<projectDir>C:/work/appFrameProject/project</projectDir>
-	<thirdPartyDir>C:/work/</thirdPartyDir>
 	<frameInstallPath>C:/work/appFrameInstall/</frameInstallPath>
 	<configDef>CGTestConfig.xml</configDef>
 	<defMsg file="cChess.xml"/>

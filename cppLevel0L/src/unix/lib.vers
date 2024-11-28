@@ -1,0 +1,12 @@
+MYLIBRARY_1.0 {
+    global:
+		initFun;
+		onPhyLoopBegin;
+		onPhyLoopEnd;
+		onPhyFrame;
+		onPhyGetRunThreadIdS;
+		afterAllLoopEndBeforeExitApp;
+		getServerGroupInfo;
+    local:
+        *;  # 所有其他符号都是局部的，不会被导出
+};

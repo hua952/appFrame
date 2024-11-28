@@ -25,23 +25,22 @@ void  globalFile::setFrameBinPath (const char* v)
 {
     strCpy (v, m_frameBinPath);
 }
-*/
+
 const char* globalFile:: depLibHome ()
 {
     return m_depLibHome.get ();
 }
-/*
+
 void  globalFile::setDepLibHome (const char* v)
 {
     strCpy (v, m_depLibHome);
 }
-*/
+
 const char*  globalFile::depIncludeHome ()
 {
     return m_depIncludeHome.get ();
 }
 
-/*
 void  globalFile::setDepIncludeHome (const char* v)
 {
     strCpy (v, m_depIncludeHome);
@@ -56,12 +55,11 @@ void  globalFile::setFrameHome (const char* v)
     strCpy (v, m_frameHome);
 }
 
+*/
 void  globalFile::setProjectHome (const char* v)
 {
     strCpy (v, m_projectHome);
-	reSetProjectInstallDir ();
 }
-*/
 
 const char* globalFile:: projectHome ()
 {
@@ -121,16 +119,15 @@ const char*  globalFile:: projectName ()
 void  globalFile:: setProjectName (const char* v)
 {
     strCpy (v, m_projectName);
-	reSetProjectInstallDir ();
+	// reSetProjectInstallDir ();
 	std::string strConfig = v;
 	strConfig += "Config";
 	setConfigClassName (strConfig.c_str());
 }
-
+/*
 void  globalFile:: reSetProjectInstallDir ()
 {
     do {
-		//auto dirN = projectHome ();
 		auto dirN = projectDir();
 		auto nameN = projectName ();
 		if (dirN && nameN) {
@@ -140,24 +137,10 @@ void  globalFile:: reSetProjectInstallDir ()
 			std::string strI = strH;
 			strH += "/";
 			strCpy (strH.c_str(), m_projectHome);
-			/*
-			std::unique_ptr<char[]> pUp;
-			strCpy (dirN, pUp);
-			auto bUp = upDir (pUp.get());
-			myAssert(bUp);
-			std::string str = pUp.get();
-			str += "/";
-			str += nameN;
-			str += "Install";
-			setProjectInstallDir (str.c_str());
-			*/
-			
-			strI += "Install";
-			setProjectInstallDir (strI.c_str());
 		}
     } while (0);
 }
-
+*/
 const char*  globalFile:: frameInstallPath ()
 {
     return m_frameInstallPath.get ();
@@ -166,10 +149,10 @@ void  globalFile:: setFrameInstallPath (const char* v)
 {
     strCpy (v, m_frameInstallPath);
 	std::string strT = v;
-	strT += "lib";
+	strT += "/lib";
 	strCpy (strT.c_str (), m_frameLibPath);
 	strT = v;
-	strT += "include";
+	strT += "/include";
 	strCpy (strT.c_str (), m_frameIncPath);
 }
 
@@ -177,7 +160,7 @@ const char*   globalFile:: frameIncPath ()
 {
     return m_frameIncPath.get();
 }
-
+/*
 const char*  globalFile:: thirdPartyDir ()
 {
     return m_thirdPartyDir.get ();
@@ -194,7 +177,7 @@ void  globalFile:: setThirdPartyDir (const char* v)
 	strL += "lib/";
 	strCpy (strL.c_str(), m_depLibHome);
 }
-
+*/
 const char*  globalFile:: projectInstallDir ()
 {
     return m_projectInstallDir.get ();
@@ -303,7 +286,7 @@ const char*  globalFile:: projectDir ()
 void  globalFile:: setProjectDir (const char* v)
 {
     strCpy (v, m_projectDir);
-	reSetProjectInstallDir ();
+	// reSetProjectInstallDir ();
 }
 
 globalFile::argV&  globalFile:: argS ()

@@ -3,6 +3,7 @@
 #include <string>
 #include <sstream>
 #include <fstream>
+#include <cstring>
 #include "myLogger.h"
 #include "myLoggerMgr.h"
 #include "tSingleton.h"

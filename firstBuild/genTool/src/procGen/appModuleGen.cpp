@@ -19,6 +19,8 @@
 #include "tSingleton.h"
 #include "rLog.h"
 
+#include<filesystem>
+using namespace std::filesystem;
 
 appModuleGen:: appModuleGen (appFile&  rAppData):m_appData(rAppData)
 {
@@ -63,6 +65,7 @@ int  appModuleGen:: genExportFunH ()
     int  nRet = 0;
     do {
 		std::string strFile = srcDir ();
+		create_directories (strFile);
 		strFile += "/exportFun.h";
 		std::ofstream os (strFile.c_str ());
 		if (!os) {
@@ -76,7 +79,7 @@ int  appModuleGen:: genExportFunH ()
 
 extern "C"
 {
-	dword afterLoad(int nArgC, char** argS, ForLogicFun* pForLogic);
+	dword afterLoad(int nArgC, char** argS, ForLogicFun* pForLogic, int nDefArgC, char** defArgS);
 	void onLoopBegin	(serverIdType	fId);
 	int onFrameLogic	(serverIdType	fId);
 	void onLoopEnd	(serverIdType	fId);
@@ -172,6 +175,65 @@ int   onRecPacket(serverIdType	fId, packetHead* pack)
     return nRet;
 }
 
+int   appModuleGen:: versFileGen ()
+{
+    int  nRet = 0;
+    do {
+		std::string win = srcDir ();
+		win += "/unix";
+		myMkdir (win.c_str());
+		auto defFun = win;
+		defFun += "/lib.vers";
+		std::ofstream os(defFun.c_str ());
+		if (!os) {
+			nRet = 1;
+			rError (" open file for write error fileName = "<<defFun.c_str ());
+			break;
+		}
+		const char* szCon = R"(MYLIBRARY_1.0 {
+    global:
+		afterLoad;
+		onLoopBegin;
+		onLoopEnd;
+		beforeUnload;
+		onFrameLogic;
+		onRecPacket;
+    local:
+        *;
+};
+)";
+		os<<szCon;
+    } while (0);
+    return nRet;
+
+}
+
+int  appModuleGen:: genBashFile ()
+{
+    int  nRet = 0;
+    do {
+		auto& rGlobalFile = tSingleton<globalFile>::single ();
+		auto projectInstallDir = rGlobalFile.projectInstallDir ();
+		auto appName = m_appData.appName();
+		std::string win =projectInstallDir;
+		win += "/bin";
+		myMkdir (win.c_str());
+		auto defFun = win;
+		defFun += "/run";
+		defFun += appName;
+		defFun += ".sh";
+		std::ofstream os(defFun.c_str ());
+		if (!os) {
+			nRet = 1;
+			rError (" open file for write error fileName = "<<defFun.c_str ());
+			break;
+		}
+		os<<R"(#!/bin/bash
+LD_LIBRARY_PATH=)"<<rGlobalFile.frameInstallPath()<<R"(/lib )"<<projectInstallDir<<"/bin/"<<appName<<R"( $@)";
+    } while (0);
+    return nRet;
+}
+
 int  appModuleGen:: genWinDef ()
 {
     int  nRet = 0;
@@ -227,12 +289,20 @@ int   appModuleGen:: startGen ()
 			nRet = 3;
 			break;
 		}
+		nR = versFileGen ();
+		if (nR) {
+			rError("versFileGen  return error nR = "<<nR);
+			nRet = 6;
+			break;
+		}
+
 		nR = cmakeListsGen ();
 		if (nR) {
 			rError(" genWinDef return error nR = "<<nR);
 			nRet = 4;
 			break;
 		}
+		genBashFile ();
 		auto& orderS  = m_appData.orderS ();
 		for (auto it = orderS.begin (); it != orderS.end (); it++) {
 			auto& rServer = *(it->get());
@@ -317,9 +387,9 @@ if (WIN32)
 	file(GLOB defS src/win/*.def)
 
 	include_directories( )";
-	auto depInc = rGlobalFile.depIncludeHome ();
-	os<<depInc<<")"<<std::endl;
-	auto depLib = rGlobalFile.depLibHome ();
+	// auto depInc = rGlobalFile.depIncludeHome ();
+	os<<")"<<std::endl;
+	// auto depLib = rGlobalFile.depLibHome ();
 
 	// os<<"list(APPEND libDep "<<depLib<<")"<<std::endl;
 	const char* szC2 = R"(endif ()
@@ -343,7 +413,14 @@ if (WIN32)
 	os<<"list(APPEND libPath "<<libPath<<")"<<std::endl
 	<<R"(link_directories(${libPath} ${libDep})
 	add_library(${prjName} SHARED ${genSrcS} ${defS})
-target_link_libraries(${prjName} PUBLIC
+if (UNIX)
+	MESSAGE(STATUS "unix add -fPIC")
+	target_compile_options(${prjName} PRIVATE -fPIC)	
+    set(VERSION_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/src/unix/lib.vers")
+	target_link_options(${prjName} PRIVATE -Wl,-version-script,${VERSION_SCRIPT})
+endif ()
+
+target_link_libraries(${prjName} PRIVATE
 	common
 	)"<<configClassName<<R"(
 	)"<<appName<<R"(Lib 
@@ -413,6 +490,7 @@ int   appModuleGen:: onCreateChannelRetGen (serverFile& rServer)
 		auto serverName = rServer.serverName ();
 		std::string proc = srcDir ();
 		proc += serverName;
+		create_directories (proc);
 		proc += "/OnCreateChannelRet.cpp";
 		if (isPathExit (proc.c_str())) {
 			nRet = 0;

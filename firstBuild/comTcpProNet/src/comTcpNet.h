@@ -6,10 +6,12 @@
 #include "ITcpServer.h"
 #include "mainLoop.h"
 #include <map>
-
+extern "C"
+{
 int initComTcpNet (const char* szDllFile, allocPackFT  allocPackFun,
 		freePackFT	freePackFun, logMsgFT logMsgFun);
 void cleanComTcpNet ();
+}
 class comTcpNet
 {
 public:

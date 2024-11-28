@@ -32,6 +32,11 @@ int   protobufSerGen:: startGen ()
 		if (nR) {
 			break;
 		}
+		nR = versFileGen ();
+		if (nR) {
+			break;
+		}
+
     } while (0);
     return nRet;
 }
@@ -45,7 +50,7 @@ int   protobufSerGen:: CMakeListGen ()
 		strFile += "/CMakeLists.txt";
 		std::ofstream os (strFile.c_str());
 		auto& rGlobal = tSingleton<globalFile>::single ();
-		auto thirdPartyDir = rGlobal.thirdPartyDir ();
+		// auto thirdPartyDir = rGlobal.thirdPartyDir ();
 		auto appFrameInstall = rGlobal.frameInstallPath ();
 		os<<R"(SET(prjName protobufSer)
 # find_package(protobuf REQUIRED	PATHS $ENV{VCPKG_HOME}/packages/protobuf_$ENV{VCPKG_STATIC}/share/protobuf	NO_DEFAULT_PATH)
@@ -66,18 +71,25 @@ elseif (WIN32)
 	ADD_DEFINITIONS(/W2)
 	add_compile_definitions(PROTOBUF_USE_DLLS)
 	file(GLOB defS src/*.def)
-	# include_directories()"<<thirdPartyDir<<R"(/include/)
-# list(APPEND libDep )"<<thirdPartyDir<<R"(/lib/)
 endif ()
 	include_directories(
+    ${CMAKE_SOURCE_DIR}/gen/defMsg/src
 	)"<<appFrameInstall<<R"(/include/appFrame
 )
 list(APPEND libPath )"<<appFrameInstall<<R"(/lib)
 link_directories(${libPath} ${libDep})
 	add_library(${prjName} SHARED  ${defS} ${srcS} ${pbSrcS} )
-	target_link_libraries(${prjName} PUBLIC
+if (WIN32)
+	MESSAGE(STATUS "windows no -fPIC")
+elseif (UNIX)
+	target_compile_options(${prjName} PRIVATE -fPIC)
+    set(VERSION_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/src/lib.vers")
+	target_link_options(${prjName} PRIVATE -Wl,-version-script,${VERSION_SCRIPT})
+endif ()
+
+
+	target_link_libraries(${prjName} PRIVATE
 	common
-	logicCommon
 	cLog
 	defMsg
 # PRIVATE protobuf::libprotoc protobuf::libprotobuf protobuf::libprotobuf-lite
@@ -86,6 +98,31 @@ link_directories(${libPath} ${libDep})
 	SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 	install(TARGETS ${prjName} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 	)";
+    } while (0);
+    return nRet;
+}
+
+int   protobufSerGen:: versFileGen ()
+{
+	int   nRet = 0;
+    do {
+		
+		auto aSrc = srcDir ();
+		std::string strFile = aSrc;
+		strFile += "/lib.vers";
+		std::ofstream os (strFile.c_str());
+		if (!os) {
+			nRet = 1;
+			break;
+		}
+		const char* szCon = R"(MYLIBRARY_1.0 {
+    global:
+		getSerializeFunS;
+		getMsgPairS;
+    local:
+        *;
+};)";
+	os<<szCon;
     } while (0);
     return nRet;
 }

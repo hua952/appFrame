@@ -11,6 +11,27 @@
 #include "internalMsgId.h"
 #include "internalMsgGroup.h"
 #include "internalChannel.h"
+/*
+static std::ostream& operator << (std::ostream& os, const packetHead& pack)
+{
+	auto pp = &pack;
+	auto& p = *(P2NHead(pp));
+    os<<"pAsk = "<<pack.packArg<<" sessionID = " <<pack.sessionID<<" loopId = "<<(int)(pack.loopId)<< " udwLength = " << p.udwLength<< "  dwToKen = " << p.dwToKen
+		<<" ubySrcServId = "<<(int)(p.ubySrcServId) <<" ubyDesServId = "<<(int)(p.ubyDesServId)
+		<<" uwMsgID = "<<p.uwMsgID<<" uwTag = "<<std::hex<<(int)(p.uwTag)<<std::dec<<"pack = "<<pp;
+    return os;
+}
+
+static std::ostream& operator << (std::ostream& os, const netPacketHead& pack)
+{
+	auto pp = &pack;
+	auto& p = pack;
+    os << " udwLength = " << p.udwLength<< "  dwToKen = " << p.dwToKen
+		<<" ubySrcServId = "<<(int)(p.ubySrcServId) <<" ubyDesServId = "<<(int)(p.ubyDesServId)
+		<<" uwMsgID = "<<p.uwMsgID<<" uwTag = "<<std::hex<<(int)(p.uwTag)<<std::dec<<"pN = "<<pp;
+    return os;
+}
+*/
 
 bool gateRouteWorker::cmpSessionChannelKey::operator ()(const sessionChannelKey& k1,const sessionChannelKey& k2)const
 {
@@ -867,7 +888,7 @@ int  gateRouteWorker:: processNetPackFun(ISession* session, packetHead* pack)
 				pSendSession->send(pack);
 				nRet = procPacketFunRetType_doNotDel;
 			} else {
-				gWarn(" can not find session to forward pack is : "<<*pack);
+				gWarn(" can not find session to forward pack is : "<<pack);
 			}
 		} while (0);
     } while (0);

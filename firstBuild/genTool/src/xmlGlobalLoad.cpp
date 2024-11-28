@@ -311,17 +311,15 @@ int  xmlGlobalLoad::xmlLoad (const char* szFile)
 			auto pName = pRpc->name ();
 			auto szPath = pRpc->value ();
 			if(0 == strcmp(pName, "projectDir")) {
-				rGlobal.setProjectDir (szPath);
+				// rGlobal.setProjectDir (szPath);
 			} else if(0 == strcmp(pName, "projectName")) {
-				rGlobal.setProjectName (szPath);
+				// rGlobal.setProjectName (szPath);
 			} else if(0 == strcmp(pName, "configDef")) {
 				rGlobal.setConfigDef(szPath);
 			}  else if(0 == strcmp(pName, "configFile")) {
 				rGlobal.setConfigFile(szPath);
 			} else if(0 == strcmp(pName, "frameInstallPath")) {
-				rGlobal.setFrameInstallPath(szPath);
-			} else if(0 == strcmp(pName, "thirdPartyDir")) {
-				rGlobal.setThirdPartyDir(szPath);
+				// rGlobal.setFrameInstallPath(szPath);
 			} else if(0 == strcmp(pName, "endPoint")) {
 				procEndPointS (pRpc);
 			} else if(0 == strcmp(pName, "defMsg")) {

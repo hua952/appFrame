@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<config className="genToolConfig" projectDir="C:\work\appFrame"  projectName="genToolConfig">
+	<projectDir type="string"></projectDir>
+	<projectName type="string"></projectName>
+	<appFrameHome type="string"></appFrameHome>
+</config>

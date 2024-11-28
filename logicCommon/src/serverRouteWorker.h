@@ -1,6 +1,7 @@
 #ifndef _serverRouteWorker_h__
 #define _serverRouteWorker_h__
 #include <memory>
+#include <vector>
 #include "routeWorker.h"
 
 struct ISession;

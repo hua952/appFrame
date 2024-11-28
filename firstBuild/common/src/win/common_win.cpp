@@ -11,6 +11,7 @@
 #include <memory>
 #include <string>
 #include "depOSFun.h"
+#include "modelLoder.h"
 
 void wcsNCpy(wchar_t* szD, int nSize, const wchar_t* szS)
 {
@@ -173,5 +174,15 @@ const char*  dllExtName ()
 const char*  exeExtName ()
 {
 	return ".exe";
+}
+
+const char*  dllInstallDir ()
+{
+	return "bin";
+}
+
+const char*  dllPerName ()
+{
+	return "";
 }
 

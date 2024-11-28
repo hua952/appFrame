@@ -10,6 +10,7 @@ public:
 	int  startGen ();
 	int  CMakeListGen ();
 	int  defFileGen ();
+	int  versFileGen ();
 	const char*  rootDir ();
 	void  setRootDir (const char* v);
 	const char*  srcDir ();

@@ -127,3 +127,14 @@ void getLvevlFromSerId (loopHandleType	serId, loopHandleType& level, loopHandleT
 	onceIndex = ubyOnce%c_levelMaxOpenNum[level];
 }
 
+std::string  getDllPath (const char* szDllName)
+{
+	std::string strRet;
+	strRet += dllInstallDir ();
+	strRet += "/";
+	strRet += dllPerName ();
+	strRet += szDllName;
+	strRet += dllExtName ();
+	return strRet;
+}
+

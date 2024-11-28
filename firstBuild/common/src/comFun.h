@@ -97,7 +97,10 @@ void second2Str (uqword uqwCur, std::unique_ptr<char[]>& strTime);
 uqword curNanosecond ();
 int  createUuid (char* outPut);
 const char*  dllExtName ();
+const char*  dllInstallDir ();
+const char*  dllPerName ();
 const char*  exeExtName ();
+std::string  getDllPath (const char* szDllName);
 bool  upDir (char* szPath);
 
 std::ostream& operator << (std::ostream& os, const packetHead& pack);

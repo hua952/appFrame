@@ -62,6 +62,8 @@ public:
   void  setNetLib (const char* v);
   uword  netNum ();
   void  setNetNum (uword v);
+  const char*  projectInstallDir ();
+  void  setProjectInstallDir (const char* v);
   const char*  runWorkNum ();
   void  setRunWorkNum (const char* v);
   udword  savePackTag ();
@@ -101,6 +103,7 @@ private:
   std::unique_ptr <char[]>  m_modelS;
   std::unique_ptr <char[]>  m_netLib;
   uword  m_netNum;
+  std::unique_ptr <char[]>  m_projectInstallDir;
   std::unique_ptr <char[]>  m_runWorkNum;
   udword  m_savePackTag;
   std::unique_ptr <char[]>  m_serializePackLib;

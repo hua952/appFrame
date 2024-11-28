@@ -48,6 +48,10 @@ void  configMgr:: onCmpKey (char* argv[])
     do {
 		procDwordA ("structBadyType", argv, m_structBadyType);
 		procStrA ("defFile", argv, m_defFile);
+		procStrA ("projectDir", argv, m_projectDir);
+		procStrA ("projectName", argv, m_projectName);
+		procStrA ("projectInstallDir", argv, m_projectInstallDir);
+		procStrA ("frameInstallPath", argv, m_frameInstallPath);
 		procBoolA ("reProc", argv,  m_reProc);
 		procBoolA ("installThreadDll", argv,  m_installThreadDll);
     } while (0);
@@ -61,5 +65,45 @@ bool  configMgr:: installThreadDll ()
 void  configMgr:: setInstallThreadDll (bool v)
 {
     m_installThreadDll = v;
+}
+
+const char*  configMgr:: projectDir ()
+{
+    return m_projectDir.get ();
+}
+
+void  configMgr:: setProjectDir (const char* v)
+{
+    strCpy (v, m_projectDir);
+}
+
+const char*  configMgr:: projectName ()
+{
+    return m_projectName.get ();
+}
+
+void  configMgr:: setProjectName (const char* v)
+{
+    strCpy (v, m_projectName);
+}
+
+const char*  configMgr:: frameInstallPath ()
+{
+    return m_frameInstallPath.get ();
+}
+
+void  configMgr:: setFrameInstallPath (const char* v)
+{
+    strCpy (v, m_frameInstallPath);
+}
+
+const char*  configMgr:: projectInstallDir ()
+{
+    return m_projectInstallDir.get ();
+}
+
+void  configMgr:: setProjectInstallDir (const char* v)
+{
+    strCpy (v, m_projectInstallDir);
 }
 

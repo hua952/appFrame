@@ -33,6 +33,7 @@ frameConfig::frameConfig ()
 	strCpy("", m_modelS);
 	strCpy("libeventSession", m_netLib);
 	m_netNum = 4;
+	strCpy("", m_projectInstallDir);
 	strCpy("", m_runWorkNum);
 	m_savePackTag = 0;
 	strCpy("protobufSer", m_serializePackLib);
@@ -301,6 +302,16 @@ void  frameConfig::setNetNum (uword v)
 	m_netNum = v;
 }
 
+const char*  frameConfig::projectInstallDir ()
+{
+    return m_projectInstallDir.get();
+}
+
+void  frameConfig::setProjectInstallDir (const char* v)
+{
+	strCpy(v, m_projectInstallDir);
+}
+
 const char*  frameConfig::runWorkNum ()
 {
     return m_runWorkNum.get();
@@ -476,6 +487,13 @@ int  frameConfig:: dumpConfig (const char* szFile)
 		strTnetLib = netLib;
 		ofs<<"netLib="<<strTnetLib<<std::endl;
 		ofs<<"netNum="<<netNum()<<std::endl;
+	int nprojectInstallDirLen = 0;
+	auto projectInstallDir = this->projectInstallDir();
+	if (projectInstallDir) nprojectInstallDirLen = strlen(projectInstallDir);
+	std::string strTprojectInstallDir =R"("")";
+	if (nprojectInstallDirLen) 
+		strTprojectInstallDir = projectInstallDir;
+		ofs<<"projectInstallDir="<<strTprojectInstallDir<<R"--(  ## 安装目录   )--"<<std::endl;
 	int nrunWorkNumLen = 0;
 	auto runWorkNum = this->runWorkNum();
 	if (runWorkNum) nrunWorkNumLen = strlen(runWorkNum);
@@ -705,6 +723,14 @@ int  frameConfig:: procCmdArgS (int nArg, char** argS)
 			}
 				if (strKey == "netNum") {
 				ssV>>m_netNum;
+				continue;
+			}
+				if (strKey == "projectInstallDir") {
+				ssV>>strVal;
+				if('"'==strVal.c_str()[0] && '"'==strVal.c_str()[strVal.length()-1]) {
+					strVal = strVal.substr(1,strVal.length()-2);
+				}
+	strCpy(strVal.c_str(), m_projectInstallDir);
 				continue;
 			}
 				if (strKey == "runWorkNum") {

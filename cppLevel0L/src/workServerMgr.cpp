@@ -14,7 +14,27 @@ outMemLeakFunT  outMemLeak = nullptr;
 static std::mutex g_mem_mtx;
 using memMap = std::map<packetHead*, packetHead*>;
 static memMap s_memMap;
+/*
+static std::ostream& operator << (std::ostream& os, const packetHead& pack)
+{
+	auto pp = &pack;
+	auto& p = *(P2NHead(pp));
+    os<<"pAsk = "<<pack.packArg<<" sessionID = " <<pack.sessionID<<" loopId = "<<(int)(pack.loopId)<< " udwLength = " << p.udwLength<< "  dwToKen = " << p.dwToKen
+		<<" ubySrcServId = "<<(int)(p.ubySrcServId) <<" ubyDesServId = "<<(int)(p.ubyDesServId)
+		<<" uwMsgID = "<<p.uwMsgID<<" uwTag = "<<std::hex<<(int)(p.uwTag)<<std::dec<<"pack = "<<pp;
+    return os;
+}
 
+static std::ostream& operator << (std::ostream& os, const netPacketHead& pack)
+{
+	auto pp = &pack;
+	auto& p = pack;
+    os << " udwLength = " << p.udwLength<< "  dwToKen = " << p.dwToKen
+		<<" ubySrcServId = "<<(int)(p.ubySrcServId) <<" ubyDesServId = "<<(int)(p.ubyDesServId)
+		<<" uwMsgID = "<<p.uwMsgID<<" uwTag = "<<std::hex<<(int)(p.uwTag)<<std::dec<<"pN = "<<pp;
+    return os;
+}
+*/
 packetHead* allocPackDebug(udword udwSize)
 {
 	auto pRet = (packetHead*)(new char [sizeof(packetHead) + sizeof(netPacketHead) + udwSize]);
@@ -213,7 +233,7 @@ int  workServerMgr:: initWorkServerMgr (int cArg, char** argS, int cDefArg, char
 			nRet = 2;
 			break;
 		}
-
+		/*
 		auto pWorkDir = rConfig.homeDir ();// rConfig.workDir ();
 		int workDirLen = 0;
 		if (pWorkDir) {
@@ -227,7 +247,8 @@ int  workServerMgr:: initWorkServerMgr (int cArg, char** argS, int cDefArg, char
 			myAssert (bR);
 			rConfig.setHomeDir(homeDirPtr.get());
 		}
-		std::string frameConfigFile = rConfig.homeDir ();
+		*/
+		std::string frameConfigFile = rConfig.projectInstallDir();// rConfig.homeDir ();
 		auto frameConfig = rConfig.frameConfigFile ();
 		frameConfigFile += "/config/";
 		myMkdir (frameConfigFile.c_str());
@@ -238,7 +259,7 @@ int  workServerMgr:: initWorkServerMgr (int cArg, char** argS, int cDefArg, char
 		rConfig.loadConfig (frameConfigFile.c_str());
 
 		auto logLevel = rConfig.logLevel ();
-		std::string strFile = rConfig.homeDir ();
+		std::string strFile = rConfig.projectInstallDir(); //rConfig.homeDir ();
 		strFile += "/logs/";
 		myMkdir (strFile.c_str());
 		auto pLogFile = rConfig.logFile();
@@ -264,6 +285,7 @@ int  workServerMgr:: initWorkServerMgr (int cArg, char** argS, int cDefArg, char
 			std::this_thread::sleep_for(std::chrono::microseconds (sleepL * 1000 * 1000));
 			mInfo("sleep "<<sleepL<<" sleep for debug end, continue");
 		}
+		/*
 		pWorkDir = rConfig.homeDir ();
 		workDirLen = 0;
 		if (pWorkDir) {
@@ -277,6 +299,7 @@ int  workServerMgr:: initWorkServerMgr (int cArg, char** argS, int cDefArg, char
 			myAssert (bR);
 			rConfig.setHomeDir(homeDirPtr.get());
 		}
+		*/
 		auto allocDebug = rConfig.allocDebug ();
 		if (allocDebug) {
 			allocPack = allocPackDebug;
@@ -312,13 +335,12 @@ int  workServerMgr:: initWorkServerMgr (int cArg, char** argS, int cDefArg, char
 		forLogic.fnPushPackToServer = sPushPackToServer;
 		forLogic.fnSetAttr = sSetAttr;
 
-		mInfo("workDir is : "<<rConfig.homeDir ());
+		// mInfo("workDir is : "<<rConfig.homeDir ());
 
-		std::string strPath = rConfig.homeDir ();// workDir();
+		std::string strPath =rConfig.projectInstallDir ();// rConfig.homeDir ();// workDir();
+		strPath += "/";
 		auto modelName = rConfig.modelName();
-		strPath += "/bin/";
-		strPath += modelName;
-		strPath += dllExtName();
+		strPath += getDllPath (modelName);
 
 		auto hdll = loadDll (strPath.c_str());
 		do {
@@ -390,7 +412,7 @@ int  workServerMgr:: initWorkServerMgr (int cArg, char** argS, int cDefArg, char
 			}
 		}
 		if (m_fnAfterLoad ) {
-			std::unique_ptr<char[]>	homeDirPtr;
+			// std::unique_ptr<char[]>	homeDirPtr;
 			
 			auto nR = m_fnAfterLoad (cArg, argS, &forLogic, cDefArg, defArgS);
 			if (nR) {

@@ -22,6 +22,15 @@ using namespace std::filesystem;
 int main (int argNum, char* argS[])
 {
 	int nRet = 0;
+	tSingleton<globalFile>::createSingleton();
+	tSingleton<xmlGlobalLoad>::createSingleton();
+	tSingleton<appFileMgr>::createSingleton ();
+	tSingleton<moduleFileMgr>::createSingleton ();
+		
+	tSingleton<xmlCommon>::createSingleton ();
+	tSingleton<globalGen>::createSingleton ();
+	tSingleton<toolServerEndPointInfoMgr>::createSingleton ();
+
 	initLogGlobal ();
 	auto nInitLog = initLog ("genTool", "logs/genTool.log", 0);
 	do {
@@ -39,29 +48,58 @@ int main (int argNum, char* argS[])
 			nRet = 4;
 			break;
 		}
-		tSingleton<globalFile>::createSingleton();
-		tSingleton<xmlGlobalLoad>::createSingleton();
-		tSingleton<appFileMgr>::createSingleton ();
-		tSingleton<moduleFileMgr>::createSingleton ();
 		
-		tSingleton<xmlCommon>::createSingleton ();
-		tSingleton<globalGen>::createSingleton ();
-		tSingleton<toolServerEndPointInfoMgr>::createSingleton ();
 		
 		auto& rGlobalFile = tSingleton<globalFile>::single ();
-		auto& rXmlGlobal = tSingleton <xmlGlobalLoad>::single ();
 		auto defFile = rConfig.defFile ();
+		auto projectDir = rConfig.projectDir ();
+		if (projectDir ) {
+			rGlobalFile.setProjectDir(projectDir);
+		} else {
+			path entry(defFile);
+			rGlobalFile.setProjectDir(entry.parent_path().string().c_str());
+		}
+		auto projectName = rConfig.projectName ();
+		if (projectName) {
+			rGlobalFile.setProjectName(projectName);
+		} else {
+			path entry(defFile);
+			rGlobalFile.setProjectName (entry.stem().string().c_str());
+		}
+		std::string strProjectHome = rGlobalFile.projectDir();
+		strProjectHome += "/";
+		strProjectHome += rGlobalFile.projectName ();
+		rGlobalFile.setProjectHome (strProjectHome.c_str());
+		auto frameInstallPath = rGlobalFile.frameInstallPath ();
+		if (frameInstallPath) {
+			rGlobalFile.setFrameInstallPath(frameInstallPath);
+		} else {
+			unique_ptr<char[]> temp;
+			auto nR = getCurModelPath (temp);
+			myAssert (0 == nR);
+			path entry(temp.get());
+			rGlobalFile.setFrameInstallPath(entry.parent_path().parent_path().string().c_str());
+		}
+		auto projectInstallDir = rConfig.projectInstallDir();
+		if (projectInstallDir) {
+			rGlobalFile.setProjectInstallDir(projectInstallDir);
+		} else {
+			std::string str = rGlobalFile.projectDir ();
+			str += "/";
+			str += rGlobalFile.projectName();
+			str += "Install";
+			rGlobalFile.setProjectInstallDir(str.c_str());
+		}
+		auto projectHome = rGlobalFile.projectHome ();
+		create_directories (projectHome);
+		auto& rXmlGlobal = tSingleton <xmlGlobalLoad>::single ();
 		nR = rXmlGlobal.xmlLoad (defFile);
 		if (nR) {
 			rError ("xmlLoad return error nR = "<<nR);
 			nRet = 5;
 			break;
 		}
-		auto projectName = rGlobalFile.projectName ();
-		if (!projectName) {
-			path entry(defFile);
-			rGlobalFile.setProjectName (entry.stem().string().c_str());
-		}
+		
 		auto& rGlobalGen = tSingleton <globalGen>::single ();
 		nR = rGlobalGen.startGen ();
 		if (nR) {
