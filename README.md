@@ -27,4 +27,4 @@ configFile.exe file=C:\work\appFrame\test\frameConfig.xml projectDir=c:/work/app
 
 genTool.exe defFile=C:/work/appFrame/test/localTest.xml structBadyType=1
 genTool.exe defFile=C:/work/appFrame/test/newSGCTest.xml structBadyType=1 projectDir=c:/work/appFrameProject/project
-./genTool defFile=~/work/appFrame/test/newSGCTest.xml structBadyType=1 projectDir=~/work/appFrameProject/project
+LD_LIBRARY_PATH=~/work/appFrameInstall/lib  ./genTool defFile=~/work/appFrame/test/newSGCTest.xml structBadyType=1 projectDir=~/work/appFrameProject
