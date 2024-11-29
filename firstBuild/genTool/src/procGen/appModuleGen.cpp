@@ -80,7 +80,7 @@ int  appModuleGen:: genExportFunH ()
 extern "C"
 {
 	dword afterLoad(int nArgC, char** argS, ForLogicFun* pForLogic, int nDefArgC, char** defArgS);
-	void onLoopBegin	(serverIdType	fId);
+	int onLoopBegin	(serverIdType	fId);
 	int onFrameLogic	(serverIdType	fId);
 	void onLoopEnd	(serverIdType	fId);
 	void  beforeUnload();
@@ -129,13 +129,15 @@ dword afterLoad(int nArgC, char** argS, ForLogicFun* pForLogic, int nDefArgC, ch
 	return rMgr.initLogicWorkerMgr (nArgC, argS, pForLogic, nDefArgC, defArgS);
 }
 
-void onLoopBegin	(serverIdType	fId)
+int onLoopBegin	(serverIdType	fId)
 {
+	int nRet = 1;
 	auto &rMgr = tSingleton<)"<<strMgrClassName<<R"(>::single();
 	auto pS = rMgr.findServer(fId);
 	if (pS) {
-		pS->onLoopBeginBase	();
+		nRet = pS->onLoopBeginBase	();
 	}
+	return nRet;
 }
 
 int onFrameLogic	(serverIdType	fId)

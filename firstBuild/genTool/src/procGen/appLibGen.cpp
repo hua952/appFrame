@@ -874,6 +874,7 @@ int  appLibGen:: writeMain ()
 #include <sstream>
 #include <string>
 #include "myAssert.h"
+#include "loop.h"
 #include "modelLoder.h"
 )";
 
@@ -984,13 +985,17 @@ int main(int cArg, char** argS)
 	ubyte runNum = 0;
 	auto  getGroupInfoRet = funGetServerGroupInfo ()"<<mainLoopGroupId<<R"(, &beginId, &runNum);
 	myAssert (0 == getGroupInfoRet);
-	funLoopBegin (beginId);
-	while(1) {
-		auto bE = funLoopFrame (beginId);
-		if (bE) {
-			break;
+
+	auto nBegRet = funLoopBegin (beginId);
+	if (!nBegRet) {
+		while(1) {
+			auto bE = funLoopFrame (beginId);
+			if (bE) {
+				break;
+			}
 		}
 	}
+	
 	funLoopEnd (beginId);
 	int curRunNum = 0;
 	const auto c_tempSize = 256;

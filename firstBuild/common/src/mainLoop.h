@@ -61,7 +61,7 @@ typedef dword (*afterLoadFunT)(int nArgC, char** argS, ForLogicFun* pForLogic, i
 typedef void (*beforeUnloadFT)();
 typedef void (*logicOnAcceptFT)(serverIdType	fId, SessionIDType sessionId, uqword userData);
 typedef void (*logicOnConnectFT)(serverIdType fId, SessionIDType sessionId, uqword userData);
-typedef void (*onLoopBeginFT)(serverIdType	fId);
+typedef int (*onLoopBeginFT)(serverIdType	fId);
 typedef int (*onFrameLagicFT)(serverIdType	fId);
 typedef void (*onLoopEndFT)(serverIdType	fId);
 typedef int (*onRecPacketFT)(serverIdType	fId, packetHead* pack);

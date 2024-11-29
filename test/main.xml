@@ -1,0 +1,14 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<servers>
+	<app>
+		<client appNetType="0">
+			<appArg>frameConfigFile=clientFrame.txt</appArg>
+			<appArg>logicConfigFile=clientLogicConf.txt</appArg>
+			<server>
+				<appClientConTh mainLoop="1">
+				</appClientConTh>
+			</server>
+		</client>
+	</app>
+</servers>
+

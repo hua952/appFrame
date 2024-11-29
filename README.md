@@ -13,10 +13,7 @@ level0=C:\work\appFrame\bin\Debug\cppLevel0L.dll addLogic=C:\work\appFrame\bin\D
 level0=cppLevel0L.dll addLogic=libtestLogic.dll procId=1
 cppLevel0.exe level0=D:\pzh\work\appFrame\bin\Debug\cppLevel0L.dll addLogic=D:\pzh\work\appFrame\bin\Debug\testLogicB.dll#127.0.0.1:11000 addLogic=D:\pzh\work\appFrame\bin\Debug\testLogic.dll procId=1 netLib=D:\pzh\work\appFrame\bin\Debug\libeventSession.dll
 gcc -E server.cpp -ID:\pzh\work\include -ID:\pzh\work\appFrame\common\src -ID:\pzh\work\appFrame\cLog\src> out.txr
-genTool.exe defFile=C:\work\appFrame\test\openWorkDir.xml
-genTool.exe defFile=C:\work\appFrame\test\chatTest.xml structBadyType=0
-genTool.exe defFile=C:\work\appFrame\test\openNumTest.xml structBadyType=1
-genTool.exe defFile=C:\work\appFrame\test\newChat.xml structBadyType=1
+
 genTool.exe defFile=C:\work\appFrame\test\openWorkDir.xml structBadyType=0
 genTool.exe defFile=C:\study\vulkan\vulk1.xml structBadyType=0
 genTool.exe defFile=C:\study\vulkan\Khronos\khr9.xml structBadyType=0
@@ -28,3 +25,4 @@ configFile.exe file=C:\work\appFrame\test\frameConfig.xml projectDir=c:/work/app
 genTool.exe defFile=C:/work/appFrame/test/localTest.xml structBadyType=1
 genTool.exe defFile=C:/work/appFrame/test/newSGCTest.xml structBadyType=1 projectDir=c:/work/appFrameProject/project
 LD_LIBRARY_PATH=~/work/appFrameInstall/lib  ./genTool defFile=~/work/appFrame/test/newSGCTest.xml structBadyType=1 projectDir=~/work/appFrameProject
+LD_LIBRARY_PATH=~/work/appFrameInstall/lib  ./genTool defFile=~/work/appFrame/test/main.xml  projectDir=~/study/msg1

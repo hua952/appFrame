@@ -163,8 +163,10 @@ enum appTmpID
 				}
 				rApp.setRunWorkNum (runSS.str().c_str());
 			//}
-			appThTem<<R"(    )"<<routeThTem.str()<<" = "<<tmpId<<","<<std::endl;
-			tmpId++;
+			if (!routeThTem.str().empty()) {
+				appThTem<<R"(    )"<<routeThTem.str()<<" = "<<tmpId<<","<<std::endl;
+				tmpId++;
+			}
 			appThTem<<R"(    )"<<rApp.appName()<<R"(ServerTmpID_serverTmpNum
 };
 )";

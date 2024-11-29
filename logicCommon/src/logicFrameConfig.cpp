@@ -100,7 +100,7 @@ int  logicFrameConfig:: procWorkers ()
 		myAssert (workerRet.size() == 2);
 		auto worksRet = stringSplit (workerRet[1].c_str(), '-');
 		groupNum += worksRet.size();
-		myAssert (routeGroupId < groupNum);
+		myAssert (routeGroupId == c_emptyLoopHandle || routeGroupId < groupNum);
 		m_serverGroups = std::make_unique<serverRunInfo[]>(groupNum);
 		auto tags = std::make_unique<bool[]>(groupNum);
 		for (decltype (groupNum) i = 0; i < groupNum; i++) {

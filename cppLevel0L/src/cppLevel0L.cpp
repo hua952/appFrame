@@ -20,14 +20,14 @@ int onPhyLoopBegin(loopHandleType pThis)
 {
 	auto& rSM = tSingleton<workServerMgr>::single ();
 	auto pS = rSM.getServer(pThis);
-	return pS ? pS->onLoopBegin() : true;
+	return pS ? pS->onLoopBegin():0;
 }
 
 int onPhyLoopEnd(loopHandleType pThis)
 {
 	auto& rSM = tSingleton<workServerMgr>::single ();
 	auto pS = rSM.getServer(pThis);
-	return pS ? pS->onLoopEnd() : true;
+	return pS ? pS->onLoopEnd():0;
 }
 
 bool onPhyFrame(loopHandleType pThis)

@@ -227,7 +227,7 @@ int workServer:: onLoopBegin()
 		m_timerMgr.addComTimer(showFpsSetp (), logFpsFun, &pT, sizeof(pT));
 		auto& rMgr = tSingleton<workServerMgr>::single();
 		rMgr.incRunThNum (serverId());
-		rMgr.onLoopBegin ()(m_serverId);
+		nRet = rMgr.onLoopBegin ()(m_serverId);
     } while (0);
     return nRet;
 }
