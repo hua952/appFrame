@@ -16,6 +16,8 @@
 #include "procGen/globalGen.h"
 #include <sstream>
 #include<filesystem>
+#include <algorithm>
+
 using namespace std;
 using namespace std::filesystem;
 
@@ -57,7 +59,9 @@ int main (int argNum, char* argS[])
 			rGlobalFile.setProjectDir(projectDir);
 		} else {
 			path entry(defFile);
-			rGlobalFile.setProjectDir(entry.parent_path().string().c_str());
+			std::string frameInstallDir = entry.parent_path().string();
+			std::replace(frameInstallDir.begin(), frameInstallDir.end(), '\\', '/');
+			rGlobalFile.setProjectDir(frameInstallDir.c_str());
 		}
 		auto projectName = rConfig.projectName ();
 		if (projectName) {
@@ -78,7 +82,9 @@ int main (int argNum, char* argS[])
 			auto nR = getCurModelPath (temp);
 			myAssert (0 == nR);
 			path entry(temp.get());
-			rGlobalFile.setFrameInstallPath(entry.parent_path().parent_path().string().c_str());
+			std::string frameInstallDir = entry.parent_path().parent_path().string();
+			std::replace(frameInstallDir.begin(), frameInstallDir.end(), '\\', '/');
+			rGlobalFile.setFrameInstallPath(frameInstallDir.c_str());
 		}
 		auto projectInstallDir = rConfig.projectInstallDir();
 		if (projectInstallDir) {

@@ -21,10 +21,10 @@ genTool.exe defFile=C:\work\appFrame\test\openWorkDir.xml structBadyType=0
 genTool.exe defFile=C:\study\vulkan\vulk1.xml structBadyType=0
 genTool.exe defFile=C:\study\vulkan\Khronos\khr9.xml structBadyType=0
 
-configFile.exe file=C:\work\appFrame\test\frameConfig.xml
+configFile.exe file=C:\work\appFrame\test\frameConfig.xml projectDir=c:/work/appFrame
 ./configFile file=~/work/appFrame/test/frameConfig.xml projectDir=~/work/appFrame
 
 
-genTool.exe defFile=C:\work\appFrame\test\localTest.xml structBadyType=1
-genTool.exe defFile=C:\work\appFrame\test\newSGCTest.xml structBadyType=1
-./genTool defFile=~/work/appFrame/test/newSGCTest.xml structBadyType=1
+genTool.exe defFile=C:/work/appFrame/test/localTest.xml structBadyType=1
+genTool.exe defFile=C:/work/appFrame/test/newSGCTest.xml structBadyType=1 projectDir=c:/work/appFrameProject/project
+./genTool defFile=~/work/appFrame/test/newSGCTest.xml structBadyType=1 projectDir=~/work/appFrameProject/project

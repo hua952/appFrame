@@ -10,6 +10,7 @@
 #include "strFun.h"
 #include <memory>
 #include <string>
+#include <iostream>
 #include "depOSFun.h"
 #include "modelLoder.h"
 
@@ -73,6 +74,7 @@ void* loadDll (const char* szFile)
 	//myAssert(hdll);
 	do {
 		if(!hdll){
+			std::cout<<" LoadLibraryA error GetLastError : "<<GetLastError ()<<std::endl;
 			break;
 		}
 		pRet = hdll;
