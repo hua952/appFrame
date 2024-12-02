@@ -430,7 +430,7 @@ target_link_libraries(${prjName} PRIVATE
 	frameConfig
 	cLog
 )";
-	auto bH = rGlobalFile.haveServer ();
+	auto bH = rGlobalFile.haveMsg();
 	if (bH) {
 		os<<R"(defMsg
 		comTcpProNet

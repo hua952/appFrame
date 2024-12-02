@@ -42,6 +42,7 @@ public:
 	void  setAppGroupIdInt (uword v);
 
 	serverFile*  findServer (const char* szName);
+	serverFile*  mainServer ();
 	serverMap&  serverS ();
 	serverOrder&  orderS ();
     const char*  genPath ();

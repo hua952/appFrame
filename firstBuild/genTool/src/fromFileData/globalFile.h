@@ -28,6 +28,7 @@ public:
 	msgPmpFile* findMsgPmp (const char* szPmpName);
 	std::vector<std::string>&  rootServerS ();
 	bool haveServer (); 
+	bool haveMsg ();
     // const char*  thirdPartyDir ();
     // void  setThirdPartyDir (const char* v);
 	void  initProtoDataTypeS ();

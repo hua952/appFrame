@@ -26,7 +26,6 @@ public:
 	int  genMain ();
 	int  startGen ();
 private:
-
 	int batFileGen ();
 	int writeUnixDep ();
 	int writeWinDep ();

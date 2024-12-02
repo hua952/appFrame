@@ -128,6 +128,12 @@ int  appLibGen:: batFileGen ()
 			ts<<"projectInstallDir="<<projectInstallDir;
 			rMainArgS.push_back(ts.str());
 		}
+		auto haveMsg = rGlobalFile.haveMsg();
+		if (haveMsg) {
+			std::stringstream ts;
+			ts<<"netLib=libeventSession";
+			rMainArgS.push_back(ts.str());
+		}
 		std::string strLogFile = szAppName;
 		strLogFile += ".log";
 		std::string strLogFull = R"(logFile=)";
@@ -239,10 +245,26 @@ int  appLibGen:: genWorkerMgrCpp ()
 				}
 			} )";
 		}
+
+		std::string incRpcH;
+		std::string strInitMsg;
+		auto haveMsg = rGlobalFile.haveMsg();
+		if (haveMsg){
+			incRpcH= "#include rpcInfo.h";
+			strInitMsg = R"(
+		const uword maxPairNum = 0x2000;
+		const uword maxMsgNum = maxPairNum * 2;
+		auto tempBuf = std::make_unique<uword[]>(maxMsgNum);
+		auto nR = getDefProc (tempBuf.get(), maxMsgNum);
+		myAssert (nR < maxMsgNum);
+		nR = m_defProcMap.init((defProcMap::NodeType*)(tempBuf.get()), nR/2);
+		myAssert (0 == nR);
+			)";
+		}
 		fmt::print(osMgrC, R"(#include "{modName}WorkerMgr.h"
 #include "logicFrameConfig.h"
 #include "tSingleton.h"
-#include "rpcInfo.h"
+{incRpcH}
 
 int {modName}WorkerMgr::initLogicGen (int cArg, char** argS, ForLogicFun* pForLogic, int cDefArg, char** defArgS)
 {{
@@ -254,19 +276,13 @@ int {modName}WorkerMgr::initLogicGen (int cArg, char** argS, ForLogicFun* pForLo
 		for (decltype (serverGroupNum) i = 0; i < serverGroupNum; i++) {{
 			{newServers}
 		}}
-
-		const uword maxPairNum = 0x2000;
-		const uword maxMsgNum = maxPairNum * 2;
-		auto tempBuf = std::make_unique<uword[]>(maxMsgNum);
-		auto nR = getDefProc (tempBuf.get(), maxMsgNum);
-		myAssert (nR < maxMsgNum);
-		nR = m_defProcMap.init((defProcMap::NodeType*)(tempBuf.get()), nR/2);
-		myAssert (0 == nR);
+		{initMsg}
+		
 	}} while (0);
 	return nRet;
 }}
 
-)", fmt::arg("modName", m_appData.appName()), fmt::arg("newServers", serVar.str().c_str()));
+)", fmt::arg("modName", m_appData.appName()), fmt::arg("incRpcH", incRpcH), fmt::arg("newServers", serVar.str().c_str()), fmt::arg("initMsg", strInitMsg));
 
 
     } while (0);
@@ -547,9 +563,14 @@ int   appLibGen:: genPackFun (serverFile& rServer)
 			rError ("open file : "<<strFile.c_str ());
 			nRet = 1;
 		}
-		os<<R"(#include "msgGroupId.h")"<<std::endl;
-		os<<R"(#include "msgStruct.h")"<<std::endl;
-		os<<R"(#include "loopHandleS.h")"<<std::endl;
+
+		auto& rGlobalFile = tSingleton<globalFile>::single ();
+		auto haveMsg = rGlobalFile.haveMsg ();
+		if (haveMsg) {
+			os<<R"(#include "msgGroupId.h")"<<std::endl;
+			os<<R"(#include "msgStruct.h")"<<std::endl;
+			os<<R"(#include "loopHandleS.h")"<<std::endl;
+		}
 		os<<R"(#include "logicFrameConfig.h")"<<std::endl;
 		os<<R"(#include "tSingleton.h")"<<std::endl;
 		os<<R"(#include "mainLoop.h")"<<std::endl;
@@ -563,7 +584,6 @@ int   appLibGen:: genPackFun (serverFile& rServer)
 		auto& rMap = pServerF->procMsgS ();
 		using groupSet = std::set<std::string>;
 		groupSet  groupS;
-		auto& rGlobalFile = tSingleton<globalFile>::single ();
 		auto pPmp = rGlobalFile.findMsgPmp ("defMsg");
         for (auto it = rMap.begin(); rMap.end() != it; ++it) {
 			auto& rMgr = pPmp->rpcFileS ();
@@ -880,7 +900,8 @@ int  appLibGen:: writeMain ()
 
 	auto& rGlobalFile = tSingleton<globalFile>::single ();
 	auto  bHave = rGlobalFile.haveServer ();
-	if (bHave) {
+	auto  haveMsg = rGlobalFile.haveMsg ();
+	if (/*bHave && */haveMsg) {
 		os<<R"(#include "loopHandleS.h"
 )";
 	}
@@ -962,11 +983,17 @@ int main(int cArg, char** argS)
 				auto bDet = rApp.detachServerS ();
 				if (bDet) {
 					// auto mainLoopServer = rApp.mainLoopServer();
-					auto mainLoopGroupId =  rApp.mainLoopGroupId();
+					std::string mainLoopGroupId =  rApp.mainLoopGroupId();
 					if (bHave ) {
-						myAssert(mainLoopGroupId);
+						if (!haveMsg) {
+							auto mainServer = rApp.mainServer ();
+							myAssert(mainServer);
+							std::stringstream ts;
+							ts<<mainServer->serverGroupId ();
+							mainLoopGroupId = ts.str();
+						}
 					}
-					if (mainLoopGroupId) {
+					if (!mainLoopGroupId.empty()) {
 					os<<R"(typedef int (*loopBeginFT)(loopHandleType pThis);
 	auto funLoopBegin = (loopBeginFT)(getFun(handle, "onPhyLoopBegin"));
 	typedef int (*loopEndFT)(loopHandleType pThis);
@@ -1068,5 +1095,4 @@ void endMain()
     } while (0);
     return nRet;
 }
-
 

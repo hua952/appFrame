@@ -5,6 +5,7 @@
 #include "appFile.h"
 #include "comFun.h"
 #include "myAssert.h"
+#include "fromFileData/msgPmpFile.h"
 
 globalFile:: globalFile ()
 {
@@ -344,3 +345,16 @@ void  globalFile:: setGateRouteServerGroupId (uword v)
     m_gateRouteServerGroupId = v;
 }
 
+bool globalFile::haveMsg ()
+{
+	bool bRet = false;
+	auto &rPmpS = msgFileS ();
+	for (auto it = rPmpS.begin(); rPmpS.end() != it; ++it) {
+			auto& rPmp = *(it->second.get());
+			if (rPmp.msgFileS().msgS().size ()) {
+				bRet = true;
+				break;
+			}
+	}
+	return bRet;
+}

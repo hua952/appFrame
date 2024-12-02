@@ -15,7 +15,7 @@
 #include "myAssert.h"
 #include "procGen/globalGen.h"
 #include <sstream>
-#include<filesystem>
+#include <filesystem>
 #include <algorithm>
 
 using namespace std;
@@ -54,6 +54,15 @@ int main (int argNum, char* argS[])
 		
 		auto& rGlobalFile = tSingleton<globalFile>::single ();
 		auto defFile = rConfig.defFile ();
+		if (!defFile && argNum >= 2) {
+
+			std::filesystem::path entry(argS[1]);
+			if (entry.is_relative()) {
+				entry = std::filesystem::absolute(entry);
+			}
+			rConfig.setDefFile (entry.string().c_str());
+			defFile = rConfig.defFile ();
+		}
 		auto projectDir = rConfig.projectDir ();
 		if (projectDir ) {
 			rGlobalFile.setProjectDir(projectDir);

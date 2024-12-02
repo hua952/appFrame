@@ -175,6 +175,21 @@ void  appFile:: setAppGroupIdInt (uword v)
     m_appGroupIdInt = v;
 }
 
+serverFile* appFile:: mainServer ()
+{
+	std::string strMain = 	mainLoopGroupId();
+	serverOrder&ors =  orderS ();
+	
+	for(auto it = ors.begin(); ors.end() != it; ++it){
+		auto ps = it->get();
+		if(strMain == ps->strServerGroupId ()) {
+			return ps;
+			break;
+		}
+	}
+	return NULL;
+}
+
 serverFile*   appFile:: findServer (const char* szName)
 {
 	serverFile*   nRet = 0;

@@ -6,6 +6,7 @@
 #include "fromFileData/globalFile.h"
 #include "fromFileData/appFile.h"
 #include "fromFileData/appFileMgr.h"
+#include "fromFileData/msgPmpFile.h"
 #include "protobufSerGen.h"
 #include "tSingleton.h"
 #include "msgGen.h"
@@ -43,10 +44,14 @@ int   globalGen:: writeGenCmakelist ()
 			break;
 		}
 		auto szPrjName = rGlobalFile.projectName ();
+		bool haveMsg = rGlobalFile.haveMsg();
+		if(haveMsg){
 		os<<R"(
 add_subdirectory (protobufSer)
 add_subdirectory (defMsg)
-add_subdirectory ()"<<szPrjName <<R"(Config))"<<std::endl;
+)";
+		}
+os<<R"(add_subdirectory ()"<<szPrjName <<R"(Config))"<<std::endl;
 		auto& rAppS = tSingleton<appFileMgr>::single ().appS ();
 		for (auto it = rAppS.begin (); rAppS.end () != it; ++it) {
 			auto& rApp = *(it->second.get ());
@@ -85,8 +90,10 @@ int   globalGen:: startGen ()
 		nR = 0;
 		auto &rGlobal = tSingleton<globalFile>::single();
 		auto bH = rGlobal.haveServer ();
+		bool haveMsg = rGlobal.haveMsg();
+		
 		std::vector <std::shared_ptr<msgGen>> gv;
-		if (bH) {
+		if (bH && haveMsg) {
 			protobufSerGen  protoGen;
 			nR = protoGen.startGen ();
 			if (nR) {
