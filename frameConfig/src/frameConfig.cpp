@@ -31,7 +31,7 @@ frameConfig::frameConfig ()
 	strCpy("", m_logicModel);
 	strCpy("", m_modelName);
 	strCpy("", m_modelS);
-	strCpy("libeventSession", m_netLib);
+	strCpy("", m_netLib);
 	m_netNum = 4;
 	strCpy("", m_projectInstallDir);
 	strCpy("", m_runWorkNum);

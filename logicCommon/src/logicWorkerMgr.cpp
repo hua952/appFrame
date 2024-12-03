@@ -166,15 +166,18 @@ int  logicWorkerMgr:: initLogicWorkerMgr (int cArg, char** argS, ForLogicFun* pF
 			strNet += midNetLibName;
 			strNet += dllExtName();
 			*/
-			std::string strNet = rConfig.frameHome ();
-			strNet += "/";
-			strNet += getDllPath(midNetLibName);
-			nR = initComTcpNet (strNet.c_str(), pForLogic->fnAllocPack, pForLogic->fnFreePack, pForLogic->fnLogMsg);
-			if (nR) {
-				gError ("initComTcpNet error nRet = "<<nRet<<" strPath = "
-					<<strNet.c_str());
-				nRet = 5;
-				break;
+			auto libNameLen = strlen (midNetLibName);
+			if (libNameLen ) {
+				std::string strNet = rConfig.frameHome ();
+				strNet += "/";
+				strNet += getDllPath(midNetLibName);
+				nR = initComTcpNet (strNet.c_str(), pForLogic->fnAllocPack, pForLogic->fnFreePack, pForLogic->fnLogMsg);
+				if (nR) {
+					gError ("initComTcpNet error nRet = "<<nRet<<" strPath = "
+							<<strNet.c_str());
+					nRet = 5;
+					break;
+				}
 			}
 		}
 		auto serverGroupNum = rConfig.serverGroupNum ();

@@ -13,7 +13,7 @@
 	<logicModel type="string"></logicModel>
 	<endPoint type="string"></endPoint>
 	<level0 type="string">cppLevel0L</level0>
-	<netLib type="string">libeventSession</netLib>
+	<netLib type="string"></netLib>
 	<frameConfigFile type="string" commit="框架配置文件"></frameConfigFile>
 	<frameHome type="string" commit="框架的安装目录"></frameHome>
 	<projectInstallDir type="string" commit="安装目录"></projectInstallDir>
