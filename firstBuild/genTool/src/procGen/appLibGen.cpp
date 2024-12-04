@@ -73,8 +73,8 @@ int  appLibGen:: batFileGen ()
 
 		auto& rMap = tSingleton<appFileMgr>::single ().appS ();
 		
-		auto haveServer = rGlobalFile.haveServer ();
-		if (haveServer) {
+		// auto haveServer = rGlobalFile.haveServer ();
+		// if (haveServer) {
 			std::stringstream ts;
 			ts<<"procId="<<procId;
 			rMainArgS.push_back(ts.str());
@@ -82,7 +82,7 @@ int  appLibGen:: batFileGen ()
 			std::stringstream appSS;
 			appSS<<"runWorkNum="<<rApp.runWorkNum ();
 			rMainArgS.push_back(appSS.str());
-		}
+		// }
 
 		auto netType = rApp.netType ();
 		/*
@@ -128,8 +128,9 @@ int  appLibGen:: batFileGen ()
 			ts<<"projectInstallDir="<<projectInstallDir;
 			rMainArgS.push_back(ts.str());
 		}
-		auto haveMsg = rGlobalFile.haveMsg();
-		if (haveMsg) {
+		// auto haveMsg = rGlobalFile.haveMsg();
+		// if (haveMsg)
+		{
 			std::stringstream ts;
 			ts<<"netLib=libeventSession";
 			rMainArgS.push_back(ts.str());
@@ -248,9 +249,9 @@ int  appLibGen:: genWorkerMgrCpp ()
 
 		std::string incRpcH;
 		std::string strInitMsg;
-		auto haveMsg = rGlobalFile.haveMsg();
-		if (haveMsg){
-			incRpcH= "#include rpcInfo.h";
+		// auto haveMsg = rGlobalFile.haveMsg();
+		// if (haveMsg){
+			incRpcH= R"(#include "rpcInfo.h")";
 			strInitMsg = R"(
 		const uword maxPairNum = 0x2000;
 		const uword maxMsgNum = maxPairNum * 2;
@@ -260,7 +261,7 @@ int  appLibGen:: genWorkerMgrCpp ()
 		nR = m_defProcMap.init((defProcMap::NodeType*)(tempBuf.get()), nR/2);
 		myAssert (0 == nR);
 			)";
-		}
+		//}
 		fmt::print(osMgrC, R"(#include "{modName}WorkerMgr.h"
 #include "logicFrameConfig.h"
 #include "tSingleton.h"
@@ -565,12 +566,12 @@ int   appLibGen:: genPackFun (serverFile& rServer)
 		}
 
 		auto& rGlobalFile = tSingleton<globalFile>::single ();
-		auto haveMsg = rGlobalFile.haveMsg ();
-		if (haveMsg) {
+		// auto haveMsg = rGlobalFile.haveMsg ();
+		// if (haveMsg) {
 			os<<R"(#include "msgGroupId.h")"<<std::endl;
 			os<<R"(#include "msgStruct.h")"<<std::endl;
 			os<<R"(#include "loopHandleS.h")"<<std::endl;
-		}
+		// }
 		os<<R"(#include "logicFrameConfig.h")"<<std::endl;
 		os<<R"(#include "tSingleton.h")"<<std::endl;
 		os<<R"(#include "mainLoop.h")"<<std::endl;
@@ -899,12 +900,12 @@ int  appLibGen:: writeMain ()
 )";
 
 	auto& rGlobalFile = tSingleton<globalFile>::single ();
-	auto  bHave = rGlobalFile.haveServer ();
-	auto  haveMsg = rGlobalFile.haveMsg ();
-	if (/*bHave && */haveMsg) {
+	// auto  bHave = rGlobalFile.haveServer ();
+	// auto  haveMsg = rGlobalFile.haveMsg ();
+	// if (/*bHave && */haveMsg) {
 		os<<R"(#include "loopHandleS.h"
 )";
-	}
+	//}
 os<<R"(
 int  beginMain(int argC, char** argV);
 void endMain();
@@ -984,15 +985,15 @@ int main(int cArg, char** argS)
 				if (bDet) {
 					// auto mainLoopServer = rApp.mainLoopServer();
 					std::string mainLoopGroupId =  rApp.mainLoopGroupId();
-					if (bHave ) {
-						if (!haveMsg) {
+					// if (bHave ) {
+						// if (!haveMsg) {
 							auto mainServer = rApp.mainServer ();
 							myAssert(mainServer);
 							std::stringstream ts;
 							ts<<mainServer->serverGroupId ();
 							mainLoopGroupId = ts.str();
-						}
-					}
+						// }
+					// }
 					if (!mainLoopGroupId.empty()) {
 					os<<R"(typedef int (*loopBeginFT)(loopHandleType pThis);
 	auto funLoopBegin = (loopBeginFT)(getFun(handle, "onPhyLoopBegin"));

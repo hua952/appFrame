@@ -92,19 +92,6 @@ bool isPathInterval (char c)
 	return  c == '/';
 }
 
-int   createUuid (char* outPut)
-{
-	std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_int_distribution<> distrib(0, 255);
-
-	auto pBuf = (ubyte*)outPut;
-    for (int i = 0; i < 16; ++i) {
-		pBuf[i] = distrib(gen);
-    }
-	return 0;
-}
-
 const char*  dllExtName ()
 {
 	return ".so";

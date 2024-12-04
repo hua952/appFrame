@@ -44,13 +44,13 @@ int   globalGen:: writeGenCmakelist ()
 			break;
 		}
 		auto szPrjName = rGlobalFile.projectName ();
-		bool haveMsg = rGlobalFile.haveMsg();
-		if(haveMsg){
+		// bool haveMsg = rGlobalFile.haveMsg();
+		// if(haveMsg){
 		os<<R"(
 add_subdirectory (protobufSer)
 add_subdirectory (defMsg)
 )";
-		}
+		// }
 os<<R"(add_subdirectory ()"<<szPrjName <<R"(Config))"<<std::endl;
 		auto& rAppS = tSingleton<appFileMgr>::single ().appS ();
 		for (auto it = rAppS.begin (); rAppS.end () != it; ++it) {

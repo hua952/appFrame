@@ -30,7 +30,7 @@ add_subdirectory ()"<<szPrjName<<R"(Config)
  )";
 		strAddProSer = ssAdd.str();
 		//}
-		auto bH = rGlobalFile.haveServer ();
+		// auto bH = rGlobalFile.haveServer ();
 		auto& rAppS = tSingleton<appFileMgr>::single ().appS ();
 			std::string strFile = rGlobalFile.projectHome ();
 			strFile += "/CMakeLists.txt";
@@ -66,10 +66,10 @@ set (firstBuildInc )"<<frameInstallDir<<R"(/include/appFrame  CACHE INTERNAL "Sh
 set (firstBuildLib )"<<frameInstallDir<<R"(/lib  CACHE INTERNAL "Shared variable")
 SET(CMAKE_INSTALL_PREFIX )"<<strInstall<<R"()
 )";
-if (bH) {
+// if (bH) {
 	os<<R"(add_subdirectory (gen)
 	)";
-}
+// }
 os<<R"(
 )";
 			for (auto it = rAppS.begin (); rAppS.end () != it; ++it) {

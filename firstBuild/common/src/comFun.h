@@ -95,7 +95,6 @@ int             getDirFromFile (const char* szFile, std::unique_ptr<char[]>& pat
 void showTraceStack(std::unique_ptr<char[]>& pBuff);
 void second2Str (uqword uqwCur, std::unique_ptr<char[]>& strTime);
 uqword curNanosecond ();
-int  createUuid (char* outPut);
 const char*  dllExtName ();
 const char*  dllInstallDir ();
 const char*  dllPerName ();

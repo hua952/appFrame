@@ -1,17 +1,21 @@
 SET(prjName logicCommon)
 set(srcS)
+set(osDepsrcS) 
 set(libDir ${firstBuildLib})
 file(GLOB srcS src/*.cpp)
 
 set(libS comTcpProNet)
 if (UNIX)
 	add_compile_options(-fPIC)
+	find_package(unofficial-libuuid CONFIG REQUIRED)
+	file(GLOB osDepsrcS src/unix/*.cpp)
 elseif (WIN32)
     MESSAGE(STATUS "windows")
 	add_definitions(-DWIN32_LEAN_AND_MEAN)
 	add_definitions(-w)
 	ADD_DEFINITIONS(/Zi)
 	ADD_DEFINITIONS(/W1)
+	file(GLOB osDepsrcS src/unix/*.cpp)
 endif ()
 
 link_directories(
@@ -19,10 +23,10 @@ link_directories(
 		)
 
 if (WIN32)
-	add_library(${prjName} ${srcS})
+	add_library(${prjName} ${srcS} ${osDepsrcS})
 elseif (UNIX)
 	#add_library(${prjName} SHARED ${srcS})
-	add_library(${prjName} ${srcS})
+	add_library(${prjName} ${srcS} ${osDepsrcS})
 endif ()
 
 

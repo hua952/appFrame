@@ -6,6 +6,7 @@
 #include "packet.h"
 #include "msg.h"
 
+int  createUuid (char* outPut);
 packetHead* nClonePack(netPacketHead* pN);
 class logicWorker
 {

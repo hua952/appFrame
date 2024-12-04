@@ -382,6 +382,7 @@ file(GLOB genSrcS src/userLogic/*.cpp )"<<cppS.str()<<R"()
 set(defS)
 set(libPath)
 set(libDep)
+set(osDepLib)
 if (WIN32)
 	MESSAGE(STATUS "windows")
 	ADD_DEFINITIONS(/Zi)
@@ -417,9 +418,11 @@ if (WIN32)
 	add_library(${prjName} SHARED ${genSrcS} ${defS})
 if (UNIX)
 	MESSAGE(STATUS "unix add -fPIC")
+	find_package(unofficial-libuuid CONFIG REQUIRED)
 	target_compile_options(${prjName} PRIVATE -fPIC)	
     set(VERSION_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/src/unix/lib.vers")
 	target_link_options(${prjName} PRIVATE -Wl,-version-script,${VERSION_SCRIPT})
+	list(APPEND osDepLib unofficial::UUID::uuid)
 endif ()
 
 target_link_libraries(${prjName} PRIVATE
@@ -429,6 +432,7 @@ target_link_libraries(${prjName} PRIVATE
 	logicCommon
 	frameConfig
 	cLog
+	${osDepLib}
 )";
 	auto bH = rGlobalFile.haveMsg();
 	if (bH) {
@@ -715,11 +719,11 @@ int appModuleGen::procMsgReg (serverFile* pServer, const procRpcNode& rProcRpc, 
 #include "myAssert.h"
 #include <memory>
 )";
-		auto bH = rGlobalFile.haveServer ();
-		if (bH) {
+		// auto bH = rGlobalFile.haveServer ();
+		// if (bH) {
 			ps<<R"(#include "loopHandleS.h"
 )";
-		}
+		//}
 
 ps<<R"(#include "logicWorker.h"
 #include ")"<<strMgrClassName<<R"(.h")"<<std::endl<<R"(
