@@ -3,7 +3,7 @@
 #include <cstring>
 #include <memory>
 #include <string>
-
+#include <objbase.h>
 
 int  createUuid (char* outPut)
 {

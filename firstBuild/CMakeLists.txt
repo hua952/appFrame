@@ -19,6 +19,7 @@ add_subdirectory (cLog)
 add_subdirectory (comTcpProNet)
 add_subdirectory (configFile)
 add_subdirectory (genTool)
+add_subdirectory (genMain)
 
 SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)

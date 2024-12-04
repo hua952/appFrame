@@ -15,7 +15,7 @@ elseif (WIN32)
 	add_definitions(-w)
 	ADD_DEFINITIONS(/Zi)
 	ADD_DEFINITIONS(/W1)
-	file(GLOB osDepsrcS src/unix/*.cpp)
+	file(GLOB osDepsrcS src/win/*.cpp)
 endif ()
 
 link_directories(
