@@ -83,7 +83,7 @@ int main (int argNum, char* argS[])
 		strProjectHome += "/";
 		strProjectHome += rGlobalFile.projectName ();
 		rGlobalFile.setProjectHome (strProjectHome.c_str());
-		auto frameInstallPath = rGlobalFile.frameInstallPath ();
+		auto frameInstallPath = rConfig.frameInstallPath ();
 		if (frameInstallPath) {
 			rGlobalFile.setFrameInstallPath(frameInstallPath);
 		} else {
