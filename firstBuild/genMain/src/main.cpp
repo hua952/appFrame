@@ -26,7 +26,8 @@ int genCmakeFile ()
 		}
 		of<<R"(cmake_minimum_required(VERSION 3.16) 
 SET(prjName )"<<g_strProjectName<<R"()
-
+project(${prjName})
+set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_HOME}/scripts/buildsystems/vcpkg.cmake")
 # find_package(fmt CONFIG REQUIRED)
 # find_path(RAPIDXML_INCLUDE_DIRS "rapidxml/rapidxml.hpp")
 set(srcS)
