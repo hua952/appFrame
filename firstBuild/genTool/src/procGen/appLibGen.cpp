@@ -148,8 +148,21 @@ int  appLibGen:: batFileGen ()
 		rMainArgS.push_back(frameHomeFull);
 	
 		auto& rV = rApp.argS ();
+		int findFrameConfig = 0;
 		for (auto it = rV.begin(); rV.end() != it; ++it) {
 			rMainArgS.push_back(*it);
+			std::string k,v;
+			stringToTwoValue (it->c_str(), k, v);
+			if (k == "frameConfigFile") {
+				findFrameConfig++;
+			}
+		}
+		myAssert (findFrameConfig <= 1);
+		if (!findFrameConfig) {
+			std::string strFC = "frameConfigFile=";
+			strFC += szAppName;
+			strFC += "frameConfig.txt";
+			rMainArgS.push_back(strFC);
 		}
 		{
 			auto& rV = rGlobalFile.argS ();

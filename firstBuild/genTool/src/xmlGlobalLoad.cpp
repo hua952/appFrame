@@ -20,6 +20,7 @@
 #include <sstream>
 #include<unordered_map>
 #include "xmlCommon.h"
+#include "configMgr.h"
 
 xmlGlobalLoad:: xmlGlobalLoad ()
 {
@@ -158,7 +159,10 @@ int   xmlGlobalLoad:: perProc(rapidxml::xml_document<>& doc)
 				findGate = true;
 			}
 		}
-		
+		if (appNameS.size() <= 1	) {
+			auto& rConfig = tSingleton <configMgr>::single ();
+			rConfig.setStructBadyType (structBadyTime_com);
+		}
 		if (!findGate && appNameS.size() > 1) {
 			auto gateServerName = "gateAuto";
 			auto it = appNameS.find(gateServerName);

@@ -46,8 +46,14 @@ int   globalGen:: writeGenCmakelist ()
 		auto szPrjName = rGlobalFile.projectName ();
 		// bool haveMsg = rGlobalFile.haveMsg();
 		// if(haveMsg){
-		os<<R"(
-add_subdirectory (protobufSer)
+
+		auto& rAppMgr = tSingleton<appFileMgr>::single ();
+		auto& rApps = rAppMgr.appS ();
+		if (rApps.size() > 1) {
+			os<<R"(
+add_subdirectory (protobufSer))";
+		}
+os<<R"(
 add_subdirectory (defMsg)
 )";
 		// }

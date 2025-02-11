@@ -74,7 +74,7 @@ void* loadDll (const char* szFile)
 	//myAssert(hdll);
 	do {
 		if(!hdll){
-			std::cout<<" LoadLibraryA error GetLastError : "<<GetLastError ()<<std::endl;
+			// std::cout<<" LoadLibraryA error GetLastError : "<<GetLastError ()<<std::endl;
 			break;
 		}
 		pRet = hdll;

@@ -26,3 +26,21 @@ genTool.exe defFile=C:/work/appFrame/test/localTest.xml structBadyType=1
 genTool.exe defFile=C:/work/appFrame/test/newSGCTest.xml structBadyType=1 projectDir=c:/work/appFrameProject/project
 LD_LIBRARY_PATH=~/work/appFrameInstall/lib  ./genTool defFile=~/work/appFrame/test/newSGCTest.xml structBadyType=1 projectDir=~/work/appFrameProject
 LD_LIBRARY_PATH=~/work/appFrameInstall/lib  ./genTool defFile=~/work/appFrame/test/main.xml  projectDir=~/study/msg1
+
+
+static bool sendFun (void *pNum)
+{
+	static int sendNum = 0;
+	auto pThA = (thA*)(pNum);
+	threadAtoBAskMsg  ask;
+	auto& pa = *(ask.pack());
+	pa.m_reqid = 2;
+	strcpy(pa.m_txt, "OKOK");
+	pThA->sendMsg (ask);
+	return sendNum < 5;
+}
+addTimer
+	gInfo("rec ret from thB result = "<<rRet.m_result);	
+
+	gInfo("rec ask from thA id = "<<rAsk.m_reqid<< "txt = "<< rAsk.m_txt);	
+	rRet.m_result = 1;

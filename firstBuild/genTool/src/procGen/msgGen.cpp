@@ -54,16 +54,22 @@ int  msgGen::startGen ()
 		strFilename += pPmpName;
 		strFilename += "/src";
 		myMkdir (strFilename.c_str ());
-		auto strPro = strFilename;
-		strPro += "/protobuf/";
-		myMkdir (strPro.c_str());
-		setProtoDir (strPro.c_str());
+		
 		auto& proOs = protoOs ();
 		
-		std::string strDir = projectHome;
-		strDir += "/gen/protobufSer/src";
-		myMkdir (strDir.c_str());
-		setProtobufSerSrcDir (strDir.c_str());
+		auto& rAppMgr = tSingleton<appFileMgr>::single ();
+		auto& rApps = rAppMgr.appS ();
+		if (rApps.size() > 1) {
+			auto strPro = strFilename;
+			strPro += "/protobuf/";
+			myMkdir (strPro.c_str());
+			setProtoDir (strPro.c_str());
+
+			std::string strDir = projectHome;
+			strDir += "/gen/protobufSer/src";
+			myMkdir (strDir.c_str());
+			setProtobufSerSrcDir (strDir.c_str());
+		}
 
 		proOs<<R"(syntax = "proto3";
 )";
@@ -123,26 +129,30 @@ int  msgGen::startGen ()
 			nRet = 8;
 			break;
 		}
-		std::string aProtoFile = protobufSerSrcDir ();
-		std::string strProtoFile = aProtoFile;
-		create_directories (strProtoFile);
-		strProtoFile += "/";
-		strProtoFile += pPmpName;
-		strProtoFile += ".proto"; 
 
-		std::ofstream protoOsF (strProtoFile.c_str());
-		if (!protoOsF) {
-			nRet = 9;
-			break;
+		if (rApps.size() > 1) {
+			std::string aProtoFile = protobufSerSrcDir ();
+			std::string strProtoFile = aProtoFile;
+			create_directories (strProtoFile);
+			strProtoFile += "/";
+			strProtoFile += pPmpName;
+			strProtoFile += ".proto"; 
+
+			std::ofstream protoOsF (strProtoFile.c_str());
+			if (!protoOsF) {
+				nRet = 9;
+				break;
+			}
+
+			protoOsF<<proOs.str();
+			protoOsF.close ();
+			std::stringstream protocOs;
+			auto vcpkg_tool = std::getenv("VCPKG_HOME");
+			auto vcpkg_dll = std::getenv("VCPKG_OS");
+			protocOs<<vcpkg_tool<<"/packages/protobuf_"<<vcpkg_dll<<"/tools/protobuf/protoc --cpp_out="<<aProtoFile<<" --proto_path="<<aProtoFile<<" "<<pPmpName<<".proto";
+			rInfo(" will exc : "<<protocOs.str());
+			system (protocOs.str().c_str());
 		}
-		protoOsF<<proOs.str();
-		protoOsF.close ();
-		std::stringstream protocOs;
-		auto vcpkg_tool = std::getenv("VCPKG_HOME");
-		auto vcpkg_dll = std::getenv("VCPKG_OS");
-		protocOs<<vcpkg_tool<<"/packages/protobuf_"<<vcpkg_dll<<"/tools/protobuf/protoc --cpp_out="<<aProtoFile<<" --proto_path="<<aProtoFile<<" "<<pPmpName<<".proto";
-		rInfo(" will exc : "<<protocOs.str());
-		system (protocOs.str().c_str());
 
 		auto& rConfig = tSingleton<configMgr>::single ();
 		auto enStructBadyType = rConfig.structBadyType ();
@@ -199,7 +209,11 @@ ssInc<<R"(#include ")"<<msgGroupName<<R"(MsgId.h"
 packetHead* allocPacketExt(udword udwS, udword ExtNum);
 )"<<strToPack.str();
 
-		// if (enStructBadyType == structBadyTime_proto) {
+
+		if (rApps.size() <= 1) {
+			break;
+		}
+			std::string aProtoFile = protobufSerSrcDir ();
 			std::string strStFunS = aProtoFile;
 			strStFunS += "/";
 			strStFunS += serializePackFunStName;
@@ -278,13 +292,7 @@ int  msgGen:: rpcInfoCppGen ()
 		// std::ofstream os(strFile);
 		std::stringstream os;
 		std::stringstream defProcOs;
-		std::string regFile = protobufSerSrcDir ();
-		regFile += "/regRpcPair.cpp";
-		std::ofstream regOs (regFile.c_str());
-		if (!regOs) {
-			nRet = 2;
-			break;
-		}
+		
 		std::stringstream incOs;
 		incOs<<R"(#include "msgGroupId.h"
 #include "msg.h"
@@ -303,8 +311,7 @@ int  msgGen:: rpcInfoCppGen ()
 		}
 		incOs<<R"(
 )";
-regOs<<incOs.str();
-os/*<<incOs.str()*/<<R"(
+os<<R"(
 void dumpStructS ()
 {
 	std::ofstream os("dumpStructS.txt");
@@ -355,6 +362,11 @@ int  checkStructS (const char* szFile)
 			break;
 		}
 		)";
+
+		
+	auto regOsP = std::make_unique<std::stringstream>();
+	auto& regOs = *(regOsP.get()); 
+	regOs<<incOs.str();
 	regOs<<R"(
 extern "C"
 {
@@ -387,11 +399,7 @@ int getMsgPairS (uword* pBuff, int buffNum)
 		askFullId += pAsk->strMsgId ();
 		askFullId += ")";
 		auto pAskDefPro = pAsk->defProServerTmpId (); // defProServerId ();
-		/*
-		if (!pAskDefPro) {
-			pAskDefPro = "c_emptyLoopHandle";
-		}
-		*/
+		
 		if (pAskDefPro) {
 			defProcOs<<R"(pBuff[nRet++] = )"<<askFullId <<R"(;
 		if (nRet >= buffNum) {
@@ -408,11 +416,7 @@ int getMsgPairS (uword* pBuff, int buffNum)
 		
 		if (pRet) {
 			pRetDefPro = pRet->defProServerTmpId (); //defProServerId ();
-			/*
-			if (!pRetDefPro) {
-				pRetDefPro = "c_emptyLoopHandle";
-			}
-			*/
+			
 			retId = pFull;
 			retId += R"(()";
 			retId += pRet->strMsgId ();
@@ -430,16 +434,7 @@ int getMsgPairS (uword* pBuff, int buffNum)
 			}
 			
 		} 
-	/*	
-		regOs<<R"(    pBuff[nRet++] = )"<<pFull<<R"(()"<<askId<<R"();
-		pBuff[nRet++] = )"<<retId<<R"(;
-		pBuff[nRet++] = )"<<pAskDefPro<<R"(;
-		pBuff[nRet++] = )"<<pRetDefPro<<R"(;
-		if (nRet >= buffNum) {
-			break;
-		}
-		)";
-		*/
+	
 		regOs<<R"(    pBuff[nRet++] = )"<<askFullId<<R"(;
 		pBuff[nRet++] = )"<<retId<<R"(;
 		if (nRet >= buffNum) {
@@ -461,7 +456,20 @@ defProcOs<<R"(
 })";
 
 	infoFileOs<<incOs.str()<<std::endl<<os.str()<<defProcOs.str();
-	regOs<<os.str();
+
+		auto& rAppMgr = tSingleton<appFileMgr>::single ();
+		auto& rApps = rAppMgr.appS ();
+		if (rApps.size() > 1) {
+			std::string regFile = protobufSerSrcDir ();
+			regFile += "/regRpcPair.cpp";
+			std::ofstream regOsRe (regFile.c_str());
+			if (!regOsRe) {
+				nRet = 2;
+				break;
+			}
+			regOs<<os.str();
+			regOsRe<<regOs.str();
+		}
     } while (0);
     return nRet;
 }
@@ -1311,9 +1319,15 @@ elseif (WIN32)
 		)
 endif ()
 add_library(${prjName} ${genSrcS} ${srcS} ${srcOS} ${defS} ${pbFileS})
-target_include_directories(${prjName} PRIVATE 
-							src
-							${CMAKE_SOURCE_DIR}/protobufSer/src
+target_include_directories(${prjName} PRIVATE
+)";
+
+		auto& rAppMgr = tSingleton<appFileMgr>::single ();
+		auto& rApps = rAppMgr.appS ();
+		if (rApps.size() > 1) {
+			os<<R"(${CMAKE_SOURCE_DIR}/protobufSer/src)";
+		}
+							os<<R"(src
 							)";
 							os<<framePath<<"/include/appFrame"<<std::endl;
 

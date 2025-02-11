@@ -5,6 +5,8 @@
 #include "comFun.h"
 #include <string>
 #include <fstream>
+#include "configMgr.h"
+#include "fromFileData/appFileMgr.h"
 
 protobufSerGen:: protobufSerGen ()
 {
@@ -18,6 +20,11 @@ int   protobufSerGen:: startGen ()
 {
     int   nRet = 0;
     do {
+		auto& rAppMgr = tSingleton<appFileMgr>::single ();
+		auto& rApps = rAppMgr.appS ();
+		if (rApps.size() <= 1) {
+			break;
+		}
 		int nR = 0;
 		nR = mkDir ();
 		if (nR) {
@@ -45,6 +52,7 @@ int   protobufSerGen:: CMakeListGen ()
 {
     int   nRet = 0;
     do {
+
 		auto aRoot = rootDir ();
 		std::string strFile = aRoot;
 		strFile += "/CMakeLists.txt";

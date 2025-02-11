@@ -1,15 +1,18 @@
 #include <string>
+#include "myAssert.h"
 #include <iostream>
 #include <filesystem>
 #include <fstream>
 #include <filesystem>
 #include "comFun.h"
+#include "strFun.h"
 
 std::string g_strProjectName;
 std::string g_strProjectDir;
 std::string g_strProjectHome;
 std::string g_strSrc;
 
+udword g_mfc = 0;
 int genCmakeFile ()
 {
 	int nRet = 0;
@@ -41,11 +44,24 @@ elseif (WIN32)
 	ADD_DEFINITIONS(/Zi)
 	ADD_DEFINITIONS(/utf-8)
 	ADD_DEFINITIONS(/W1)
+	)";
+	if (g_mfc) {
+		myAssert (g_mfc < 3);
+		of<<R"(
+	ADD_DEFINITIONS(-D_AFXDLL)
+	SET(CMAKE_MFC_FLAG 2)
+		)";
+	}
+	of<<R"(
 endif ()
 
 # include_directories()
 
-add_executable (${prjName} ${srcS})
+add_executable (${prjName} )";
+if (g_mfc) {
+	of<<"WIN32 ";
+}
+of<<R"(${srcS})
 # target_include_directories(${prjName} PRIVATE src)
 # target_link_libraries(${prjName} PRIVATE  common cLog)
 SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
@@ -58,6 +74,9 @@ int  genMain ()
 {
 	int nRet = 0;
 	do {
+		if (g_mfc) {
+			break;
+		}
 		std::string strFile = g_strSrc;
 		strFile += "/main.cpp";
 		if (isPathExit (strFile.c_str())) {
@@ -89,8 +108,14 @@ int  main (int argC, char** argS)
 	if (argC > 1) {
 		g_strProjectName = argS[1];
 	}
+		/*
 	if (argC > 2) {
 		g_strProjectDir = argS[2];
+	}
+	*/
+	for (decltype (argC) i = 1; i < argC; i++) {
+		getValueFromArgKV(argS[i], "mfc", g_mfc);
+		getValueFromArgKV(argS[i], "projectDir", g_strProjectDir);
 	}
 	do {
 		if (g_strProjectName.empty()) {

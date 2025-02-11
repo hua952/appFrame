@@ -87,22 +87,7 @@ int  logicWorkerMgr:: initLogicWorkerMgr (int cArg, char** argS, ForLogicFun* pF
 			nRet = 2;
 			break;
 		}
-/*
-		auto pWorkDir = rConfig.homeDir (); // rConfig.frameConfigFile();// rConfig.homeDir ();
-		int workDirLen = 0;
-		if (pWorkDir) {
-			workDirLen = (int)(strlen(pWorkDir));
-		}
-		if (!workDirLen) {
-			std::unique_ptr<char[]>	homeDirPtr;
-			auto nR = getCurModelPath (homeDirPtr);
-			myAssert (0 == nR);
-			auto bR = upDir (homeDirPtr.get());
-			myAssert (bR);
-			rConfig.setHomeDir(homeDirPtr.get());
-			pWorkDir = rConfig.homeDir ();
-		}
-		*/
+
 		std::string frameConfigFile = rConfig.projectInstallDir(); // pWorkDir;
 		auto frameConfig = rConfig.frameConfigFile ();
 		frameConfigFile += "/config/";
@@ -119,22 +104,7 @@ int  logicWorkerMgr:: initLogicWorkerMgr (int cArg, char** argS, ForLogicFun* pF
 			nRet = 4;
 			break;
 		}
-		/*
-		pWorkDir = rConfig.homeDir ();
-		workDirLen = 0;
-		if (pWorkDir) {
-			workDirLen = (int)(strlen(pWorkDir));
-		}
-		if (!workDirLen) {
-			std::unique_ptr<char[]>	homeDirPtr;
-			auto nR = getCurModelPath (homeDirPtr);
-			myAssert (0 == nR);
-			auto bR = upDir (homeDirPtr.get());
-			myAssert (bR);
-			rConfig.setHomeDir(homeDirPtr.get());
-			pWorkDir = rConfig.homeDir ();
-		}
-		*/
+		
 		std::string strPath = rConfig.projectInstallDir (); //pWorkDir;
 		
 		auto serializePackLib = rConfig.serializePackLib ();
@@ -156,16 +126,11 @@ int  logicWorkerMgr:: initLogicWorkerMgr (int cArg, char** argS, ForLogicFun* pF
 					s_SerFunSet.init ((pSerializePackFunType3*)(pBuf.get()), serNum);
 				}
 			}
-		} else {
+		}/* else {
 			gWarn(" can not load "<<strPath);
-		}
+		}*/
 		auto midNetLibName = rConfig.netLib (); // rArgS.midNetLibName ();
 		if (midNetLibName ) {
-			/*
-			std::string strNet;
-			strNet += midNetLibName;
-			strNet += dllExtName();
-			*/
 			auto libNameLen = strlen (midNetLibName);
 			if (libNameLen ) {
 				std::string strNet = rConfig.frameHome ();
@@ -173,7 +138,7 @@ int  logicWorkerMgr:: initLogicWorkerMgr (int cArg, char** argS, ForLogicFun* pF
 				strNet += getDllPath(midNetLibName);
 				nR = initComTcpNet (strNet.c_str(), pForLogic->fnAllocPack, pForLogic->fnFreePack, pForLogic->fnLogMsg);
 				if (nR) {
-					gError ("initComTcpNet error nRet = "<<nRet<<" strPath = "
+					gError ("initComTcpNet error nR = "<<nR<<" strPath = "
 							<<strNet.c_str());
 					nRet = 5;
 					break;

@@ -279,7 +279,7 @@ void    workServer:: setAttr(const char* txt)
     do {
 		std::string strKey;
 		std::string strValue;
-		auto twoRet = stringToTwoValue (txt, '=', strKey, strValue);
+		auto twoRet = stringToTwoValue (txt, strKey, strValue);
 		if (!twoRet) {
 			break;
 		}

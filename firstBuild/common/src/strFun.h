@@ -44,7 +44,20 @@ template<class T2> bool stringMatchValue(const char* srcKey, const char* srcValu
 	return bRet;
 }
 
-template<class T1, class T2> bool stringToTwoValue(const char* src, const char delim, T1& first, T2& second)
+template<class T1> bool getValueFromArgKV(const char* szArgKV, const char* szKey, T1& retValue, const char delim = '=')
+{
+	bool bRet = false;
+	auto ret = stringSplit (szArgKV, delim, false);
+	if (2 == ret.size()) {
+		if (ret[0] == szKey) {
+			stringToValue(ret[1].c_str(), retValue);
+			bRet = true;
+		}
+	}
+	return bRet;
+}
+
+template<class T1, class T2> bool stringToTwoValue(const char* src, T1& first, T2& second, const char delim = '=')
 {
 	bool bRet = false;
 	auto ret = stringSplit (src, delim, false);

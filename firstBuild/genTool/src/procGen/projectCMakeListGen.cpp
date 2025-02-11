@@ -21,12 +21,18 @@ int   projectCMakeListGen:: startGen ()
 	do {
 		auto& rGlobalFile = tSingleton<globalFile>::single ();
 		auto& rConfig = tSingleton<configMgr>::single ();
+
+		auto& rAppMgr = tSingleton<appFileMgr>::single ();
+		auto& rApps = rAppMgr.appS ();
+
 		auto szPrjName = rGlobalFile.projectName ();
 		auto structBadyType = rConfig.structBadyType ();
 		std::string strAddProSer;
 		std::stringstream ssAdd;
-			ssAdd<< R"(add_subdirectory (protobufSer)
-add_subdirectory ()"<<szPrjName<<R"(Config)
+		if (rApps.size() > 1) {
+			ssAdd<< R"(add_subdirectory (protobufSer))";
+		}
+		ssAdd<<R"(add_subdirectory ()"<<szPrjName<<R"(Config)
  )";
 		strAddProSer = ssAdd.str();
 		//}
