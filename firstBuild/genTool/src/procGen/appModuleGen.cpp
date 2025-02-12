@@ -330,6 +330,7 @@ int   appModuleGen:: cmakeListsGen ()
     do {
 		auto& rGlobalFile = tSingleton<globalFile>::single ();
 		auto appName = m_appData.appName (); // rMod.appName ();
+		auto pPmp = rGlobalFile.findMsgPmp ("defMsg");
 		std::string strFile = homeDir ();
 		strFile += "/CMakeLists.txt";
 		auto bE = isPathExit (strFile.c_str());
@@ -364,15 +365,17 @@ int   appModuleGen:: cmakeListsGen ()
 			auto pServerF = it->get();
 			myAssert (pServerF);
 			auto& rMap = pServerF->procMsgS ();
-			auto pPmp = rGlobalFile.findMsgPmp ("defMsg");
-			myAssert (pPmp);
-			for (auto ite = rMap.begin(); rMap.end() != ite; ++ite) {
-				auto& rMgr = pPmp->rpcFileS ();
-				auto pRpc = rMgr.findRpc (ite->rpcName.c_str ());
-				myAssert (pRpc);
-				auto pGName = pRpc->groupName ();
-				groupS.insert (pGName);
+			if (pPmp) {
+				myAssert (pPmp);
+				for (auto ite = rMap.begin(); rMap.end() != ite; ++ite) {
+					auto& rMgr = pPmp->rpcFileS ();
+					auto pRpc = rMgr.findRpc (ite->rpcName.c_str ());
+					myAssert (pRpc);
+					auto pGName = pRpc->groupName ();
+					groupS.insert (pGName);
+				}
 			}
+
 			for (auto ite = groupS.begin(); groupS.end() != ite; ++ite) {
 				cppS<<"src/"<<pName<<"/"<<*ite<<"/*.cpp "<<std::endl;
 			}
@@ -402,9 +405,11 @@ if (WIN32)
 	auto configClassName = rGlobalFile.configClassName ();
 	std::string incPath = rGlobalFile.frameIncPath ();
 	incPath += "/appFrame";
-	os<<szC2<<std::endl
-	<<"    ${CMAKE_SOURCE_DIR}/gen/defMsg/src"<<std::endl
-	<<"	${CMAKE_SOURCE_DIR}/gen/"<<configClassName<<"/src"<<std::endl
+	os<<szC2<<std::endl;
+	if (pPmp) {
+		os<<"    ${CMAKE_SOURCE_DIR}/gen/defMsg/src"<<std::endl;
+	}
+	os<<"	${CMAKE_SOURCE_DIR}/gen/"<<configClassName<<"/src"<<std::endl
 	<<"src/userLogic"<<std::endl
 	<<incPath<<std::endl
 	<<incS.str();
@@ -432,12 +437,13 @@ target_link_libraries(${prjName} PRIVATE
 	logicCommon
 	frameConfig
 	cLog
+	comTcpProNet
 	${osDepLib}
 )";
-	auto bH = rGlobalFile.haveMsg();
+	// auto bH = rGlobalFile.haveMsg();
+	auto bH = pPmp;
 	if (bH) {
 		os<<R"(defMsg
-		comTcpProNet
 	)";
 	}
 os<<R"(
@@ -662,20 +668,24 @@ int appModuleGen::procMsgReg (serverFile* pServer, const procRpcNode& rProcRpc, 
 	bool bAsk = rProcRpc.bAsk;
 	auto& rGlobalFile = tSingleton<globalFile>::single ();
 	auto pPmp = rGlobalFile.findMsgPmp ("defMsg");
-	myAssert (pPmp);
-	auto& rRpcFileMgr = pPmp->rpcFileS(); // tSingleton <rpcFileMgr>::single ();
-	auto pRpc = rRpcFileMgr.findRpc (rProcRpc.rpcName.c_str());
-	myAssert (pRpc);
-	auto& rRpc = *pRpc;
-	auto pGName = rRpc.groupName ();
-	auto& rGMgr = pPmp->msgGroupFileS ();
-	auto pGroup = rGMgr.findGroup (pGName);
-	myAssert (pGroup);
-	auto pFullMsg = pGroup->fullChangName ();
-	auto szMsgStructName = bAsk ? pRpc->askMsgName () : pRpc->retMsgName ();
-	auto& rMsgMgr = pPmp->msgFileS ();
-	auto pMsg = rMsgMgr.findMsg (szMsgStructName);
-	do {	
+
+	do {
+		if (!pPmp) {
+			break;
+		}
+		myAssert (pPmp);
+		auto& rRpcFileMgr = pPmp->rpcFileS(); // tSingleton <rpcFileMgr>::single ();
+		auto pRpc = rRpcFileMgr.findRpc (rProcRpc.rpcName.c_str());
+		myAssert (pRpc);
+		auto& rRpc = *pRpc;
+		auto pGName = rRpc.groupName ();
+		auto& rGMgr = pPmp->msgGroupFileS ();
+		auto pGroup = rGMgr.findGroup (pGName);
+		myAssert (pGroup);
+		auto pFullMsg = pGroup->fullChangName ();
+		auto szMsgStructName = bAsk ? pRpc->askMsgName () : pRpc->retMsgName ();
+		auto& rMsgMgr = pPmp->msgFileS ();
+		auto pMsg = rMsgMgr.findMsg (szMsgStructName);
 		myAssert (pMsg);
 		if (!pMsg) {
 			nRet = 1;
@@ -753,6 +763,9 @@ int   appModuleGen:: genPackFun (serverFile& rServer)
 		groupSet  groupS;
 		auto& rGlobalFile = tSingleton<globalFile>::single ();
 		auto pPmp = rGlobalFile.findMsgPmp ("defMsg");
+		if (!pPmp) {
+			break;
+		}
         for (auto it = rMap.begin(); rMap.end() != it; ++it) {
 			auto& rMgr = pPmp->rpcFileS ();
 			auto pRpc = rMgr.findRpc (it->rpcName.c_str ());

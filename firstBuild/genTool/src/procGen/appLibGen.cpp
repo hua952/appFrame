@@ -264,6 +264,9 @@ int  appLibGen:: genWorkerMgrCpp ()
 		std::string strInitMsg;
 		// auto haveMsg = rGlobalFile.haveMsg();
 		// if (haveMsg){
+
+		auto pPmp = rGlobalFile.findMsgPmp ("defMsg");
+		if (pPmp ) {
 			incRpcH= R"(#include "rpcInfo.h")";
 			strInitMsg = R"(
 		const uword maxPairNum = 0x2000;
@@ -274,6 +277,7 @@ int  appLibGen:: genWorkerMgrCpp ()
 		nR = m_defProcMap.init((defProcMap::NodeType*)(tempBuf.get()), nR/2);
 		myAssert (0 == nR);
 			)";
+		}
 		//}
 		fmt::print(osMgrC, R"(#include "{modName}WorkerMgr.h"
 #include "logicFrameConfig.h"
@@ -321,21 +325,9 @@ int   appLibGen:: genWorkerH (serverFile& rServer)
 			nRet = 1;
 		}
 		
-		std::set<std::string> procMsgSet;
-		auto& rGlobalFile = tSingleton<globalFile>::single ();
-		auto pPmp = rGlobalFile.findMsgPmp ("defMsg");
-		auto& rRpcFileMgr = pPmp->rpcFileS();
-		auto& rMsgMgr = pPmp->msgFileS();
-		auto& rPMap = rServer.procMsgS ();
-		for (auto ite = rPMap.begin(); rPMap.end() != ite; ++ite) {
-			auto& rProcRpc = *(ite);
-			auto rpcFileName = rProcRpc.rpcName;
-			auto pRpc = rRpcFileMgr.findRpc (rpcFileName.c_str ());
-			myAssert (pRpc);
-			auto pG = pRpc->groupName ();
-			procMsgSet.insert (pG);
-		}
 		std::stringstream ssInc;
+		std::stringstream ssProc;
+
 		std::string strWorker = "logicWorker";
 		ubyte  netType = m_appData.netType ();
 		if (appNetType_gate == netType) {
@@ -353,25 +345,40 @@ int   appLibGen:: genWorkerH (serverFile& rServer)
 				strWorker = "serverRouteWorker";
 			}
 		}
+		auto& rGlobalFile = tSingleton<globalFile>::single ();
+		auto pPmp = rGlobalFile.findMsgPmp ("defMsg");
+		if (pPmp ) {
+			std::set<std::string> procMsgSet;
+			auto& rRpcFileMgr = pPmp->rpcFileS();
+			auto& rMsgMgr = pPmp->msgFileS();
+			auto& rPMap = rServer.procMsgS ();
+			for (auto ite = rPMap.begin(); rPMap.end() != ite; ++ite) {
+				auto& rProcRpc = *(ite);
+				auto rpcFileName = rProcRpc.rpcName;
+				auto pRpc = rRpcFileMgr.findRpc (rpcFileName.c_str ());
+				myAssert (pRpc);
+				auto pG = pRpc->groupName ();
+				procMsgSet.insert (pG);
+			}
+			
 
-		for (auto iter = procMsgSet.begin(); procMsgSet.end() != iter; ++iter) {
-			ssInc<<R"(#include ")"<<iter->c_str()<<R"(Rpc.h")"<<std::endl;
-		}
+			for (auto iter = procMsgSet.begin(); procMsgSet.end() != iter; ++iter) {
+				ssInc<<R"(#include ")"<<iter->c_str()<<R"(Rpc.h")"<<std::endl;
+			}
 
-		std::stringstream ssProc;
-		for (auto ite = rPMap.begin(); rPMap.end() != ite; ++ite) {
-			auto& rProcRpc = *(ite);
-			auto rpcFileName = rProcRpc.rpcName;
-			auto pRpc = rRpcFileMgr.findRpc (rpcFileName.c_str ());
-			myAssert (pRpc);
-			auto& rRpc = *pRpc;
-			auto szMsgStructName = rProcRpc.bAsk ? 
-				pRpc->askMsgName () : pRpc->retMsgName ();
-			auto pMsg = rMsgMgr.findMsg (szMsgStructName);
- 			auto pDec = pMsg->msgFunDec ();
-			ssProc<<"    "<<pDec<<";"<<std::endl;
+			for (auto ite = rPMap.begin(); rPMap.end() != ite; ++ite) {
+				auto& rProcRpc = *(ite);
+				auto rpcFileName = rProcRpc.rpcName;
+				auto pRpc = rRpcFileMgr.findRpc (rpcFileName.c_str ());
+				myAssert (pRpc);
+				auto& rRpc = *pRpc;
+				auto szMsgStructName = rProcRpc.bAsk ? 
+					pRpc->askMsgName () : pRpc->retMsgName ();
+				auto pMsg = rMsgMgr.findMsg (szMsgStructName);
+				auto pDec = pMsg->msgFunDec ();
+				ssProc<<"    "<<pDec<<";"<<std::endl;
+			}
 		}
-		
 		fmt::print(os, R"(#ifndef _{serverName}_h__
 #define _{serverName}_h__
 
@@ -419,21 +426,30 @@ int   appLibGen:: genWorkerCpp (serverFile& rServer)
 		for (auto it = attrs.begin (); it != attrs.end (); it++) {
 			ssAttrs<<R"(setAttrFun(serverId (),")"<<*it<<R"(");)"<<std::endl;
 		}
+		std::string strRegPackFunDec;
+		std::string strRegPackFunName;
+
+		auto& rGlobalFile = tSingleton<globalFile>::single ();
+		auto pPmp = rGlobalFile.findMsgPmp ("defMsg");
+		if (pPmp) {
+			strRegPackFunDec = rServer.regPackFunDec ();
+			strRegPackFunName = rServer.regPackFunName ();
+			strRegPackFunName += "(pForLogic->fnRegMsg, serverId ());";
+		}
 		fmt::print(os, R"(#include "{serverName}.h"
 
 int {serverName}::onWorkerInitGen(ForLogicFun* pForLogic)
 {{
 
 	{regPackFunDec};
-	{regPackFunName}(pForLogic->fnRegMsg, serverId ());
+	{regPackFunName}
 	auto setAttrFun = pForLogic->fnSetAttr;
 	auto nRet = onWorkerInit(pForLogic);
-
 	{attrs}
 	return nRet;
 }}
 
-)", fmt::arg("serverName", serverName), fmt::arg("regPackFunDec", rServer.regPackFunDec ()), fmt::arg("regPackFunName", rServer.regPackFunName ()), fmt::arg("attrs", ssAttrs.str()));
+)", fmt::arg("serverName", serverName), fmt::arg("regPackFunDec", strRegPackFunDec), fmt::arg("regPackFunName", strRegPackFunName), fmt::arg("attrs", ssAttrs.str()));
 
     } while (0);
     return nRet;
@@ -447,20 +463,23 @@ static int sProcMsgReg (appFile& rApp, serverFile* pServer,
 	bool bAsk = rProcRpc.bAsk;
 	auto& rGlobalFile = tSingleton<globalFile>::single ();
 	auto pPmp = rGlobalFile.findMsgPmp ("defMsg");
-	myAssert (pPmp);
-	auto& rRpcFileMgr = pPmp->rpcFileS();
-	auto pRpc = rRpcFileMgr.findRpc (rProcRpc.rpcName.c_str());
-	myAssert (pRpc);
-	auto& rRpc = *pRpc;
-	auto pGName = rRpc.groupName ();
-	auto& rGMgr = pPmp->msgGroupFileS ();
-	auto pGroup = rGMgr.findGroup (pGName);
-	myAssert (pGroup);
-	auto pFullMsg = pGroup->fullChangName ();
-	auto szMsgStructName = bAsk ? pRpc->askMsgName () : pRpc->retMsgName ();
-	auto& rMsgMgr = pPmp->msgFileS ();
-	auto pMsg = rMsgMgr.findMsg (szMsgStructName);
 	do {	
+		if (!pPmp) {
+			break;
+		}
+		myAssert (pPmp);
+		auto& rRpcFileMgr = pPmp->rpcFileS();
+		auto pRpc = rRpcFileMgr.findRpc (rProcRpc.rpcName.c_str());
+		myAssert (pRpc);
+		auto& rRpc = *pRpc;
+		auto pGName = rRpc.groupName ();
+		auto& rGMgr = pPmp->msgGroupFileS ();
+		auto pGroup = rGMgr.findGroup (pGName);
+		myAssert (pGroup);
+		auto pFullMsg = pGroup->fullChangName ();
+		auto szMsgStructName = bAsk ? pRpc->askMsgName () : pRpc->retMsgName ();
+		auto& rMsgMgr = pPmp->msgFileS ();
+		auto pMsg = rMsgMgr.findMsg (szMsgStructName);
 		myAssert (pMsg);
 		if (!pMsg) {
 			nRet = 1;
@@ -566,6 +585,11 @@ int   appLibGen:: genPackFun (serverFile& rServer)
 {
     int   nRet = 0;
     do {
+		auto& rGlobalFile = tSingleton<globalFile>::single ();
+		auto pPmp = rGlobalFile.findMsgPmp ("defMsg");
+		if (!pPmp) {
+			break;
+		}
 		std::string strFile = srcDir(); // rMod.genPath ();
 		auto szServerName = rServer.serverName ();
 		strFile += "/";
@@ -578,12 +602,11 @@ int   appLibGen:: genPackFun (serverFile& rServer)
 			nRet = 1;
 		}
 
-		auto& rGlobalFile = tSingleton<globalFile>::single ();
 		// auto haveMsg = rGlobalFile.haveMsg ();
 		// if (haveMsg) {
 			os<<R"(#include "msgGroupId.h")"<<std::endl;
 			os<<R"(#include "msgStruct.h")"<<std::endl;
-			os<<R"(#include "loopHandleS.h")"<<std::endl;
+			// os<<R"(#include "loopHandleS.h")"<<std::endl;
 		// }
 		os<<R"(#include "logicFrameConfig.h")"<<std::endl;
 		os<<R"(#include "tSingleton.h")"<<std::endl;
@@ -598,7 +621,6 @@ int   appLibGen:: genPackFun (serverFile& rServer)
 		auto& rMap = pServerF->procMsgS ();
 		using groupSet = std::set<std::string>;
 		groupSet  groupS;
-		auto pPmp = rGlobalFile.findMsgPmp ("defMsg");
         for (auto it = rMap.begin(); rMap.end() != it; ++it) {
 			auto& rMgr = pPmp->rpcFileS ();
 			auto pRpc = rMgr.findRpc (it->rpcName.c_str ());
@@ -649,6 +671,8 @@ int   appLibGen:: cmakeListsGen ()
 		std::string strFile = homeDir ();
 		strFile += "CMakeLists.txt";
 		
+		auto pPmp = rGlobalFile.findMsgPmp ("defMsg");
+
 		std::ofstream os(strFile.c_str ());
 		if (!os) {
 			nRet = 1;
@@ -668,10 +692,9 @@ int   appLibGen:: cmakeListsGen ()
 			auto pName = pServerF->serverName ();
 			incS<<"src/"<<pName<<std::endl;
 			cppS<<"src/"<<pName<<"/*.cpp ";
+			/*
 			groupSet  groupS;
 			auto& rMap = pServerF->procMsgS ();
-			auto pPmp = rGlobalFile.findMsgPmp ("defMsg");
-			myAssert (pPmp);
 			for (auto ite = rMap.begin(); rMap.end() != ite; ++ite) {
 				auto& rMgr = pPmp->rpcFileS ();
 				auto pRpc = rMgr.findRpc (ite->rpcName.c_str ());
@@ -679,6 +702,7 @@ int   appLibGen:: cmakeListsGen ()
 				auto pGName = pRpc->groupName ();
 				groupS.insert (pGName);
 			}
+			*/
 		}
 
 		os<<R"(set(genSrcS)
@@ -712,9 +736,11 @@ elseif (WIN32)
 	auto configClassName = rGlobalFile.configClassName ();
 	std::string incPath = rGlobalFile.frameIncPath ();
 	incPath += "/appFrame";
-	os<<szC2<<std::endl
-	<<"    ${CMAKE_SOURCE_DIR}/gen/defMsg/src"<<std::endl
-	<<"	${CMAKE_SOURCE_DIR}/gen/"<<configClassName<<"/src"<<std::endl
+	os<<szC2<<std::endl;
+	if (pPmp) {
+		os<<"    ${CMAKE_SOURCE_DIR}/gen/defMsg/src"<<std::endl;
+	}
+	os<<"	${CMAKE_SOURCE_DIR}/gen/"<<configClassName<<"/src"<<std::endl
 	<<"src/userLogic"<<std::endl
 	<<incPath<<std::endl
 	<<incS.str();
@@ -916,8 +942,10 @@ int  appLibGen:: writeMain ()
 	// auto  bHave = rGlobalFile.haveServer ();
 	// auto  haveMsg = rGlobalFile.haveMsg ();
 	// if (/*bHave && */haveMsg) {
+		/*
 		os<<R"(#include "loopHandleS.h"
 )";
+*/
 	//}
 os<<R"(
 int  beginMain(int argC, char** argV);

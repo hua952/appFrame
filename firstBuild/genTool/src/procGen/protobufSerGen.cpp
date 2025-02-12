@@ -81,8 +81,16 @@ elseif (WIN32)
 	file(GLOB defS src/*.def)
 endif ()
 	include_directories(
-    ${CMAKE_SOURCE_DIR}/gen/defMsg/src
-	)"<<appFrameInstall<<R"(/include/appFrame
+)";
+
+	auto& rGlobalFile = tSingleton<globalFile>::single ();
+	auto pPmp = rGlobalFile.findMsgPmp ("defMsg");
+	if (pPmp ) {
+		os<<R"(${CMAKE_SOURCE_DIR}/gen/defMsg/src
+)";
+	}
+    
+	os<<appFrameInstall<<R"(/include/appFrame
 )
 list(APPEND libPath )"<<appFrameInstall<<R"(/lib)
 link_directories(${libPath} ${libDep})
@@ -98,10 +106,16 @@ endif ()
 
 	target_link_libraries(${prjName} PRIVATE
 	common
-	cLog
-	defMsg
+)";
+	if (pPmp) {
+		os<<R"(defMsg
 # PRIVATE protobuf::libprotoc protobuf::libprotobuf protobuf::libprotobuf-lite
  PRIVATE protobuf::libprotobuf
+ )";
+
+	}
+		
+	os<<R"(	cLog
 	)
 	SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 	install(TARGETS ${prjName} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})

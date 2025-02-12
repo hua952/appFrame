@@ -10,6 +10,7 @@ public:
 	int  startGen ();
 	int  secondGen ();
 	int  configLibGen ();
+	int  runWorkNumGen ();
 private:
 	int  makePath ();
 	int  writeGenCmakelist ();

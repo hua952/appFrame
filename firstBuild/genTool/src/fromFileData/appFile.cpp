@@ -144,7 +144,6 @@ void  appFile:: setRunWorkNum (const char* v)
     strCpy (v, m_runWorkNum);
 }
 
-
 const char*  appFile:: appGroupId ()
 {
     return m_appGroupId.get ();

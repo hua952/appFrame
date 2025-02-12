@@ -32,7 +32,6 @@ defMsgGen:: defMsgGen ()
 defMsgGen:: ~defMsgGen ()
 {
 }
-
 int defMsgGen::loopHandleSGen ()
 {
     int  nRet = 0;
@@ -69,14 +68,12 @@ enum appTmpID
 			int is = ip++ * LoopNum;
 			rApp.setProcId (is);
 			auto netType = rApp.netType ();
-			// auto& rModNameS = rApp.moduleFileNameS ();
 			int mutI = 0;
 			int sinI = 0;
 			int lvI[c_serverLevelNum];
 			for (int i = 0; i < c_serverLevelNum; i++) {
 				lvI[i] = 0;
 			}
-			// appTem<<"    appTmpId_"<<rApp.appName()<<" = "<<appIndex++<<","<<std::endl;
 			rApp.setAppGroupIdInt (appIndex);
 			appTem<<rApp.appGroupId()<<" = "<<appIndex<<","<<std::endl;
 
@@ -93,13 +90,7 @@ enum appTmpID
 
 			auto tmpId = 0;
 			serverFile* pRouteServer = nullptr;
-			/*
-			for (auto ite = rModNameS.begin ();
-					rModNameS.end () != ite; ++ite) {
-				auto& rMName = *ite;
-				auto pMod = rModMgr.findModule (rMName.c_str ());
-				myAssert (pMod);
-				*/
+			
 				auto& rSS = rApp.orderS ();
 				bool firstServer = true;
 				auto pRunSS = std::make_unique<std::stringstream>();
@@ -161,8 +152,7 @@ enum appTmpID
 						rGlobal.setGateRouteServerGroupId (tmpId);
 					}
 				}
-				rApp.setRunWorkNum (runSS.str().c_str());
-			//}
+				// rApp.setRunWorkNum (runSS.str().c_str());
 			if (!routeThTem.str().empty()) {
 				appThTem<<R"(    )"<<routeThTem.str()<<" = "<<tmpId<<","<<std::endl;
 				tmpId++;
@@ -194,6 +184,9 @@ int  defMsgGen:: startGen ()
 		int nR = 0;
 		auto& rGlobal = tSingleton <globalFile>::single ();
 		auto pDefPmp = rGlobal.findMsgPmp ("defMsg");
+		if (!pDefPmp) {
+			break;
+		}
 		myAssert (pDefPmp);
 		auto projectHome = rGlobal.projectHome ();
 		std::string strFilename = projectHome;
@@ -204,6 +197,7 @@ int  defMsgGen:: startGen ()
 			nRet = 1;
 			break;
 		}
+		
 		nR = loopHandleSGen ();
 		if (nR) {
 			nRet = 7;

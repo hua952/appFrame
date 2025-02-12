@@ -356,6 +356,7 @@ int  xmlGlobalLoad::xmlLoad (const char* szFile)
 			break;
 		}
 		rGlobal.setXmlDir (dirBuf.get());
+		/*
 		auto pPmpT = rMsgFileS.find ("defMsg");
 		if (pPmpT == rMsgFileS.end()) {
 			auto pT = std::make_shared <msgPmpFile> ();
@@ -363,6 +364,7 @@ int  xmlGlobalLoad::xmlLoad (const char* szFile)
 			auto inR = rMsgFileS.insert(std::make_pair("defMsg", pT));
 			myAssert (inR.second);
 		}
+		*/
 		for (auto it = rMsgFileS.begin (); rMsgFileS.end () != it; ++it) {
 			xmlMsgFileLoad msgFileLoader;
 			std::string strF = dirBuf.get ();
@@ -1017,6 +1019,9 @@ int   xmlGlobalLoad:: onceServerLoad (rapidxml::xml_node<char>* pS,
 		}
 		auto& rGlobalGen = tSingleton <globalFile>::single ();
 		auto pPmp = rGlobalGen.findMsgPmp ("defMsg");
+		if (!pPmp) {
+			break;
+		}
 		auto& rMsgMgr = pPmp->msgFileS();
 		auto& rProcS = newServer->procMsgS ();
 		auto  route = newServer->route();
@@ -1087,60 +1092,6 @@ int   xmlGlobalLoad:: onceServerLoad (rapidxml::xml_node<char>* pS,
 			break;
 		}
 		ubyte  netType = rApp.netType ();
-		// bool bIsRoot = newServer->isRoot ();
-		/*
-		if (appNetType_gate == netType ) {
-			int rootRpcNum = 0;
-			auto ppRpc = getRpptRpc (rootRpcNum);
-			for (decltype (rootRpcNum) i = 0; i < rootRpcNum; i++) {
-				procRpcNode node;
-				node.retValue = "procPacketFunRetType_del";
-				node.bAsk = true;
-				node.rpcName = ppRpc[i];
-				auto inRet = rProcS.insert (node);
-				myAssert (inRet.second);
-			}
-		}
-		*/	
-		/*
-		if (appNetType_gate == netType || appNetType_server == netType) {
-			procRpcNode node;
-			node.retValue = "procPacketFunRetType_stopBroadcast";
-			node.bAsk = appNetType_gate == netType;
-			node.rpcName = "regRoute";
-			auto inRet = rProcS.insert (node);
-			myAssert (inRet.second);
-		}
-		{
-			procRpcNode node;
-			node.retValue = "procPacketFunRetType_exitNow";
-			node.bAsk = true;
-			node.rpcName = "ntfExit";
-			auto inRet = rProcS.insert (node);
-			myAssert (inRet.second);
-			node.retValue = "procPacketFunRetType_del";
-			node.bAsk = false;
-			node.rpcName = "ntfExit";
-			inRet = rProcS.insert (node);
-			myAssert (inRet.second);
-		}
-		{
-			procRpcNode node;
-			if (route) {
-				node.retValue = "procPacketFunRetType_stopBroadcast";
-				node.bAsk = true;
-				node.rpcName = "ntfExitByNet";
-				auto inRet = rProcS.insert (node);
-				myAssert (inRet.second);
-			}
-			
-			node.retValue = "procPacketFunRetType_del";
-			node.bAsk = false;
-			node.rpcName = "ntfExitByNet";
-			auto inRet = rProcS.insert (node);
-			myAssert (inRet.second);
-		}
-		*/
     } while (0);
     return nRet;
 }
