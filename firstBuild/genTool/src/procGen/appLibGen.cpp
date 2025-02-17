@@ -95,6 +95,7 @@ int  appLibGen:: batFileGen ()
 			ts<<"netNum="<<rGlobalFile.netNum();
 			rMainArgS.push_back(ts.str());
 		}
+		/*
 		{
 			std::stringstream ts;
 			ts<<"gateAppGroupId="<<rGlobalFile.gateAppGroupId();
@@ -110,6 +111,7 @@ int  appLibGen:: batFileGen ()
 			ts<<"gateRouteServerGroupId="<<rGlobalFile.gateRouteServerGroupId();
 			rMainArgS.push_back(ts.str());
 		}
+		*/
 		{
 			std::stringstream ts;
 			uword uwT = rApp.netType ();
@@ -950,6 +952,15 @@ int  appLibGen:: writeMain ()
 os<<R"(
 int  beginMain(int argC, char** argV);
 void endMain();
+using defArgMap = std::map<std::string, std::string>;
+void addDefKV(defArgMap& rMap, const char* szKV, const char delim = '=')
+{
+	auto ret = stringSplit (szKV, delim);
+	if (ret.size() == 2) {
+		rMap[ret[0]] = ret[1];
+	}
+}
+
 int main(int cArg, char** argS)
 {
 	auto& ws = std::cout;
@@ -961,33 +972,46 @@ int main(int cArg, char** argS)
 			ws<<" beginMain error nRet = "<<nRet<<std::endl;
 			break;
 		}
-		
-		)";
+		defArgMap aDefArgMap;
+)";
 		auto& rMainArgS = rApp.mainArgS();
-		auto  mainArgSize = rMainArgS.size();
-		os<<R"(auto defArgS = std::make_unique<char*[]>()"<<mainArgSize + 1<<R"();
-		)";
-		auto defLen = 0;
 		for (auto it = rMainArgS.begin(); rMainArgS.end() != it; ++it) {
-			defLen += (it->length() + 1);
+			os<<R"(		addDefKV(aDefArgMap, ")"<<it->c_str()<<R"(");
+)";
 		}
-		// defLen = 2048;
+
 		os<<R"(
-			auto defArgTxt = std::make_unique<char[]>()"<<defLen<<R"();
-			int curDef = 0;
-			char* pCur = defArgTxt.get();
-		)";
-		for (auto it = rMainArgS.begin(); rMainArgS.end() != it; ++it) {
-			os<<R"(defArgS[curDef++] = pCur;
-		pCur += (sprintf (pCur, "%s", ")"<<it->c_str()<<R"(") + 1);
-		)";
+		std::string strDefDelim;
+		char defDelim ='#';
+		getOnceValueFromArgS (cArg, argS, "defDelim", strDefDelim);
+		if (!strDefDelim.empty()) {
+			defDelim = strDefDelim.c_str()[0];
 		}
-		os<<R"(std::string pLevel0Name;
+		for (decltype (cArg) i = 1; i < cArg; i++) {
+			addDefKV (aDefArgMap, argS[i], defDelim);
+		}
+		int defArgLen = 0;
+		for (auto it = aDefArgMap.begin (); it != aDefArgMap.end (); it++) {
+			defArgLen += it->first.length();
+			defArgLen += it->second.length();
+			defArgLen += 2;
+		}
+		auto nDefArg = (int)(aDefArgMap.size());
+		auto defArgS = std::make_unique<char*[]>(nDefArg + 1);
+		auto defArgTxt = std::make_unique<char[]>(defArgLen);
+		int curDef = 0;
+		char* pCur = defArgTxt.get();
+		for (auto it = aDefArgMap.begin (); it != aDefArgMap.end (); it++) {
+			defArgS[curDef++] = pCur;
+			pCur += (sprintf (pCur, "%s=%s", it->first.c_str(), it->second.c_str()) + 1);
+		}
+
+		std::string pLevel0Name;
 		std::string strFrameHome;
 
 		auto level0Ret = getTwoValueFromArgS (cArg, argS,  "level0", "frameHome", pLevel0Name, strFrameHome);
 		if (!level0Ret) {
-			level0Ret = getTwoValueFromArgS ()"<<mainArgSize<<R"(, defArgS.get(),  "level0", "frameHome", pLevel0Name, strFrameHome);
+			level0Ret = getTwoValueFromArgS (nDefArg, defArgS.get(),  "level0", "frameHome", pLevel0Name, strFrameHome);
 		}
 		
 		if (pLevel0Name.empty()) {
@@ -1016,11 +1040,13 @@ int main(int cArg, char** argS)
 					nRet = 12;
 					break;
 				}
-				auto nnR = funOnLoad (cArg, argS, )"<<mainArgSize<<R"(, defArgS.get());
+				auto nnR = funOnLoad (cArg, argS, nDefArg, defArgS.get());
 				if (nnR) {
 					std::cout<<"funOnLoad error nnR = "<<nnR<<std::endl;
 					break;
 				}
+				defArgTxt.reset ();
+				defArgS.reset();
 				)";
 				auto bDet = rApp.detachServerS ();
 				if (bDet) {

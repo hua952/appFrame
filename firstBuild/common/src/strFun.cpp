@@ -74,6 +74,8 @@ int strRS(char* szText, char* szP, char** pBuf, int BufNum)
 	return nRet;
 }
 
+
+
 void toWord (char* szWord)
 {
 	if ('a' <= *szWord && *szWord <= 'z') {
@@ -157,3 +159,24 @@ void getStringValuesFromArgS (int argC, char** argS, void** keyValues, int keyNu
 	}
 }
 
+void repChar (char* szSrc, const char cFrom, const char cTo)
+{
+	auto pCur = szSrc;
+	while (*pCur) {
+		if (cFrom == *pCur) {
+			*pCur = cTo;
+		}
+		pCur++;
+	}
+}
+
+void repwChar (wchar_t* szSrc, const wchar_t cFrom, const wchar_t cTo)
+{
+	auto pCur = szSrc;
+	while (*pCur) {
+		if (cFrom == *pCur) {
+			*pCur = cTo;
+		}
+		pCur++;
+	}
+}

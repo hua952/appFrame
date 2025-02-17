@@ -60,22 +60,15 @@ int   globalGen:: writeGenCmakelist ()
 		// bool haveMsg = rGlobalFile.haveMsg();
 		// if(haveMsg){
 
+		auto pPmp = rGlobalFile.findMsgPmp ("defMsg");
 		auto& rAppMgr = tSingleton<appFileMgr>::single ();
-		auto& rApps = rAppMgr.appS ();
-		if (rApps.size() > 1) {
+		// auto& rApps = rAppMgr.appS ();
+		if (pPmp) {
 			os<<R"(
-add_subdirectory (protobufSer))";
+add_subdirectory (protobufSer)
+add_subdirectory (defMsg)
+)";
 		}
-
-os<<R"(
-)";
-auto pPmp = rGlobalFile.findMsgPmp ("defMsg");
-	if (pPmp ) {
-		os<<R"(add_subdirectory (defMsg))";
-	}
-	os<<R"(
-)";
-		// }
 os<<R"(add_subdirectory ()"<<szPrjName <<R"(Config))"<<std::endl;
 		auto& rAppS = tSingleton<appFileMgr>::single ().appS ();
 		for (auto it = rAppS.begin (); rAppS.end () != it; ++it) {

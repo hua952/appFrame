@@ -185,63 +185,48 @@ int   xmlGlobalLoad:: perProc(rapidxml::xml_document<>& doc)
 			pArg = doc.allocate_node(rapidxml::node_element, "appArg", doc.allocate_string(frameConfig.c_str()));
 			pGateNode->append_node(pArg);
 			pGateNode->append_attribute(doc.allocate_attribute("appNetType", "1"));
-			/*
-			rapidxml::xml_node<>* pModuleS = doc.allocate_node(rapidxml::node_element, "module");
-			myAssert (pModuleS);
-			pGateNode->append_node(pModuleS);
-			rapidxml::xml_node<>* pM= doc.allocate_node(rapidxml::node_element, "gateAutoM");
-			pModuleS->append_node(pM);
-			*/
+			
 			rapidxml::xml_node<>* pServerS = doc.allocate_node(rapidxml::node_element, "server");
-			// pM->append_node(pServerS);
 			pGateNode->append_node(pServerS);
 		}
 		pAppS = root->first_node("app");
 		
 		for(rapidxml::xml_node<char> * pApp = pAppS->first_node();  NULL != pApp; pApp= pApp->next_sibling()) {
 			auto appName = pApp->name();
-			/*
-			auto pModuleS = pApp->first_node("module");
-			if (!pModuleS) {
-				break;
-			}
-			auto pM = pModuleS->first_node();
-			if (!pM) {
-				break;
-			}
-			myAssert (!pM->next_sibling());
-			*/
-			// auto pServerS = pM->first_node("server");
-			auto pServerS = pApp->first_node("server");
-			if (!pServerS) {
-				break;
-			}
+			auto findNetServer = false;
+			bool allAutoRun = true;
 			std::set<std::string> serverNameS;
+			auto pServerS = pApp->first_node("server");
+			if (pServerS) {
+				for(rapidxml::xml_node<char> * pS = pServerS->first_node();  NULL != pS; pS = pS->next_sibling()) {
+					auto inS = serverNameS.insert(pS->name());
+					myAssert (inS.second);
+					auto pA = pS->first_attribute("route");
+					if (pA) {
+						bool bR = atoi(pA->value());
+						if (bR) {
+							findNetServer = true;
+						}
+					}
+					pA = pS->first_attribute("mainLoop");
+					if (pA) {
+						bool bR = atoi(pA->value());
+						if (bR) {
+							allAutoRun = false;
+						}
+					}
+				}
+			} else {
+				pServerS = doc.allocate_node(rapidxml::node_element, doc.allocate_string("server"));
+				myAssert (pServerS);
+				pApp->append_node(pServerS);
+			}
 			int appNetType = 0;
 			auto pA = pApp->first_attribute("appNetType");
 			if (pA) {
 				appNetType = atoi(pA->value());
 			}
-			auto findNetServer = false;
-			bool allAutoRun = true;
-			for(rapidxml::xml_node<char> * pS = pServerS->first_node();  NULL != pS; pS = pS->next_sibling()) {
-				auto inS = serverNameS.insert(pS->name());
-				myAssert (inS.second);
-				auto pA = pS->first_attribute("route");
-				if (pA) {
-					bool bR = atoi(pA->value());
-					if (bR) {
-						findNetServer = true;
-					}
-				}
-				pA = pS->first_attribute("mainLoop");
-				if (pA) {
-					bool bR = atoi(pA->value());
-					if (bR) {
-						allAutoRun = false;
-					}
-				}
-			}
+			
 			if (allAutoRun) {
 				std::string netServerName = appName;
 				netServerName += "ConTh";

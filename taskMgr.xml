@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<servers>
+	<app>
+		<taskClient appNetType="0">
+		</taskClient>
+		<taskGate appNetType="1">
+		</taskGate>
+		<taskServer appNetType="2">
+		</taskServer>
+	</app>
+</servers>
+

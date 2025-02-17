@@ -28,7 +28,7 @@ public:
 
     logicWorkerMgr ();
     ~logicWorkerMgr ();
-	int initLogicWorkerMgr (int cArg, char** argS, ForLogicFun* pForLogic, int cDefArg, char** defArgS);
+	int initLogicWorkerMgr (int cArg, char** argS, ForLogicFun* pForLogic, int cDefArg, char** defArgS, char* taskBuf, int taskBufSize);
 	int processOncePack(ubyte serverIndex, packetHead* pPack);
 	virtual int initLogicGen (int cArg, char** argS, ForLogicFun* pForLogic, int cDefArg, char** defArgS);
 	ForLogicFun*   forLogicFun ();

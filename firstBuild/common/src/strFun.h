@@ -23,7 +23,8 @@ void myU8ToW(const char* szText, std::unique_ptr<wchar_t[]>& var);
 void strCpy (const char* szSrc, std::unique_ptr<char[]>& pDec);
 void strCpy (const wchar_t* szSrc, std::unique_ptr<wchar_t[]>& pDec);
 void wstrCpy (const wchar_t* szSrc, std::unique_ptr<wchar_t[]>& pDec);
-
+void repChar (char* szSrc, const char cFrom, const char cTo);
+void repwChar (wchar_t* szSrc, const wchar_t cFrom, const wchar_t cTo);
 
 template<class T> void stringToValue(const char* str,  T& v)
 {
@@ -96,11 +97,11 @@ template<class T1, class T2, class T3, class T4> bool stringToFourValue(const ch
 	return bRet;
 }
 
-template<class T1> bool  getOnceValueFromArgS (int argC, char** argS, const char* key, T1& v)
+template<class T1> bool  getOnceValueFromArgS (int argC, char** argS, const char* key, T1& v, const char delim = '=')
 {
 	bool bRet = false;
 	for (decltype (argC) i = 0; i < argC; i++) {
-		auto ret = stringSplit (argS[i], '=');
+		auto ret = stringSplit (argS[i], delim);
 		if (ret.size() != 2) {
 			continue;
 		}
@@ -113,12 +114,12 @@ template<class T1> bool  getOnceValueFromArgS (int argC, char** argS, const char
 	return bRet;
 }
 
-template<class T1, class T2> bool  getTwoValueFromArgS (int argC, char** argS, const char* key1, const char* key2, T1& v1, T2& v2)
+template<class T1, class T2> bool  getTwoValueFromArgS (int argC, char** argS, const char* key1, const char* key2, T1& v1, T2& v2, const char delim = '=')
 {
 	bool b1 = false;
 	bool b2 = false;
 	for (decltype (argC) i = 0; i < argC; i++) {
-		auto ret = stringSplit (argS[i], '=');
+		auto ret = stringSplit (argS[i], delim);
 		if (ret.size() != 2) {
 			continue;
 		}

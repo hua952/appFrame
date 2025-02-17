@@ -79,7 +79,7 @@ int  appModuleGen:: genExportFunH ()
 
 extern "C"
 {
-	dword afterLoad(int nArgC, char** argS, ForLogicFun* pForLogic, int nDefArgC, char** defArgS);
+	dword afterLoad(int nArgC, char** argS, ForLogicFun* pForLogic, int nDefArgC, char** defArgS, char* taskBuf, int taskBufSize);
 	int onLoopBegin	(serverIdType	fId);
 	int onFrameLogic	(serverIdType	fId);
 	void onLoopEnd	(serverIdType	fId);
@@ -120,13 +120,13 @@ int appModuleGen:: genExportFunCpp ()
 #include "gLog.h"
 #include ")"<<strMgrClassName<<R"(.h"
 
-dword afterLoad(int nArgC, char** argS, ForLogicFun* pForLogic, int nDefArgC, char** defArgS)
+dword afterLoad(int nArgC, char** argS, ForLogicFun* pForLogic, int nDefArgC, char** defArgS, char* taskBuf, int taskBufSize)
 {
 	setForMsgModuleFunS (pForLogic);
 	tSingleton<)"<<strMgrClassName<<R"(>::createSingleton();
 	auto &rMgr = tSingleton<)"<<strMgrClassName<<R"(>::single();
 	logicWorkerMgr::s_mgr = &rMgr;
-	return rMgr.initLogicWorkerMgr (nArgC, argS, pForLogic, nDefArgC, defArgS);
+	return rMgr.initLogicWorkerMgr (nArgC, argS, pForLogic, nDefArgC, defArgS, taskBuf, taskBufSize);
 }
 
 int onLoopBegin	(serverIdType	fId)
@@ -225,13 +225,30 @@ int  appModuleGen:: genBashFile ()
 		defFun += appName;
 		defFun += ".sh";
 		std::ofstream os(defFun.c_str ());
-		if (!os) {
-			nRet = 1;
-			rError (" open file for write error fileName = "<<defFun.c_str ());
-			break;
-		}
+		if (os) {
 		os<<R"(#!/bin/bash
 LD_LIBRARY_PATH=)"<<rGlobalFile.frameInstallPath()<<R"(/lib )"<<projectInstallDir<<"/bin/"<<appName<<R"( $@)";
+		} else {
+			rError (" open file for write error fileName = "<<defFun.c_str ());
+		}
+		auto defArgsFile = win;
+		defArgsFile += "/";
+		defArgsFile += appName;
+		defArgsFile += "DefArgs.txt";
+		if (!isPathExit (defArgsFile.c_str())) {
+			std::ofstream osDefArgs(defArgsFile.c_str ());
+			if (osDefArgs) {
+				auto& rMainArgS = m_appData.mainArgS();
+				for (auto it = rMainArgS.begin (); it != rMainArgS.end (); it++) {
+					std::unique_ptr<char[]>	kvPt;
+					strCpy (it->c_str (), kvPt);
+					repChar (kvPt.get(), '=', '#');
+					osDefArgs<<kvPt.get()<<std::endl;
+				}
+			} else {
+				rError (" open defArgs file for write error fileName = "<<defArgsFile.c_str ());
+			}
+		}
     } while (0);
     return nRet;
 }

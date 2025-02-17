@@ -70,7 +70,7 @@ int logicWorkerMgr::toNetPack (netPacketHead* pN, pPacketHead& pNew)
 	return nRet;
 }
 
-int  logicWorkerMgr:: initLogicWorkerMgr (int cArg, char** argS, ForLogicFun* pForLogic, int cDefArg, char** defArgS)
+int  logicWorkerMgr:: initLogicWorkerMgr (int cArg, char** argS, ForLogicFun* pForLogic, int cDefArg, char** defArgS, char* taskBuf, int taskBufSize)
 {
     int  nRet = 0;
     do {
@@ -167,6 +167,9 @@ int  logicWorkerMgr:: initLogicWorkerMgr (int cArg, char** argS, ForLogicFun* pF
 				m_allServers [curIncex]->onWorkerInitGen (pForLogic);
 				m_allServers [curIncex]->recPacketProcFun (pForLogic);
 			}
+		}
+		if (taskBuf) {
+			taskBuf[0] = 0;
 		}
     } while (0);
     return nRet;

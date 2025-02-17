@@ -57,7 +57,7 @@ typedef struct _ForLogicFun
 	pushPackToServerFT     fnPushPackToServer;
 } ForLogicFun;
 
-typedef dword (*afterLoadFunT)(int nArgC, char** argS, ForLogicFun* pForLogic, int nDefArgC, char** defArgS);
+typedef dword (*afterLoadFunT)(int nArgC, char** argS, ForLogicFun* pForLogic, int nDefArgC, char** defArgS, char* taskBuf, int taskBufSize);
 typedef void (*beforeUnloadFT)();
 typedef void (*logicOnAcceptFT)(serverIdType	fId, SessionIDType sessionId, uqword userData);
 typedef void (*logicOnConnectFT)(serverIdType fId, SessionIDType sessionId, uqword userData);

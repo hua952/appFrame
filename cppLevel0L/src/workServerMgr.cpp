@@ -1,3 +1,4 @@
+#include<algorithm>
 #include "workServerMgr.h"
 #include "strFun.h"
 #include "mLog.h"
@@ -222,8 +223,27 @@ int  workServerMgr:: initWorkServerMgr (int cArg, char** argS, int cDefArg, char
 	tSingleton <argConfig>::createSingleton ();
 	auto& rConfig = tSingleton<argConfig>::single ();
 	do {
+		int nDefArg = cDefArg;
+		char** ppArgS = defArgS;
+		std::string strDefArgs;
+		std::unique_ptr<std::unique_ptr<char[]>[]>	defArgsPt;
+		std::unique_ptr<char*[]>	ppArgsPt;
+		getOnceValueFromArgS (cArg, argS, "defArgs", strDefArgs);
+		if (!strDefArgs.empty()) {
+			auto ret = stringSplit (strDefArgs.c_str(), '+');
+			ppArgsPt = std::make_unique<char*[]>(ret.size());
+			defArgsPt = std::make_unique<std::unique_ptr<char[]>[]>(ret.size());
+			for (decltype (ret.size()) i = 0; i < ret.size(); i++) {
+				auto& str = ret[i];
+				std::replace(str.begin(),str.end(), '-', '=');
+				strCpy(str.c_str(), defArgsPt[i]);
+				ppArgsPt[i] = defArgsPt[i].get();
+			}
+			ppArgS = ppArgsPt.get();
+		}
+
 		// std::this_thread::sleep_for(std::chrono::microseconds (16* 1000 * 1000));
-		int nR = rConfig.procCmdArgS (cDefArg, defArgS);   /* 下一步用到参数里的文件名,所以要先解析一遍命令行参数  */
+		int nR = rConfig.procCmdArgS (nDefArg, ppArgS);   /* 下一步用到参数里的文件名,所以要先解析一遍命令行参数  */
 		if (nR) {
 			nRet = 1;
 			break;
@@ -233,21 +253,7 @@ int  workServerMgr:: initWorkServerMgr (int cArg, char** argS, int cDefArg, char
 			nRet = 2;
 			break;
 		}
-		/*
-		auto pWorkDir = rConfig.homeDir ();// rConfig.workDir ();
-		int workDirLen = 0;
-		if (pWorkDir) {
-			workDirLen = (int)(strlen(pWorkDir));
-		}
-		if (!workDirLen) {
-			std::unique_ptr<char[]>	homeDirPtr;
-			auto nR = getCurModelPath (homeDirPtr);
-			myAssert (0 == nR);
-			auto bR = upDir (homeDirPtr.get());
-			myAssert (bR);
-			rConfig.setHomeDir(homeDirPtr.get());
-		}
-		*/
+		
 		std::string frameConfigFile = rConfig.projectInstallDir();// rConfig.homeDir ();
 		auto frameConfig = rConfig.frameConfigFile ();
 		frameConfigFile += "/config/";
@@ -285,21 +291,7 @@ int  workServerMgr:: initWorkServerMgr (int cArg, char** argS, int cDefArg, char
 			std::this_thread::sleep_for(std::chrono::microseconds (sleepL * 1000 * 1000));
 			mInfo("sleep "<<sleepL<<" sleep for debug end, continue");
 		}
-		/*
-		pWorkDir = rConfig.homeDir ();
-		workDirLen = 0;
-		if (pWorkDir) {
-			workDirLen = (int)(strlen(pWorkDir));
-		}
-		if (!workDirLen) {
-			std::unique_ptr<char[]>	homeDirPtr;
-			auto nR = getCurModelPath (homeDirPtr);
-			myAssert (0 == nR);
-			auto bR = upDir (homeDirPtr.get());
-			myAssert (bR);
-			rConfig.setHomeDir(homeDirPtr.get());
-		}
-		*/
+		
 		auto allocDebug = rConfig.allocDebug ();
 		if (allocDebug) {
 			allocPack = allocPackDebug;
@@ -335,7 +327,6 @@ int  workServerMgr:: initWorkServerMgr (int cArg, char** argS, int cDefArg, char
 		forLogic.fnPushPackToServer = sPushPackToServer;
 		forLogic.fnSetAttr = sSetAttr;
 
-		// mInfo("workDir is : "<<rConfig.homeDir ());
 
 		std::string strPath =rConfig.projectInstallDir ();// rConfig.homeDir ();// workDir();
 		strPath += "/";
@@ -411,14 +402,20 @@ int  workServerMgr:: initWorkServerMgr (int cArg, char** argS, int cDefArg, char
 				rServer.initWorkServer ();
 			}
 		}
-		if (m_fnAfterLoad ) {
-			// std::unique_ptr<char[]>	homeDirPtr;
-			
-			auto nR = m_fnAfterLoad (cArg, argS, &forLogic, cDefArg, defArgS);
-			if (nR) {
-				mError ("funOnLoad ret error nR = "<<nR);
-			}
+
+		if (!m_fnAfterLoad ) {
+			nRet = 10;
+			break;
 		}
+		const int c_taskBufSize = 1024;
+		auto taskBufPt = std::make_unique<char[]>(c_taskBufSize);
+		auto taskBuf = taskBufPt.get();
+		nR = m_fnAfterLoad (cArg, argS, &forLogic, nDefArg, ppArgS, taskBuf, c_taskBufSize);
+		if (nR) {
+			mError ("funOnLoad ret error nR = "<<nR);
+		}
+		ppArgsPt.reset();
+		defArgsPt.reset ();
 		auto dumpMsg = rConfig.dumpMsg ();
 		if (dumpMsg) {
 			rInfo ("dupmMsg end plese check");
@@ -435,7 +432,6 @@ int  workServerMgr:: initWorkServerMgr (int cArg, char** argS, int cDefArg, char
 			}
 		}
 		
-		// loggerDrop ();
 	} while (0);
 	return nRet;
 }

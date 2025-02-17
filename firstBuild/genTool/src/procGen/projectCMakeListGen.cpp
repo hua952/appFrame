@@ -40,7 +40,9 @@ int   projectCMakeListGen:: startGen ()
 		auto& rAppS = tSingleton<appFileMgr>::single ().appS ();
 			std::string strFile = rGlobalFile.projectHome ();
 			strFile += "/CMakeLists.txt";
-
+		if (isPathExit (strFile.c_str ())) {
+			break;
+		}
 			std::ofstream os(strFile.c_str ());
 			if (!os) {
 				nRet = 1;

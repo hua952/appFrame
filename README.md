@@ -28,6 +28,7 @@ LD_LIBRARY_PATH=~/work/appFrameInstall/lib  ./genTool defFile=~/work/appFrame/te
 LD_LIBRARY_PATH=~/work/appFrameInstall/lib  ./genTool defFile=~/work/appFrame/test/main.xml  projectDir=~/study/msg1
 
 
+genTool taskMgr.xml projectInstallDir=C:/work/appFrameInstall
 static bool sendFun (void *pNum)
 {
 	static int sendNum = 0;

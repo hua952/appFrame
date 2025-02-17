@@ -27,7 +27,7 @@ static std::ostream& operator << (std::ostream& os, const netPacketHead& pack)
 
 workServer:: workServer ()
 {
-	m_sleepSetp = 0;
+	m_sleepSetp = 1;
 	// m_id = c_emptyLoopHandle;
 	m_frameNum = 0;
 }
