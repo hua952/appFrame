@@ -73,6 +73,9 @@ int  appLibGen:: batFileGen ()
 
 		auto& rMap = tSingleton<appFileMgr>::single ().appS ();
 		
+		auto& rAppMgr = tSingleton<appFileMgr>::single ();
+		auto& rApps = rAppMgr.appS ();
+
 		// auto haveServer = rGlobalFile.haveServer ();
 		// if (haveServer) {
 			std::stringstream ts;
@@ -95,17 +98,18 @@ int  appLibGen:: batFileGen ()
 			ts<<"netNum="<<rGlobalFile.netNum();
 			rMainArgS.push_back(ts.str());
 		}
+		{
+			std::stringstream ts;
+			ts<<"modelName="<<szAppName<<"Module";
+			rMainArgS.push_back(ts.str());
+		}
 		/*
 		{
 			std::stringstream ts;
 			ts<<"gateAppGroupId="<<rGlobalFile.gateAppGroupId();
 			rMainArgS.push_back(ts.str());
 		}
-		{
-			std::stringstream ts;
-			ts<<"modelName="<<szAppName<<"Module";
-			rMainArgS.push_back(ts.str());
-		}
+		
 		{
 			std::stringstream ts;
 			ts<<"gateRouteServerGroupId="<<rGlobalFile.gateRouteServerGroupId();
@@ -132,6 +136,7 @@ int  appLibGen:: batFileGen ()
 		}
 		// auto haveMsg = rGlobalFile.haveMsg();
 		// if (haveMsg)
+		if (rApps.size() > 1)
 		{
 			std::stringstream ts;
 			ts<<"netLib=libeventSession";

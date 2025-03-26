@@ -34,7 +34,9 @@ set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_HOME}/scripts/buildsystems/vcpkg.cmake")
 # find_package(fmt CONFIG REQUIRED)
 # find_path(RAPIDXML_INCLUDE_DIRS "rapidxml/rapidxml.hpp")
 set(srcS)
+set(rcS)
 file(GLOB srcS src/*.cpp)
+file(GLOB rcS src/*.rc)
 set(osSrc)
 if (UNIX)
     MESSAGE(STATUS "unix")
@@ -61,7 +63,7 @@ add_executable (${prjName} )";
 if (g_mfc) {
 	of<<"WIN32 ";
 }
-of<<R"(${srcS})
+of<<R"(${srcS} ${rcS})
 # target_include_directories(${prjName} PRIVATE src)
 # target_link_libraries(${prjName} PRIVATE  common cLog)
 SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)

@@ -1,3 +1,4 @@
+#include <chrono>
 #include "deListMsgQue.h"
 #include "cppLevel0L.h"
 #include "comFun.h"
@@ -36,27 +37,28 @@ bool deListMsgQue::pushPack (packetHead* pack)
 		pack->pPer = pH->pPer;
 		pack->pNext = pH;
 		pH->pPer = pack;
+		m_cv.notify_one();
 	}
 	return true;
 }
 
-void deListMsgQue::getMsgS (packetHead* pH)
+void deListMsgQue::getMsgS (packetHead* pH, udword milliSec)
 {
-	std::lock_guard<std::mutex> lock(m_mtx);
-	auto pMyH = &m_Head;
-	if (pMyH->pNext == pMyH)
+	pH->pNext = pH;
+	pH->pPer = pH;
+	// auto timeout = std::chrono::steady_clock::now() + std::chrono::seconds(milliSec);
 	{
-		myAssert (pMyH->pPer = pMyH);
-		pH->pNext = pH;
-		pH->pPer = pH;
-		return;
+		std::unique_lock<std::mutex> lock(m_mtx);
+		if (m_cv.wait_for(lock, std::chrono::microseconds(milliSec), [this] { return m_Head.pNext != &m_Head;})) {
+			auto pMyH = &m_Head;
+			auto pEnd = pMyH->pPer;
+			auto pBegin = pMyH->pNext;
+			pH->pNext =  pBegin;
+			pBegin->pPer = pH;
+			pH->pPer = pEnd;
+			pEnd->pNext = pH;
+			pMyH->pNext = pMyH;
+			pMyH->pPer = pMyH;
+		} 
 	}
-	auto pEnd = pMyH->pPer;
-	auto pBegin = pMyH->pNext;
-	pH->pNext =  pBegin;
-	pBegin->pPer = pH;
-	pH->pPer = pEnd;
-	pEnd->pNext = pH;
-	pMyH->pNext = pMyH;
-	pMyH->pPer = pMyH;
 }

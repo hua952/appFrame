@@ -757,7 +757,7 @@ ps<<R"(#include "logicWorker.h"
 #include ")"<<pGSrcName<<R"(.h")"<<std::endl<<std::endl
 		<<strDec<<R"(
 {
-	
+	gInfo("Rec )"<<msgFunName<<R"(");
 }
 )";
 	} while (0);

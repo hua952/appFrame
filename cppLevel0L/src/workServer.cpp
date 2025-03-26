@@ -110,7 +110,7 @@ bool  workServer:: onFrame()
 		}
 		packetHead head;
 		auto pH = &head;
-		m_slistMsgQue.getMsgS(pH);
+		m_slistMsgQue.getMsgS(pH, m_sleepSetp);
 		auto n = pH->pNext;
 		while (n != pH) {
 			auto d = n;
@@ -138,9 +138,11 @@ bool  workServer:: onFrame()
 			freePack(d);
 		}
 	}
+	/*
 	if (m_sleepSetp) {
 		std::this_thread::sleep_for(std::chrono::microseconds (m_sleepSetp));
 	}
+	*/
 	/*
 	} catch (const std::exception& e) {
 		mError (" catch exception : "<<e.what());

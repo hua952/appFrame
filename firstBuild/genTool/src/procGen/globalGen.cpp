@@ -45,6 +45,8 @@ int   globalGen:: writeGenCmakelist ()
 	do {
 		auto &rGlobalFile = tSingleton<globalFile>::single();
 		auto  projectHome = rGlobalFile.projectHome ();
+		auto& rAppS = tSingleton<appFileMgr>::single ().appS ();
+
 		std::string strFile = projectHome;
 		strFile += "/gen";
 		myMkdir(strFile.c_str());
@@ -65,12 +67,15 @@ int   globalGen:: writeGenCmakelist ()
 		// auto& rApps = rAppMgr.appS ();
 		if (pPmp) {
 			os<<R"(
-add_subdirectory (protobufSer)
 add_subdirectory (defMsg)
 )";
+			if (rAppS.size() > 1) {
+				os<<R"(
+add_subdirectory (protobufSer)
+)";
+			}
 		}
 os<<R"(add_subdirectory ()"<<szPrjName <<R"(Config))"<<std::endl;
-		auto& rAppS = tSingleton<appFileMgr>::single ().appS ();
 		for (auto it = rAppS.begin (); rAppS.end () != it; ++it) {
 			auto& rApp = *(it->second.get ());
 			auto appName = rApp.appName ();
@@ -390,8 +395,10 @@ int   globalGen:: makePath ()
     do {
 		auto& rGlobalFile = tSingleton <globalFile>::single ();
 		auto szProject = rGlobalFile.projectHome ();
+		std::string build = szProject;
+		build += "/build";
 		// rInfo ("will mkdir : "<<szProject);
-		nRet = myMkdir (szProject);
+		nRet = myMkdir (build.c_str());
     } while (0);
     return nRet;
 }
