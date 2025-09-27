@@ -13,7 +13,7 @@ endif ()
 
 add_library(${prjName} ${srcS})
 target_include_directories(${prjName} PRIVATE 
-							${firstBuildInc}
+							${firstBuildDir}/include/firstBuild
                            )
 
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)

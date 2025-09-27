@@ -1,8 +1,7 @@
 SET(prjName cppLevel0)
 set(srcS)
 file(GLOB srcS src/*.cpp)
-
-set(libDir ${firstBuildLib})
+set(libDir ${firstBuildDir/lib})
 set(libS common)
 set(osSrc)
 if (UNIX)
@@ -25,7 +24,7 @@ link_directories(
 add_executable (${prjName} ${srcS} ${osSrc})
 
 target_include_directories(${prjName} PRIVATE 
-							${firstBuildInc} 
+							${firstBuildDir}/include/firstBuild
                            )
 target_link_libraries(${prjName} PRIVATE  ${libS})
 

@@ -1,6 +1,6 @@
 SET(prjName cppLevel0L)
 set(srcS)
-set(libDir ${firstBuildLib})
+set(libDir ${firstBuildDir}/lib)
 file(GLOB srcS src/*.cpp)
 set(defS)
 set(osSrc)
@@ -28,7 +28,7 @@ add_library(${prjName} SHARED ${srcS} ${defS} ${osSrc})
 target_include_directories(${prjName} PRIVATE
 							${CMAKE_SOURCE_DIR}/logicCommon/src
 							${CMAKE_SOURCE_DIR}/frameConfig/src
-							${firstBuildInc}
+							${firstBuildDir}/include/firstBuild
                            )
 target_link_libraries(${prjName} PRIVATE  ${libS})
 

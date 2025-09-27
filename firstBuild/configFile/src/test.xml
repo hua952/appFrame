@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<config className="configMgr" projectDir="C:\work\appFrame"  projectName="frameConfig">
-	<depInclude type="string">d:/pzh/include</depInclude>
-	<sendSetp type="udword">10000</sendSetp>
-	<clearTag type="bool">1</clearTag>
-</config>

@@ -1,6 +1,6 @@
 SET(prjName libeventSession)
 set(srcS)
-set(libDir ${firstBuildLib})
+set(libDir ${firstBuildDir}/lib)
 file(GLOB srcS src/*.cpp)
 set(defS)
 set(srcH)
@@ -37,7 +37,7 @@ add_library(${prjName} SHARED ${srcS} ${osSrc} ${defS})
 
 target_include_directories(${prjName} PRIVATE 
 							${srcH}
-							${firstBuildInc} 
+							${firstBuildDir}/include/firstBuild
                            )
 target_link_libraries(${prjName} PRIVATE  common
 	PRIVATE libevent::core libevent::extra

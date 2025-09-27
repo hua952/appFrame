@@ -1,5 +1,0 @@
-LIBRARY
-EXPORTS
-	strNCpy    @1
-    strR       @2
-    strRS      @3

@@ -1,7 +1,7 @@
 SET(prjName logicCommon)
 set(srcS)
 set(osDepsrcS) 
-set(libDir ${firstBuildLib})
+set(libDir ${firstBuildDir/lib})
 file(GLOB srcS src/*.cpp)
 
 set(libS comTcpProNet)
@@ -32,7 +32,7 @@ endif ()
 
 target_include_directories(${prjName} PRIVATE 
 							${CMAKE_SOURCE_DIR}/frameConfig/src
-							${firstBuildInc} 
+							${firstBuildDir}/include/firstBuild
                            )
 
 # target_link_libraries(${prjName} PRIVATE  ${libS})
