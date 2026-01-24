@@ -10,7 +10,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 set (myProjectName appFrame CACHE INTERNAL "Shared variable")
 project(${myProjectName})
-SET(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/../${myProjectName}Install)
 
 # set (firstBuildInc ${CMAKE_INSTALL_PREFIX}/include/appFrame  CACHE INTERNAL "Shared variable")
 # set (firstBuildLib ${CMAKE_INSTALL_PREFIX}/lib  CACHE INTERNAL "Shared variable")
@@ -30,6 +29,8 @@ set(firstBuildDir "${firstBuildDirDef}" CACHE PATH "Path of firstBuild install")
 # 使用变量
 message(STATUS "最终firstBuildDir是: ${firstBuildDir}")
 
+# SET(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/../${myProjectName}Install)
+SET(CMAKE_INSTALL_PREFIX ${firstBuildDir})
 add_subdirectory (cppLevel0L)
 # add_subdirectory (cppLevel0)
 add_subdirectory (logicCommon)

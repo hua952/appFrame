@@ -40,6 +40,7 @@ frameConfig::frameConfig ()
 	m_srand = true;
 	m_startPort = 12000;
 	m_testTag = 1234;
+	strCpy("", m_userConfigFile);
 	
 }
 bool  frameConfig::allocDebug ()
@@ -372,6 +373,16 @@ void  frameConfig::setTestTag (udword v)
 	m_testTag = v;
 }
 
+const char*  frameConfig::userConfigFile ()
+{
+    return m_userConfigFile.get();
+}
+
+void  frameConfig::setUserConfigFile (const char* v)
+{
+	strCpy(v, m_userConfigFile);
+}
+
 
 
 
@@ -512,6 +523,13 @@ int  frameConfig:: dumpConfig (const char* szFile)
 		ofs<<"srand="<<srand()<<std::endl;
 		ofs<<"startPort="<<startPort()<<std::endl;
 		ofs<<"testTag="<<testTag()<<std::endl;
+	int nuserConfigFileLen = 0;
+	auto userConfigFile = this->userConfigFile();
+	if (userConfigFile) nuserConfigFileLen = strlen(userConfigFile);
+	std::string strTuserConfigFile =R"("")";
+	if (nuserConfigFileLen) 
+		strTuserConfigFile = userConfigFile;
+		ofs<<"userConfigFile="<<strTuserConfigFile<<R"--(  ## 用户配置文件   )--"<<std::endl;
 
 	} while (0);
 	return nRet;
@@ -764,6 +782,14 @@ int  frameConfig:: procCmdArgS (int nArg, char** argS)
 			}
 				if (strKey == "testTag") {
 				ssV>>m_testTag;
+				continue;
+			}
+				if (strKey == "userConfigFile") {
+				ssV>>strVal;
+				if('"'==strVal.c_str()[0] && '"'==strVal.c_str()[strVal.length()-1]) {
+					strVal = strVal.substr(1,strVal.length()-2);
+				}
+	strCpy(strVal.c_str(), m_userConfigFile);
 				continue;
 			}
 		

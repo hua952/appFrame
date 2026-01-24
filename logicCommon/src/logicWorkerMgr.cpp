@@ -89,9 +89,14 @@ int  logicWorkerMgr:: initLogicWorkerMgr (int cArg, char** argS, ForLogicFun* pF
 		}
 
 		std::string frameConfigFile = rConfig.projectInstallDir(); // pWorkDir;
-		auto frameConfig = rConfig.frameConfigFile ();
+        std::string frameConfig = "frameConfig.txt";
+		auto szFrameConfig = rConfig.frameConfigFile ();
+        if (szFrameConfig) {
+            if (strlen(szFrameConfig)) {
+                frameConfig = szFrameConfig;
+            }
+        }
 		frameConfigFile += "/config/";
-
 		frameConfigFile += frameConfig;
 		rConfig.loadConfig (frameConfigFile.c_str());
 		nR = rConfig.procCmdArgS (cArg, argS);   /* 下一步用到参数里的文件名,所以要先解析一遍命令行参数  */

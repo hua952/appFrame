@@ -76,6 +76,8 @@ public:
   void  setStartPort (uword v);
   udword  testTag ();
   void  setTestTag (udword v);
+  const char*  userConfigFile ();
+  void  setUserConfigFile (const char* v);
 private:
   bool  m_allocDebug;
   uword  m_appGroupId;
@@ -110,5 +112,6 @@ private:
   bool  m_srand;
   uword  m_startPort;
   udword  m_testTag;
+  std::unique_ptr <char[]>  m_userConfigFile;
 };
 #endif

@@ -138,12 +138,10 @@ bool  workServer:: onFrame()
 			freePack(d);
 		}
 	}
-	/*
+    /*
 	if (m_sleepSetp) {
 		std::this_thread::sleep_for(std::chrono::microseconds (m_sleepSetp));
 	}
-	*/
-	/*
 	} catch (const std::exception& e) {
 		mError (" catch exception : "<<e.what());
 	}

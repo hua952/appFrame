@@ -56,16 +56,6 @@ packetHead* allocPackDebug(udword udwSize)
 
 void	freePackDebug(packetHead* pack)
 {
-	/*
-	if (pack->packArg) {
-		auto pN = P2NHead(pack);
-		int a = pN->uwMsgID;
-		a++;
-		// mTrace(" free pack have packArg pack is : "<<*pack);
-		freePackDebug((packetHead*)(pack->packArg));
-		pack->packArg= 0;
-	}
-	*/
 	{
 		std::lock_guard<std::mutex> lock(g_mem_mtx);
 		auto inRet = s_memMap.erase(pack);
@@ -98,12 +88,6 @@ packetHead* allocPackRelease (udword udwSize)
 
 void	freePackRelease (packetHead* pack)
 {
-	/*
-	if (pack->packArg) {
-		freePackRelease ((packetHead*)(pack->packArg));
-		pack->packArg= 0;
-	}
-	*/
 	delete [] ((char*)(pack));
 }
 

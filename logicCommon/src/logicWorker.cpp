@@ -763,6 +763,23 @@ void   logicWorker:: setUserData (void* v)
 	m_userData = v;
 }
 
+void  logicWorker:: ntfOtherLocalServerExit()
+{
+    auto& sMgr = logicWorkerMgr::getMgr();
+	auto allServerNum = sMgr.allServerNum ();
+	for (decltype (allServerNum) i = 0; i < allServerNum; i++) {
+        if (i == serverId()) {
+            continue;
+        }
+		exitAppNtfMsg  msg;
+		auto pExitPack = msg.pop();
+		auto pEN = P2NHead(pExitPack);
+		pEN->ubySrcServId = serverId();
+		pEN->ubyDesServId = i;
+		sMgr.forLogicFun()->fnPushPackToServer (i, pExitPack);
+	}
+}
+
 int   logicWorker:: sendToAllGate (packetHead* pack)
 {
     int   nRet = 0;
