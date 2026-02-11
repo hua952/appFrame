@@ -397,6 +397,7 @@ int  workServerMgr:: initWorkServerMgr (int cArg, char** argS, int cDefArg, char
 		nR = m_fnAfterLoad (cArg, argS, &forLogic, nDefArg, ppArgS, taskBuf, c_taskBufSize);
 		if (nR) {
 			mError ("funOnLoad ret error nR = "<<nR);
+            break;
 		}
 		ppArgsPt.reset();
 		defArgsPt.reset ();

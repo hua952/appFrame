@@ -763,12 +763,12 @@ void   logicWorker:: setUserData (void* v)
 	m_userData = v;
 }
 
-void  logicWorker:: ntfOtherLocalServerExit()
+void  logicWorker:: ntfOtherLocalServerExit(bool bIncMe)
 {
     auto& sMgr = logicWorkerMgr::getMgr();
 	auto allServerNum = sMgr.allServerNum ();
 	for (decltype (allServerNum) i = 0; i < allServerNum; i++) {
-        if (i == serverId()) {
+        if (i == serverId() && !bIncMe) {
             continue;
         }
 		exitAppNtfMsg  msg;

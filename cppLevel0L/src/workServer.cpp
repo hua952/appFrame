@@ -49,19 +49,18 @@ void workServer::run()
 {
 	auto nRet = onLoopBegin(); // onMidLoopBegin(m_serverId);
 
-	if (procPacketFunRetType_exitNow & nRet || procPacketFunRetType_exitAfterLoop & nRet) {
-		mInfo ("onMidLoopBegin ret procPacketFunRetType_exitNow");
-		return;
-	}
-	while(true)
-	{
-		auto bExit = onFrame();
-		if (bExit)
-		{
-			break;
-		}
-		
-	}
+    if (procPacketFunRetType_exitNow & nRet || procPacketFunRetType_exitAfterLoop & nRet) [[unlikely]]{
+        mInfo ("onMidLoopBegin ret procPacketFunRetType_exitNow");
+    } else {
+        while(true)
+        {
+            auto bExit = onFrame();
+            if (bExit) [[unlikely]]
+            {
+                break;
+            }
+        }
+    }
 	onLoopEnd ();// onMidLoopEnd(m_serverId);
 }
 
@@ -102,7 +101,7 @@ bool  workServer:: onFrame()
 	auto myHandle = m_serverId; 
 	//auto nQuit = ::onLoopFrame(myHandle);
 	auto nQuit = onLoopFrame();
-	if (procPacketFunRetType_exitNow & nQuit) {
+	if (procPacketFunRetType_exitNow & nQuit) [[unlikely]]{
 		bExit = true;
 	} else {
 		if (procPacketFunRetType_exitAfterLoop & nQuit) {
@@ -161,7 +160,7 @@ int workServer::processOncePack(packetHead* pPack)
 		auto pN = P2NHead(pPack);
 		bool bIsRet = NIsRet(pN);
 		auto pF = findMsg(pN->uwMsgID);
-		if(!pF) {
+		if(!pF) [[unlikely]]{
 			mWarn ("can not find proc function token: "
 				<<pN->dwToKen<<" msgId = "<<pN->uwMsgID
 					<<" length = "<<pN->udwLength);
