@@ -8,6 +8,14 @@
 
 int  createUuid (char* outPut);
 packetHead* nClonePack(netPacketHead* pN);
+
+struct IUserLogicWorker
+{
+	virtual int onLoopBegin() = 0;
+	virtual int onLoopEnd() = 0;
+	virtual int onLoopFrame() = 0;
+};
+
 class logicWorker
 {
 public:
@@ -41,9 +49,11 @@ public:
 	virtual int onWorkerInitGen(ForLogicFun* pForLogic);
 	virtual int onWorkerInit(ForLogicFun* pForLogic);
 	virtual int processOncePack(packetHead* pPack);
+    /*
 	virtual int onLoopBegin();
 	virtual int onLoopEnd();
 	virtual int onLoopFrame();
+    */
 	virtual int onCreateChannelRet(const channelKey& rKey, udword result) = 0;
 
 	virtual int onLoopBeginBase();
@@ -74,14 +84,17 @@ public:
 	void  setUserData (void* v);
 	createChannelMap&  getCreateChannelMap (); 
 	static void stringToChannel (const char* szCh, channelKey& rCh);
-protected:
-	int  sendToAllGate (packetHead* pack);
+    IUserLogicWorker*  pIUserLogicWorker ();
+    void  setPIUserLogicWorker (IUserLogicWorker* v);
 private:
+    IUserLogicWorker*  m_pIUserLogicWorker{nullptr};
 	void*  m_userData;
 	tokenMapType   m_tokenMap;
 	createChannelMap  m_createChannelMap;
 	bool  m_willExit{false};
 	ubyte  m_serverGroup {0};
 	ubyte  m_serverId;
+protected:
+	int  sendToAllGate (packetHead* pack);
 };
 #endif

@@ -185,7 +185,7 @@ int   logicWorker:: processOncePack(packetHead* pPack)
     int   nRet = procPacketFunRetType_del;
     return nRet;
 }
-
+/*
 int  logicWorker:: onLoopBegin()
 {
     int  nRet = 0;
@@ -209,7 +209,7 @@ int  logicWorker:: onLoopFrame()
     } while (0);
     return nRet;
 }
-
+*/
 int  logicWorker:: onWorkerInitGen(ForLogicFun* pForLogic)
 {
     int  nRet = 0;
@@ -289,7 +289,8 @@ int  logicWorker:: onLoopBeginBase()
 {
     int  nRet = 0;
     do {
-		nRet = onLoopBegin ();
+		// nRet = onLoopBegin ();
+        nRet = m_pIUserLogicWorker->onLoopBegin ();
     } while (0);
     return nRet;
 }
@@ -298,7 +299,8 @@ int  logicWorker:: onLoopEndBase()
 {
     int  nRet = 0;
     do {
-		nRet = onLoopEnd ();
+		// nRet = onLoopEnd ();
+        nRet = m_pIUserLogicWorker->onLoopEnd ();
     } while (0);
     return nRet;
 }
@@ -307,7 +309,8 @@ int  logicWorker:: onLoopFrameBase()
 {
     int  nRet = 0;
     do {
-		nRet = onLoopFrame ();
+		// nRet = onLoopFrame ();
+        nRet = m_pIUserLogicWorker->onLoopFrame ();
 		/*
 		if (willExit ()) {
 			nRet |= procPacketFunRetType_exitNow;
@@ -802,5 +805,15 @@ void  logicWorker:: stringToChannel (const char* szCh, channelKey& rCh)
 {
 	std::stringstream ss(szCh);
 	ss>>std::hex>>rCh.first>>rCh.second;
+}
+
+IUserLogicWorker*  logicWorker:: pIUserLogicWorker ()
+{
+    return m_pIUserLogicWorker;
+}
+
+void  logicWorker:: setPIUserLogicWorker (IUserLogicWorker* v)
+{
+    m_pIUserLogicWorker = v;
 }
 

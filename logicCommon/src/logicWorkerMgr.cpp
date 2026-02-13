@@ -249,3 +249,9 @@ logicWorkerMgr& logicWorkerMgr::getMgr()
 {
 	return *s_mgr;
 }
+
+void  logicWorkerMgr:: setIUserLogicWorkerMgr(IUserLogicWorkerMgr*  pIUserLogicWorkerMgr)
+{
+    m_pIUserLogicWorkerMgr = pIUserLogicWorkerMgr;
+}
+

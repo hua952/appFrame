@@ -5,6 +5,12 @@
 #include "arrayMap.h"
 
 class logicWorker;
+struct IUserLogicWorkerMgr
+{
+    virtual int initLogicUser (int cArg, char** argS, ForLogicFun* pForLogic, int cDefArg, char** defArgS) = 0;
+    virtual void onAppExit() = 0;
+};
+
 class logicWorkerMgr
 {
 public:
@@ -37,6 +43,7 @@ public:
 	logicWorker** allServers ();
 	logicWorker* findServer (ubyte serverIndex);
 	bool findDefProc (uword msgId, ubyte& appGroup, ubyte& serverGroup);
+    void setIUserLogicWorkerMgr(IUserLogicWorkerMgr*  pIUserLogicWorkerMgr);
 	static logicWorkerMgr& getMgr();
 	static logicWorkerMgr* s_mgr;
 protected:
@@ -47,5 +54,6 @@ protected:
 	defProcMap  m_defProcMap;
 private:
 	msgSerFunSet s_SerFunSet;
+    IUserLogicWorkerMgr*  m_pIUserLogicWorkerMgr{nullptr};
 };
 #endif
