@@ -44,9 +44,11 @@ public:
 	logicWorker* findServer (ubyte serverIndex);
 	bool findDefProc (uword msgId, ubyte& appGroup, ubyte& serverGroup);
     void setIUserLogicWorkerMgr(IUserLogicWorkerMgr*  pIUserLogicWorkerMgr);
+    IUserLogicWorkerMgr* getIUserLogicWorkerMgr();
 	static logicWorkerMgr& getMgr();
 	static logicWorkerMgr* s_mgr;
 protected:
+    IUserLogicWorkerMgr*  m_pIUserLogicWorkerMgr;
 	pSerializePackFunType3* sGetNode (udword msgId);
 	uword  m_allServerNum{0};
 	ForLogicFun*     m_pForLogicFun;
@@ -54,6 +56,5 @@ protected:
 	defProcMap  m_defProcMap;
 private:
 	msgSerFunSet s_SerFunSet;
-    IUserLogicWorkerMgr*  m_pIUserLogicWorkerMgr{nullptr};
 };
 #endif

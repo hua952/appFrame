@@ -243,6 +243,11 @@ bool  logicWorkerMgr:: findDefProc (uword msgId, ubyte& appGroup, ubyte& serverG
     return nRet;
 }
 
+IUserLogicWorkerMgr*  logicWorkerMgr:: getIUserLogicWorkerMgr()
+{
+    return m_pIUserLogicWorkerMgr;
+}
+
 logicWorkerMgr* logicWorkerMgr::s_mgr = nullptr;
 
 logicWorkerMgr& logicWorkerMgr::getMgr()

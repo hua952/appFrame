@@ -807,6 +807,12 @@ void  logicWorker:: stringToChannel (const char* szCh, channelKey& rCh)
 	ss>>std::hex>>rCh.first>>rCh.second;
 }
 
+IUserLogicWorker*   logicWorker:: getIUserLogicWorker ()
+{
+    return m_pIUserLogicWorker.get();
+}
+
+/*
 IUserLogicWorker*  logicWorker:: pIUserLogicWorker ()
 {
     return m_pIUserLogicWorker;
@@ -816,4 +822,4 @@ void  logicWorker:: setPIUserLogicWorker (IUserLogicWorker* v)
 {
     m_pIUserLogicWorker = v;
 }
-
+*/

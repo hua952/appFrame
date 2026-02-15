@@ -11,6 +11,7 @@ packetHead* nClonePack(netPacketHead* pN);
 
 struct IUserLogicWorker
 {
+    virtual ~IUserLogicWorker()=default;
 	virtual int onLoopBegin() = 0;
 	virtual int onLoopEnd() = 0;
 	virtual int onLoopFrame() = 0;
@@ -83,11 +84,12 @@ public:
 	void*  userData ();
 	void  setUserData (void* v);
 	createChannelMap&  getCreateChannelMap (); 
+    IUserLogicWorker*  getIUserLogicWorker ();
 	static void stringToChannel (const char* szCh, channelKey& rCh);
-    IUserLogicWorker*  pIUserLogicWorker ();
-    void  setPIUserLogicWorker (IUserLogicWorker* v);
+    // IUserLogicWorker*  pIUserLogicWorker ();
+    // void  setPIUserLogicWorker (IUserLogicWorker* v);
 private:
-    IUserLogicWorker*  m_pIUserLogicWorker{nullptr};
+    // IUserLogicWorker*  m_pIUserLogicWorker{nullptr};
 	void*  m_userData;
 	tokenMapType   m_tokenMap;
 	createChannelMap  m_createChannelMap;
@@ -95,6 +97,7 @@ private:
 	ubyte  m_serverGroup {0};
 	ubyte  m_serverId;
 protected:
+    std::unique_ptr<IUserLogicWorker>  m_pIUserLogicWorker;
 	int  sendToAllGate (packetHead* pack);
 };
 #endif
